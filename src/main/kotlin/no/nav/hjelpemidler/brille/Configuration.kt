@@ -30,6 +30,8 @@ object Configuration {
             "DB_HOST" to "localhost",
             "DB_PORT" to "5433",
             "pdfgen.rest-uri" to "http://host.docker.internal:8088",
+            "pdl.graphql-uri" to "http://host.docker.internal:8089/pdl",
+            "pdl.apiScope" to "api://dev-gcp.pdl.pdl-api/.default",
             "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "http://host.docker.internal:8080/default/token",
             "AZURE_APP_TENANT_ID" to "123",
             "AZURE_APP_CLIENT_ID" to "321",
@@ -45,6 +47,8 @@ object Configuration {
         mapOf(
             "application.profile" to "DEV",
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
+            "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
+            "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
         )
     )
 
@@ -52,6 +56,8 @@ object Configuration {
         mapOf(
             "application.profile" to "PROD",
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
+            "pdl.graphql-uri" to "https://pdl-api.prod-fss-pub.nais.io/graphql",
+            "pdl.apiScope" to "api://prod-fss.pdl.pdl-api/.default",
         )
     )
 
@@ -70,6 +76,7 @@ object Configuration {
     val dbProperties = DatabaseProperties()
     val kafkaProperties = KafkaProperties()
     val pdfProperties = PdfProperties()
+    val pdlProperties = PdlProperties()
     val tokenXProperties = TokenXProperties()
 
     data class AllowlistProperties(
@@ -103,6 +110,11 @@ object Configuration {
 
     data class PdfProperties(
         val pdfgenUri: String = config[Key("pdfgen.rest-uri", stringType)]
+    )
+
+    data class PdlProperties(
+        val graphqlUri: String = config[Key("pdl.graphql-uri", stringType)],
+        val apiScope: String = config[Key("pdl.apiScope", stringType)]
     )
 
     data class TokenXProperties(

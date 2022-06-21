@@ -14,6 +14,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.setupCallId
@@ -22,6 +23,7 @@ import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
+import no.nav.hjelpemidler.brille.pdl.client.PdlClient
 import no.nav.hjelpemidler.brille.wiremock.WiremockConfig
 import org.slf4j.event.Level
 import java.util.TimeZone
@@ -60,10 +62,13 @@ fun Application.configure() {
 
 // Wire up services and routes
 fun Application.setupRoutes() {
+    val azureAdClient = AzureAdClient()
     val httpClient = httpClient()
+    val pdlClient = PdlClient(azureAdClient, httpClient)
 
     val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
+
 
     installAuthentication(httpClient)
 
