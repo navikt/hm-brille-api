@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS vedtak (
 
 CREATE INDEX vedtak_fnr_bruker ON vedtak (fnr_bruker, opprettet DESC);
 CREATE INDEX vedtak_fnr_innsender ON vedtak (fnr_innsender, opprettet DESC);
+CREATE INDEX vedtak_orgnr ON vedtak (orgnr, opprettet DESC);
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO cloudsqliamuser;
