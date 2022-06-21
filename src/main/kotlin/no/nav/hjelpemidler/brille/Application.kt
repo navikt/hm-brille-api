@@ -15,6 +15,7 @@ import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientCon
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.setupCallId
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
+import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.wiremock.WiremockConfig
 import org.slf4j.event.Level
@@ -60,6 +61,7 @@ fun Application.setupRoutes() {
     routing {
         authenticate(TOKEN_X_AUTH) {
         }
+        selvtestRoutes()
     }
 
     setupMetrics()
