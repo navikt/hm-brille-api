@@ -12,11 +12,11 @@ import no.nav.hjelpemidler.brille.model.SoknadData
 import org.postgresql.util.PGobject
 import javax.sql.DataSource
 
-internal interface SøknadStore {
+internal interface SoknadStore {
     fun save(soknadData: SoknadData): Int
 }
 
-internal class SøknadStorePostgres(private val ds: DataSource) : SøknadStore {
+internal class SoknadStorePostgres(private val ds: DataSource) : SoknadStore {
     override fun save(soknadData: SoknadData): Int =
         using(sessionOf(ds)) { session ->
             session.transaction { transaction ->

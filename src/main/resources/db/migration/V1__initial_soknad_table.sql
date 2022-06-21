@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS soknad (
     fnr_bruker              varchar(11)     NOT NULL,
     fnr_innsender           varchar(11)     NOT NULL,
     data                    text            NOT NULL,
-    created                 timestamp       NOT NULL
+    opprettet               timestamp       NOT NULL DEFAULT (NOW())
 );
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO cloudsqliamuser;
