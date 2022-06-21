@@ -14,13 +14,13 @@ spec:
     min: {{ min-replicas }}
     max: {{ max-replicas }}
   liveness:
-    path: /hm/internal/isAlive
+    path: /internal/isAlive
     initialDelay: 50
     timeout: 1
     periodSeconds: 10
     failureThreshold: 3
   readiness:
-    path: /hm/internal/isReady
+    path: /internal/isReady
     initialDelay: 50
     timeout: 1
   resources:
@@ -57,7 +57,7 @@ spec:
       {{/each}}
   prometheus:
     enabled: true
-    path: /hm/internal/metrics
+    path: /internal/metrics
   kafka:
     pool: {{ kafka-cluster }}
   gcp:
