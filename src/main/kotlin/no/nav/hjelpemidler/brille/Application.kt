@@ -14,6 +14,8 @@ import io.ktor.server.routing.routing
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.setupCallId
+import no.nav.hjelpemidler.brille.db.DatabaseConfig
+import no.nav.hjelpemidler.brille.db.SøknadStorePostgres
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -56,6 +58,10 @@ fun Application.configure() {
 // Wire up services and routes
 fun Application.setupRoutes() {
     val httpClient = httpClient()
+
+    val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
+    val soknadStore = SøknadStorePostgres(dataSource)
+
     installAuthentication(httpClient)
 
     routing {
