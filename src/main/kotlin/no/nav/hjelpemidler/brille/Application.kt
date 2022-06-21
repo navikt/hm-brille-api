@@ -36,7 +36,6 @@ fun Application.configure() {
             disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         }
     }
-
     setupCallId()
     configureStatusPages()
 
