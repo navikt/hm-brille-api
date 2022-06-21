@@ -15,7 +15,7 @@ import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientCon
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.setupCallId
 import no.nav.hjelpemidler.brille.db.DatabaseConfig
-import no.nav.hjelpemidler.brille.db.SoknadStorePostgres
+import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -60,14 +60,15 @@ fun Application.setupRoutes() {
     val httpClient = httpClient()
 
     val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
-    val soknadStore = SoknadStorePostgres(dataSource)
+    val vedtakStore = VedtakStorePostgres(dataSource)
 
     installAuthentication(httpClient)
 
     routing {
+        selvtestRoutes()
+
         authenticate(TOKEN_X_AUTH) {
         }
-        selvtestRoutes()
     }
 
     setupMetrics()
