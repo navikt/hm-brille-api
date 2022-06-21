@@ -9,5 +9,5 @@ data class SoknadData (
     val fnrBruker: String,
     val fnrInnsender: String,
     val data: JsonNode,
-    val created: LocalDateTime,
+    val opprettet: LocalDateTime,
 )
