@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-import io.ktor.client.request.forms.formData
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -15,7 +14,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import kotliquery.param
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.setupCallId
@@ -75,7 +73,7 @@ fun Application.setupRoutes() {
         get("/sjekk-kan-søke/{fnrBruker}") {
             val fnrBruker = call.parameters["fnrBruker"] ?: error("Mangler fnr som skal sjekkes")
             if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-            data class Response ( val kanSøke: Boolean )
+            data class Response(val kanSøke: Boolean)
             call.respond(Response(!vedtakStore.harFåttBrilleSisteÅret(fnrBruker)))
         }
 

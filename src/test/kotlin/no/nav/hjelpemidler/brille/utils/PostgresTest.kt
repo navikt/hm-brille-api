@@ -4,9 +4,9 @@ import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateResult
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
-import kotlin.test.assertEquals
 
 internal val postgresContainer: PostgreSQLContainer<Nothing> by lazy {
     PostgreSQLContainer<Nothing>("postgres:13.1").apply {
@@ -45,9 +45,10 @@ internal fun withMigratedDb(test: () -> Unit) = migratedDb().run { test() }
 internal class PostgresTest {
     @Test
     fun `Migration scripts are applied successfully`() {
-        withCleanDb {
-            val migrations = migrate(dataSource).migrationsExecuted
-            assertEquals(1, migrations)
+        assertDoesNotThrow {
+            withCleanDb {
+                migrate(dataSource)
+            }
         }
     }
 }
