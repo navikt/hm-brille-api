@@ -29,7 +29,7 @@ internal class SøknadStorePostgres(private val ds: DataSource) : SøknadStore {
                         soknadData.fnrInnsender,
                         PGobject().apply {
                             type = "jsonb"
-                            value = soknadToJsonString(soknadData.json)
+                            value = soknadToJsonString(soknadData.data)
                         },
                     ).asUpdate
                 )

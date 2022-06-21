@@ -8,6 +8,6 @@ data class SoknadData (
     val soknadsId: UUID,
     val fnrBruker: String,
     val fnrInnsender: String,
-    val json: JsonNode,
+    val data: JsonNode,
     val created: LocalDateTime,
 )
