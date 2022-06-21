@@ -1,0 +1,18 @@
+{
+  "appnavn": "hm-brille-api",
+  "inbound-applications": [
+    "hm-brille-frontend"
+  ],
+  "port": 9090,
+  "db_tier": "db-f1-micro",
+  "db_size": 10,
+  "db_instance_name": "hm-brille-api-db-dev",
+  "db_name": "brilleapidb",
+  "external-hosts": [
+  ],
+  "outbound-applications": [
+  ],
+  "kafka-cluster": "nav-dev",
+  "min-replicas": 1,
+  "max-replicas": 1
+}

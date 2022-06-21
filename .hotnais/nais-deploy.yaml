@@ -1,0 +1,79 @@
+---
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: {{ appnavn }}
+  namespace: teamdigihot
+  labels:
+    team: teamdigihot
+spec:
+  image: {{ image }}
+  team: teamdigihot
+  port: {{ port }}
+  replicas:
+    min: {{ min-replicas }}
+    max: {{ max-replicas }}
+  liveness:
+    path: /hm/internal/isAlive
+    initialDelay: 50
+    timeout: 1
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /hm/internal/isReady
+    initialDelay: 50
+    timeout: 1
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 3000Mi
+    requests:
+      cpu: 45m
+      memory: 1256Mi
+  env:
+  {{#each env}}
+     - name: {{@key }}
+       value: "{{this}}"
+  {{/each}}
+  tokenx:
+    enabled: true
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    inbound:
+      rules:
+      {{#each inbound-applications}}
+        - application: {{ this }}
+      {{/each}}
+    outbound:
+      rules:
+      {{#each outbound-applications}}
+         - application: {{ this }}
+      {{/each}}
+      external:
+      {{#each external-hosts}}
+        - host: {{ this }}
+      {{/each}}
+  prometheus:
+    enabled: true
+    path: /hm/internal/metrics
+  kafka:
+    pool: {{ kafka-cluster }}
+  gcp:
+    sqlInstances:
+      - name: {{ db_instance_name }}
+        type: POSTGRES_13
+        tier: {{ db_tier }}
+        diskType: SSD
+        highAvailability: true
+        diskSize: {{ db_size }}
+        diskAutoresize: true
+        autoBackupTime: "03:00"
+        databases:
+          - name: {{ db_name }}
+            envVarPrefix: DB
+        cascadingDelete: false
+
+  secureLogs:
+    enabled: true

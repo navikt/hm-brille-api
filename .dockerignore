@@ -1,0 +1,6 @@
+src/*
+target/*
+!target/hm-brille-api-0.0.1-SNAPSHOT.jar
+pom.xml
+.git
+.gitignore

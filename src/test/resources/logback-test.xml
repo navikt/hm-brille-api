@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <appender name="stdout_json" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <mdc/>
+                <timestamp/>
+                <message/>
+                <loggerName/>
+                <threadName/>
+                <logLevel/>
+                <callerData/>
+                <arguments/>
+                <stackTrace>
+                    <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                        <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                        <shortenedClassNameLength>20</shortenedClassNameLength>
+                        <rootCauseFirst>true</rootCauseFirst>
+                    </throwableConverter>
+                </stackTrace>
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="WARN">
+        <appender-ref ref="stdout_json"/>
+    </root>
+    <logger name="no.nav" level="info"/>
+
+    <logger name="reactor.netty.http.client" level="DEBUG"/>
+    <logger name="no.nav" level="DEBUG"/>
+    <root level="info">
+        <appender-ref ref="localConsole"/>
+    </root>
+
+    <logger name="tjenestekall" level="DEBUG" additivity="false">
+        <appender-ref ref="localConsole"/>
+    </logger>
+
+    <!-- Turning down the wiremock logging -->
+    <logger name="com.github.tomakehurst.wiremock" level="WARN"/>
+    <logger name="wiremock.org" level="WARN"/>
+    <logger name="WireMock" level="WARN"/>
+    <!-- wiremock has per endpoint servlet logging -->
+    <logger name="/" level="WARN"/>
+
+</configuration>
