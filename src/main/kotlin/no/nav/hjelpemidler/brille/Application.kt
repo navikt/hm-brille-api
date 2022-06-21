@@ -76,7 +76,7 @@ fun Application.setupRoutes() {
             val fnrBruker = call.parameters["fnrBruker"] ?: error("Mangler fnr som skal sjekkes")
             if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
             data class Response ( val kanSøke: Boolean )
-            call.respond(Response(vedtakStore.harFåttBrilleSisteÅret(fnrBruker)))
+            call.respond(Response(!vedtakStore.harFåttBrilleSisteÅret(fnrBruker)))
         }
 
         authenticate(TOKEN_X_AUTH) {
