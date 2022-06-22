@@ -116,16 +116,17 @@ fun Application.setupRoutes() {
             }
         }
 
-        get("/erOptiker/{fnr}") {
-            data class Response(val erLege: Boolean)
-            // val fnrOptiker = call.extractFnr()
-            val fnrOptiker = call.parameters["fnr"] ?: error("Må ha fnr")
+        get("/erOptiker") {
+            data class Response(val erOptiker: Boolean)
 
+            val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
             val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
-            LOG.info("DEBUG: DEBUG: raw behandler: $behandler")
 
-            val erLege = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == "LE" }.isNotEmpty()
-            call.respond(Response(erLege))
+            // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
+            // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
+            val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
+            val erOptiker = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == helsepersonellkategoriVerdi }.isNotEmpty()
+            call.respond(Response(erOptiker))
         }
     }
 
