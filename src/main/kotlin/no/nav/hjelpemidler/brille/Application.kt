@@ -88,16 +88,16 @@ fun Application.setupRoutes() {
             // Slå opp personinformasjon om barnet
             val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
             val fultNavn = "${personInformasjon.fornavn} ${personInformasjon.etternavn}"
-            val adresse = "${personInformasjon.adresse}, ${personInformasjon.postnummer} ${personInformasjon.poststed}"
+            // val adresse = "${personInformasjon.adresse}, ${personInformasjon.postnummer} ${personInformasjon.poststed}"
             val forGammel = personInformasjon.alder!! > 18
 
             data class Response(
                 val navn: String,
-                val adresse: String,
+                val alder: Int,
                 val kanSøke: Boolean,
             )
 
-            call.respond(Response(fultNavn, adresse, !harVedtak && !forGammel))
+            call.respond(Response(fultNavn, personInformasjon.alder, !harVedtak && !forGammel))
         }
 
         authenticate(TOKEN_X_AUTH) {
