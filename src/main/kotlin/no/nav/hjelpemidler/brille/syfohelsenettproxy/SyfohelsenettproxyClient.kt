@@ -9,8 +9,13 @@ import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 
-class SyfohelsenettproxyClient(private val baseUrl: String) {
+class SyfohelsenettproxyClient(
+    private val baseUrl: String,
+    private val scope: String,
+    private val azureAdClient: AzureAdClient,
+) {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
             jackson {
@@ -20,9 +25,10 @@ class SyfohelsenettproxyClient(private val baseUrl: String) {
     }
 
     suspend fun hentBehandler(fnr: String): Behandler = runCatching {
-        val url = "$baseUrl/behandler"
+        val url = "$baseUrl/api/v2/behandler"
         log.info { "Henter behandler data med url: $url" }
         val response = client.get(url) {
+            headers["Authorization"] = "Bearer ${azureAdClient.getToken(scope).accessToken}"
             headers["behandlerFnr"] = fnr
         }
         if (response.status == HttpStatusCode.OK) {
@@ -32,9 +38,10 @@ class SyfohelsenettproxyClient(private val baseUrl: String) {
     }.getOrElse { throw SyfohelsenettproxyClientException("Feil under henting av behandler data", it) }
 
     suspend fun hentBehandlerMedHprNummer(hprnr: String): Behandler = runCatching {
-        val url = "$baseUrl/behandlerMedHprNummer"
+        val url = "$baseUrl/api/v2/behandlerMedHprNummer"
         log.info { "Henter behandler data med url: $url" }
         val response = client.get(url) {
+            headers["Authorization"] = "Bearer ${azureAdClient.getToken(scope).accessToken}"
             headers["hprNummer"] = hprnr
         }
         if (response.status == HttpStatusCode.OK) {

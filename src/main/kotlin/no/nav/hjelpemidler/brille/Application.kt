@@ -78,7 +78,7 @@ fun Application.setupRoutes() {
     val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
-    val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties.baseUrl)
+    val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties.baseUrl, Configuration.syfohelsenettproxyProperties.scope, azureAdClient)
 
     installAuthentication(httpClient)
 
@@ -117,13 +117,15 @@ fun Application.setupRoutes() {
         }
 
         get("/erOptiker/{fnr}") {
+            data class Response(val erLege: Boolean)
             // val fnrOptiker = call.extractFnr()
             val fnrOptiker = call.parameters["fnr"] ?: error("Må ha fnr")
 
             val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
             LOG.info("DEBUG: DEBUG: raw behandler: $behandler")
 
-            // behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori?.verdi ?: "") == "LE" }
+            val erLege = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == "LE" }.isNotEmpty()
+            call.respond(Response(erLege))
         }
     }
 

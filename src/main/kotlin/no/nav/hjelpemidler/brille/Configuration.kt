@@ -31,8 +31,9 @@ object Configuration {
             "DB_PORT" to "5433",
             "pdfgen.rest-uri" to "http://host.docker.internal:8088",
             "pdl.graphql-uri" to "http://host.docker.internal:8089/pdl",
-            "syfohelsenettproxy.rest-uri" to "http://host.docker.internal:8089/syfohelsenettproxy",
             "pdl.apiScope" to "api://dev-gcp.pdl.pdl-api/.default",
+            "syfohelsenettproxy.rest-uri" to "http://host.docker.internal:8089/syfohelsenettproxy",
+            "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "http://host.docker.internal:8080/default/token",
             "AZURE_APP_TENANT_ID" to "123",
             "AZURE_APP_CLIENT_ID" to "321",
@@ -51,6 +52,7 @@ object Configuration {
             "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
             "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.dev-fss-pub.nais.io",
+            "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
         )
     )
 
@@ -61,6 +63,7 @@ object Configuration {
             "pdl.graphql-uri" to "https://pdl-api.prod-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://prod-fss.pdl.pdl-api/.default",
             "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.prod-fss-pub.nais.io",
+            "syfohelsenettproxy.scope" to "api://prod-fss.teamsykmelding.syfohelsenettproxy/.default",
         )
     )
 
@@ -138,6 +141,7 @@ object Configuration {
 
     data class SyfohelsenettproxyProperties(
         val baseUrl: String = this["syfohelsenettproxy.rest-uri"],
+        val scope: String = this["syfohelsenettproxy.scope"],
     )
 }
 
