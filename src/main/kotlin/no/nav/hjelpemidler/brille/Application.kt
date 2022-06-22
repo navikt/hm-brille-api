@@ -119,8 +119,10 @@ fun Application.setupRoutes() {
         get("/erOptiker/{fnr}") {
             // val fnrOptiker = call.extractFnr()
             val fnrOptiker = call.parameters["fnr"] ?: error("Må ha fnr")
+
             val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
             LOG.info("DEBUG: DEBUG: raw behandler: $behandler")
+
             // behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori?.verdi ?: "") == "LE" }
         }
     }

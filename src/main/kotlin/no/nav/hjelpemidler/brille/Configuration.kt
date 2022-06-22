@@ -31,6 +31,7 @@ object Configuration {
             "DB_PORT" to "5433",
             "pdfgen.rest-uri" to "http://host.docker.internal:8088",
             "pdl.graphql-uri" to "http://host.docker.internal:8089/pdl",
+            "syfohelsenettproxy.rest-uri" to "http://host.docker.internal:8089/syfohelsenettproxy",
             "pdl.apiScope" to "api://dev-gcp.pdl.pdl-api/.default",
             "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "http://host.docker.internal:8080/default/token",
             "AZURE_APP_TENANT_ID" to "123",
