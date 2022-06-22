@@ -18,14 +18,6 @@ class PersonNotAccessibleInPdl(message: String = "") : RuntimeException(message)
 
 class PdlRequestFailedException(message: String = "") : RuntimeException("Request to PDL Failed $message")
 
-// class KvitteringRequestFailedException(message: String = "") : RuntimeException(message)
-// class BestillingsordningSjekkFailedException(message: String = "") : RuntimeException(message)
-// class BestillingsordningSjekkMismatchException(message: String = "") : RuntimeException(message)
-// class DigiHotException(message: String) : RuntimeException(message)
-// class TilgangsKontrollException(message: String) : RuntimeException(message)
-// class DKIFRequestFailedException(message: String = "") :
-//     RuntimeException("Request to get Kontakinformasjon from DKIF Failed $message")
-
 fun Application.configureStatusPages() {
     install(StatusPages) {
         // PDL exceptions
