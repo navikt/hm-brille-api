@@ -10,9 +10,11 @@ import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientConfig.httpClient
@@ -75,8 +77,9 @@ fun Application.setupRoutes() {
     routing {
         selvtestRoutes()
 
-        get("/sjekk-kan-søke/{fnrBruker}") {
-            val fnrBruker = call.parameters["fnrBruker"] ?: error("Mangler fnr som skal sjekkes")
+        post("/sjekk-kan-søke") {
+            data class Request(val fnr: String)
+            val fnrBruker = call.receive<Request>().fnr
             if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
             // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
