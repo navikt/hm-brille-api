@@ -114,23 +114,6 @@ fun Application.setupRoutes() {
                 )
             }
 
-            get("/orgnr") {
-                data class Response(
-                    val sistBrukteOrgnr: String,
-                    val tidligereBrukteOrgnr: List<String>,
-                )
-
-                val fnrOptikker = call.extractFnr()
-                val sistBrukte = vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptikker)
-
-                call.respond(
-                    Response(
-                        sistBrukte.first,
-                        sistBrukte.second,
-                    )
-                )
-            }
-
             get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
                 val organisasjonsnummer =
                     call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
@@ -138,6 +121,11 @@ fun Application.setupRoutes() {
                     enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
                 call.respond(organisasjonsenhet)
             }
+        }
+
+        get("/orgnr") {
+            val fnrOptikker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+            call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptikker))
         }
 
         get("/erOptiker") {
