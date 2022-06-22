@@ -4,4 +4,5 @@ enum class AvvisningsType {
     ANNET,
     ALDER,
     HAR_VEDTAK_I_ÅR,
+    INNSENDER_ER_IKKE_OPTIKER,
 }

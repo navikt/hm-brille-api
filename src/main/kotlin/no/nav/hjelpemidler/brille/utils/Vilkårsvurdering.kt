@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.hjelpemidler.brille.db.VedtakStore
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.model.PersonDetaljerDto
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
 
 private val objectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
@@ -14,27 +15,34 @@ private val objectMapper = jacksonObjectMapper()
     .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
 class Vilkårsvurdering(val vedtakStore: VedtakStore) {
-    fun kanSøke(personInformasjon: PersonDetaljerDto): Vilkår {
+    fun kanSøke(personInformasjon: PersonDetaljerDto, behandler: Behandler, helsepersonellkategoriVerdi: String): Vilkår {
         // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
         val harVedtak = vedtakStore.harFåttBrilleSisteÅret(personInformasjon.fnr)
 
-        // Slå opp personinformasjon om barnet
+        // Sjekk om man er for gammel for barnebriller
         val forGammel =
             personInformasjon.alder!! > 17 /* Arbeidshypotese fra forskrift: krav må komme før fylte 18 år */
 
-        return Vilkår(forGammel, harVedtak)
+        // Sjekk om innsender faktisk er optiker
+        val erOptiker = behandler.godkjenninger
+            .filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == helsepersonellkategoriVerdi }
+            .isNotEmpty()
+
+        return Vilkår(forGammel, harVedtak, erOptiker)
     }
 }
 
 data class Vilkår(
     val forGammel: Boolean,
     val harVedtak: Boolean,
+    val erOptiker: Boolean,
 ) {
     fun avvisningsGrunner(): List<AvvisningsType> {
         val avvisningsTyper = mutableListOf<AvvisningsType>()
 
         if (forGammel) avvisningsTyper.add(AvvisningsType.ALDER)
         if (harVedtak) avvisningsTyper.add(AvvisningsType.HAR_VEDTAK_I_ÅR)
+        if (!erOptiker) avvisningsTyper.add(AvvisningsType.INNSENDER_ER_IKKE_OPTIKER)
 
         return avvisningsTyper
     }

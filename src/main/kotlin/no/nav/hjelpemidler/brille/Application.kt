@@ -102,7 +102,14 @@ fun Application.setupRoutes() {
                 if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
                 val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
-                val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+
+                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+                val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+                // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
+                // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
+                val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
+
+                val vilkår = vilkårsvurdering.kanSøke(personInformasjon, behandler, helsepersonellkategoriVerdi)
 
                 call.respond(
                     Response(
