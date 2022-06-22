@@ -80,36 +80,35 @@ fun Application.setupRoutes() {
     routing {
         selvtestRoutes()
 
-        post("/sjekk-kan-søke") {
-            data class Request(val fnr: String)
-            val fnrBruker = call.receive<Request>().fnr
-            if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-
-            // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
-            val harVedtak = vedtakStore.harFåttBrilleSisteÅret(fnrBruker)
-
-            // Slå opp personinformasjon om barnet
-            val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
-            val forGammel = personInformasjon.alder!! > 18
-
-            data class Response(
-                val navn: String,
-                val alder: Int,
-                val kanSøke: Boolean,
-            )
-
-            call.respond(Response("${personInformasjon.fornavn} ${personInformasjon.etternavn}", personInformasjon.alder, !harVedtak && !forGammel))
-        }
-
-        get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
-            val organisasjonsnummer =
-                call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
-            val organisasjonsenhet =
-                enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
-            call.respond(organisasjonsenhet)
-        }
-
         authenticate(TOKEN_X_AUTH) {
+            post("/sjekk-kan-søke") {
+                data class Request(val fnr: String)
+                val fnrBruker = call.receive<Request>().fnr
+                if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+
+                // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
+                val harVedtak = vedtakStore.harFåttBrilleSisteÅret(fnrBruker)
+
+                // Slå opp personinformasjon om barnet
+                val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
+                val forGammel = personInformasjon.alder!! > 18
+
+                data class Response(
+                    val navn: String,
+                    val alder: Int,
+                    val kanSøke: Boolean,
+                )
+
+                call.respond(Response("${personInformasjon.fornavn} ${personInformasjon.etternavn}", personInformasjon.alder, !harVedtak && !forGammel))
+            }
+
+            get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
+                val organisasjonsnummer =
+                    call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
+                val organisasjonsenhet =
+                    enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+                call.respond(organisasjonsenhet)
+            }
         }
     }
 
