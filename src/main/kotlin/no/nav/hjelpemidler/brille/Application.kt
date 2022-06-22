@@ -91,7 +91,7 @@ fun Application.setupRoutes() {
 
                 // Slå opp personinformasjon om barnet
                 val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
-                val forGammel = personInformasjon.alder!! > 18
+                val forGammel = personInformasjon.alder!! > 17 /* Arbeidshypotese fra forskrift: krav må komme før fylte 18 år */
 
                 data class Response(
                     val navn: String,
