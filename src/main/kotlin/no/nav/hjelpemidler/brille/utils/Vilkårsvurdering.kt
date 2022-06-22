@@ -1,11 +1,20 @@
 package no.nav.hjelpemidler.brille.utils
 
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.hjelpemidler.brille.db.VedtakStore
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.model.PersonDetaljerDto
 
+private val objectMapper = jacksonObjectMapper()
+    .registerModule(JavaTimeModule())
+    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+
 class Vilkårsvurdering(val vedtakStore: VedtakStore) {
-    suspend fun kanSøke(personInformasjon: PersonDetaljerDto): Vilkår {
+    fun kanSøke(personInformasjon: PersonDetaljerDto): Vilkår {
         // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
         val harVedtak = vedtakStore.harFåttBrilleSisteÅret(personInformasjon.fnr)
 
@@ -33,4 +42,6 @@ data class Vilkår(
     fun valider(): Boolean {
         return avvisningsGrunner().isEmpty()
     }
+
+    fun json(): String = objectMapper.writeValueAsString(this)
 }

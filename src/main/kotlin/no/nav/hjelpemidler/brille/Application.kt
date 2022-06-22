@@ -109,6 +109,24 @@ fun Application.setupRoutes() {
                 )
             }
 
+            authenticate(TOKEN_X_AUTH) {
+                get("/orgnr") {
+                    data class Response(
+                        val sistBrukteOrgnr: String,
+                        val tidligereBrukteOrgnr: List<String>,
+                    )
+
+                    val fnrOptikker = call.extractFnr()
+                    val sistBrukte = vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptikker)
+
+                    call.respond(
+                        Response(
+                            sistBrukte.first,
+                            sistBrukte.second,
+                        )
+                    )
+                }
+
             get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
                 val organisasjonsnummer =
                     call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
