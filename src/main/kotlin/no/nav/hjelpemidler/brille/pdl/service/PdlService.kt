@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.pdl.service
 
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.exceptions.PersonNotFoundInPdl
 import no.nav.hjelpemidler.brille.pdl.client.PdlClient
 import no.nav.hjelpemidler.brille.pdl.model.PersonDto
 import no.nav.hjelpemidler.brille.pdl.model.toFormidlerDto
@@ -10,13 +11,12 @@ private val LOG = KotlinLogging.logger {}
 class PdlService(
     private val pdlClient: PdlClient,
 ) {
-
     suspend fun hentAktorId(fnummer: String): String {
         try {
             val pdlResponse = pdlClient.hentIdentInfo(fnummer)
             if (pdlResponse.data?.hentIdenter?.identer?.get(0)?.ident == null) {
                 LOG.warn("Fant ikke person i PDL")
-                throw RuntimeException("Fant ikke person i PDL")
+                throw PersonNotFoundInPdl("Fant ikke person i PDL")
             }
 
             return pdlResponse.data.hentIdenter.identer[0].ident

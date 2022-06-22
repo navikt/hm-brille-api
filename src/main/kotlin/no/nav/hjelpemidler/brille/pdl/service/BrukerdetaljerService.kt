@@ -1,31 +1,16 @@
 package no.nav.hjelpemidler.brille.pdl.service
 
-import jdk.internal.platform.Container.metrics
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.metrics.HjelpemiddelSoknadProbe
-import no.nav.hjelpemidler.brille.pdl.client.PdlClient
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.allowlists.AllowlistService
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.enhetsregisteret.service.EnhetsregisteretService
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.exceptions.PersonNotAccessibleInPdl
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.metrics.HjelpemiddelSoknadProbe
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.pdl.client.PdlClient
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.pdl.model.Error
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.pdl.model.PdlPersonResponse
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.pdl.model.PersonDetaljerResponse
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.pdl.model.kommunenummer
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.pdl.model.toPersonDto
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.pdl.service.validerPdlOppslag
-import no.nav.hjelpemidler.hjelpemidlerdigitalSoknadapi.postnummer.PostnummerService
 
 private val LOG = KotlinLogging.logger {}
 private val isDev = System.getenv("NAIS_CLUSTER_NAME") == "dev-gcp"
 
-class BrukerdetaljerService(
+/* class BrukerdetaljerService(
     private val pdlClient: PdlClient,
-    private val enhetsregisteretService: EnhetsregisteretService,
-    private val allowlistService: AllowlistService,
     private val hjelpemiddelSoknadProbe: HjelpemiddelSoknadProbe,
-    private val postnummerService: PostnummerService
+    // private val postnummerService: PostnummerService
+    // private val enhetsregisteretService: EnhetsregisteretService,
+    // private val allowlistService: AllowlistService,
 ) {
 
     suspend fun hentBrukerDetaljer(fnrBruker: String, fnrFormidler: String): PersonDetaljerResponse {
@@ -67,4 +52,4 @@ class BrukerdetaljerService(
 
         return geografiskTilknytningMatcher
     }
-}
+} */

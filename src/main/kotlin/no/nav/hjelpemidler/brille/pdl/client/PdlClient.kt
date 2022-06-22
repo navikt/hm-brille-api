@@ -9,11 +9,10 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.contentType
-import jdk.internal.net.http.common.Log.headers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.pdl.model.PdlIdentResponse
 import no.nav.hjelpemidler.brille.pdl.model.PdlPersonResponse
 import no.nav.hjelpemidler.brille.pdl.model.PersonGraphqlQuery
