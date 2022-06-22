@@ -78,8 +78,23 @@ fun Application.setupRoutes() {
         get("/sjekk-kan-søke/{fnrBruker}") {
             val fnrBruker = call.parameters["fnrBruker"] ?: error("Mangler fnr som skal sjekkes")
             if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-            data class Response(val kanSøke: Boolean)
-            call.respond(Response(!vedtakStore.harFåttBrilleSisteÅret(fnrBruker)))
+
+            // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
+            val harVedtak = vedtakStore.harFåttBrilleSisteÅret(fnrBruker)
+
+            // Slå opp personinformasjon om barnet
+            val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
+            val fultNavn = "${personInformasjon.fornavn} ${personInformasjon.etternavn}"
+            val adresse = "${personInformasjon.adresse}, ${personInformasjon.postnummer} ${personInformasjon.poststed}"
+            val forGammel = personInformasjon.alder!! > 18
+
+            data class Response(
+                val navn: String,
+                val adresse: String,
+                val kanSøke: Boolean,
+            )
+
+            call.respond(Response(fultNavn, adresse, !harVedtak && !forGammel))
         }
 
         authenticate(TOKEN_X_AUTH) {
