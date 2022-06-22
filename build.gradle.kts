@@ -7,7 +7,7 @@ version = "1.0-SNAPSHOT"
 
 plugins {
     application
-    kotlin("jvm") version "1.6.20"
+    kotlin("jvm") version "1.7.0"
     id("com.diffplug.spotless") version "6.4.2"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
@@ -26,13 +26,8 @@ repositories {
     maven("https://jitpack.io") // Used for hm-docs
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib"))
     implementation("com.github.navikt:hm-docs:21.350.104114")
 
     // Database
@@ -45,7 +40,7 @@ dependencies {
     implementation("org.apache.kafka:kafka-clients:3.1.0")
 
     // Ktor Shared
-    val ktorVersion = "2.0.1"
+    val ktorVersion = "2.0.2"
     fun ktor(name: String) = "io.ktor:ktor-$name:$ktorVersion"
     implementation(ktor("serialization-jackson"))
 
@@ -62,7 +57,7 @@ dependencies {
     // Ktor Client
     fun ktorClient(name: String) = "io.ktor:ktor-client-$name:$ktorVersion"
     implementation(ktorClient("core"))
-    implementation(ktorClient("apache"))
+    implementation(ktorClient("cio"))
     implementation(ktorClient("content-negotiation"))
     implementation(ktorClient("jackson"))
 
