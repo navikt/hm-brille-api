@@ -18,6 +18,7 @@ object Configuration {
             "altinn.serviceEditionCode" to "1",
             "digihot-oppslag.oppslagUrl" to "http://digihot-oppslag/api",
             "userclaim" to "pid",
+            "enhetsregisteret_base_url" to "https://data.brreg.no/enhetsregisteret/api"
         )
     )
 
@@ -78,38 +79,42 @@ object Configuration {
     val pdfProperties = PdfProperties()
     val pdlProperties = PdlProperties()
     val tokenXProperties = TokenXProperties()
+    val enhetsregisteretProperties = EnhetsregisteretProperties()
+
+    operator fun get(key: String): String = config[Key(key, stringType)]
+    fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
 
     data class AllowlistProperties(
-        val restUri: String = config[Key("allowlist-api.rest-uri", stringType)]
+        val restUri: String = this["allowlist-api.rest-uri"],
     )
 
     data class AzureAdProperties(
-        val openidConfigTokenEndpoint: String = config[Key("AZURE_OPENID_CONFIG_TOKEN_ENDPOINT", stringType)],
-        val tenantId: String = config[Key("AZURE_APP_TENANT_ID", stringType)],
-        val clientId: String = config[Key("AZURE_APP_CLIENT_ID", stringType)],
-        val clientSecret: String = config[Key("AZURE_APP_CLIENT_SECRET", stringType)]
+        val openidConfigTokenEndpoint: String = this["AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"],
+        val tenantId: String = this["AZURE_APP_TENANT_ID"],
+        val clientId: String = this["AZURE_APP_CLIENT_ID"],
+        val clientSecret: String = this["AZURE_APP_CLIENT_SECRET"],
     )
 
     data class DatabaseProperties(
-        val databaseNavn: String = config[Key("DB_DATABASE", stringType)],
-        val databaseUser: String = config[Key("DB_USERNAME", stringType)],
-        val databasePassword: String = config[Key("DB_PASSWORD", stringType)],
-        val databaseHost: String = config[Key("DB_HOST", stringType)],
-        val databasePort: String = config[Key("DB_PORT", stringType)]
+        val databaseNavn: String = this["DB_DATABASE"],
+        val databaseUser: String = this["DB_USERNAME"],
+        val databasePassword: String = this["DB_PASSWORD"],
+        val databaseHost: String = this["DB_HOST"],
+        val databasePort: String = this["DB_PORT"],
     )
 
     data class KafkaProperties(
-        val clientId: String = config[Key("kafka.client-id", stringType)],
-        val topic: String = config[Key("kafka.topic", stringType)],
-        val bootstrapServers: String = config[Key("KAFKA_BROKERS", stringType)],
-        val truststorePath: String? = config.getOrNull(Key("KAFKA_TRUSTSTORE_PATH", stringType)),
-        val truststorePassword: String? = config.getOrNull(Key("KAFKA_CREDSTORE_PASSWORD", stringType)),
-        val keystorePath: String? = config.getOrNull(Key("KAFKA_KEYSTORE_PATH", stringType)),
-        val keystorePassword: String? = config.getOrNull(Key("KAFKA_CREDSTORE_PASSWORD", stringType))
+        val clientId: String = this["kafka.client-id"],
+        val topic: String = this["kafka.topic"],
+        val bootstrapServers: String = this["KAFKA_BROKERS"],
+        val truststorePath: String? = getOrNull("KAFKA_TRUSTSTORE_PATH"),
+        val truststorePassword: String? = getOrNull("KAFKA_CREDSTORE_PASSWORD"),
+        val keystorePath: String? = getOrNull("KAFKA_KEYSTORE_PATH"),
+        val keystorePassword: String? = getOrNull("KAFKA_CREDSTORE_PASSWORD"),
     )
 
     data class PdfProperties(
-        val pdfgenUri: String = config[Key("pdfgen.rest-uri", stringType)]
+        val pdfgenUri: String = this["pdfgen.rest-uri"],
     )
 
     data class PdlProperties(
@@ -118,9 +123,13 @@ object Configuration {
     )
 
     data class TokenXProperties(
-        val clientId: String = config[Key("TOKEN_X_CLIENT_ID", stringType)],
-        val wellKnownUrl: String = config[Key("TOKEN_X_WELL_KNOWN_URL", stringType)],
-        val userclaim: String = config[Key("userclaim", stringType)],
+        val clientId: String = this["TOKEN_X_CLIENT_ID"],
+        val wellKnownUrl: String = this["TOKEN_X_WELL_KNOWN_URL"],
+        val userclaim: String = this["userclaim"],
+    )
+
+    data class EnhetsregisteretProperties(
+        val baseUrl: String = this["enhetsregisteret_base_url"],
     )
 }
 

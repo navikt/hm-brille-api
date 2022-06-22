@@ -22,6 +22,8 @@ import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATI
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.setupCallId
 import no.nav.hjelpemidler.brille.db.DatabaseConfig
 import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
+import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -71,6 +73,7 @@ fun Application.setupRoutes() {
 
     val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
+    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
 
     installAuthentication(httpClient)
 
@@ -96,6 +99,14 @@ fun Application.setupRoutes() {
             )
 
             call.respond(Response("${personInformasjon.fornavn} ${personInformasjon.etternavn}", personInformasjon.alder, !harVedtak && !forGammel))
+        }
+
+        get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
+            val organisasjonsnummer =
+                call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
+            val organisasjonsenhet =
+                enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+            call.respond(organisasjonsenhet)
         }
 
         authenticate(TOKEN_X_AUTH) {
