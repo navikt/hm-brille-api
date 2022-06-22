@@ -211,15 +211,6 @@ fun PdlPersonResponse.toPersonDto(fnr: String, hentPoststed: (String) -> String?
     )
 }
 
-fun PdlPersonResponse.toFormidlerDto(): PersonDto {
-    val person = this.data ?: throw RuntimeException("PDL response mangler data")
-    val (fornavn, etternavn) = person.navn()
-    return PersonDto(
-        fornavn = fornavn.capitalizeWord(),
-        etternavn = etternavn.capitalizeWord()
-    )
-}
-
 fun Adressebeskyttelse.isKode6(): Boolean {
     return this.gradering == Gradering.STRENGT_FORTROLIG || this.gradering == Gradering.STRENGT_FORTROLIG_UTLAND
 }
