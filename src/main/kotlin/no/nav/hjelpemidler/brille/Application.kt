@@ -16,6 +16,7 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATION_ID
@@ -29,9 +30,12 @@ import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.pdl.client.PdlClient
 import no.nav.hjelpemidler.brille.pdl.service.PdlService
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.wiremock.WiremockConfig
 import org.slf4j.event.Level
 import java.util.TimeZone
+
+private val LOG = KotlinLogging.logger {}
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -74,6 +78,7 @@ fun Application.setupRoutes() {
     val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
+    val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties.baseUrl)
 
     installAuthentication(httpClient)
 
@@ -109,6 +114,14 @@ fun Application.setupRoutes() {
                     enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
                 call.respond(organisasjonsenhet)
             }
+        }
+
+        get("/erOptiker/{fnr}") {
+            // val fnrOptiker = call.extractFnr()
+            val fnrOptiker = call.parameters["fnr"] ?: error("Må ha fnr")
+            val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+            LOG.info("DEBUG: DEBUG: raw behandler: $behandler")
+            // behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori?.verdi ?: "") == "LE" }
         }
     }
 

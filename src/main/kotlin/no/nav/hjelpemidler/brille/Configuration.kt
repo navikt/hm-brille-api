@@ -49,6 +49,7 @@ object Configuration {
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
+            "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.dev-fss-pub.nais.io",
         )
     )
 
@@ -58,6 +59,7 @@ object Configuration {
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.prod-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://prod-fss.pdl.pdl-api/.default",
+            "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.prod-fss-pub.nais.io",
         )
     )
 
@@ -80,6 +82,7 @@ object Configuration {
     val pdlProperties = PdlProperties()
     val tokenXProperties = TokenXProperties()
     val enhetsregisteretProperties = EnhetsregisteretProperties()
+    val syfohelsenettproxyProperties = SyfohelsenettproxyProperties()
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
@@ -130,6 +133,10 @@ object Configuration {
 
     data class EnhetsregisteretProperties(
         val baseUrl: String = this["enhetsregisteret_base_url"],
+    )
+
+    data class SyfohelsenettproxyProperties(
+        val baseUrl: String = this["syfohelsenettproxy.rest-uri"],
     )
 }
 
