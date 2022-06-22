@@ -8,7 +8,6 @@ import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 
 object Configuration {
-
     private val defaultProperties = ConfigurationMap(
         mapOf(
             "unleash.unleash-uri" to "https://unleash.nais.io/api/",
@@ -68,10 +67,11 @@ object Configuration {
             "prod-gcp" -> prodProperties
             else -> localProperties
         }
+
     val config =
         systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
 
-    val profile: Profile = config[Key("application.profile", stringType)].let { Profile.valueOf(it) }
+    val profile: Profile = this["application.profile"].let { Profile.valueOf(it) }
 
     val azureAdProperties = AzureAdProperties()
     val dbProperties = DatabaseProperties()
@@ -118,8 +118,8 @@ object Configuration {
     )
 
     data class PdlProperties(
-        val graphqlUri: String = config[Key("pdl.graphql-uri", stringType)],
-        val apiScope: String = config[Key("pdl.apiScope", stringType)]
+        val graphqlUri: String = this["pdl.graphql-uri"],
+        val apiScope: String = this["pdl.apiScope"],
     )
 
     data class TokenXProperties(
