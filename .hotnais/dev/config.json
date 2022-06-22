@@ -9,6 +9,7 @@
   "db_instance_name": "hm-brille-api-db-dev",
   "db_name": "brilleapidb",
   "external-hosts": [
+    "data.brreg.no"
   ],
   "outbound-applications": [
   ],
