@@ -10,7 +10,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import javax.sql.DataSource
 
-internal interface VedtakStore {
+interface VedtakStore {
     fun harFåttBrilleSisteÅret(fnrBruker: String): Boolean
 }
 

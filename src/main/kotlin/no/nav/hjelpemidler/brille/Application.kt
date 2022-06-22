@@ -27,8 +27,10 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
+import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.client.PdlClient
 import no.nav.hjelpemidler.brille.pdl.service.PdlService
+import no.nav.hjelpemidler.brille.utils.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.wiremock.WiremockConfig
 import org.slf4j.event.Level
 import java.util.TimeZone
@@ -74,6 +76,7 @@ fun Application.setupRoutes() {
     val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
+    val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
 
     installAuthentication(httpClient)
 
@@ -83,23 +86,27 @@ fun Application.setupRoutes() {
         authenticate(TOKEN_X_AUTH) {
             post("/sjekk-kan-søke") {
                 data class Request(val fnr: String)
-                val fnrBruker = call.receive<Request>().fnr
-                if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-
-                // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
-                val harVedtak = vedtakStore.harFåttBrilleSisteÅret(fnrBruker)
-
-                // Slå opp personinformasjon om barnet
-                val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
-                val forGammel = personInformasjon.alder!! > 17 /* Arbeidshypotese fra forskrift: krav må komme før fylte 18 år */
-
                 data class Response(
                     val navn: String,
                     val alder: Int,
                     val kanSøke: Boolean,
+                    val begrunnelse: List<AvvisningsType>,
                 )
 
-                call.respond(Response("${personInformasjon.fornavn} ${personInformasjon.etternavn}", personInformasjon.alder, !harVedtak && !forGammel))
+                val fnrBruker = call.receive<Request>().fnr
+                if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+
+                val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
+                val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+
+                call.respond(
+                    Response(
+                        "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
+                        personInformasjon.alder!!,
+                        vilkår.valider(),
+                        vilkår.avvisningsGrunner(),
+                    )
+                )
             }
 
             get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
