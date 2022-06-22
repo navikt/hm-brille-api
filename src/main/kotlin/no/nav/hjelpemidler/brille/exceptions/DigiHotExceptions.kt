@@ -12,12 +12,29 @@ import mu.KotlinLogging
 
 private val LOG = KotlinLogging.logger {}
 
+class PersonNotFoundInPdl(message: String) : RuntimeException(message)
+
+class PersonNotAccessibleInPdl(message: String = "") : RuntimeException(message)
+
+class PdlRequestFailedException(message: String = "") : RuntimeException("Request to PDL Failed $message")
+
 fun Application.configureStatusPages() {
     install(StatusPages) {
+        // PDL exceptions
+        exception<PersonNotFoundInPdl> { call, _ ->
+            call.respond(HttpStatusCode.NotFound)
+        }
+        exception<PersonNotAccessibleInPdl> { call, _ ->
+            call.respond(HttpStatusCode.Forbidden)
+        }
+        exception<PdlRequestFailedException> { call, _ ->
+            call.respond(HttpStatusCode.InternalServerError)
+        }
+
+        // Others
         exception<MissingKotlinParameterException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest)
         }
-
         exception<Exception> { call, cause ->
             when (cause) {
                 is BadRequestException -> call.respond(HttpStatusCode.BadRequest)

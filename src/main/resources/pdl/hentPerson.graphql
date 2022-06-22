@@ -1,0 +1,11 @@
+query($ident: ID!){
+    hentPerson(ident: $ident) {
+        navn(historikk: false) {
+            fornavn,
+            mellomnavn,
+            etternavn,
+            forkortetNavn
+        }
+        adressebeskyttelse(historikk: false) { gradering }
+    }
+}

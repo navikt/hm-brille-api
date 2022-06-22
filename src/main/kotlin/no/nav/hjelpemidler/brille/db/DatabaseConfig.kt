@@ -18,7 +18,7 @@ class DatabaseConfig(
     private val dbProperties: Configuration.DatabaseProperties = Configuration.dbProperties,
 ) {
     fun dataSource(): DataSource {
-        if (!waitForDB(10.minutes, Configuration)) {
+        if (!waitForDB(10.minutes)) {
             throw Exception("database never became available within the deadline")
         }
 
@@ -39,7 +39,7 @@ class DatabaseConfig(
         return ds
     }
 
-    private fun waitForDB(timeout: Duration, config: Configuration): Boolean {
+    private fun waitForDB(timeout: Duration): Boolean {
         val deadline = LocalDateTime.now().plusSeconds(timeout.inWholeSeconds)
         while (true) {
             try {
