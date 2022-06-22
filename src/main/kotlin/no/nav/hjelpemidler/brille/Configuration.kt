@@ -32,6 +32,8 @@ object Configuration {
             "pdfgen.rest-uri" to "http://host.docker.internal:8088",
             "pdl.graphql-uri" to "http://host.docker.internal:8089/pdl",
             "pdl.apiScope" to "api://dev-gcp.pdl.pdl-api/.default",
+            "syfohelsenettproxy.rest-uri" to "http://host.docker.internal:8089/syfohelsenettproxy",
+            "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "http://host.docker.internal:8080/default/token",
             "AZURE_APP_TENANT_ID" to "123",
             "AZURE_APP_CLIENT_ID" to "321",
@@ -49,6 +51,8 @@ object Configuration {
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
+            "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.dev-fss-pub.nais.io",
+            "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
         )
     )
 
@@ -58,6 +62,8 @@ object Configuration {
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.prod-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://prod-fss.pdl.pdl-api/.default",
+            "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.prod-fss-pub.nais.io",
+            "syfohelsenettproxy.scope" to "api://prod-fss.teamsykmelding.syfohelsenettproxy/.default",
         )
     )
 
@@ -80,6 +86,7 @@ object Configuration {
     val pdlProperties = PdlProperties()
     val tokenXProperties = TokenXProperties()
     val enhetsregisteretProperties = EnhetsregisteretProperties()
+    val syfohelsenettproxyProperties = SyfohelsenettproxyProperties()
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
@@ -130,6 +137,11 @@ object Configuration {
 
     data class EnhetsregisteretProperties(
         val baseUrl: String = this["enhetsregisteret_base_url"],
+    )
+
+    data class SyfohelsenettproxyProperties(
+        val baseUrl: String = this["syfohelsenettproxy.rest-uri"],
+        val scope: String = this["syfohelsenettproxy.scope"],
     )
 }
 

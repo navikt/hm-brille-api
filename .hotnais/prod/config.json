@@ -15,5 +15,6 @@
   ],
   "kafka-cluster": "nav-prod",
   "min-replicas": 2,
-  "max-replicas": 4
+  "max-replicas": 4,
+  "syfohelsenettproxy_cluster": "prod-fss"
 }

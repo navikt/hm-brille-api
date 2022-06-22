@@ -16,6 +16,7 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATION_ID
@@ -29,9 +30,12 @@ import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.pdl.client.PdlClient
 import no.nav.hjelpemidler.brille.pdl.service.PdlService
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.wiremock.WiremockConfig
 import org.slf4j.event.Level
 import java.util.TimeZone
+
+private val LOG = KotlinLogging.logger {}
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -74,6 +78,7 @@ fun Application.setupRoutes() {
     val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
+    val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties.baseUrl, Configuration.syfohelsenettproxyProperties.scope, azureAdClient)
 
     installAuthentication(httpClient)
 
@@ -109,6 +114,19 @@ fun Application.setupRoutes() {
                     enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
                 call.respond(organisasjonsenhet)
             }
+        }
+
+        get("/erOptiker") {
+            data class Response(val erOptiker: Boolean)
+
+            val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+            val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+
+            // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
+            // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
+            val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
+            val erOptiker = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == helsepersonellkategoriVerdi }.isNotEmpty()
+            call.respond(Response(erOptiker))
         }
     }
 
