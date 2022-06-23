@@ -131,8 +131,8 @@ fun Application.setupRoutes() {
             }
 
             get("/orgnr") {
-                val fnrOptikker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
-                call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptikker))
+                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+                call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker))
             }
 
             get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
