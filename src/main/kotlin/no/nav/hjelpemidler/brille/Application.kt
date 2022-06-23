@@ -113,7 +113,7 @@ fun Application.setupRoutes() {
                 call.respond(Response(erOptiker))
             }
 
-            post("/sjekk-kan-søke") {
+            post("/sjekk-kan-soke") {
                 data class Request(val fnr: String)
                 data class Response(
                     val fnr: String,
@@ -160,7 +160,7 @@ fun Application.setupRoutes() {
                 call.respond(organisasjonsenhet)
             }
 
-            post("/søk") {
+            post("/sok") {
                 data class Request(
                     val fnr: String,
                     val orgnr: String,
