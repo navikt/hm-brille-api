@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.databind.DeserializationFeature
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -89,6 +90,19 @@ fun Application.setupRoutes() {
         selvtestRoutes()
 
         authenticate(TOKEN_X_AUTH) {
+            get("/erOptiker") {
+                data class Response(val erOptiker: Boolean)
+
+                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+                val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+
+                // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
+                // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
+                val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
+                val erOptiker = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == helsepersonellkategoriVerdi }.isNotEmpty()
+                call.respond(Response(erOptiker))
+            }
+
             post("/sjekk-kan-søke") {
                 data class Request(val fnr: String)
                 data class Response(
@@ -123,6 +137,11 @@ fun Application.setupRoutes() {
                 )
             }
 
+            get("/orgnr") {
+                val fnrOptikker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+                call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptikker))
+            }
+
             get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
                 val organisasjonsnummer =
                     call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
@@ -130,24 +149,38 @@ fun Application.setupRoutes() {
                     enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
                 call.respond(organisasjonsenhet)
             }
-        }
 
-        get("/orgnr") {
-            val fnrOptikker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
-            call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptikker))
-        }
+            post("/søk") {
+                data class Request(
+                    val fnr: String,
+                    val orgnr: String,
+                    val annet: String,
+                )
+                data class Response(
+                    val success: Boolean,
+                )
 
-        get("/erOptiker") {
-            data class Response(val erOptiker: Boolean)
+                val request = call.receive<Request>()
+                val fnrBruker = request.fnr
+                if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
-            val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
-            val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+                val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
 
-            // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
-            // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
-            val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
-            val erOptiker = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == helsepersonellkategoriVerdi }.isNotEmpty()
-            call.respond(Response(erOptiker))
+                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+                val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+                // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
+                // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
+                val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
+
+                val vilkår = vilkårsvurdering.kanSøke(personInformasjon, behandler, helsepersonellkategoriVerdi)
+
+                if (!vilkår.valider()) {
+                    call.respond(HttpStatusCode.BadRequest, "{}")
+                    return@post
+                }
+
+                call.respond(Response(true))
+            }
         }
     }
 
