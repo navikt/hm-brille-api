@@ -99,12 +99,13 @@ fun Application.setupRoutes() {
                 val forGammel = personInformasjon.alder!! > 17 /* Arbeidshypotese fra forskrift: krav må komme før fylte 18 år */
 
                 data class Response(
+                    val fnr: String,
                     val navn: String,
                     val alder: Int,
                     val kanSøke: Boolean,
                 )
 
-                call.respond(Response("${personInformasjon.fornavn} ${personInformasjon.etternavn}", personInformasjon.alder, !harVedtak && !forGammel))
+                call.respond(Response(fnrBruker, "${personInformasjon.fornavn} ${personInformasjon.etternavn}", personInformasjon.alder, !harVedtak && !forGammel))
             }
 
             get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
