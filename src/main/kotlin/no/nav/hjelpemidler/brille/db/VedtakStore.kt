@@ -9,15 +9,17 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.hjelpemidler.brille.model.TidligereBrukteOrgnrForOptiker
+import java.time.LocalDateTime
+import java.time.Month
 import javax.sql.DataSource
 
 interface VedtakStore {
-    fun harFåttBrilleSisteÅret(fnrBruker: String): Boolean
+    fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean
     fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
-    override fun harFåttBrilleSisteÅret(fnrBruker: String): Boolean =
+    override fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean =
         using(sessionOf(ds)) { session ->
             session.run(
                 queryOf(
@@ -26,9 +28,10 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                         FROM vedtak
                         WHERE
                             fnr_bruker = ? AND
-                            opprettet > (NOW() - interval '1 years')
+                            opprettet > ?
                     """.trimIndent(),
                     fnrBruker,
+                    LocalDateTime.of(LocalDateTime.now().year, Month.JANUARY, 1, 0, 0),
                 ).map {
                     true
                 }.asSingle

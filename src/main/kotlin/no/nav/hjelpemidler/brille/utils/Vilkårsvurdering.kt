@@ -17,7 +17,7 @@ private val objectMapper = jacksonObjectMapper()
 class Vilkårsvurdering(val vedtakStore: VedtakStore) {
     fun kanSøke(personInformasjon: PersonDetaljerDto, behandler: Behandler, helsepersonellkategoriVerdi: String): Vilkår {
         // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
-        val harVedtak = vedtakStore.harFåttBrilleSisteÅret(personInformasjon.fnr)
+        val harVedtak = vedtakStore.harFåttBrilleDetteKalenderÅret(personInformasjon.fnr)
 
         // Sjekk om man er for gammel for barnebriller
         val forGammel =
