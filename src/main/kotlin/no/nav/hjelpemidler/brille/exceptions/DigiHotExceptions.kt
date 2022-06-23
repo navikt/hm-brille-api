@@ -35,6 +35,7 @@ fun Application.configureStatusPages() {
 
         // SjekkOptikerPlugin exceptions
         exception<SjekkOptikerPluginUnauthorizedException> { call, e ->
+            // TODO: Fjern når vi ikke trenger den lengre.
             LOG.warn(e) { "401 unauthorized exception fra middleware" }
             call.respond(HttpStatusCode.Unauthorized)
         }

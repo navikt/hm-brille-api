@@ -2,11 +2,8 @@ package no.nav.hjelpemidler.brille
 
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.request.uri
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginUnauthorizedException
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
-
-private val LOG = KotlinLogging.logger {}
 
 val SjekkOptikerPlugin = createApplicationPlugin(
     name = "SjekkOptikerPlugin",
@@ -14,8 +11,6 @@ val SjekkOptikerPlugin = createApplicationPlugin(
 ) {
     val syfohelsenettproxyClient = this.pluginConfig.syfohelsenettproxyClient!!
     onCall { call ->
-        LOG.info("DEBUG: DEBUG: $call, ${call.request.headers}, ${call.request.headers["x-optiker-fnr"]}")
-
         // Slipp igjennom kall for liveness/readiness/metrics
         if (call.request.uri.startsWith("/internal")) return@onCall
 
@@ -32,18 +27,14 @@ val SjekkOptikerPlugin = createApplicationPlugin(
         val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
         val erOptiker = behandler.godkjenninger.filter {
             it.helsepersonellkategori?.aktiv == true && (
-                it.helsepersonellkategori.verdi
-                    ?: ""
-                ) == helsepersonellkategoriVerdi
+                    it.helsepersonellkategori.verdi
+                        ?: ""
+                    ) == helsepersonellkategoriVerdi
         }.isNotEmpty()
-
-        LOG.info("DEBUG: DEBUG: 2: erOptiker=$erOptiker, helsepersonellkategoriVerdi=$helsepersonellkategoriVerdi, fnrOptiker=$fnrOptiker, behandler=$behandler")
 
         if (!erOptiker) {
             throw SjekkOptikerPluginUnauthorizedException("innlogget bruker er ikke registrert som optiker i HPR")
         }
-
-        LOG.info("DEBUG: DEBUG: 3: erOptikker!")
     }
 }
 
