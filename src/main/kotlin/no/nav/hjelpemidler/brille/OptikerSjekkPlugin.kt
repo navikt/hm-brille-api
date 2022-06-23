@@ -4,6 +4,7 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
+import io.ktor.server.request.uri
 import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginUnauthorizedException
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 
@@ -19,6 +20,9 @@ val SjekkOptikerPlugin = createApplicationPlugin(
 ) {
     val syfohelsenettproxyClient = this.pluginConfig.syfohelsenettproxyClient!!
     onCall { call ->
+        // Slipp igjennom kall for liveness/readiness/metrics
+        if (call.request.uri.startsWith("/internal")) return@onCall
+
         val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: runCatching { call.extractFnr() }.getOrElse {
             throw SjekkOptikerPluginUnauthorizedException("finner ikke fnr i token")
         }
