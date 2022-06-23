@@ -18,6 +18,8 @@ class PersonNotAccessibleInPdl(message: String = "") : RuntimeException(message)
 
 class PdlRequestFailedException(message: String = "") : RuntimeException("Request to PDL Failed $message")
 
+class SjekkOptikerPluginUnauthorizedException(message: String = "") : RuntimeException("401 Unauthorized: $message")
+
 fun Application.configureStatusPages() {
     install(StatusPages) {
         // PDL exceptions
@@ -29,6 +31,11 @@ fun Application.configureStatusPages() {
         }
         exception<PdlRequestFailedException> { call, _ ->
             call.respond(HttpStatusCode.InternalServerError)
+        }
+
+        // SjekkOptikerPlugin exceptions
+        exception<SjekkOptikerPluginUnauthorizedException> { call, _ ->
+            call.respond(HttpStatusCode.Unauthorized)
         }
 
         // Others

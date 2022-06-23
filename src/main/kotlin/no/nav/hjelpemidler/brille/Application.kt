@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
@@ -94,25 +92,13 @@ fun Application.setupRoutes() {
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties.baseUrl, Configuration.syfohelsenettproxyProperties.scope, azureAdClient)
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
 
+    installSjekkOptiker(syfohelsenettproxyClient)
     installAuthentication(httpClient)
 
     routing {
         selvtestRoutes()
 
         authenticate(TOKEN_X_AUTH) {
-            get("/erOptiker") {
-                data class Response(val erOptiker: Boolean)
-
-                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
-                val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
-
-                // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
-                // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
-                val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
-                val erOptiker = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == helsepersonellkategoriVerdi }.isNotEmpty()
-                call.respond(Response(erOptiker))
-            }
-
             post("/sjekk-kan-soke") {
                 data class Request(val fnr: String)
                 data class Response(
@@ -128,13 +114,7 @@ fun Application.setupRoutes() {
 
                 val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
 
-                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
-                val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
-                // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
-                // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
-                val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
-
-                val vilkår = vilkårsvurdering.kanSøke(personInformasjon, behandler, helsepersonellkategoriVerdi)
+                val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
 
                 call.respond(
                     Response(
@@ -171,21 +151,15 @@ fun Application.setupRoutes() {
 
                 val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
 
-                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
-                val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
-                // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
-                // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
-                val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
-
                 // Valider vilkår for å forsikre oss om at alle sjekker er gjort
-                val vilkår = vilkårsvurdering.kanSøke(personInformasjon, behandler, helsepersonellkategoriVerdi)
+                val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
                 if (!vilkår.valider()) {
                     call.respond(HttpStatusCode.BadRequest, "{}")
                     return@post
                 }
 
                 // Innvilg søknad og opprett vedtak
-                vedtakStore.opprettVedtak(request.fnr, fnrOptiker, request.orgnr, objectMapper.valueToTree(request))
+                vedtakStore.opprettVedtak(request.fnr, call.request.headers["x-optiker-fnr"] ?: call.extractFnr(), request.orgnr, objectMapper.valueToTree(request))
 
                 // TODO: Journalfør søknad/vedtak som dokument i joark på barnet
                 // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket

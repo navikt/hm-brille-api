@@ -1,0 +1,37 @@
+package no.nav.hjelpemidler.brille
+
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.install
+import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginUnauthorizedException
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+
+fun Application.installSjekkOptiker(syfohelsenettproxyClientArg: SyfohelsenettproxyClient) {
+    install(SjekkOptikerPlugin) {
+        syfohelsenettproxyClient = syfohelsenettproxyClientArg
+    }
+}
+
+val SjekkOptikerPlugin = createApplicationPlugin(
+    name = "SjekkOptikerPlugin",
+    createConfiguration = ::SjekkOptikerPluginConfiguration,
+) {
+    val syfohelsenettproxyClient = this.pluginConfig.syfohelsenettproxyClient!!
+    onCall { call ->
+        val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+        val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+
+        // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
+        // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
+        val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
+        val erOptiker = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == helsepersonellkategoriVerdi }.isNotEmpty()
+        if (!erOptiker) {
+            throw SjekkOptikerPluginUnauthorizedException("innlogget bruker er ikke registrert som optiker i HPR")
+        }
+    }
+}
+
+class SjekkOptikerPluginConfiguration {
+    var syfohelsenettproxyClient: SyfohelsenettproxyClient? = null
+}
