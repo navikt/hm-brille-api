@@ -92,7 +92,10 @@ fun Application.setupRoutes() {
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties.baseUrl, Configuration.syfohelsenettproxyProperties.scope, azureAdClient)
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
 
-    installSjekkOptiker(syfohelsenettproxyClient)
+    install(SjekkOptikerPlugin) {
+        this.syfohelsenettproxyClient = syfohelsenettproxyClient
+    }
+
     installAuthentication(httpClient)
 
     routing {
