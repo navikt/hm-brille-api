@@ -19,7 +19,9 @@ val SjekkOptikerPlugin = createApplicationPlugin(
 ) {
     val syfohelsenettproxyClient = this.pluginConfig.syfohelsenettproxyClient!!
     onCall { call ->
-        val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+        val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: runCatching { call.extractFnr() }.getOrElse {
+            throw SjekkOptikerPluginUnauthorizedException("finner ikke fnr i token")
+        }
         val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
 
         // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
