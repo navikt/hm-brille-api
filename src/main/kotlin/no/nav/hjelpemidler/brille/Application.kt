@@ -92,6 +92,7 @@ fun Application.setupRoutes() {
             post("/sjekk-kan-søke") {
                 data class Request(val fnr: String)
                 data class Response(
+                    val fnr: String,
                     val navn: String,
                     val alder: Int,
                     val kanSøke: Boolean,
@@ -113,6 +114,7 @@ fun Application.setupRoutes() {
 
                 call.respond(
                     Response(
+                        fnrBruker,
                         "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
                         personInformasjon.alder!!,
                         vilkår.valider(),
