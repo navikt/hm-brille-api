@@ -9,6 +9,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.hjelpemidler.brille.model.TidligereBrukteOrgnrForOptiker
+import java.lang.RuntimeException
 import java.time.LocalDateTime
 import java.time.Month
 import java.util.UUID
@@ -17,7 +18,7 @@ import javax.sql.DataSource
 interface VedtakStore {
     fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean
     fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker
-    fun lagreVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode)
+    fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode)
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
@@ -63,8 +64,8 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         )
     }
 
-    override fun lagreVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode) {
-        using(sessionOf(ds)) { session ->
+    override fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode) {
+        val result = using(sessionOf(ds)) { session ->
             session.run(
                 queryOf(
                     """
@@ -84,9 +85,10 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                     orgnr,
                     data,
                     LocalDateTime.now(),
-                ).asUpdate
+                ).asExecute
             )
         }
+        if (!result) throw RuntimeException("VedtakStore.opprettVedtak: feilet i å opprette vedtak (result=false)")
     }
 
     companion object {

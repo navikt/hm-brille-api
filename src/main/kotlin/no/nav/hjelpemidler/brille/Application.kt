@@ -1,6 +1,11 @@
 package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
@@ -39,6 +44,11 @@ import org.slf4j.event.Level
 import java.util.TimeZone
 
 private val LOG = KotlinLogging.logger {}
+
+private val objectMapper = jacksonObjectMapper()
+    .registerModule(JavaTimeModule())
+    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -154,17 +164,12 @@ fun Application.setupRoutes() {
                 data class Request(
                     val fnr: String,
                     val orgnr: String,
-                    val annet: String,
-                )
-                data class Response(
-                    val success: Boolean,
                 )
 
                 val request = call.receive<Request>()
-                val fnrBruker = request.fnr
-                if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+                if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
-                val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
+                val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
 
                 val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
                 val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
@@ -172,14 +177,20 @@ fun Application.setupRoutes() {
                 // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
                 val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
 
+                // Valider vilkår for å forsikre oss om at alle sjekker er gjort
                 val vilkår = vilkårsvurdering.kanSøke(personInformasjon, behandler, helsepersonellkategoriVerdi)
-
                 if (!vilkår.valider()) {
                     call.respond(HttpStatusCode.BadRequest, "{}")
                     return@post
                 }
 
-                call.respond(Response(true))
+                // Innvilg søknad og opprett vedtak
+                vedtakStore.opprettVedtak(request.fnr, fnrOptiker, request.orgnr, objectMapper.valueToTree(request))
+
+                // TODO: Journalfør søknad/vedtak som dokument i joark på barnet
+                // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+
+                call.respond(HttpStatusCode.Created, "201 Created")
             }
         }
     }
