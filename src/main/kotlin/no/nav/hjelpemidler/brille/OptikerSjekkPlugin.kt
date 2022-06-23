@@ -22,7 +22,10 @@ val SjekkOptikerPlugin = createApplicationPlugin(
         val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: runCatching { call.extractFnr() }.getOrElse {
             throw SjekkOptikerPluginUnauthorizedException("finner ikke fnr i token")
         }
-        val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+
+        val behandler = runCatching { syfohelsenettproxyClient.hentBehandler(fnrOptiker) }.getOrElse {
+            throw SjekkOptikerPluginUnauthorizedException("Kunne ikke hente data fra syfohelsenettproxyClient: $it")
+        }
 
         // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
         // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
@@ -34,9 +37,13 @@ val SjekkOptikerPlugin = createApplicationPlugin(
                 ) == helsepersonellkategoriVerdi
         }.isNotEmpty()
 
+        LOG.info("DEBUG: DEBUG: 2: erOptiker=$erOptiker, helsepersonellkategoriVerdi=$helsepersonellkategoriVerdi, fnrOptiker=$fnrOptiker, behandler=$behandler")
+
         if (!erOptiker) {
             throw SjekkOptikerPluginUnauthorizedException("innlogget bruker er ikke registrert som optiker i HPR")
         }
+
+        LOG.info("DEBUG: DEBUG: 3: erOptikker!")
     }
 }
 
