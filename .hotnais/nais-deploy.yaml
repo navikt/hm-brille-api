@@ -54,6 +54,9 @@ spec:
          - application: syfohelsenettproxy
            namespace: teamsykmelding
            cluster: {{ syfohelsenettproxy_cluster }}
+         - application: medlemskap-oppslag
+           namespace: medlemskap
+           cluster: {{ medlemskap_cluster }}
       external:
       {{#each external-hosts}}
         - host: {{ this }}

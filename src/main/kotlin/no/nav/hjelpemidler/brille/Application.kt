@@ -1,6 +1,10 @@
 package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -28,14 +32,21 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selvtestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
+import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.client.PdlClient
 import no.nav.hjelpemidler.brille.pdl.service.PdlService
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import no.nav.hjelpemidler.brille.utils.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.wiremock.WiremockConfig
 import org.slf4j.event.Level
 import java.util.TimeZone
 
 private val LOG = KotlinLogging.logger {}
+
+private val objectMapper = jacksonObjectMapper()
+    .registerModule(JavaTimeModule())
+    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 
@@ -79,6 +90,11 @@ fun Application.setupRoutes() {
     val vedtakStore = VedtakStorePostgres(dataSource)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties.baseUrl, Configuration.syfohelsenettproxyProperties.scope, azureAdClient)
+    val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
+
+    install(SjekkOptikerPlugin) {
+        this.syfohelsenettproxyClient = syfohelsenettproxyClient
+    }
 
     installAuthentication(httpClient)
 
@@ -86,26 +102,37 @@ fun Application.setupRoutes() {
         selvtestRoutes()
 
         authenticate(TOKEN_X_AUTH) {
-            post("/sjekk-kan-søke") {
+            post("/sjekk-kan-soke") {
                 data class Request(val fnr: String)
-                val fnrBruker = call.receive<Request>().fnr
-                if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-
-                // Sjekk om det allerede eksisterer et vedtak for barnet det siste året
-                val harVedtak = vedtakStore.harFåttBrilleSisteÅret(fnrBruker)
-
-                // Slå opp personinformasjon om barnet
-                val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
-                val forGammel = personInformasjon.alder!! > 17 /* Arbeidshypotese fra forskrift: krav må komme før fylte 18 år */
-
                 data class Response(
                     val fnr: String,
                     val navn: String,
                     val alder: Int,
                     val kanSøke: Boolean,
+                    val begrunnelse: List<AvvisningsType>,
                 )
 
-                call.respond(Response(fnrBruker, "${personInformasjon.fornavn} ${personInformasjon.etternavn}", personInformasjon.alder, !harVedtak && !forGammel))
+                val fnrBruker = call.receive<Request>().fnr
+                if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+
+                val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
+
+                val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+
+                call.respond(
+                    Response(
+                        fnrBruker,
+                        "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
+                        personInformasjon.alder!!,
+                        vilkår.valider(),
+                        vilkår.avvisningsGrunner(),
+                    )
+                )
+            }
+
+            get("/orgnr") {
+                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+                call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker))
             }
 
             get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
@@ -115,19 +142,33 @@ fun Application.setupRoutes() {
                     enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
                 call.respond(organisasjonsenhet)
             }
-        }
 
-        get("/erOptiker") {
-            data class Response(val erOptiker: Boolean)
+            post("/sok") {
+                data class Request(
+                    val fnr: String,
+                    val orgnr: String,
+                )
 
-            val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
-            val behandler = syfohelsenettproxyClient.hentBehandler(fnrOptiker)
+                val request = call.receive<Request>()
+                if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
-            // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
-            // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
-            val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
-            val erOptiker = behandler.godkjenninger.filter { it.helsepersonellkategori?.aktiv == true && (it.helsepersonellkategori.verdi ?: "") == helsepersonellkategoriVerdi }.isNotEmpty()
-            call.respond(Response(erOptiker))
+                val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
+
+                // Valider vilkår for å forsikre oss om at alle sjekker er gjort
+                val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+                if (!vilkår.valider()) {
+                    call.respond(HttpStatusCode.BadRequest, "{}")
+                    return@post
+                }
+
+                // Innvilg søknad og opprett vedtak
+                vedtakStore.opprettVedtak(request.fnr, call.request.headers["x-optiker-fnr"] ?: call.extractFnr(), request.orgnr, objectMapper.valueToTree(request))
+
+                // TODO: Journalfør søknad/vedtak som dokument i joark på barnet
+                // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+
+                call.respond(HttpStatusCode.Created, "201 Created")
+            }
         }
     }
 

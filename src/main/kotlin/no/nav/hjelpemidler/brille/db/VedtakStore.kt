@@ -8,14 +8,21 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.hjelpemidler.brille.model.TidligereBrukteOrgnrForOptiker
+import java.lang.RuntimeException
+import java.time.LocalDateTime
+import java.time.Month
+import java.util.UUID
 import javax.sql.DataSource
 
-internal interface VedtakStore {
-    fun harFåttBrilleSisteÅret(fnrBruker: String): Boolean
+interface VedtakStore {
+    fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean
+    fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker
+    fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode)
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
-    override fun harFåttBrilleSisteÅret(fnrBruker: String): Boolean =
+    override fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean =
         using(sessionOf(ds)) { session ->
             session.run(
                 queryOf(
@@ -24,14 +31,65 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                         FROM vedtak
                         WHERE
                             fnr_bruker = ? AND
-                            opprettet > (NOW() - interval '1 years')
+                            opprettet > ?
                     """.trimIndent(),
                     fnrBruker,
+                    LocalDateTime.of(LocalDateTime.now().year, Month.JANUARY, 1, 0, 0),
                 ).map {
                     true
                 }.asSingle
             )
         } ?: false
+
+    override fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker {
+        val resultater = using(sessionOf(ds)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        SELECT orgnr
+                        FROM vedtak
+                        WHERE fnr_innsender = ?
+                        ORDER BY opprettet DESC
+                    """.trimIndent(),
+                    fnrOptiker,
+                ).map {
+                    it.string("orgnr")
+                }.asList
+            )
+        }
+
+        return TidligereBrukteOrgnrForOptiker(
+            resultater.getOrElse(0) { "" },
+            resultater.toSet().toList()
+        )
+    }
+
+    override fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode) {
+        val result = using(sessionOf(ds)) { session ->
+            session.run(
+                queryOf(
+                    """
+                        INSERT INTO vedtak (
+                            id,
+                            fnr_bruker,
+                            fnr_innsender,
+                            orgnr,
+                            data,
+                            opprettet
+                        ) VALUES (?, ?, ?, ?, ?, ?)
+                        ;
+                    """.trimIndent(),
+                    UUID.randomUUID(),
+                    fnrBruker,
+                    fnrInnsender,
+                    orgnr,
+                    data,
+                    LocalDateTime.now(),
+                ).asExecute
+            )
+        }
+        if (!result) throw RuntimeException("VedtakStore.opprettVedtak: feilet i å opprette vedtak (result=false)")
+    }
 
     companion object {
         private val objectMapper = jacksonObjectMapper()

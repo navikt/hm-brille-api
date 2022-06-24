@@ -16,5 +16,6 @@
   "kafka-cluster": "nav-dev",
   "min-replicas": 1,
   "max-replicas": 1,
-  "syfohelsenettproxy_cluster": "dev-fss"
+  "syfohelsenettproxy_cluster": "dev-fss",
+  "medlemskap_cluster": "dev-gcp"
 }

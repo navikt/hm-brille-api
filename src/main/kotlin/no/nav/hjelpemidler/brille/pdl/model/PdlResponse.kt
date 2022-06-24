@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.pdl.model
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Period
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 import java.util.Locale
@@ -39,7 +40,9 @@ data class PdlPerson(
     val navn: List<PdlPersonNavn>,
     val adressebeskyttelse: List<Adressebeskyttelse>? = emptyList(),
     val bostedsadresse: List<Bostedsadresse> = emptyList(),
-    val foedsel: List<Foedsel> = emptyList()
+    val foedsel: List<Foedsel> = emptyList(),
+    val forelderBarnRelasjon: List<ForelderBarnRelasjon> = emptyList(),
+    val vergemaalEllerFremtidsfullmakt: List<VergemaalEllerFremtidsfullmakt> = emptyList(),
 )
 
 data class PdlPersonNavn(
@@ -66,6 +69,61 @@ data class Vegadresse(
 data class Matrikkeladresse(val postnummer: String?, val kommunenummer: String?)
 
 data class Foedsel(val foedselsaar: String?, val foedselsdato: String?)
+
+data class ForelderBarnRelasjon(
+    val relatertPersonsIdent: String,
+    val relatertPersonsRolle: ForelderBarnRelasjonRolle,
+    val minRolleForPerson: ForelderBarnRelasjonRolle,
+    val relatertPersonUtenFolkeregisteridentifikator: RelatertBiPerson,
+    val folkeregistermetadata: Folkeregistermetadata,
+)
+
+enum class ForelderBarnRelasjonRolle {
+    BARN,
+    MOR,
+    FAR,
+    MEDMOR
+}
+
+data class RelatertBiPerson(
+    val navn: Personnavn,
+    val foedselsdato: LocalDate,
+    val statsborgerskap: String,
+    val kjoenn: KjoennType,
+)
+
+data class Personnavn(
+    val fornavn: String,
+    val mellomnavn: String,
+    val etternavn: String,
+)
+
+enum class KjoennType {
+    MANN, KVINNE, UKJENT
+}
+
+data class Folkeregistermetadata(
+    val ajourholdstidspunkt: LocalDateTime,
+    val gyldighetstidspunkt: LocalDateTime,
+    val opphoerstidspunkt: LocalDateTime,
+    val kilde: String,
+    val aarsak: String,
+    val sekvens: Int,
+)
+
+data class VergemaalEllerFremtidsfullmakt(
+    val type: String,
+    val embete: String,
+    val vergeEllerFullmektig: VergeEllerFullmektig,
+    val folkeregistermetadata: Folkeregistermetadata,
+)
+
+data class VergeEllerFullmektig(
+    val navn: Personnavn,
+    val motpartsPersonident: String,
+    val omfang: String,
+    val omfangetErInnenPersonligOmraade: Boolean,
+)
 
 enum class Gradering {
     STRENGT_FORTROLIG_UTLAND,
