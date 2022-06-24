@@ -5,8 +5,10 @@
   ],
   "port": 9090,
   "db_tier": "db-f1-micro",
+  "db_high_availability": false,
   "db_size": 10,
   "db_instance_name": "hm-brille-api-db-dev",
+  "db_retained_backups": 7,
   "db_name": "brilleapidb",
   "external-hosts": [
     "data.brreg.no"
