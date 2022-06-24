@@ -18,7 +18,7 @@ class PersonNotAccessibleInPdl(message: String = "") : RuntimeException(message)
 
 class PdlRequestFailedException(message: String = "") : RuntimeException("Request to PDL Failed $message")
 
-class SjekkOptikerPluginUnauthorizedException(message: String = "") : RuntimeException("401 Unauthorized: $message")
+class SjekkOptikerPluginException(val status: HttpStatusCode, message: String = "") : RuntimeException(message)
 
 fun Application.configureStatusPages() {
     install(StatusPages) {
@@ -34,10 +34,10 @@ fun Application.configureStatusPages() {
         }
 
         // SjekkOptikerPlugin exceptions
-        exception<SjekkOptikerPluginUnauthorizedException> { call, e ->
+        exception<SjekkOptikerPluginException> { call, e ->
             // TODO: Fjern når vi ikke trenger den lengre.
-            LOG.warn(e) { "401 unauthorized exception fra middleware" }
-            call.respond(HttpStatusCode.Unauthorized)
+            LOG.warn(e) { "Exception fra middleware med status: ${e.status.description}" }
+            call.respond(e.status)
         }
 
         // Others
