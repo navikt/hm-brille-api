@@ -53,7 +53,11 @@ query($ident: ID!){
             type
             embete
             vergeEllerFullmektig {
-                navn
+                navn {
+                    fornavn
+                    mellomnavn
+                    etternavn
+                }
                 motpartsPersonident
                 omfang
                 omfangetErInnenPersonligOmraade
