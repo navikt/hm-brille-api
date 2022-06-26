@@ -79,8 +79,7 @@ fun Application.configure() {
 // Wire up services and routes
 fun Application.setupRoutes() {
     val azureAdClient = AzureAdClient()
-    val httpClient = httpClient()
-    val pdlService = PdlService(PdlClient(azureAdClient, httpClient))
+    val pdlService = PdlService(PdlClient(azureAdClient))
 
     val dataSource = DatabaseConfig(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
@@ -96,7 +95,7 @@ fun Application.setupRoutes() {
         this.syfohelsenettproxyClient = syfohelsenettproxyClient
     }
 
-    installAuthentication(httpClient)
+    installAuthentication(httpClient())
 
     routing {
         selvtestRoutes()
