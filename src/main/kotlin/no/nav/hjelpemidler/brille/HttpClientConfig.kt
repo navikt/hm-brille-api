@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
@@ -11,7 +12,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.jackson.jackson
 
 object HttpClientConfig {
-    fun httpClient(): HttpClient = HttpClient(CIO) {
+    fun httpClient(engine: HttpClientEngine = CIO.create()): HttpClient = HttpClient(engine) {
         expectSuccess = true
         install(ContentNegotiation) {
             jackson {
@@ -23,7 +24,7 @@ object HttpClientConfig {
         install(HttpTimeout)
     }
 
-    fun retryingHttpClient(): HttpClient = HttpClient(CIO) {
+    fun retryingHttpClient(engine: HttpClientEngine = CIO.create()): HttpClient = HttpClient(engine) {
         expectSuccess = true
         install(HttpRequestRetry) {
             retryOnServerErrors(maxRetries = 3)

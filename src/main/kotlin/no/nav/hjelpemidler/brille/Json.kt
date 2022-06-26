@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.utils
+package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.Row
+import org.postgresql.util.PGobject
 
 val jsonMapper: JsonMapper = jacksonMapperBuilder()
     .addModule(JavaTimeModule())
@@ -20,4 +21,9 @@ inline fun <reified T> Row.json(columnLabel: String): T = string(columnLabel).le
 
 inline fun <reified T> Row.jsonOrNull(columnLabel: String): T? = stringOrNull(columnLabel)?.let {
     jsonMapper.readValue(it)
+}
+
+fun <T> pgObjectOf(value: T): PGobject = PGobject().apply {
+    type = "jsonb"
+    setValue(jsonMapper.writeValueAsString(value))
 }

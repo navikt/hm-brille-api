@@ -18,7 +18,8 @@ class PersonNotAccessibleInPdl(message: String = "") : RuntimeException(message)
 
 class PdlRequestFailedException(message: String = "") : RuntimeException("Request to PDL Failed $message")
 
-class SjekkOptikerPluginException(val status: HttpStatusCode, message: String = "") : RuntimeException(message)
+class SjekkOptikerPluginException(val status: HttpStatusCode, message: String = "", cause: Throwable? = null) :
+    RuntimeException(message, cause)
 
 fun Application.configureStatusPages() {
     install(StatusPages) {

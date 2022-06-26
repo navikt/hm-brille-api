@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -20,8 +21,9 @@ import java.time.Instant
 
 class AzureAdClient(
     private val props: Configuration.AzureAdProperties = Configuration.azureAdProperties,
+    engine: HttpClientEngine = CIO.create(),
 ) {
-    private val client = HttpClient(CIO) {
+    private val client = HttpClient(engine) {
         expectSuccess = false
         install(ContentNegotiation) {
             jackson {
@@ -46,11 +48,13 @@ class AzureAdClient(
         if (response.status == HttpStatusCode.OK) {
             return response.body()
         }
-        runCatching {
-            throw AzureAdClientException(response.body<TokenError>().toString())
+        val messageAndError = runCatching {
+            val error = response.body<TokenError>().toString()
+            "Uventet svar fra Azure AD, status: ${response.status}, error: $error" to null
         }.getOrElse {
-            throw AzureAdClientException("Uventet svar fra Azure AD, status: ${response.status}", it)
+            "Uventet svar fra Azure AD, status: ${response.status}" to it
         }
+        throw AzureAdClientException(messageAndError.first, messageAndError.second)
     }
 
     suspend fun getToken(scope: String): Token = mutex.withLock {

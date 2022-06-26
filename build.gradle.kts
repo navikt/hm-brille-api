@@ -54,6 +54,7 @@ dependencies {
     implementation(ktorClient("content-negotiation"))
     implementation(ktorClient("auth"))
     implementation(ktorClient("jackson"))
+    implementation(ktorClient("mock"))
 
     // Jackson
     val jacksonVersion = "2.13.3"

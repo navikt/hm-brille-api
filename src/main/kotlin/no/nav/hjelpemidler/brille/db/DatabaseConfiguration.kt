@@ -12,7 +12,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-class DatabaseConfig(
+class DatabaseConfiguration(
     private val dbProperties: Configuration.DatabaseProperties = Configuration.dbProperties,
 ) {
     fun dataSource(): DataSource {
@@ -20,7 +20,7 @@ class DatabaseConfig(
             throw Exception("database never became available within the deadline")
         }
 
-        val ds = HikariDataSource().apply {
+        val dataSource = HikariDataSource().apply {
             username = dbProperties.databaseUser
             password = dbProperties.databasePassword
             jdbcUrl =
@@ -32,9 +32,9 @@ class DatabaseConfig(
             maxLifetime = 30001
         }
 
-        migrate(ds)
+        migrate(dataSource)
 
-        return ds
+        return dataSource
     }
 
     private fun waitForDB(timeout: Duration): Boolean {

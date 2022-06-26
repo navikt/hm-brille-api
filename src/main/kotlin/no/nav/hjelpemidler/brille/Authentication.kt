@@ -12,6 +12,7 @@ import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.Principal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import java.net.URL
 import java.util.concurrent.TimeUnit
@@ -20,7 +21,7 @@ const val TOKEN_X_AUTH = "tokenX"
 
 fun Application.installAuthentication(httpClient: HttpClient) {
     var tokenXConfig: AuthenticationConfig
-    runBlocking {
+    runBlocking(Dispatchers.IO) {
         tokenXConfig = AuthenticationConfig(
             metadata = httpClient.get(Configuration.tokenXProperties.wellKnownUrl).body(),
             clientId = Configuration.tokenXProperties.clientId,
