@@ -25,7 +25,13 @@ class PdlService(
         try {
             val pdlResponse = pdlClient.hentPersonDetaljer(fnummer)
             validerPdlOppslag(pdlResponse)
-            if (Configuration.profile == Profile.DEV) LOG.info("DEBUG: PDL raw result: ${objectMapper.writeValueAsString(pdlResponse)}")
+            if (Configuration.profile == Profile.DEV) LOG.info(
+                "DEBUG: PDL raw result: ${
+                    objectMapper.writeValueAsString(
+                        pdlResponse
+                    )
+                }"
+            )
             return pdlResponse.toPersonDto(fnummer) {
                 "UKJENT"
             }

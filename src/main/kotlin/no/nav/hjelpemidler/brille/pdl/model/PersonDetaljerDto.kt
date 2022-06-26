@@ -8,5 +8,5 @@ data class PersonDetaljerDto(
     val postnummer: String?,
     val poststed: String?,
     val alder: Int?,
-    val kommunenummer: String?
+    val kommunenummer: String?,
 )

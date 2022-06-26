@@ -10,7 +10,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import mu.KotlinLogging
 
-private val LOG = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 class PersonNotFoundInPdl(message: String) : RuntimeException(message)
 
@@ -36,7 +36,7 @@ fun Application.configureStatusPages() {
         // SjekkOptikerPlugin exceptions
         exception<SjekkOptikerPluginException> { call, e ->
             // TODO: Fjern når vi ikke trenger den lengre.
-            LOG.warn(e) { "Exception fra middleware med status: ${e.status.description}" }
+            log.warn(e) { "Exception fra middleware med status: ${e.status.description}" }
             call.respond(e.status)
         }
 
@@ -48,7 +48,7 @@ fun Application.configureStatusPages() {
             when (cause) {
                 is BadRequestException -> call.respond(HttpStatusCode.BadRequest)
                 else -> {
-                    LOG.error(
+                    log.error(
                         "Unhandled exception. Pls fix slik at den fanges og håndteres med riktig statuskode.",
                         cause
                     )

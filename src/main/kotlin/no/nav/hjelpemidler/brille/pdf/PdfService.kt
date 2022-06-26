@@ -11,13 +11,10 @@ import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 
-private val LOG = KotlinLogging.logger {}
-
 class PdfService(
     private val httpClient: HttpClient,
     private val pdfProperties: Configuration.PdfProperties = Configuration.pdfProperties,
 ) {
-
     suspend fun genererPdf(behovsmelding: Any): ByteArray {
         return try {
             withContext(Dispatchers.IO) {
@@ -27,8 +24,12 @@ class PdfService(
                 }.body()
             }
         } catch (e: Exception) {
-            LOG.error("Feil ved generering av pdf", e)
+            log.error("Feil ved generering av pdf", e)
             throw e
         }
+    }
+
+    companion object {
+        private val log = KotlinLogging.logger {}
     }
 }

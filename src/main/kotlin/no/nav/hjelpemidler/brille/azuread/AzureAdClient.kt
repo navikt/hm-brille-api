@@ -8,9 +8,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.time.Instant
 
-private val log = KotlinLogging.logger {}
-private val objectMapper = jacksonObjectMapper()
-
 class AzureAdClient(
     private val props: Configuration.AzureAdProperties = Configuration.azureAdProperties,
 ) {
@@ -59,6 +56,11 @@ class AzureAdClient(
             expiresIn = jsonNode["expires_in"].longValue(),
             accessToken = jsonNode["access_token"].textValue()
         )
+    }
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+        private val objectMapper = jacksonObjectMapper()
     }
 }
 

@@ -8,19 +8,19 @@ data class Behandler(
     val hprNummer: Int?,
     val fornavn: String?,
     val mellomnavn: String?,
-    val etternavn: String?
+    val etternavn: String?,
 )
 
 data class Godkjenning(
     val helsepersonellkategori: Kode? = null,
     val autorisasjon: Kode? = null,
-    val tillegskompetanse: List<Tilleggskompetanse>? = null
+    val tillegskompetanse: List<Tilleggskompetanse>? = null,
 )
 
 data class Kode(
     val aktiv: Boolean,
     val oid: Int,
-    val verdi: String?
+    val verdi: String?,
 )
 
 data class Tilleggskompetanse(
@@ -28,10 +28,10 @@ data class Tilleggskompetanse(
     val eTag: String?,
     val gyldig: Periode?,
     val id: Int?,
-    val type: Kode?
+    val type: Kode?,
 )
 
 data class Periode(
     val fra: LocalDateTime?,
-    val til: LocalDateTime?
+    val til: LocalDateTime?,
 )

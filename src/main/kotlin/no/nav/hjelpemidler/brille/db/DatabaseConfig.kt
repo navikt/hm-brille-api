@@ -12,8 +12,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-private val LOG = KotlinLogging.logger {}
-
 class DatabaseConfig(
     private val dbProperties: Configuration.DatabaseProperties = Configuration.dbProperties,
 ) {
@@ -46,7 +44,7 @@ class DatabaseConfig(
                 Socket(dbProperties.databaseHost, dbProperties.databasePort.toInt())
                 return true
             } catch (e: Exception) {
-                LOG.info("Database not available yet, waiting...")
+                log.info("Database not available yet, waiting...")
                 Thread.sleep(2.seconds.inWholeMilliseconds)
             }
             if (LocalDateTime.now().isAfter(deadline)) break
@@ -56,4 +54,8 @@ class DatabaseConfig(
 
     private fun migrate(dataSource: HikariDataSource, initSql: String = ""): MigrateResult =
         Flyway.configure().dataSource(dataSource).initSql(initSql).load().migrate()
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 }

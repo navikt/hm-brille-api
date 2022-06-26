@@ -23,7 +23,7 @@ object HttpClientConfig {
         install(HttpTimeout)
     }
 
-    fun retyringHttpClient(): HttpClient = HttpClient(CIO) {
+    fun retryingHttpClient(): HttpClient = HttpClient(CIO) {
         expectSuccess = true
         install(HttpRequestRetry) {
             retryOnServerErrors(maxRetries = 3)

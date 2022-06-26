@@ -9,7 +9,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.hjelpemidler.brille.model.TidligereBrukteOrgnrForOptiker
-import java.lang.RuntimeException
 import java.time.LocalDateTime
 import java.time.Month
 import java.util.UUID

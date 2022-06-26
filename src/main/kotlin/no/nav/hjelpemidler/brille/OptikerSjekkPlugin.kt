@@ -20,7 +20,10 @@ val SjekkOptikerPlugin = createApplicationPlugin(
         }
 
         val behandler = runCatching { syfohelsenettproxyClient.hentBehandler(fnrOptiker) }.getOrElse {
-            throw SjekkOptikerPluginException(HttpStatusCode.InternalServerError, "Kunne ikke hente data fra syfohelsenettproxyClient: $it")
+            throw SjekkOptikerPluginException(
+                HttpStatusCode.InternalServerError,
+                "Kunne ikke hente data fra syfohelsenettproxyClient: $it"
+            )
         }
 
         // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
@@ -28,13 +31,16 @@ val SjekkOptikerPlugin = createApplicationPlugin(
         val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
         val erOptiker = behandler.godkjenninger.filter {
             it.helsepersonellkategori?.aktiv == true && (
-                it.helsepersonellkategori.verdi
-                    ?: ""
-                ) == helsepersonellkategoriVerdi
+                    it.helsepersonellkategori.verdi
+                        ?: ""
+                    ) == helsepersonellkategoriVerdi
         }.isNotEmpty()
 
         if (!erOptiker) {
-            throw SjekkOptikerPluginException(HttpStatusCode.Unauthorized, "innlogget bruker er ikke registrert som optiker i HPR")
+            throw SjekkOptikerPluginException(
+                HttpStatusCode.Unauthorized,
+                "innlogget bruker er ikke registrert som optiker i HPR"
+            )
         }
     }
 }

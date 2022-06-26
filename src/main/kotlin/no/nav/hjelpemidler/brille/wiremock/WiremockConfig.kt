@@ -1,11 +1,6 @@
 package no.nav.hjelpemidler.brille.wiremock
 
-import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
-import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer
-import mu.KotlinLogging
-
+/*
 private val LOG = KotlinLogging.logger {}
 
 class WiremockConfig {
@@ -50,3 +45,4 @@ class WiremockConfig {
         return wireMockServer
     }
 }
+*/
