@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.pdl.service
+package no.nav.hjelpemidler.brille.pdl
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -7,9 +7,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.Profile
-import no.nav.hjelpemidler.brille.pdl.client.PdlClient
-import no.nav.hjelpemidler.brille.pdl.model.PersonDetaljerDto
-import no.nav.hjelpemidler.brille.pdl.model.toPersonDto
 
 private val LOG = KotlinLogging.logger {}
 

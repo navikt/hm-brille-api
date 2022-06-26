@@ -20,20 +20,18 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
-import no.nav.hjelpemidler.brille.configurations.applicationConfig.HttpClientConfig.httpClient
-import no.nav.hjelpemidler.brille.configurations.applicationConfig.MDC_CORRELATION_ID
-import no.nav.hjelpemidler.brille.configurations.applicationConfig.setupCallId
 import no.nav.hjelpemidler.brille.db.DatabaseConfig
 import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
-import no.nav.hjelpemidler.brille.internal.selvtestRoutes
+import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.model.AvvisningsType
-import no.nav.hjelpemidler.brille.pdl.client.PdlClient
-import no.nav.hjelpemidler.brille.pdl.service.PdlService
+import no.nav.hjelpemidler.brille.pdl.PdlClient
+import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.utils.Vilkårsvurdering
 import org.slf4j.event.Level
@@ -98,7 +96,7 @@ fun Application.setupRoutes() {
     installAuthentication(httpClient())
 
     routing {
-        selvtestRoutes()
+        selfTestRoutes()
 
         authenticate(TOKEN_X_AUTH) {
             post("/sjekk-kan-soke") {

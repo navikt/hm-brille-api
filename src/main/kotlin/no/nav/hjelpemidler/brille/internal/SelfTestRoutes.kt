@@ -7,7 +7,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 
-fun Route.selvtestRoutes() {
+fun Route.selfTestRoutes() {
     route("/internal") {
         get("/isAlive") {
             try {

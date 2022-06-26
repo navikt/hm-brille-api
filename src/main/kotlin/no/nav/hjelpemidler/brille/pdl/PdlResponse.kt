@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.pdl.model
+package no.nav.hjelpemidler.brille.pdl
 
 import java.time.LocalDate
 import java.time.LocalDateTime

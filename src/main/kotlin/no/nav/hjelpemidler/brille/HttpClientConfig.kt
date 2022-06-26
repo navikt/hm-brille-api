@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.configurations.applicationConfig
+package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature

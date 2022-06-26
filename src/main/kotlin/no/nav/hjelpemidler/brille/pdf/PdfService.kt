@@ -24,7 +24,9 @@ class PdfService(
                 }.body()
             }
         } catch (e: Exception) {
-            log.error("Feil ved generering av pdf", e)
+            log.error(e) {
+                "Feil ved generering av pdf"
+            }
             throw e
         }
     }

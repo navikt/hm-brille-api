@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.pdl.client
+package no.nav.hjelpemidler.brille.pdl
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -21,12 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
-import no.nav.hjelpemidler.brille.pdl.model.PdlIdentResponse
-import no.nav.hjelpemidler.brille.pdl.model.PdlPersonResponse
-import no.nav.hjelpemidler.brille.pdl.model.PersonGraphqlQuery
-import no.nav.hjelpemidler.brille.pdl.model.hentIdenterQuery
-import no.nav.hjelpemidler.brille.pdl.model.hentPersonDetaljerQuery
-import no.nav.hjelpemidler.brille.pdl.model.hentPersonQuery
 import java.util.UUID
 
 class PdlClient(

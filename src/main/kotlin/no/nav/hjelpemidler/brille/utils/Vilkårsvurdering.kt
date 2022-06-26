@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.nav.hjelpemidler.brille.db.VedtakStore
 import no.nav.hjelpemidler.brille.model.AvvisningsType
-import no.nav.hjelpemidler.brille.pdl.model.PersonDetaljerDto
+import no.nav.hjelpemidler.brille.pdl.PersonDetaljerDto
 
 private val objectMapper = jacksonObjectMapper()
     .registerModule(JavaTimeModule())
