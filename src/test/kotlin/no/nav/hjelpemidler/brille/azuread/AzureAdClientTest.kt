@@ -9,7 +9,7 @@ import kotlin.test.Test
 internal class AzureAdClientTest {
     private val client = AzureAdClient(
         AzureAdProperties(
-            openidConfigTokenEndpoint = "http://localhost:8080/default/token",
+            openidConfigTokenEndpoint = "http://localhost:1234/default/token",
             tenantId = "default",
             clientId = "default",
             clientSecret = ""
@@ -18,7 +18,7 @@ internal class AzureAdClientTest {
 
     @Test
     internal fun `kaster feil`() {
-        val throwable = assertThrows(RuntimeException::class.java) {
+        val throwable = assertThrows(Exception::class.java) {
             runBlocking(Dispatchers.IO) {
                 client.getToken("default")
             }
