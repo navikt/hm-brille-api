@@ -32,9 +32,9 @@ val SjekkOptikerPlugin = createApplicationPlugin(
         val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
         val erOptiker = behandler.godkjenninger.any {
             it.helsepersonellkategori?.aktiv == true && (
-                    it.helsepersonellkategori.verdi
-                        ?: ""
-                    ) == helsepersonellkategoriVerdi
+                it.helsepersonellkategori.verdi
+                    ?: ""
+                ) == helsepersonellkategoriVerdi
         }
 
         if (!erOptiker) {

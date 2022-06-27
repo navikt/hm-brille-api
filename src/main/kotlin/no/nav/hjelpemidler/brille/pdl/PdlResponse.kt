@@ -143,7 +143,7 @@ fun PdlPersonResponse.harFeilmeldinger(): Boolean {
 
 fun PdlPersonResponse.feilType(): PdlFeiltype {
     return if (this.errors.map { it.extensions.code }
-            .contains("not_found")
+        .contains("not_found")
     ) PdlFeiltype.IKKE_FUNNET else PdlFeiltype.TEKNISK_FEIL
 }
 
