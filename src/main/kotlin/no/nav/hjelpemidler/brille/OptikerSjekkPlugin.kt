@@ -6,9 +6,11 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.AuthenticationChecked
 import io.ktor.server.auth.AuthenticationRouteSelector
 import io.ktor.server.routing.Route
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
 
@@ -26,30 +28,57 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
     createConfiguration = ::SjekkOptikerPluginConfiguration,
 ) {
     val syfohelsenettproxyClient = this.pluginConfig.syfohelsenettproxyClient!!
+
+    // In-memory (1 hour) cache of helsenett-lookups
+    val inMemCacheErOptiker: MutableMap<String, Pair<LocalDateTime, Boolean>> = mutableMapOf()
+    val sjekkErOptiker = { fnrOptiker: String ->
+        synchronized(inMemCacheErOptiker) {
+            // Clean up stale items in cache
+            inMemCacheErOptiker.filter {
+                it.value.first.isBefore(LocalDateTime.now())
+            }.forEach { inMemCacheErOptiker.remove(it.key) }
+
+            // Check if we have this fnrOptiker cached
+            if (inMemCacheErOptiker[fnrOptiker] == null) {
+                // Else we revalidate the cache
+                val behandler =
+                    runCatching { runBlocking { syfohelsenettproxyClient.hentBehandler(fnrOptiker) } }.getOrElse {
+                        throw SjekkOptikerPluginException(
+                            HttpStatusCode.InternalServerError,
+                            "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
+                            it
+                        )
+                    }
+
+                if (Configuration.profile == Profile.DEV) log.info(
+                    "DEBUG: DEBUG: Behandler: ${
+                    jsonMapper.writeValueAsString(
+                        behandler
+                    )
+                    }"
+                )
+
+                // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
+                val erOptiker = behandler.godkjenninger.any {
+                    it.helsepersonellkategori?.aktiv == true && (
+                        it.helsepersonellkategori.verdi
+                            ?: ""
+                        ) == "OP"
+                }
+
+                inMemCacheErOptiker[fnrOptiker] = Pair(LocalDateTime.now().plusHours(1), erOptiker)
+            }
+
+            inMemCacheErOptiker[fnrOptiker]!!.second
+        }
+    }
+
     on(AuthenticationChecked) { call ->
         val fnrOptiker = runCatching { call.extractFnr() }.getOrElse {
             throw SjekkOptikerPluginException(HttpStatusCode.BadRequest, "finner ikke optikers fnr i token")
         }
 
-        val behandler = runCatching { syfohelsenettproxyClient.hentBehandler(fnrOptiker) }.getOrElse {
-            throw SjekkOptikerPluginException(
-                HttpStatusCode.InternalServerError,
-                "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
-                it
-            )
-        }
-
-        if (Configuration.profile == Profile.DEV) log.info("DEBUG: DEBUG: Behandler: ${jsonMapper.writeValueAsString(behandler)}")
-
-        // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
-        val erOptiker = behandler.godkjenninger.any {
-            it.helsepersonellkategori?.aktiv == true && (
-                it.helsepersonellkategori.verdi
-                    ?: ""
-                ) == "OP"
-        }
-
-        if (!erOptiker) {
+        if (!sjekkErOptiker(fnrOptiker)) {
             throw SjekkOptikerPluginException(
                 HttpStatusCode.Unauthorized,
                 "innlogget bruker er ikke registrert som optiker i HPR"
