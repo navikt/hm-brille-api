@@ -28,8 +28,8 @@ val SjekkOptikerPluginInternal = createRouteScopedPlugin(
         // Slipp igjennom kall for liveness/readiness/metrics
         if (call.request.uri.startsWith("/internal/")) return@on
 
-        val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: runCatching { call.extractFnr() }.getOrElse {
-            throw SjekkOptikerPluginException(HttpStatusCode.BadRequest, "finner ikke fnr i token")
+        val fnrOptiker = runCatching { call.extractFnr() }.getOrElse {
+            throw SjekkOptikerPluginException(HttpStatusCode.BadRequest, "finner ikke optikers fnr i token")
         }
 
         val behandler = runCatching { syfohelsenettproxyClient.hentBehandler(fnrOptiker) }.getOrElse {
@@ -40,14 +40,12 @@ val SjekkOptikerPluginInternal = createRouteScopedPlugin(
             )
         }
 
-        // FIXME: Sjekker nå om man er lege hvis fnr kommer fra headeren i stede for idporten-session; dette er bare for testing
         // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
-        val helsepersonellkategoriVerdi = if (call.request.headers["x-optiker-fnr"] == null) "OP" else "LE"
         val erOptiker = behandler.godkjenninger.any {
             it.helsepersonellkategori?.aktiv == true && (
                 it.helsepersonellkategori.verdi
                     ?: ""
-                ) == helsepersonellkategoriVerdi
+                ) == "OP"
         }
 
         if (!erOptiker) {

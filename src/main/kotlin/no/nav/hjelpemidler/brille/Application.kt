@@ -126,7 +126,7 @@ fun Application.setupRoutes() {
                 }
 
                 get("/orgnr") {
-                    val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+                    val fnrOptiker = call.extractFnr()
                     call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker))
                 }
 
@@ -159,7 +159,7 @@ fun Application.setupRoutes() {
                     // Innvilg søknad og opprett vedtak
                     vedtakStore.opprettVedtak(
                         request.fnr,
-                        call.request.headers["x-optiker-fnr"] ?: call.extractFnr(),
+                        call.extractFnr(),
                         request.orgnr,
                         jsonMapper.valueToTree(request)
                     )

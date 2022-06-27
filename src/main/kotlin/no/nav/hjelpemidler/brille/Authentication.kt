@@ -48,11 +48,6 @@ fun Application.installAuthentication(httpClient: HttpClient) {
                 require(credentials.payload.audience.contains(tokenXConfig.clientId)) {
                     "Auth: Valid audience not found in claims"
                 }
-
-                if (Configuration.profile == Profile.DEV) log.info(
-                    "DEBUG: DEBUG: fnr=${credentials.payload.getClaim(Configuration.tokenXProperties.userclaim).asString()}"
-                )
-
                 require(credentials.payload.getClaim("acr").asString() == ("Level4")) { "Auth: Level4 required" }
                 UserPrincipal(credentials.payload.getClaim(Configuration.tokenXProperties.userclaim).asString())
             }
