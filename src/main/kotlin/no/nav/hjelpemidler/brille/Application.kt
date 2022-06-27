@@ -96,7 +96,7 @@ fun Application.setupRoutes() {
         selfTestRoutes()
 
         authenticate(TOKEN_X_AUTH) {
-            SjekkOptikerPlugin(syfohelsenettproxyClient) {
+            authenticateOptiker(syfohelsenettproxyClient) {
                 post("/sjekk-kan-soke") {
                     data class Request(val fnr: String)
                     data class Response(

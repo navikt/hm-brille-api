@@ -9,7 +9,7 @@ import io.ktor.server.routing.Route
 import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 
-fun Route.SjekkOptikerPlugin(syfohelsenettproxyClient: SyfohelsenettproxyClient, build: Route.() -> Unit): Route {
+fun Route.authenticateOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient, build: Route.() -> Unit): Route {
     val authenticatedRoute = createChild(AuthenticationRouteSelector(listOf("sjekkOptikerPlugin")))
     authenticatedRoute.install(SjekkOptikerPluginInternal) {
         this.syfohelsenettproxyClient = syfohelsenettproxyClient
