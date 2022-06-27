@@ -3,6 +3,7 @@ package no.nav.hjelpemidler.brille
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.engine.mock.MockRequestHandler
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.engine.mock.respondError
 import io.ktor.client.request.HttpRequestData
@@ -21,20 +22,26 @@ private val log = KotlinLogging.logger { }
 class MockRoute(
     val url: String,
     val method: HttpMethod,
-    val configure: MockRequestHandleScope.() -> HttpResponseData,
+    val handler: MockRequestHandler,
 )
 
 class MockEngineBuilder(private val routes: MutableList<MockRoute> = mutableListOf()) : List<MockRoute> by routes {
-    private fun add(url: String, method: HttpMethod, configure: MockRequestHandleScope.() -> HttpResponseData) =
-        routes.add(MockRoute(url = url, method = method, configure = configure))
+    private fun add(
+        url: String,
+        method: HttpMethod,
+        configure: MockRequestHandler,
+    ) = routes.add(MockRoute(url = url, method = method, handler = configure))
 
-    fun get(url: String, configure: MockRequestHandleScope.() -> HttpResponseData) =
+    fun get(url: String, configure: MockRequestHandler) =
         add(url = url, method = HttpMethod.Get, configure = configure)
 
-    fun post(url: String, configure: MockRequestHandleScope.() -> HttpResponseData) =
+    fun post(url: String, configure: MockRequestHandler) =
         add(url = url, method = HttpMethod.Post, configure = configure)
 
-    fun findOrElse(request: HttpRequestData, fallback: MockRequestHandleScope.() -> HttpResponseData): MockRoute =
+    fun findOrElse(
+        request: HttpRequestData,
+        fallback: MockRequestHandleScope.(request: HttpRequestData) -> HttpResponseData,
+    ): MockRoute =
         firstOrNull {
             it.url == request.url.encodedPath && it.method == request.method
         } ?: MockRoute(request.url.encodedPath, request.method, fallback)
@@ -55,7 +62,7 @@ object StubEngine {
         log.info { "Svarer på ${request.method.value} ${request.url}" }
         mockEngineBuilder(block)
             .findOrElse(request) { respondError(HttpStatusCode.NotFound) }
-            .configure(this)
+            .handler(this, request)
     }
 
     fun azureAd(): HttpClientEngine = mockEngine {
