@@ -90,11 +90,11 @@ fun Application.setupRoutes() {
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
 
-    installAuthentication(httpClient())
-
     install(SjekkOptikerPlugin) {
         this.syfohelsenettproxyClient = syfohelsenettproxyClient
     }
+
+    installAuthentication(httpClient())
 
     routing {
         selfTestRoutes()
