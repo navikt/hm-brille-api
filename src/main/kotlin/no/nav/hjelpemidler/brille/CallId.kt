@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.configurations.applicationConfig
+package no.nav.hjelpemidler.brille
 
 import io.ktor.http.HttpHeaders
 import io.ktor.server.application.Application
@@ -11,9 +11,8 @@ const val MDC_CORRELATION_ID = "correlation-id"
 private val uuidLength = UUID.randomUUID().toString().length
 
 fun Application.setupCallId() {
-
     install(CallId) {
-        // Spesifiser hvilken header callId skal hentes fra (og evt settes på dersom det mangler)
+        // Spesifiser hvilken header callId skal hentes fra (og evt. settes på dersom det mangler)
         header(HttpHeaders.XCorrelationId)
 
         // Generer ny callId dersom den mangler

@@ -7,9 +7,9 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 
-fun Route.selvtestRoutes() {
+fun Route.selfTestRoutes() {
     route("/internal") {
-        get("/isAlive") {
+        get("/is-alive") {
             try {
                 call.respondText("Application is alive!", status = HttpStatusCode.OK)
             } catch (e: Exception) {
@@ -17,7 +17,7 @@ fun Route.selvtestRoutes() {
             }
         }
 
-        get("/isReady") {
+        get("/is-ready") {
             call.respondText("Application is ready!", status = HttpStatusCode.OK)
         }
     }

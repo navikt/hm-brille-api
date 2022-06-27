@@ -14,13 +14,13 @@ spec:
     min: {{ min-replicas }}
     max: {{ max-replicas }}
   liveness:
-    path: /internal/isAlive
+    path: /internal/is-alive
     initialDelay: 50
     timeout: 1
     periodSeconds: 10
     failureThreshold: 3
   readiness:
-    path: /internal/isReady
+    path: /internal/is-ready
     initialDelay: 50
     timeout: 1
   resources:

@@ -74,7 +74,7 @@ object Configuration {
             else -> localProperties
         }
 
-    val config =
+    private val config =
         systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
 
     val profile: Profile = this["application.profile"].let { Profile.valueOf(it) }

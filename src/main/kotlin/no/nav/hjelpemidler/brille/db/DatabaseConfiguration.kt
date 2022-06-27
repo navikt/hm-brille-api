@@ -12,9 +12,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-private val LOG = KotlinLogging.logger {}
-
-class DatabaseConfig(
+class DatabaseConfiguration(
     private val dbProperties: Configuration.DatabaseProperties = Configuration.dbProperties,
 ) {
     fun dataSource(): DataSource {
@@ -22,7 +20,7 @@ class DatabaseConfig(
             throw Exception("database never became available within the deadline")
         }
 
-        val ds = HikariDataSource().apply {
+        val dataSource = HikariDataSource().apply {
             username = dbProperties.databaseUser
             password = dbProperties.databasePassword
             jdbcUrl =
@@ -34,9 +32,9 @@ class DatabaseConfig(
             maxLifetime = 30001
         }
 
-        migrate(ds)
+        migrate(dataSource)
 
-        return ds
+        return dataSource
     }
 
     private fun waitForDB(timeout: Duration): Boolean {
@@ -46,7 +44,7 @@ class DatabaseConfig(
                 Socket(dbProperties.databaseHost, dbProperties.databasePort.toInt())
                 return true
             } catch (e: Exception) {
-                LOG.info("Database not available yet, waiting...")
+                log.info("Database not available yet, waiting...")
                 Thread.sleep(2.seconds.inWholeMilliseconds)
             }
             if (LocalDateTime.now().isAfter(deadline)) break
@@ -56,4 +54,8 @@ class DatabaseConfig(
 
     private fun migrate(dataSource: HikariDataSource, initSql: String = ""): MigrateResult =
         Flyway.configure().dataSource(dataSource).initSql(initSql).load().migrate()
+
+    companion object {
+        private val log = KotlinLogging.logger {}
+    }
 }

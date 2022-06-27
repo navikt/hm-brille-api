@@ -1,72 +1,104 @@
 package no.nav.hjelpemidler.brille.azuread
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.DeserializationFeature
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.auth.providers.BearerTokens
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.forms.submitForm
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
+import io.ktor.serialization.jackson.jackson
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
-import java.io.InputStream
-import java.net.HttpURLConnection
-import java.net.URL
 import java.time.Instant
-
-private val log = KotlinLogging.logger {}
-private val objectMapper = jacksonObjectMapper()
 
 class AzureAdClient(
     private val props: Configuration.AzureAdProperties = Configuration.azureAdProperties,
+    engine: HttpClientEngine = CIO.create(),
 ) {
+    private val client = HttpClient(engine) {
+        expectSuccess = false
+        install(ContentNegotiation) {
+            jackson {
+                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            }
+        }
+    }
+    private val mutex = Mutex()
     private val tokenCache: MutableMap<String, Token> = mutableMapOf()
 
-    fun getToken(scope: String) =
+    private suspend fun grant(scope: String): Token {
+        val response = client
+            .submitForm(
+                url = props.openidConfigTokenEndpoint,
+                formParameters = Parameters.build {
+                    append("grant_type", "client_credentials")
+                    append("client_id", props.clientId)
+                    append("client_secret", props.clientSecret)
+                    append("scope", scope)
+                },
+            )
+        if (response.status == HttpStatusCode.OK) {
+            return response.body()
+        }
+        val messageAndError = runCatching {
+            val error = response.body<TokenError>().toString()
+            "Uventet svar fra Azure AD, status: ${response.status}, error: $error" to null
+        }.getOrElse {
+            "Uventet svar fra Azure AD, status: ${response.status}" to it
+        }
+        throw AzureAdClientException(messageAndError.first, messageAndError.second)
+    }
+
+    suspend fun getToken(scope: String): Token = mutex.withLock {
         tokenCache[scope]
             ?.takeUnless(Token::isExpired)
-            ?: fetchToken(scope)
+            ?: grant(scope)
                 .also { token ->
+                    log.debug { "Token oppdatert, scope: $scope" }
                     tokenCache[scope] = token
                 }
+    }
 
-    private fun fetchToken(scope: String): Token {
-        val (responseCode, responseBody) = with(URL(props.openidConfigTokenEndpoint).openConnection() as HttpURLConnection) {
-            requestMethod = "POST"
-            connectTimeout = 10000
-            readTimeout = 10000
-            doOutput = true
-            outputStream.use {
-                it.bufferedWriter().apply {
-                    write("client_id=${props.clientId}&client_secret=${props.clientSecret}&scope=$scope&grant_type=client_credentials")
-                    flush()
-                }
-            }
-
-            val stream: InputStream? = if (responseCode < 300) this.inputStream else this.errorStream
-            responseCode to stream?.bufferedReader()?.readText()
-        }
-
-        if (responseBody == null) {
-            throw RuntimeException("ukjent feil fra azure ad (responseCode=$responseCode), responseBody er null")
-        }
-
-        val jsonNode = objectMapper.readTree(responseBody)
-
-        if (jsonNode.has("error")) {
-            log.error("${jsonNode["error_description"].textValue()}: $jsonNode")
-            throw RuntimeException("error from the azure token endpoint: ${jsonNode["error_description"].textValue()}")
-        } else if (responseCode >= 300) {
-            throw RuntimeException("unknown error (responseCode=$responseCode) from azure ad")
-        }
-
-        return Token(
-            tokenType = jsonNode["token_type"].textValue(),
-            expiresIn = jsonNode["expires_in"].longValue(),
-            accessToken = jsonNode["access_token"].textValue()
-        )
+    companion object {
+        private val log = KotlinLogging.logger {}
     }
 }
 
-private const val TOKEN_LEEWAY_SECONDS = 60
+class AzureAdClientException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
-data class Token(val tokenType: String, val expiresIn: Long, val accessToken: String) {
+data class Token(
+    @JsonProperty("token_type")
+    val tokenType: String,
+    @JsonProperty("expires_in")
+    val expiresIn: Long,
+    @JsonProperty("access_token")
+    val accessToken: String,
+) {
+    @JsonIgnore
+    private val expiresOn: Instant = Instant.now().plusSeconds(expiresIn - TOKEN_LEEWAY_SECONDS)
 
-    private val expiresOn = Instant.now().plusSeconds(expiresIn - TOKEN_LEEWAY_SECONDS)
+    @JsonIgnore
+    fun isExpired(): Boolean = expiresOn.isBefore(Instant.now())
 
-    fun isExpired() = expiresOn.isBefore(Instant.now())
+    @JsonIgnore
+    fun toBearerTokens(): BearerTokens = BearerTokens(accessToken, "")
+
+    companion object {
+        private const val TOKEN_LEEWAY_SECONDS = 60
+    }
 }
+
+data class TokenError(
+    @JsonProperty("error")
+    val error: String? = null,
+    @JsonProperty("error_description")
+    val errorDescription: String? = null,
+)

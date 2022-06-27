@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.pdl.model
+package no.nav.hjelpemidler.brille.pdl
 
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -12,24 +12,24 @@ data class PdlError(
     val message: String,
     val locations: List<PdlErrorLocation> = emptyList(),
     val path: List<String>? = emptyList(),
-    val extensions: PdlErrorExtension
+    val extensions: PdlErrorExtension,
 )
 
 data class PdlErrorLocation(
     val line: Int?,
-    val column: Int?
+    val column: Int?,
 )
 
 data class PdlErrorExtension(
     val code: String?,
-    val classification: String
+    val classification: String,
 )
 
 // HentPerson
 
 data class PdlPersonResponse(
     val errors: List<PdlError> = emptyList(),
-    val data: PdlHentPerson?
+    val data: PdlHentPerson?,
 )
 
 data class PdlHentPerson(
@@ -48,11 +48,11 @@ data class PdlPerson(
 data class PdlPersonNavn(
     val fornavn: String,
     val mellomnavn: String? = null,
-    val etternavn: String
+    val etternavn: String,
 )
 
 data class Adressebeskyttelse(
-    val gradering: Gradering
+    val gradering: Gradering,
 )
 
 data class Bostedsadresse(val vegadresse: Vegadresse?, val matrikkeladresse: Matrikkeladresse?)
@@ -63,7 +63,7 @@ data class Vegadresse(
     val husnummer: String? = null,
     val kommunenummer: String? = null,
     val husbokstav: String? = null,
-    val tilleggsnavn: String? = null
+    val tilleggsnavn: String? = null,
 )
 
 data class Matrikkeladresse(val postnummer: String?, val kommunenummer: String?)
@@ -143,7 +143,7 @@ fun PdlPersonResponse.harFeilmeldinger(): Boolean {
 
 fun PdlPersonResponse.feilType(): PdlFeiltype {
     return if (this.errors.map { it.extensions.code }
-        .contains("not_found")
+            .contains("not_found")
     ) PdlFeiltype.IKKE_FUNNET else PdlFeiltype.TEKNISK_FEIL
 }
 
@@ -203,7 +203,7 @@ fun PdlHentPerson.adresse(): Adresse {
 data class Adresse(
     val adresse: String?,
     val postnummer: String?,
-    val kommunenummer: String?
+    val kommunenummer: String?,
 )
 
 fun PdlHentPerson.isKode6Or7(): Boolean {
@@ -280,18 +280,18 @@ fun Adressebeskyttelse.isKode7(): Boolean {
 // HentIdent
 data class PdlIdentResponse(
     val errors: List<PdlError>?,
-    val data: PdlHentIdent?
+    val data: PdlHentIdent?,
 )
 
 data class PdlHentIdent(
-    val hentIdenter: PdlIdenter?
+    val hentIdenter: PdlIdenter?,
 )
 
 data class PdlIdenter(
-    val identer: List<PdlIdent>
+    val identer: List<PdlIdent>,
 )
 
 data class PdlIdent(
     val ident: String,
-    val gruppe: String?
+    val gruppe: String?,
 )

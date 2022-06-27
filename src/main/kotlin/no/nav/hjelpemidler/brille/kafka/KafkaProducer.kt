@@ -12,8 +12,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-private val log = KotlinLogging.logger {}
-
 class KafkaProducer(
     private val kafkaProducer: KafkaProducer<String, String>,
     kafkaProperties: Configuration.KafkaProperties = Configuration.kafkaProperties,
@@ -57,5 +55,9 @@ class KafkaProducer(
             log.error("Sending av event til $topic feilet")
             throw RuntimeException(e)
         }
+    }
+
+    companion object {
+        private val log = KotlinLogging.logger {}
     }
 }

@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.pdl.model
+package no.nav.hjelpemidler.brille.pdl
 
 data class PersonDetaljerDto(
     val fnr: String,
@@ -8,5 +8,5 @@ data class PersonDetaljerDto(
     val postnummer: String?,
     val poststed: String?,
     val alder: Int?,
-    val kommunenummer: String?
+    val kommunenummer: String?,
 )
