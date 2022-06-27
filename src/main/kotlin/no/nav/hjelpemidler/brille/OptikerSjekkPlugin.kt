@@ -36,10 +36,15 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
             // Clean up stale items in cache
             inMemCacheErOptiker.filter {
                 it.value.first.isBefore(LocalDateTime.now())
-            }.forEach { inMemCacheErOptiker.remove(it.key) }
+            }.forEach {
+                log.info("SjekkOptikerPlugin: Removing erOptiker-CacheItem from cache: fnrOptiker=${if (Configuration.profile == Profile.DEV) it.key else "[MASKED]"}")
+                inMemCacheErOptiker.remove(it.key)
+            }
 
             // Check if we have this fnrOptiker cached
             if (inMemCacheErOptiker[fnrOptiker] == null) {
+                log.info("SjekkOptikerPlugin: (Re)validating erOptiker-CacheItem: fnrOptiker=${if (Configuration.profile == Profile.DEV) fnrOptiker else "[MASKED]"}")
+
                 // Else we revalidate the cache
                 val behandler =
                     runCatching { runBlocking { syfohelsenettproxyClient.hentBehandler(fnrOptiker) } }.getOrElse {
