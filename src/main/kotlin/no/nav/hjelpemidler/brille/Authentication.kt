@@ -50,11 +50,7 @@ fun Application.installAuthentication(httpClient: HttpClient) {
                 }
 
                 if (Configuration.profile == Profile.DEV) log.info(
-                    "DEBUG: DEBUG: credentials: ${
-                        jsonMapper.writeValueAsString(
-                            credentials
-                        )
-                    }, payload: ${jsonMapper.writeValueAsString(credentials.payload)}"
+                    "DEBUG: DEBUG: fnr=${credentials.payload.getClaim(Configuration.tokenXProperties.userclaim).asString()}"
                 )
 
                 require(credentials.payload.getClaim("acr").asString() == ("Level4")) { "Auth: Level4 required" }
