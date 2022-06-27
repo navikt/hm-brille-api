@@ -14,14 +14,14 @@ private val log = KotlinLogging.logger {}
 
 fun Route.authenticateOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient, build: Route.() -> Unit): Route {
     val authenticatedRoute = createChild(AuthenticationRouteSelector(listOf("sjekkOptikerPlugin")))
-    authenticatedRoute.install(SjekkOptikerPluginInternal) {
+    authenticatedRoute.install(SjekkOptikerPlugin) {
         this.syfohelsenettproxyClient = syfohelsenettproxyClient
     }
     authenticatedRoute.build()
     return authenticatedRoute
 }
 
-val SjekkOptikerPluginInternal = createRouteScopedPlugin(
+val SjekkOptikerPlugin = createRouteScopedPlugin(
     name = "SjekkOptikerPlugin",
     createConfiguration = ::SjekkOptikerPluginConfiguration,
 ) {
