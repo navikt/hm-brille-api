@@ -5,7 +5,6 @@ import io.ktor.server.application.createRouteScopedPlugin
 import io.ktor.server.application.install
 import io.ktor.server.auth.AuthenticationChecked
 import io.ktor.server.auth.AuthenticationRouteSelector
-import io.ktor.server.request.uri
 import io.ktor.server.routing.Route
 import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
@@ -25,9 +24,6 @@ val SjekkOptikerPluginInternal = createRouteScopedPlugin(
 ) {
     val syfohelsenettproxyClient = this.pluginConfig.syfohelsenettproxyClient!!
     on(AuthenticationChecked) { call ->
-        // Slipp igjennom kall for liveness/readiness/metrics
-        if (call.request.uri.startsWith("/internal/")) return@on
-
         val fnrOptiker = runCatching { call.extractFnr() }.getOrElse {
             throw SjekkOptikerPluginException(HttpStatusCode.BadRequest, "finner ikke optikers fnr i token")
         }
