@@ -19,6 +19,8 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import java.time.Instant
 
+private val log = KotlinLogging.logger {}
+
 class AzureAdClient(
     private val props: Configuration.AzureAdProperties = Configuration.azureAdProperties,
     engine: HttpClientEngine = CIO.create(),
@@ -65,10 +67,6 @@ class AzureAdClient(
                     log.debug { "Token oppdatert, scope: $scope" }
                     tokenCache[scope] = token
                 }
-    }
-
-    companion object {
-        private val log = KotlinLogging.logger {}
     }
 }
 

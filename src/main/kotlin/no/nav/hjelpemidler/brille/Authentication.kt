@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 const val TOKEN_X_AUTH = "tokenX"
 
-private val LOG = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 fun Application.installAuthentication(httpClient: HttpClient) {
     var tokenXConfig: AuthenticationConfig
@@ -49,11 +49,11 @@ fun Application.installAuthentication(httpClient: HttpClient) {
                     "Auth: Valid audience not found in claims"
                 }
 
-                if (Configuration.profile == Profile.DEV) LOG.info(
+                if (Configuration.profile == Profile.DEV) log.info(
                     "DEBUG: DEBUG: credentials: ${
-                    jsonMapper.writeValueAsString(
-                        credentials
-                    )
+                        jsonMapper.writeValueAsString(
+                            credentials
+                        )
                     }, payload: ${jsonMapper.writeValueAsString(credentials.payload)}"
                 )
 

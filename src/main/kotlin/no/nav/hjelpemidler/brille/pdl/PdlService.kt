@@ -5,6 +5,8 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.jsonMapper
 
+private val log = KotlinLogging.logger {}
+
 class PdlService(
     private val pdlClient: PdlClient,
 ) {
@@ -26,9 +28,5 @@ class PdlService(
             }
             throw e
         }
-    }
-
-    companion object {
-        private val log = KotlinLogging.logger {}
     }
 }

@@ -3,6 +3,8 @@ package no.nav.hjelpemidler.brille.metrics
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.kafka.KafkaProducer
 
+private val log = KotlinLogging.logger {}
+
 class HjelpemiddelSoknadProbe(
     private val kafkaProducer: KafkaProducer,
 ) {
@@ -25,6 +27,5 @@ class HjelpemiddelSoknadProbe(
 
     companion object {
         private const val BRILLE = "hm-brille-api"
-        private val log = KotlinLogging.logger {}
     }
 }
