@@ -13,10 +13,13 @@ import io.ktor.server.auth.Principal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
 import kotlinx.coroutines.runBlocking
+import mu.KotlinLogging
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
 const val TOKEN_X_AUTH = "tokenX"
+
+private val LOG = KotlinLogging.logger {}
 
 fun Application.installAuthentication(httpClient: HttpClient) {
     var tokenXConfig: AuthenticationConfig
@@ -44,6 +47,8 @@ fun Application.installAuthentication(httpClient: HttpClient) {
                 require(credentials.payload.audience.contains(tokenXConfig.clientId)) {
                     "Auth: Valid audience not found in claims"
                 }
+
+                if (Configuration.profile == Profile.DEV) LOG.info("DEBUG: DEBUG: credentials: ${credentials}, payload: ${credentials.payload}")
 
                 require(credentials.payload.getClaim("acr").asString() == ("Level4")) { "Auth: Level4 required" }
                 UserPrincipal(credentials.payload.getClaim(Configuration.tokenXProperties.userclaim).asString())
