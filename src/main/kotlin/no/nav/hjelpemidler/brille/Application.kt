@@ -90,87 +90,85 @@ fun Application.setupRoutes() {
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
 
-    install(SjekkOptikerPlugin) {
-        this.syfohelsenettproxyClient = syfohelsenettproxyClient
-    }
-
     installAuthentication(httpClient())
 
     routing {
         selfTestRoutes()
 
         authenticate(TOKEN_X_AUTH) {
-            post("/sjekk-kan-soke") {
-                data class Request(val fnr: String)
-                data class Response(
-                    val fnr: String,
-                    val navn: String,
-                    val alder: Int,
-                    val kanSøke: Boolean,
-                    val begrunnelse: List<AvvisningsType>,
-                )
-
-                val fnrBruker = call.receive<Request>().fnr
-                if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-
-                val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
-
-                val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
-
-                call.respond(
-                    Response(
-                        fnrBruker,
-                        "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
-                        personInformasjon.alder!!,
-                        vilkår.valider(),
-                        vilkår.avvisningsGrunner(),
+            SjekkOptikerPlugin(syfohelsenettproxyClient) {
+                post("/sjekk-kan-soke") {
+                    data class Request(val fnr: String)
+                    data class Response(
+                        val fnr: String,
+                        val navn: String,
+                        val alder: Int,
+                        val kanSøke: Boolean,
+                        val begrunnelse: List<AvvisningsType>,
                     )
-                )
-            }
 
-            get("/orgnr") {
-                val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
-                call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker))
-            }
+                    val fnrBruker = call.receive<Request>().fnr
+                    if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
-            get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
-                val organisasjonsnummer =
-                    call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
-                val organisasjonsenhet =
-                    enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
-                call.respond(organisasjonsenhet)
-            }
+                    val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
 
-            post("/sok") {
-                data class Request(
-                    val fnr: String,
-                    val orgnr: String,
-                )
+                    val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
 
-                val request = call.receive<Request>()
-                if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-
-                val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
-
-                // Valider vilkår for å forsikre oss om at alle sjekker er gjort
-                val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
-                if (!vilkår.valider()) {
-                    call.respond(HttpStatusCode.BadRequest, "{}")
-                    return@post
+                    call.respond(
+                        Response(
+                            fnrBruker,
+                            "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
+                            personInformasjon.alder!!,
+                            vilkår.valider(),
+                            vilkår.avvisningsGrunner(),
+                        )
+                    )
                 }
 
-                // Innvilg søknad og opprett vedtak
-                vedtakStore.opprettVedtak(
-                    request.fnr,
-                    call.request.headers["x-optiker-fnr"] ?: call.extractFnr(),
-                    request.orgnr,
-                    jsonMapper.valueToTree(request)
-                )
+                get("/orgnr") {
+                    val fnrOptiker = call.request.headers["x-optiker-fnr"] ?: call.extractFnr()
+                    call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker))
+                }
 
-                // TODO: Journalfør søknad/vedtak som dokument i joark på barnet
-                // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+                get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
+                    val organisasjonsnummer =
+                        call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
+                    val organisasjonsenhet =
+                        enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+                    call.respond(organisasjonsenhet)
+                }
 
-                call.respond(HttpStatusCode.Created, "201 Created")
+                post("/sok") {
+                    data class Request(
+                        val fnr: String,
+                        val orgnr: String,
+                    )
+
+                    val request = call.receive<Request>()
+                    if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+
+                    val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
+
+                    // Valider vilkår for å forsikre oss om at alle sjekker er gjort
+                    val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+                    if (!vilkår.valider()) {
+                        call.respond(HttpStatusCode.BadRequest, "{}")
+                        return@post
+                    }
+
+                    // Innvilg søknad og opprett vedtak
+                    vedtakStore.opprettVedtak(
+                        request.fnr,
+                        call.request.headers["x-optiker-fnr"] ?: call.extractFnr(),
+                        request.orgnr,
+                        jsonMapper.valueToTree(request)
+                    )
+
+                    // TODO: Journalfør søknad/vedtak som dokument i joark på barnet
+                    // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+
+                    call.respond(HttpStatusCode.Created, "201 Created")
+                }
             }
         }
     }

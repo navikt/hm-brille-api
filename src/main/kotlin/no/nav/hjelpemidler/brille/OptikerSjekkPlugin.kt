@@ -1,13 +1,25 @@
 package no.nav.hjelpemidler.brille
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.createApplicationPlugin
+import io.ktor.server.application.createRouteScopedPlugin
+import io.ktor.server.application.install
 import io.ktor.server.auth.AuthenticationChecked
+import io.ktor.server.auth.AuthenticationRouteSelector
 import io.ktor.server.request.uri
+import io.ktor.server.routing.Route
 import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 
-val SjekkOptikerPlugin = createApplicationPlugin(
+fun Route.SjekkOptikerPlugin(syfohelsenettproxyClient: SyfohelsenettproxyClient, build: Route.() -> Unit): Route {
+    val authenticatedRoute = createChild(AuthenticationRouteSelector(listOf("sjekkOptikerPlugin")))
+    authenticatedRoute.install(SjekkOptikerPluginInternal) {
+        this.syfohelsenettproxyClient = syfohelsenettproxyClient
+    }
+    authenticatedRoute.build()
+    return authenticatedRoute
+}
+
+val SjekkOptikerPluginInternal = createRouteScopedPlugin(
     name = "SjekkOptikerPlugin",
     createConfiguration = ::SjekkOptikerPluginConfiguration,
 ) {
