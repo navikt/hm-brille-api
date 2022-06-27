@@ -16,7 +16,7 @@ object Configuration {
             "altinn.serviceCode" to "5614",
             "altinn.serviceEditionCode" to "1",
             "digihot-oppslag.oppslagUrl" to "http://digihot-oppslag/api",
-            "userclaim" to "sub",
+            "userclaim" to "pid",
             "enhetsregisteret_base_url" to "https://data.brreg.no/enhetsregisteret/api"
         )
     )
