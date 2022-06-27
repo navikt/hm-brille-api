@@ -12,6 +12,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
+private val log = KotlinLogging.logger {}
+
 class DatabaseConfiguration(
     private val dbProperties: Configuration.DatabaseProperties = Configuration.dbProperties,
 ) {
@@ -54,8 +56,4 @@ class DatabaseConfiguration(
 
     private fun migrate(dataSource: HikariDataSource, initSql: String = ""): MigrateResult =
         Flyway.configure().dataSource(dataSource).initSql(initSql).load().migrate()
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
 }

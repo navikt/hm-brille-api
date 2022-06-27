@@ -10,6 +10,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
 
+private val log = KotlinLogging.logger { }
+
 class EnhetsregisteretClient(private val baseUrl: String) {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -28,8 +30,4 @@ class EnhetsregisteretClient(private val baseUrl: String) {
         }
         throw EnhetsregisteretClientException("Uventet svar fra tjeneste: ${response.status}", null)
     }.getOrElse { throw EnhetsregisteretClientException("Feil under henting av organisasjonsenhet", it) }
-
-    companion object {
-        private val log = KotlinLogging.logger { }
-    }
 }

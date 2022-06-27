@@ -16,6 +16,8 @@ import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 
+private val log = KotlinLogging.logger { }
+
 class SyfohelsenettproxyClient(
     private val baseUrl: String,
     private val scope: String,
@@ -63,8 +65,4 @@ class SyfohelsenettproxyClient(
         }
         throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
     }.getOrElse { throw SyfohelsenettproxyClientException("Feil under henting av behandler data", it) }
-
-    companion object {
-        private val log = KotlinLogging.logger { }
-    }
 }

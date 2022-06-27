@@ -16,6 +16,8 @@ import no.nav.hjelpemidler.brille.azuread.Token
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
 import kotlin.time.Duration.Companion.hours
 
+private val log = KotlinLogging.logger { }
+
 class MockRoute(
     val url: String,
     val method: HttpMethod,
@@ -39,8 +41,6 @@ class MockEngineBuilder(private val routes: MutableList<MockRoute> = mutableList
 }
 
 object StubEngine {
-    private val log = KotlinLogging.logger { }
-
     private fun <T> MockRequestHandleScope.respond(body: T): HttpResponseData =
         respond(
             jsonMapper.writeValueAsString(body),

@@ -11,6 +11,8 @@ import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 
+private val log = KotlinLogging.logger {}
+
 class PdfService(
     private val httpClient: HttpClient,
     private val pdfProperties: Configuration.PdfProperties = Configuration.pdfProperties,
@@ -29,9 +31,5 @@ class PdfService(
             }
             throw e
         }
-    }
-
-    companion object {
-        private val log = KotlinLogging.logger {}
     }
 }
