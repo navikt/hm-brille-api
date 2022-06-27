@@ -6,8 +6,11 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.AuthenticationChecked
 import io.ktor.server.auth.AuthenticationRouteSelector
 import io.ktor.server.routing.Route
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+
+private val log = KotlinLogging.logger {}
 
 fun Route.authenticateOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient, build: Route.() -> Unit): Route {
     val authenticatedRoute = createChild(AuthenticationRouteSelector(listOf("sjekkOptikerPlugin")))
@@ -35,6 +38,8 @@ val SjekkOptikerPluginInternal = createRouteScopedPlugin(
                 it
             )
         }
+
+        if (Configuration.profile == Profile.DEV) log.info("DEBUG: DEBUG: Behandler: ${jsonMapper.writeValueAsString(behandler)}")
 
         // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
         val erOptiker = behandler.godkjenninger.any {
