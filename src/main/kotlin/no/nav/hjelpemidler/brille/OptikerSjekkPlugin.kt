@@ -37,13 +37,13 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
             inMemCacheErOptiker.filter {
                 it.value.first.isBefore(LocalDateTime.now())
             }.forEach {
-                log.info("SjekkOptikerPlugin: Removing erOptiker-CacheItem from cache: fnrOptiker=${if (Configuration.profile == Profile.DEV) it.key else "[MASKED]"}")
+                // log.info("SjekkOptikerPlugin: Removing erOptiker-CacheItem from cache: fnrOptiker=${if (Configuration.profile == Profile.DEV) it.key else "[MASKED]"}")
                 inMemCacheErOptiker.remove(it.key)
             }
 
             // Check if we have this fnrOptiker cached
             if (inMemCacheErOptiker[fnrOptiker] == null) {
-                log.info("SjekkOptikerPlugin: (Re)validating erOptiker-CacheItem: fnrOptiker=${if (Configuration.profile == Profile.DEV) fnrOptiker else "[MASKED]"}")
+                // log.info("SjekkOptikerPlugin: (Re)validating erOptiker-CacheItem: fnrOptiker=${if (Configuration.profile == Profile.DEV) fnrOptiker else "[MASKED]"}")
 
                 // Else we revalidate the cache
                 val behandler =
@@ -55,13 +55,13 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
                         )
                     }
 
-                if (Configuration.profile == Profile.DEV) log.info(
+                /* if (Configuration.profile == Profile.DEV) log.info(
                     "DEBUG: DEBUG: Behandler: ${
                     jsonMapper.writeValueAsString(
                         behandler
                     )
                     }"
-                )
+                ) */
 
                 // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
                 val erOptiker = behandler.godkjenninger.any {
@@ -71,10 +71,11 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
                         ) == "OP"
                 }
 
-                inMemCacheErOptiker[fnrOptiker] = Pair(LocalDateTime.now().plusMinutes(5), erOptiker)
+                // Cache the rest of the workday+ (nb: reduce if this takes too much mem, shouldn't really unless lots of abuse / DDOS)
+                inMemCacheErOptiker[fnrOptiker] = Pair(LocalDateTime.now().plusHours(8), erOptiker)
             }
 
-            log.info("SjekkOptikerPlugin: fnrOptiker=${if (Configuration.profile == Profile.DEV) fnrOptiker else "[MASKED]"} resultat=${inMemCacheErOptiker[fnrOptiker]!!.second}")
+            // log.info("SjekkOptikerPlugin: fnrOptiker=${if (Configuration.profile == Profile.DEV) fnrOptiker else "[MASKED]"} resultat=${inMemCacheErOptiker[fnrOptiker]!!.second}")
 
             inMemCacheErOptiker[fnrOptiker]!!.second
         }
