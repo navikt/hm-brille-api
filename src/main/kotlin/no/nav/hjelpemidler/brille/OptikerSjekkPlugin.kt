@@ -71,7 +71,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
                         ) == "OP"
                 }
 
-                inMemCacheErOptiker[fnrOptiker] = Pair(LocalDateTime.now().plusHours(1), erOptiker)
+                inMemCacheErOptiker[fnrOptiker] = Pair(LocalDateTime.now().plusMinutes(5), erOptiker)
             }
 
             log.info("SjekkOptikerPlugin: fnrOptiker=${if (Configuration.profile == Profile.DEV) fnrOptiker else "[MASKED]"} resultat=${inMemCacheErOptiker[fnrOptiker]!!.second}")
