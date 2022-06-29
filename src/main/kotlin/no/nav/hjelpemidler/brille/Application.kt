@@ -121,7 +121,7 @@ fun Application.setupRoutes() {
             // Innvilg søknad og opprett vedtak
             vedtakStore.opprettVedtak(
                 request.fnr,
-                call.extractFnr(),
+                "15084300133", // <- TODO SEDAT hardkodet for dev //call.extractFnr(),
                 request.orgnr,
                 jsonMapper.valueToTree(request)
             )
@@ -183,8 +183,6 @@ fun Application.setupRoutes() {
                         enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
                     call.respond(organisasjonsenhet)
                 }
-
-
             }
         }
     }

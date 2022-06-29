@@ -84,10 +84,10 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                     orgnr,
                     pgObjectOf(data),
                     LocalDateTime.now(),
-                ).asExecute
+                ).asUpdate
             )
         }
-        if (!result) {
+        if (result == 0) {
             throw RuntimeException("VedtakStore.opprettVedtak: feilet i å opprette vedtak (result=false)")
         }
     }
