@@ -19,6 +19,7 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.db.DatabaseConfiguration
@@ -38,6 +39,8 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.slf4j.event.Level
 import java.util.TimeZone
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
 
@@ -106,13 +109,17 @@ fun Application.setupRoutes() {
                 val orgnr: String,
             )
 
+            log.info { "endepunkt /sok" }
             val request = call.receive<Request>()
+            log.info { "request <$request>" }
             if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
             val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
+            log.info { "personInformasjon <$personInformasjon>" }
 
             // Valider vilkår for å forsikre oss om at alle sjekker er gjort
             val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+            log.info { "vilkår <$vilkår>" }
             if (!vilkår.valider()) {
                 call.respond(HttpStatusCode.BadRequest, "{}")
                 return@post
