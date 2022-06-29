@@ -50,7 +50,7 @@ class KafkaProducer(
         )
     }
 
-    private fun produceEvent(key: String, event: String) {
+    fun produceEvent(key: String, event: String) {
         try {
             kafkaProducer.send(ProducerRecord(topic, key, event)).get(10, TimeUnit.SECONDS)
         } catch (e: Exception) {
@@ -58,4 +58,12 @@ class KafkaProducer(
             throw RuntimeException(e)
         }
     }
+
+    internal data class BrilleVedtakData(
+        val fnrBarn: String,
+        val optikerOrgNr: String,
+        val eventId: UUID,
+        val eventName: String,
+        val opprettetDato: LocalDateTime = LocalDateTime.now()
+    )
 }

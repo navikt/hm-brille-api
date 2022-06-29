@@ -28,6 +28,8 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
+import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
+import no.nav.hjelpemidler.brille.kafka.KafkaProducer
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
@@ -35,6 +37,7 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.slf4j.event.Level
 import java.util.TimeZone
+import java.util.UUID
 
 fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
 
@@ -89,6 +92,7 @@ fun Application.setupRoutes() {
         azureAdClient,
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
+    val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
 
     installAuthentication(httpClient())
 
@@ -164,7 +168,16 @@ fun Application.setupRoutes() {
                         jsonMapper.valueToTree(request)
                     )
 
-                    // TODO: Journalfør søknad/vedtak som dokument i joark på barnet
+                    // Journalfør søknad/vedtak som dokument i joark på barnet
+                    val brilleVedtakData = KafkaProducer.BrilleVedtakData(
+                        request.fnr,
+                        request.orgnr,
+                        UUID.randomUUID(),
+                        "hm-brillevedtak-opprettet"
+                    )
+                    val event = jsonMapper.writeValueAsString(brilleVedtakData)
+                    kafkaProducer.produceEvent(request.fnr, event)
+
                     // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
 
                     call.respond(HttpStatusCode.Created, "201 Created")
