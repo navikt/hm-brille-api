@@ -52,12 +52,12 @@ jobs:
           RESOURCE: .hotnais/nais-deploy.yaml
           VARS: .hotnais/dev/config.json
       - name: post-deploy
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/prod-test-endpoints'
         uses: navikt/digihot-deploy/actions/post-deploy@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: draft release
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/prod-test-endpoints'
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
