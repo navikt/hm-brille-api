@@ -23,7 +23,7 @@ class PdlService(
                 "UKJENT"
             }
         } catch (e: Exception) {
-            log.warn(e) {
+            log.error(e) {
                 "Klarte ikke å hente person fra PDL"
             }
             throw e

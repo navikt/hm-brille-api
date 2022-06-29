@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - pdl-endpoints
+      - 20-journalføre-til-joark
 
 jobs:
   build-and-deploy:

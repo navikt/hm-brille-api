@@ -20,8 +20,11 @@ import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 class PdlClient(
     private val baseUrl: String,
@@ -64,7 +67,7 @@ class PdlClient(
 
     private suspend inline fun <reified T : Any> pdlRequest(pdlQuery: PersonGraphqlQuery): T {
         return withContext(Dispatchers.IO) {
-            client
+            val response = client
                 .post(baseUrl) {
                     headers {
                         contentType(Json)
@@ -74,7 +77,8 @@ class PdlClient(
                     }
                     setBody(pdlQuery)
                 }
-                .body()
+            
+            response.body()
         }
     }
 }

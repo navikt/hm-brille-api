@@ -19,6 +19,7 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.db.DatabaseConfiguration
@@ -28,6 +29,8 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
+import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
+import no.nav.hjelpemidler.brille.kafka.KafkaProducer
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
@@ -35,6 +38,9 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.slf4j.event.Level
 import java.util.TimeZone
+import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
 
@@ -89,11 +95,63 @@ fun Application.setupRoutes() {
         azureAdClient,
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
+    val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
 
     installAuthentication(httpClient())
 
     routing {
         selfTestRoutes()
+
+        // TODO: erstatt /sok når ferdig
+        post("/sok_test") {
+            data class Request(
+                val fnr: String,
+                val orgnr: String,
+            )
+
+            val request = call.receive<Request>()
+            if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+
+            /*
+            val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
+            log.info { "personInformasjon <$personInformasjon>" }
+
+
+            // Valider vilkår for å forsikre oss om at alle sjekker er gjort
+            val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+            log.info { "vilkår <$vilkår>" }
+            if (!vilkår.valider()) {
+                call.respond(HttpStatusCode.BadRequest, "{}")
+                return@post
+            }
+            */
+
+            // Innvilg søknad og opprett vedtak
+            vedtakStore.opprettVedtak(
+                request.fnr,
+                "15084300133", // <- TODO: SEDAT hardkodet for dev //call.extractFnr(),
+                request.orgnr,
+                jsonMapper.valueToTree(request)
+            )
+
+            val antallRader = vedtakStore.tellRader() // TODO: vi må finne ut hvordan vi faktisk sender sakId. Skal vi heller legge inn en sakId-kolonne som autoinkrementer?
+
+            // Journalfør søknad/vedtak som dokument i joark på barnet
+            val barneBrilleVedtakData = KafkaProducer.BarnebrilleVedtakData(
+                fnr = request.fnr,
+                orgnr = request.orgnr,
+                eventId = UUID.randomUUID(),
+                "hm-barnebrillevedtak-opprettet",
+                navnAvsender = "Ole Brumm", // TODO: hvilket navn skal dette egentlig være? Navnet til bruker (barn) eller optiker?
+                sakId = (antallRader + 1).toString()
+            )
+            val event = jsonMapper.writeValueAsString(barneBrilleVedtakData)
+            kafkaProducer.produceEvent(request.fnr, event)
+
+            // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+
+            call.respond(HttpStatusCode.Created, "201 Created")
+        }
 
         authenticate(TOKEN_X_AUTH) {
             authenticateOptiker(syfohelsenettproxyClient) {
@@ -145,6 +203,7 @@ fun Application.setupRoutes() {
                     )
 
                     val request = call.receive<Request>()
+
                     if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
                     val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
@@ -164,7 +223,7 @@ fun Application.setupRoutes() {
                         jsonMapper.valueToTree(request)
                     )
 
-                    // TODO: Journalfør søknad/vedtak som dokument i joark på barnet
+                    // TODO: Journalfør søknad/vedtak som dokument i joark på barnet (se /sok_test)
                     // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
 
                     call.respond(HttpStatusCode.Created, "201 Created")
