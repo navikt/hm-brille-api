@@ -202,6 +202,23 @@ fun Application.setupRoutes() {
             call.respond(jsonMapper.writeValueAsString(behandler))
         }
 
+        post("/temp/test/helsenett2") {
+            data class Request(val hprnr: String)
+
+            val req = call.receive<Request>()
+
+            val behandler =
+                runCatching { runBlocking { syfohelsenettproxyClient.hentBehandlerMedHprNummer(req.hprnr) } }.getOrElse {
+                    throw SjekkOptikerPluginException(
+                        HttpStatusCode.InternalServerError,
+                        "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
+                        it
+                    )
+                }
+
+            call.respond(jsonMapper.writeValueAsString(behandler))
+        }
+
         post("/temp/test/medlemskap") {
             data class Request(val fnr: String)
 
