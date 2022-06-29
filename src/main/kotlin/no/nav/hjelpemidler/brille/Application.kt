@@ -7,6 +7,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.bearer
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -47,6 +48,7 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.slf4j.event.Level
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.TimeZone
 
 fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
@@ -185,40 +187,6 @@ fun Application.setupRoutes() {
             }
         }
 
-        post("/temp/test/helsenett") {
-            data class Request(val fnr: String)
-
-            val req = call.receive<Request>()
-
-            val behandler =
-                runCatching { runBlocking { syfohelsenettproxyClient.hentBehandler(req.fnr) } }.getOrElse {
-                    throw SjekkOptikerPluginException(
-                        HttpStatusCode.InternalServerError,
-                        "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
-                        it
-                    )
-                }
-
-            call.respond(jsonMapper.writeValueAsString(behandler))
-        }
-
-        post("/temp/test/helsenett2") {
-            data class Request(val hprnr: String)
-
-            val req = call.receive<Request>()
-
-            val behandler =
-                runCatching { runBlocking { syfohelsenettproxyClient.hentBehandlerMedHprNummer(req.hprnr) } }.getOrElse {
-                    throw SjekkOptikerPluginException(
-                        HttpStatusCode.InternalServerError,
-                        "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
-                        it
-                    )
-                }
-
-            call.respond(jsonMapper.writeValueAsString(behandler))
-        }
-
         post("/temp/test/medlemskap") {
             data class Request(val fnr: String)
 
@@ -238,6 +206,9 @@ fun Application.setupRoutes() {
             val response =
                 client.post(if (Configuration.profile == Profile.DEV) "https://medlemskap-oppslag.dev.nav.no/" else "https://medlemskap-oppslag.intern.nav.no") {
                     contentType(ContentType.Application.Json)
+                    val id = "teamdigihot-selvtest-${LocalDateTime.now().toString()}
+                    header("Nav-Call-Id", id)
+                    header("X-Correlation-Id", id)
                     setBody(
                         MedlemskapRequest(
                             fnr = req.fnr,
