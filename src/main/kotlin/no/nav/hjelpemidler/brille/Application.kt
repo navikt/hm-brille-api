@@ -102,20 +102,22 @@ fun Application.setupRoutes() {
     routing {
         selfTestRoutes()
 
-        // TODO!!!! legg tilbake under authentication++
-        post("/sok") {
+        // TODO: erstatt /sok når ferdig
+        post("/sok_test") {
             data class Request(
                 val fnr: String,
                 val orgnr: String,
             )
 
-            log.info { "endepunkt /sok" }
+            log.info { "endepunkt /sok_test" }
             val request = call.receive<Request>()
             log.info { "request <$request>" }
             if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
+            /*
             val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
             log.info { "personInformasjon <$personInformasjon>" }
+
 
             // Valider vilkår for å forsikre oss om at alle sjekker er gjort
             val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
@@ -124,6 +126,7 @@ fun Application.setupRoutes() {
                 call.respond(HttpStatusCode.BadRequest, "{}")
                 return@post
             }
+            */
 
             // Innvilg søknad og opprett vedtak
             vedtakStore.opprettVedtak(
@@ -189,6 +192,39 @@ fun Application.setupRoutes() {
                     val organisasjonsenhet =
                         enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
                     call.respond(organisasjonsenhet)
+                }
+
+                post("/sok") {
+                    data class Request(
+                        val fnr: String,
+                        val orgnr: String,
+                    )
+
+                    val request = call.receive<Request>()
+
+                    if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+
+                    val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
+
+                    // Valider vilkår for å forsikre oss om at alle sjekker er gjort
+                    val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+                    if (!vilkår.valider()) {
+                        call.respond(HttpStatusCode.BadRequest, "{}")
+                        return@post
+                    }
+
+                    // Innvilg søknad og opprett vedtak
+                    vedtakStore.opprettVedtak(
+                        request.fnr,
+                        "15084300133", // <- TODO SEDAT hardkodet for dev //call.extractFnr(),
+                        request.orgnr,
+                        jsonMapper.valueToTree(request)
+                    )
+
+                    // Journalfør søknad/vedtak som dokument i joark på barnet
+                    // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+
+                    call.respond(HttpStatusCode.Created, "201 Created")
                 }
             }
         }
