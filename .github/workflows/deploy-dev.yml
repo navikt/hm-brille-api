@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - pdl-endpoints
+      - prod-test-endpoints
 
 jobs:
   build-and-deploy:
