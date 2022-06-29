@@ -30,14 +30,12 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.db.DatabaseConfiguration
 import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
-import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -206,7 +204,7 @@ fun Application.setupRoutes() {
             val response =
                 client.post(if (Configuration.profile == Profile.DEV) "https://medlemskap-oppslag.dev.nav.no/" else "https://medlemskap-oppslag.intern.nav.no") {
                     contentType(ContentType.Application.Json)
-                    val id = "teamdigihot-selvtest-${LocalDateTime.now().toString()}
+                    val id = "teamdigihot-selvtest-${LocalDateTime.now()}"
                     header("Nav-Call-Id", id)
                     header("X-Correlation-Id", id)
                     setBody(
