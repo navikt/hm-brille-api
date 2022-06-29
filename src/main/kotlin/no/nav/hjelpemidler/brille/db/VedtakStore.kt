@@ -16,6 +16,7 @@ interface VedtakStore {
     fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean
     fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker
     fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode)
+    fun tellRader(): Int
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
@@ -90,5 +91,26 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         if (result == 0) {
             throw RuntimeException("VedtakStore.opprettVedtak: feilet i å opprette vedtak (result=false)")
         }
+    }
+
+    override fun tellRader(): Int {
+        val rowCount = using(sessionOf(ds)) { session ->
+            @Language("PostgreSQL")
+            val sql = """
+                SELECT COUNT (id) as count
+                FROM vedtak
+            """.trimIndent()
+            session.run(
+                queryOf(
+                    sql
+                ).map { row -> row.int("count") }.asSingle
+            )
+        }
+
+        if (rowCount == null) {
+            throw RuntimeException("VedtakStore.countRows: feilet i å telle rader")
+        }
+
+        return rowCount
     }
 }

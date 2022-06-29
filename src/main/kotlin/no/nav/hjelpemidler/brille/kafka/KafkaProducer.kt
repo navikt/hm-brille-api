@@ -59,11 +59,13 @@ class KafkaProducer(
         }
     }
 
-    internal data class BrilleVedtakData(
-        val fnrBarn: String,
-        val optikerOrgNr: String,
+    internal data class BarnebrilleVedtakData(
+        val fnr: String,
+        val orgnr: String,
         val eventId: UUID,
         val eventName: String,
-        val opprettetDato: LocalDateTime = LocalDateTime.now()
+        val opprettetDato: LocalDateTime = LocalDateTime.now(),
+        val navnAvsender: String,
+        val sakId: String,
     )
 }

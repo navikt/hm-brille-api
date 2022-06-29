@@ -131,19 +131,23 @@ fun Application.setupRoutes() {
             // Innvilg søknad og opprett vedtak
             vedtakStore.opprettVedtak(
                 request.fnr,
-                "15084300133", // <- TODO SEDAT hardkodet for dev //call.extractFnr(),
+                "15084300133", // <- TODO: SEDAT hardkodet for dev //call.extractFnr(),
                 request.orgnr,
                 jsonMapper.valueToTree(request)
             )
 
+            val antallRader = vedtakStore.tellRader() // TODO: vi må finne ut hvordan vi faktisk sender sakId. Skal vi heller legge inn en sakId-kolonne som autoinkrementer?
+
             // Journalfør søknad/vedtak som dokument i joark på barnet
-            val brilleVedtakData = KafkaProducer.BrilleVedtakData(
-                request.fnr,
-                request.orgnr,
-                UUID.randomUUID(),
-                "hm-brillevedtak-opprettet"
+            val barneBrilleVedtakData = KafkaProducer.BarnebrilleVedtakData(
+                fnr = request.fnr,
+                orgnr = request.orgnr,
+                eventId = UUID.randomUUID(),
+                "hm-barnebrillevedtak-opprettet",
+                navnAvsender = "Ole Brumm", // TODO: hvilket navn skal dette egentlig være? Navnet til bruker (barn) eller optiker?
+                sakId = (antallRader + 1).toString()
             )
-            val event = jsonMapper.writeValueAsString(brilleVedtakData)
+            val event = jsonMapper.writeValueAsString(barneBrilleVedtakData)
             kafkaProducer.produceEvent(request.fnr, event)
 
             // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
@@ -216,12 +220,12 @@ fun Application.setupRoutes() {
                     // Innvilg søknad og opprett vedtak
                     vedtakStore.opprettVedtak(
                         request.fnr,
-                        "15084300133", // <- TODO SEDAT hardkodet for dev //call.extractFnr(),
+                        call.extractFnr(),
                         request.orgnr,
                         jsonMapper.valueToTree(request)
                     )
 
-                    // Journalfør søknad/vedtak som dokument i joark på barnet
+                    // TODO: Journalfør søknad/vedtak som dokument i joark på barnet (se /sok_test)
                     // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
 
                     call.respond(HttpStatusCode.Created, "201 Created")
