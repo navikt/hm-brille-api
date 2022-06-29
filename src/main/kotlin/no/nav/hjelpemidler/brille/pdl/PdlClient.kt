@@ -77,10 +77,7 @@ class PdlClient(
                     }
                     setBody(pdlQuery)
                 }
-
-            val stringBody: String = response.body()
-            log.info { "pdlrequest url=$baseUrl, query=$pdlQuery, response=<$stringBody>" }
-
+            
             response.body()
         }
     }

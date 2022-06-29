@@ -109,9 +109,7 @@ fun Application.setupRoutes() {
                 val orgnr: String,
             )
 
-            log.info { "endepunkt /sok_test" }
             val request = call.receive<Request>()
-            log.info { "request <$request>" }
             if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
             /*
