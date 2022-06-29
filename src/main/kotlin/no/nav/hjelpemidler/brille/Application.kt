@@ -99,6 +99,48 @@ fun Application.setupRoutes() {
     routing {
         selfTestRoutes()
 
+        // TODO!!!! legg tilbake under authentication++
+        post("/sok") {
+            data class Request(
+                val fnr: String,
+                val orgnr: String,
+            )
+
+            val request = call.receive<Request>()
+            if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+
+            val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
+
+            // Valider vilkår for å forsikre oss om at alle sjekker er gjort
+            val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+            if (!vilkår.valider()) {
+                call.respond(HttpStatusCode.BadRequest, "{}")
+                return@post
+            }
+
+            // Innvilg søknad og opprett vedtak
+            vedtakStore.opprettVedtak(
+                request.fnr,
+                call.extractFnr(),
+                request.orgnr,
+                jsonMapper.valueToTree(request)
+            )
+
+            // Journalfør søknad/vedtak som dokument i joark på barnet
+            val brilleVedtakData = KafkaProducer.BrilleVedtakData(
+                request.fnr,
+                request.orgnr,
+                UUID.randomUUID(),
+                "hm-brillevedtak-opprettet"
+            )
+            val event = jsonMapper.writeValueAsString(brilleVedtakData)
+            kafkaProducer.produceEvent(request.fnr, event)
+
+            // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+
+            call.respond(HttpStatusCode.Created, "201 Created")
+        }
+
         authenticate(TOKEN_X_AUTH) {
             authenticateOptiker(syfohelsenettproxyClient) {
                 post("/sjekk-kan-soke") {
@@ -142,46 +184,7 @@ fun Application.setupRoutes() {
                     call.respond(organisasjonsenhet)
                 }
 
-                post("/sok") {
-                    data class Request(
-                        val fnr: String,
-                        val orgnr: String,
-                    )
 
-                    val request = call.receive<Request>()
-                    if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-
-                    val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
-
-                    // Valider vilkår for å forsikre oss om at alle sjekker er gjort
-                    val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
-                    if (!vilkår.valider()) {
-                        call.respond(HttpStatusCode.BadRequest, "{}")
-                        return@post
-                    }
-
-                    // Innvilg søknad og opprett vedtak
-                    vedtakStore.opprettVedtak(
-                        request.fnr,
-                        call.extractFnr(),
-                        request.orgnr,
-                        jsonMapper.valueToTree(request)
-                    )
-
-                    // Journalfør søknad/vedtak som dokument i joark på barnet
-                    val brilleVedtakData = KafkaProducer.BrilleVedtakData(
-                        request.fnr,
-                        request.orgnr,
-                        UUID.randomUUID(),
-                        "hm-brillevedtak-opprettet"
-                    )
-                    val event = jsonMapper.writeValueAsString(brilleVedtakData)
-                    kafkaProducer.produceEvent(request.fnr, event)
-
-                    // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
-
-                    call.respond(HttpStatusCode.Created, "201 Created")
-                }
             }
         }
     }
