@@ -232,7 +232,6 @@ fun Application.setupRoutes() {
                 }
 
             val body = response.bodyAsText()
-            call.response.header("Content-Type", "applicatin/json")
             call.respond(body)
         }
     }
