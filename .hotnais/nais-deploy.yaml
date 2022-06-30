@@ -57,6 +57,7 @@ spec:
          - application: medlemskap-oppslag
            namespace: medlemskap
            cluster: {{ medlemskap_cluster }}
+         - application: brille-redis
       external:
       {{#each external-hosts}}
         - host: {{ this }}

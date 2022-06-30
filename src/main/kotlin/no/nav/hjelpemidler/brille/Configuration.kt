@@ -6,6 +6,7 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import java.time.Duration
 
 object Configuration {
     private val defaultProperties = ConfigurationMap(
@@ -42,6 +43,7 @@ object Configuration {
             "TOKEN_X_WELL_KNOWN_URL" to "http://host.docker.internal:8080/default/.well-known/openid-configuration",
             "TOKEN_X_CLIENT_ID" to "local",
             "userclaim" to "sub",
+            "REDIS_HOST" to "dummy"
         )
     )
 
@@ -87,6 +89,7 @@ object Configuration {
     val tokenXProperties = TokenXProperties()
     val enhetsregisteretProperties = EnhetsregisteretProperties()
     val syfohelsenettproxyProperties = SyfohelsenettproxyProperties()
+    val redisProperties = RedisProperties()
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
@@ -142,6 +145,12 @@ object Configuration {
     data class SyfohelsenettproxyProperties(
         val baseUrl: String = this["syfohelsenettproxy.rest-uri"],
         val scope: String = this["syfohelsenettproxy.scope"],
+    )
+
+    data class RedisProperties(
+        val host: String = this["REDIS_HOST"],
+        val port: Int = 6379,
+        val hprExpirySeconds: Long = Duration.ofDays(1).seconds // TODO: Hva er en OK lengde på cache?
     )
 }
 

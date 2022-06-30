@@ -66,6 +66,9 @@ dependencies {
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.2")
     runtimeOnly("ch.qos.logback:logback-classic:1.2.11")
 
+    // Redis
+    implementation("redis.clients:jedis:4.2.0")
+
     // Testing
     testImplementation(kotlin("test"))
     testImplementation(ktorServer("test-host"))

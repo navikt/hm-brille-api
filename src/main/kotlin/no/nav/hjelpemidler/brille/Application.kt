@@ -34,6 +34,7 @@ import no.nav.hjelpemidler.brille.kafka.KafkaProducer
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
+import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
@@ -87,13 +88,14 @@ fun Application.setupRoutes() {
         )
     )
 
+    val redisClient = RedisClient()
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(
         Configuration.syfohelsenettproxyProperties.baseUrl,
         Configuration.syfohelsenettproxyProperties.scope,
-        azureAdClient,
+        azureAdClient
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
     val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
@@ -157,7 +159,7 @@ fun Application.setupRoutes() {
         }
 
         authenticate(TOKEN_X_AUTH) {
-            authenticateOptiker(syfohelsenettproxyClient) {
+            authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                 post("/sjekk-kan-soke") {
                     data class Request(val fnr: String)
                     data class Response(
