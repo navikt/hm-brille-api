@@ -7,12 +7,9 @@ import io.ktor.server.auth.AuthenticationChecked
 import io.ktor.server.auth.AuthenticationRouteSelector
 import io.ktor.server.routing.Route
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
-
-private val log = KotlinLogging.logger {}
 
 fun Route.authenticateOptiker(
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
@@ -35,9 +32,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
     val syfohelsenettproxyClient = this.pluginConfig.syfohelsenettproxyClient!!
     val redisClient: RedisClient = this.pluginConfig.redisClient!!
 
-    // In-memory cache of helsenett-lookups
     fun sjekkErOptiker(fnrOptiker: String): Boolean {
-
         val cachedErOptiker = redisClient.erOptiker(fnrOptiker)
 
         if (cachedErOptiker != null) {
@@ -53,20 +48,9 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
                 )
             }
 
-        /* if (Configuration.profile == Profile.DEV) log.info(
-            "DEBUG: DEBUG: Behandler: ${
-            jsonMapper.writeValueAsString(
-                behandler
-            )
-            }"
-        ) */
-
         // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
         val erOptiker = behandler.godkjenninger.any {
-            it.helsepersonellkategori?.aktiv == true && (
-                it.helsepersonellkategori.verdi
-                    ?: ""
-                ) == "OP"
+            it.helsepersonellkategori?.aktiv == true && it.helsepersonellkategori.verdi == "OP"
         }
 
         redisClient.setErOptiker(fnrOptiker, erOptiker)
