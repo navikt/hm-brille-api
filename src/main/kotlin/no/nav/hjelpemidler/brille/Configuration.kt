@@ -43,7 +43,8 @@ object Configuration {
             "TOKEN_X_WELL_KNOWN_URL" to "http://host.docker.internal:8080/default/.well-known/openid-configuration",
             "TOKEN_X_CLIENT_ID" to "local",
             "userclaim" to "sub",
-            "REDIS_HOST" to "dummy"
+            "REDIS_HOST" to "dummy",
+            "REDIS_PASSWORD" to "dummy"
         )
     )
 
@@ -150,6 +151,7 @@ object Configuration {
     data class RedisProperties(
         val host: String = this["REDIS_HOST"],
         val port: Int = 6379,
+        val password: String = this["REDIS_PASSWORD"],
         val hprExpirySeconds: Long = Duration.ofDays(1).seconds // TODO: Hva er en OK lengde på cache?
     )
 }
