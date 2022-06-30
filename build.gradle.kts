@@ -70,6 +70,9 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(ktorServer("test-host"))
     testImplementation("io.mockk:mockk:1.12.4")
+    val kotestVersion = "5.3.2"
+    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
     testImplementation("org.testcontainers:postgresql:1.17.2")
 }
 
