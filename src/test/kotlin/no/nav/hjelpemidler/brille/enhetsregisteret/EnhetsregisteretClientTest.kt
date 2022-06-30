@@ -1,9 +1,9 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.test.shouldBe
 import kotlin.test.Test
 
 internal class EnhetsregisteretClientTest {

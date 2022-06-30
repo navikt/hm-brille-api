@@ -34,6 +34,7 @@ import no.nav.hjelpemidler.brille.kafka.KafkaProducer
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
+import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.slf4j.event.Level
@@ -101,6 +102,7 @@ fun Application.setupRoutes() {
 
     routing {
         selfTestRoutes()
+        satsApi()
 
         // TODO: erstatt /sok når ferdig
         post("/sok_test") {
@@ -134,7 +136,8 @@ fun Application.setupRoutes() {
                 jsonMapper.valueToTree(request)
             )
 
-            val antallRader = vedtakStore.tellRader() // TODO: vi må finne ut hvordan vi faktisk sender sakId. Skal vi heller legge inn en sakId-kolonne som autoinkrementer?
+            val antallRader =
+                vedtakStore.tellRader() // TODO: vi må finne ut hvordan vi faktisk sender sakId. Skal vi heller legge inn en sakId-kolonne som autoinkrementer?
 
             // Journalfør søknad/vedtak som dokument i joark på barnet
             val barneBrilleVedtakData = KafkaProducer.BarnebrilleVedtakData(
