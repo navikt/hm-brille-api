@@ -21,6 +21,6 @@
   "syfohelsenettproxy_cluster": "dev-fss",
   "medlemskap_cluster": "dev-gcp",
   "env": {
-    "REDIS_HOST": "brille-redis.teamdigihot.svc.cluster.local"
+    "REDIS_HOST": "brille-redis.teamdigihot.svc.cluster.local",
   }
 }
