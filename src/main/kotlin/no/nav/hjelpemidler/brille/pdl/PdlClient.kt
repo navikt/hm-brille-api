@@ -77,7 +77,7 @@ class PdlClient(
                     }
                     setBody(pdlQuery)
                 }
-            
+
             response.body()
         }
     }

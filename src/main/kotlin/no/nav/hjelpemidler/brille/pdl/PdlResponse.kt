@@ -71,11 +71,11 @@ data class Matrikkeladresse(val postnummer: String?, val kommunenummer: String?)
 data class Foedsel(val foedselsaar: String?, val foedselsdato: String?)
 
 data class ForelderBarnRelasjon(
-    val relatertPersonsIdent: String,
+    val relatertPersonsIdent: String?,
     val relatertPersonsRolle: ForelderBarnRelasjonRolle,
-    val minRolleForPerson: ForelderBarnRelasjonRolle,
-    val relatertPersonUtenFolkeregisteridentifikator: RelatertBiPerson,
-    val folkeregistermetadata: Folkeregistermetadata,
+    val minRolleForPerson: ForelderBarnRelasjonRolle?,
+    val relatertPersonUtenFolkeregisteridentifikator: RelatertBiPerson?,
+    val folkeregistermetadata: Folkeregistermetadata?,
 )
 
 enum class ForelderBarnRelasjonRolle {
@@ -86,15 +86,15 @@ enum class ForelderBarnRelasjonRolle {
 }
 
 data class RelatertBiPerson(
-    val navn: Personnavn,
-    val foedselsdato: LocalDate,
-    val statsborgerskap: String,
-    val kjoenn: KjoennType,
+    val navn: Personnavn?,
+    val foedselsdato: LocalDate?,
+    val statsborgerskap: String?,
+    val kjoenn: KjoennType?,
 )
 
 data class Personnavn(
     val fornavn: String,
-    val mellomnavn: String,
+    val mellomnavn: String?,
     val etternavn: String,
 )
 
@@ -103,25 +103,25 @@ enum class KjoennType {
 }
 
 data class Folkeregistermetadata(
-    val ajourholdstidspunkt: LocalDateTime,
-    val gyldighetstidspunkt: LocalDateTime,
-    val opphoerstidspunkt: LocalDateTime,
-    val kilde: String,
-    val aarsak: String,
-    val sekvens: Int,
+    val ajourholdstidspunkt: LocalDateTime?,
+    val gyldighetstidspunkt: LocalDateTime?,
+    val opphoerstidspunkt: LocalDateTime?,
+    val kilde: String?,
+    val aarsak: String?,
+    val sekvens: Int?,
 )
 
 data class VergemaalEllerFremtidsfullmakt(
-    val type: String,
-    val embete: String,
+    val type: String?,
+    val embete: String?,
     val vergeEllerFullmektig: VergeEllerFullmektig,
-    val folkeregistermetadata: Folkeregistermetadata,
+    val folkeregistermetadata: Folkeregistermetadata?,
 )
 
 data class VergeEllerFullmektig(
-    val navn: Personnavn,
-    val motpartsPersonident: String,
-    val omfang: String,
+    val navn: Personnavn?,
+    val motpartsPersonident: String?,
+    val omfang: String?,
     val omfangetErInnenPersonligOmraade: Boolean,
 )
 
