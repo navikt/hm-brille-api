@@ -45,7 +45,9 @@ class MedlemskapBarn(
             val vergerOgForeldre: List<Pair<String, String>> = listOf(
                 vergemaalEllerFremtidsfullmakt.filter {
                     // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
-                    it.vergeEllerFullmektig.motpartsPersonident != null
+                    it.vergeEllerFullmektig.motpartsPersonident != null &&
+                        // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                        (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(LocalDateTime.now()) ?: true)
                 }.map {
                     Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
                 },
