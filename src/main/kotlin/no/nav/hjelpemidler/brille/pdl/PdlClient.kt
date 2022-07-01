@@ -50,18 +50,18 @@ class PdlClient(
         }
     }
 
-    suspend fun hentIdentInfo(fnummer: String): PdlIdentResponse {
-        val hentIdenterQuery = hentIdenterQuery(fnummer)
-        return pdlRequest(hentIdenterQuery)
-    }
-
-    suspend fun hentPersonInfo(fnummer: String): PdlPersonResponse {
-        val hentPersonQuery = hentPersonQuery(fnummer)
-        return pdlRequest(hentPersonQuery)
-    }
-
     suspend fun hentPersonDetaljer(fnummer: String): PdlPersonResponse {
         val hentPersonDetaljerQuery = hentPersonDetaljerQuery(fnummer)
+        return pdlRequest(hentPersonDetaljerQuery)
+    }
+
+    suspend fun medlemskapHentBarn(fnummer: String): PdlPersonResponse {
+        val hentPersonDetaljerQuery = medlemskapHentBarnQuery(fnummer)
+        return pdlRequest(hentPersonDetaljerQuery)
+    }
+
+    suspend fun medlemskapHentVergeEllerForelder(fnummer: String): PdlPersonResponse {
+        val hentPersonDetaljerQuery = medlemskapHentVergeEllerForelderQuery(fnummer)
         return pdlRequest(hentPersonDetaljerQuery)
     }
 

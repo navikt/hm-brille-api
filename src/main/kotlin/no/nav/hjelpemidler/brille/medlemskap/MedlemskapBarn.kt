@@ -27,27 +27,38 @@ class MedlemskapBarn(
             log.info("Sjekker medlemskap for barn")
 
             // Slå opp pdl informasjon om barnet
-            val pdlBarn = pdlClient.hentPersonDetaljer(fnrBarn)
+            val pdlBarn = pdlClient.medlemskapHentBarn(fnrBarn)
             validerPdlOppslag(pdlBarn)
 
             val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
             val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
+            val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
 
             log.debug("PDL response: ${jsonMapper.writeValueAsString(pdlBarn)}")
             log.debug("vergemaalEllerFremtidsfullmakt: ${jsonMapper.writeValueAsString(vergemaalEllerFremtidsfullmakt)}")
             log.debug("foreldreBarnRelasjon: ${jsonMapper.writeValueAsString(foreldreBarnRelasjon)}")
 
             // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
+            // TODO: Hva med delt bostedsadresse (skilte foreldre), må kanskje ansees som en ekstra folkeregistrert adresse?
+            if (bostedsadresser.none { it.vegadresse != null || it.matrikkeladresse != null }) {
+                // Ingen av de folkeregistrerte bostedsadressene satt på barnet i PDL er en normal norsk adresse (kan
+                // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
+                // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
+                // stopper vi opp behandling tidlig her!
+                return@runBlocking MedlemskapResultat(false, false, false, listOf())
+            }
 
             // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i medlemskap-oppslag tjenesten. Her
             // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
             // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
+            val now = LocalDateTime.now()
             val vergerOgForeldre: List<Pair<String, String>> = listOf(
                 vergemaalEllerFremtidsfullmakt.filter {
                     // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
                     it.vergeEllerFullmektig.motpartsPersonident != null &&
                         // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                        (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(LocalDateTime.now()) ?: true)
+                        (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                        (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
                 }.map {
                     Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
                 },
@@ -57,7 +68,8 @@ class MedlemskapBarn(
                         // Bare se på foreldrerelasjoner
                         it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
                         // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                        (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(LocalDateTime.now()) ?: true)
+                        (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                        (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
                 }.map {
                     Pair(it.relatertPersonsRolle.name, it.relatertPersonsIdent!!)
                 }.sortedBy {
@@ -79,9 +91,14 @@ class MedlemskapBarn(
                     )
                 ) {
                     log.info("Sjekker barns verge/forelder")
-                    // TODO: Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
+
+                    // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
+                    val pdlVergeEllerForelder = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
+                    log.debug("PDL response verge/forelder: ${jsonMapper.writeValueAsString(pdlVergeEllerForelder)}")
+
                     // TODO: Gitt adresse match: Sjekk medlemskap:
                     //   val medlemskap = medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, innerCorrelationId)
+
                     // TODO: Gitt medlemskap: svar ok med en return@runBlocking her
                 }
             }

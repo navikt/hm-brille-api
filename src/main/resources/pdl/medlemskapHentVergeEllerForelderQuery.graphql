@@ -1,0 +1,75 @@
+query($ident: ID!){
+    hentPerson(ident: $ident) {
+        navn(historikk: false) {
+            fornavn,
+            mellomnavn,
+            etternavn,
+            forkortetNavn,
+        }
+        bostedsadresse(historikk: false ) {
+              vegadresse {
+                  adressenavn,
+                  postnummer,
+                  husnummer,
+                  husbokstav,
+                  tilleggsnavn,
+                  kommunenummer
+              },
+               matrikkeladresse {
+                    postnummer,
+                    kommunenummer
+               }
+        }
+        adressebeskyttelse(historikk: false) { gradering }
+        foedsel {
+            foedselsaar
+            foedselsdato
+        }
+        # TODO: Dataminimering når vi finner ut hva vi trenger
+        forelderBarnRelasjon {
+            relatertPersonsIdent
+            relatertPersonsRolle
+            minRolleForPerson
+            relatertPersonUtenFolkeregisteridentifikator {
+                navn {
+                    fornavn
+                    mellomnavn
+                    etternavn
+                }
+                foedselsdato
+                statsborgerskap
+                kjoenn
+            }
+            folkeregistermetadata {
+                ajourholdstidspunkt
+                gyldighetstidspunkt
+                opphoerstidspunkt
+                kilde
+                aarsak
+                sekvens
+            }
+        }
+        vergemaalEllerFremtidsfullmakt {
+            type
+            embete
+            vergeEllerFullmektig {
+                navn {
+                    fornavn
+                    mellomnavn
+                    etternavn
+                }
+                motpartsPersonident
+                omfang
+                omfangetErInnenPersonligOmraade
+            }
+            folkeregistermetadata {
+                ajourholdstidspunkt
+                gyldighetstidspunkt
+                opphoerstidspunkt
+                kilde
+                aarsak
+                sekvens
+            }
+        }
+    }
+}
