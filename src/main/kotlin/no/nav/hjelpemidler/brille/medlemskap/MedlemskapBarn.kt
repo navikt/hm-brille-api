@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
+import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
+import org.slf4j.MDC
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -16,11 +18,9 @@ class MedlemskapBarn(
     private val pdlClient: PdlClient,
 ) {
     fun sjekkMedlemskapBarn(fnrBarn: String): MedlemskapResultat = runBlocking {
-        val baseCorrelationId = UUID.randomUUID().toString()
+        val baseCorrelationId = MDC.get(MDC_CORRELATION_ID)
         withLoggingContext(
-            mapOf(
-                "baseCorrelationId" to baseCorrelationId,
-            )
+            mapOf()
         ) {
             log.info("Sjekker medlemskap for barn")
 
@@ -38,10 +38,10 @@ class MedlemskapBarn(
             // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
 
             for (vergeEllerForelder in listOf("abc", "def")) {
-                val innerCorrelationId = "$baseCorrelationId-${UUID.randomUUID()}"
+                val correlationIdMedlemskap = "$baseCorrelationId-${UUID.randomUUID()}"
                 withLoggingContext(
                     mapOf(
-                        "innerCorrelationId" to innerCorrelationId,
+                        "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
                     )
                 ) {
                     log.info("Sjekker barns verge/forelder")
