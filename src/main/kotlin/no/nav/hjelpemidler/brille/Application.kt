@@ -31,6 +31,7 @@ import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
 import no.nav.hjelpemidler.brille.kafka.KafkaProducer
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.PdlClient
@@ -81,13 +82,12 @@ fun Application.configure() {
 // Wire up services and routes
 fun Application.setupRoutes() {
     val azureAdClient = AzureAdClient()
-    val pdlService = PdlService(
-        PdlClient(
-            Configuration.pdlProperties.graphqlUri,
-            Configuration.pdlProperties.apiScope,
-            azureAdClient,
-        )
+    val pdlClient = PdlClient(
+        Configuration.pdlProperties.graphqlUri,
+        Configuration.pdlProperties.apiScope,
+        azureAdClient,
     )
+    val pdlService = PdlService(pdlClient)
 
     val redisClient = RedisClient()
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
@@ -100,7 +100,9 @@ fun Application.setupRoutes() {
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
     val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
+
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
+    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient)
 
     installAuthentication(httpClient())
 
@@ -239,7 +241,7 @@ fun Application.setupRoutes() {
         }
 
         // FIXME: Remove eventually
-        post("/test/medlemskap") {
+        post("/test/medlemskap-client") {
             if (Configuration.profile != Profile.DEV) {
                 call.respond(HttpStatusCode.Unauthorized)
                 return@post
@@ -247,6 +249,17 @@ fun Application.setupRoutes() {
             data class Request(val fnr: String)
             val fnr = call.receive<Request>().fnr
             call.respond(medlemskapClient.slåOppMedlemskap(fnr))
+        }
+
+        // FIXME: Remove eventually
+        post("/test/medlemskap-barn") {
+            if (Configuration.profile != Profile.DEV) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+            data class Request(val fnr: String)
+            val fnr = call.receive<Request>().fnr
+            call.respond(medlemskapBarn.sjekkMedlemskapBarn(fnr))
         }
     }
 }

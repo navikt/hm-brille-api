@@ -23,6 +23,8 @@
         <appender-ref ref="secureLog" />
     </logger>
 
+    <logger name="no.nav.hjelpemidler.brille.medlemskap" level="DEBUG" />
+
     <root level="INFO">
         <appender-ref ref="STDOUT_JSON" />
     </root>
