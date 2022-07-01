@@ -6,9 +6,11 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
 import org.slf4j.MDC
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -28,8 +30,8 @@ class MedlemskapBarn(
             val pdlBarn = pdlClient.hentPersonDetaljer(fnrBarn)
             validerPdlOppslag(pdlBarn)
 
-            val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt
-            val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon
+            val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
+            val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
 
             log.debug("PDL response: ${jsonMapper.writeValueAsString(pdlBarn)}")
             log.debug("vergemaalEllerFremtidsfullmakt: ${jsonMapper.writeValueAsString(vergemaalEllerFremtidsfullmakt)}")
@@ -37,11 +39,41 @@ class MedlemskapBarn(
 
             // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
 
-            for (vergeEllerForelder in listOf("abc", "def")) {
+            // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i medlemskap-oppslag tjenesten. Her
+            // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
+            // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
+            val vergerOgForeldre: List<Pair<String, String>> = listOf(
+                vergemaalEllerFremtidsfullmakt.filter {
+                    // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
+                    it.vergeEllerFullmektig.motpartsPersonident != null
+                }.map {
+                    Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
+                },
+                foreldreBarnRelasjon.filter {
+                    // Vi kan ikke slå opp medlemskap om forelder ikke har fnr
+                    it.relatertPersonsIdent != null &&
+                        // Bare se på foreldrerelasjoner
+                        it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
+                        // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                        (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(LocalDateTime.now()) ?: true)
+                }.map {
+                    Pair(it.relatertPersonsRolle.name, it.relatertPersonsIdent!!)
+                }.sortedBy {
+                    // Sorter rekkefølgen vi sjekker basert på rolle.
+                    it.first
+                },
+            ).flatten()
+
+            log.debug("Prioritert liste for oppslag: $vergerOgForeldre")
+
+            for ((rolle, fnrVergeEllerForelder) in vergerOgForeldre) {
+                log.debug("Slår opp i PDL for $rolle: $fnrVergeEllerForelder")
+
                 val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
                 withLoggingContext(
                     mapOf(
                         "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
+                        "rolle" to rolle,
                     )
                 ) {
                     log.info("Sjekker barns verge/forelder")
