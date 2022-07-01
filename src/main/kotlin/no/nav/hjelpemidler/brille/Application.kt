@@ -31,6 +31,7 @@ import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
 import no.nav.hjelpemidler.brille.kafka.KafkaProducer
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
@@ -99,6 +100,7 @@ fun Application.setupRoutes() {
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
     val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
+    val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
 
     installAuthentication(httpClient())
 
@@ -234,6 +236,17 @@ fun Application.setupRoutes() {
                     call.respond(HttpStatusCode.Created, "201 Created")
                 }
             }
+        }
+
+        // FIXME: Remove eventually
+        post("/test/medlemskap") {
+            if (Configuration.profile != Profile.DEV) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+            data class Request(val fnr: String)
+            val fnr = call.receive<Request>().fnr
+            call.respond(medlemskapClient.slåOppMedlemskap(fnr))
         }
     }
 }
