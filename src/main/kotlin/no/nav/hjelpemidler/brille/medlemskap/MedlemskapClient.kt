@@ -11,6 +11,7 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType.Application.Json
@@ -21,6 +22,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import java.time.LocalDate
+import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -47,9 +49,11 @@ class MedlemskapClient(
         }
     }
 
-    fun slåOppMedlemskap(fnr: String): JsonNode = runBlocking {
+    fun slåOppMedlemskap(fnr: String, correlationId: String = UUID.randomUUID().toString()): JsonNode = runBlocking {
         val now = LocalDate.now()
         val response = client.post(props.baseUrl) {
+            header("Nav-Call-Id", correlationId)
+            header("X-Correlation-Id", correlationId)
             contentType(Json)
             setBody(
                 Request(

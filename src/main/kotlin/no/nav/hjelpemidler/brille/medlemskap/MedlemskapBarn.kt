@@ -3,9 +3,11 @@ package no.nav.hjelpemidler.brille.medlemskap
 import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import mu.withLoggingContext
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
+import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -14,29 +16,46 @@ class MedlemskapBarn(
     private val pdlClient: PdlClient,
 ) {
     fun sjekkMedlemskapBarn(fnrBarn: String): MedlemskapResultat = runBlocking {
-        // Slå opp pdl informasjon om barnet
-        val pdlBarn = pdlClient.hentPersonDetaljer(fnrBarn)
-        validerPdlOppslag(pdlBarn)
+        val baseCorrelationId = UUID.randomUUID().toString()
+        withLoggingContext(
+            mapOf(
+                "baseCorrelationId" to baseCorrelationId,
+            )
+        ) {
+            log.info("Sjekker medlemskap for barn")
 
-        val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt
-        val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon
+            // Slå opp pdl informasjon om barnet
+            val pdlBarn = pdlClient.hentPersonDetaljer(fnrBarn)
+            validerPdlOppslag(pdlBarn)
 
-        log.debug("PDL response: ${jsonMapper.writeValueAsString(pdlBarn)}")
-        log.debug("vergemaalEllerFremtidsfullmakt: ${jsonMapper.writeValueAsString(vergemaalEllerFremtidsfullmakt)}")
-        log.debug("foreldreBarnRelasjon: ${jsonMapper.writeValueAsString(foreldreBarnRelasjon)}")
+            val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt
+            val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon
 
-        // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
+            log.debug("PDL response: ${jsonMapper.writeValueAsString(pdlBarn)}")
+            log.debug("vergemaalEllerFremtidsfullmakt: ${jsonMapper.writeValueAsString(vergemaalEllerFremtidsfullmakt)}")
+            log.debug("foreldreBarnRelasjon: ${jsonMapper.writeValueAsString(foreldreBarnRelasjon)}")
 
-        for (vergeEllerForelder in listOf("", "")) {
-            // TODO: Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
-            // TODO: Gitt adresse match: Sjekk medlemskap:
-            //   val medlemskap = medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder)
-            // TODO: Gitt medlemskap: svar ok med en return@runBlocking her
+            // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
+
+            for (vergeEllerForelder in listOf("abc", "def")) {
+                val innerCorrelationId = "$baseCorrelationId-${UUID.randomUUID()}"
+                withLoggingContext(
+                    mapOf(
+                        "innerCorrelationId" to innerCorrelationId,
+                    )
+                ) {
+                    log.info("Sjekker barns verge/forelder")
+                    // TODO: Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
+                    // TODO: Gitt adresse match: Sjekk medlemskap:
+                    //   val medlemskap = medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, innerCorrelationId)
+                    // TODO: Gitt medlemskap: svar ok med en return@runBlocking her
+                }
+            }
+
+            // Hvis man kommer sålangt så har man sjekket alle verger og foreldre, og ingen både bor på samme folk.reg.
+            // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
+            MedlemskapResultat(true, medlemskapBevist = false, uavklartMedlemskap = true, saksgrunnlag = listOf())
         }
-
-        // Hvis man kommer sålangt så har man sjekket alle verger og foreldre, og ingen både bor på samme folk.reg.
-        // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
-        MedlemskapResultat(true, medlemskapBevist = false, uavklartMedlemskap = true, saksgrunnlag = listOf())
     }
 }
 
