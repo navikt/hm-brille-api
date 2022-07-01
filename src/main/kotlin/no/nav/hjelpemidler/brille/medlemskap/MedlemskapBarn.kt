@@ -38,7 +38,7 @@ class MedlemskapBarn(
             // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
 
             for (vergeEllerForelder in listOf("abc", "def")) {
-                val correlationIdMedlemskap = "$baseCorrelationId-${UUID.randomUUID()}"
+                val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
                 withLoggingContext(
                     mapOf(
                         "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
