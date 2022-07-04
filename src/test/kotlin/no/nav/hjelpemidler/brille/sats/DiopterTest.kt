@@ -8,25 +8,25 @@ import kotlin.test.Test
 internal class DiopterTest {
     @Test
     internal fun `to tall før komma`() {
-        val diopter = Diopter.parse("00,25D")
+        val diopter = "00,25D".tilDiopter()
         diopter shouldBe "0.25"
     }
 
     @Test
     internal fun `ett tall før komma`() {
-        val diopter = Diopter.parse("0,25D")
+        val diopter = "0,25D".tilDiopter()
         diopter shouldBe "0.25"
     }
 
     @Test
     internal fun `uten komma`() {
-        val diopter = Diopter.parse("25D")
+        val diopter = "25D".tilDiopter()
         diopter shouldBe "25"
     }
 
     @Test
     internal fun `uten suffiks`() {
-        val diopter = Diopter.parse("5.75")
+        val diopter = "5.75".tilDiopter()
         diopter shouldBe "5.75"
     }
 
@@ -40,7 +40,7 @@ internal class DiopterTest {
 
     @Test
     internal fun `til json`() {
-        val json = jsonMapper.writeValueAsString(TestDto(Diopter.parse("00,25D")))
+        val json = jsonMapper.writeValueAsString(TestDto("00,25D".tilDiopter()))
         json shouldBe """{"diopter":"00,25D"}"""
     }
 

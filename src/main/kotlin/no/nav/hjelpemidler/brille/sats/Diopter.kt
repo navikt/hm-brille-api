@@ -30,6 +30,8 @@ data class Diopter(private val value: BigDecimal) : Comparable<Diopter> {
         val MIN = Diopter(BigDecimal("-99.99"))
         val MAX = Diopter(BigDecimal("+99.99"))
 
+        val INGEN = ZERO..ZERO
+
         private val regex = "^\\d{0,2}([.,]\\d{0,2})?D?\$".toRegex()
         private val formatter: NumberFormat = DecimalFormat("00.00", DecimalFormatSymbols(Locale("nb")))
 
@@ -42,13 +44,13 @@ data class Diopter(private val value: BigDecimal) : Comparable<Diopter> {
     }
 
     object Deserializer : JsonDeserializer<Diopter?>() {
-        override fun deserialize(parser: JsonParser, context: DeserializationContext): Diopter? {
-            val text = parser.valueAsString ?: return null
-            return parse(text)
-        }
+        override fun deserialize(parser: JsonParser, context: DeserializationContext): Diopter? =
+            parser.valueAsString?.tilDiopter()
     }
 }
 
-fun String.toDiopter() = Diopter.parse(this)
-
+fun String.tilDiopter(): Diopter = Diopter.parse(this)
+infix fun String.til(endInclusive: String): ClosedRange<Diopter> = this.tilDiopter()..endInclusive.tilDiopter()
+fun String.ellerMer(): ClosedRange<Diopter> = this.tilDiopter()..Diopter.MAX
+fun tilOgMed(endInclusive: String): ClosedRange<Diopter> = Diopter.MIN..endInclusive.tilDiopter()
 fun ClosedRange<Diopter>.visning(): String = "≥ $start ≤ $endInclusive"
