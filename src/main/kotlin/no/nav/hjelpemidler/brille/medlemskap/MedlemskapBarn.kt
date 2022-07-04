@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.medlemskap
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
@@ -19,6 +20,18 @@ import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 private val tjenestelogg = KotlinLogging.logger("tjenestekall")
+
+data class MedlemskapResultat(
+    val kanSøke: Boolean, // Ja eller antatt pga. folkereg. addresse i norge
+    val medlemskapBevist: Boolean,
+    val uavklartMedlemskap: Boolean,
+    val saksgrunnlag: List<Saksgrunnlag>,
+)
+
+data class Saksgrunnlag(
+    val kilde: String,
+    val saksgrunnlag: JsonNode,
+)
 
 class MedlemskapBarn(
     private val medlemskapClient: MedlemskapClient,
@@ -85,6 +98,9 @@ class MedlemskapBarn(
                         // TODO: Sjekk medlemskap:
                         val medlemskap = medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
                         log.debug("LovMe response verge/forelder: ${jsonMapper.writeValueAsString(medlemskap)}")
+
+                        val medlemskapResponse: MedlemskapResponse = jsonMapper.treeToValue(medlemskap)
+                        log.debug("LovMe response verge/forelder (parsed): ${jsonMapper.writeValueAsString(medlemskapResponse)}")
 
                         // TODO: Gitt medlemskap: svar ok med en return@runBlocking her
                     } else {
@@ -189,14 +205,27 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
     return false
 }
 
-data class MedlemskapResultat(
-    val kanSøke: Boolean, // Ja eller antatt pga. folkereg. addresse i norge
-    val medlemskapBevist: Boolean,
-    val uavklartMedlemskap: Boolean,
-    val saksgrunnlag: List<Saksgrunnlag>,
+private data class MedlemskapResponse(
+    val resultat: MedlemskapResponseResultat,
 )
 
-data class Saksgrunnlag(
-    val kilde: String,
-    val saksgrunnlag: JsonNode,
+private data class MedlemskapResponseResultat(
+    val regelId: MedlemskapResponseResultatRegelId,
+    val svar: MedlemskapResponseResultatSvar,
+    val årsaker: List<MedlemskapResultatÅrsaker>,
+)
+
+private enum class MedlemskapResponseResultatRegelId {
+    REGEL_MEDLEM_KONKLUSJON
+}
+
+private enum class MedlemskapResponseResultatSvar {
+    JA, UAVKLART, NEI
+}
+
+private data class MedlemskapResultatÅrsaker(
+    val regelId: String,
+    val avklaring: String,
+    val svar: MedlemskapResponseResultatSvar,
+    val begrunnelse: String,
 )
