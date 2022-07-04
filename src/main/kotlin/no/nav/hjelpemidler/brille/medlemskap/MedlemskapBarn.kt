@@ -6,8 +6,11 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjon
 import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
+import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
+import no.nav.hjelpemidler.brille.pdl.VergemaalEllerFremtidsfullmakt
 import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
 import org.slf4j.MDC
 import java.time.LocalDateTime
@@ -30,17 +33,9 @@ class MedlemskapBarn(
             val pdlBarn = pdlClient.medlemskapHentBarn(fnrBarn)
             validerPdlOppslag(pdlBarn)
 
-            val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
-            val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
-            val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
-
             log.debug("PDL response: ${jsonMapper.writeValueAsString(pdlBarn)}")
-            log.debug("vergemaalEllerFremtidsfullmakt: ${jsonMapper.writeValueAsString(vergemaalEllerFremtidsfullmakt)}")
-            log.debug("foreldreBarnRelasjon: ${jsonMapper.writeValueAsString(foreldreBarnRelasjon)}")
 
-            // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
-            // TODO: Hva med delt bostedsadresse (skilte foreldre), må kanskje ansees som en ekstra folkeregistrert adresse?
-            if (bostedsadresser.none { it.vegadresse != null || it.matrikkeladresse != null }) {
+            if (!sjekkFolkeregistrertAdresseINorge(pdlBarn)) {
                 // Ingen av de folkeregistrerte bostedsadressene satt på barnet i PDL er en normal norsk adresse (kan
                 // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
                 // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
@@ -48,36 +43,7 @@ class MedlemskapBarn(
                 return@runBlocking MedlemskapResultat(false, false, false, listOf())
             }
 
-            // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i medlemskap-oppslag tjenesten. Her
-            // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
-            // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
-            val now = LocalDateTime.now()
-            val vergerOgForeldre: List<Pair<String, String>> = listOf(
-                vergemaalEllerFremtidsfullmakt.filter {
-                    // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
-                    it.vergeEllerFullmektig.motpartsPersonident != null &&
-                        // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                        (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                        (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
-                }.map {
-                    Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
-                },
-                foreldreBarnRelasjon.filter {
-                    // Vi kan ikke slå opp medlemskap om forelder ikke har fnr
-                    it.relatertPersonsIdent != null &&
-                        // Bare se på foreldrerelasjoner
-                        it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
-                        // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                        (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                        (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
-                }.map {
-                    Pair(it.relatertPersonsRolle.name, it.relatertPersonsIdent!!)
-                }.sortedBy {
-                    // Sorter rekkefølgen vi sjekker basert på rolle.
-                    it.first
-                },
-            ).flatten()
-
+            val vergerOgForeldre = prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)
             log.debug("Prioritert liste for oppslag: $vergerOgForeldre")
 
             for ((rolle, fnrVergeEllerForelder) in vergerOgForeldre) {
@@ -108,6 +74,54 @@ class MedlemskapBarn(
             MedlemskapResultat(true, medlemskapBevist = false, uavklartMedlemskap = true, saksgrunnlag = listOf())
         }
     }
+}
+
+private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boolean {
+    // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
+    // TODO: Hva med delt bostedsadresse (skilte foreldre), må kanskje ansees som en ekstra folkeregistrert adresse?
+    val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
+    return bostedsadresser.any { it.vegadresse != null || it.matrikkeladresse != null }
+}
+
+private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
+    // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i medlemskap-oppslag tjenesten. Her
+    // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
+    // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
+
+    val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
+    val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
+
+    log.debug("vergemaalEllerFremtidsfullmakt: ${jsonMapper.writeValueAsString(vergemaalEllerFremtidsfullmakt)}")
+    log.debug("foreldreBarnRelasjon: ${jsonMapper.writeValueAsString(foreldreBarnRelasjon)}")
+
+    val now = LocalDateTime.now()
+    val vergerOgForeldre: List<Pair<String, String>> = listOf(
+        vergemaalEllerFremtidsfullmakt.filter {
+            // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
+            it.vergeEllerFullmektig.motpartsPersonident != null &&
+                    // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                    (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                    (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+        }.map {
+            Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
+        },
+        foreldreBarnRelasjon.filter {
+            // Vi kan ikke slå opp medlemskap om forelder ikke har fnr
+            it.relatertPersonsIdent != null &&
+                    // Bare se på foreldrerelasjoner
+                    it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
+                    // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                    (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                    (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+        }.map {
+            Pair(it.relatertPersonsRolle.name, it.relatertPersonsIdent!!)
+        }.sortedBy {
+            // Sorter rekkefølgen vi sjekker basert på rolle.
+            it.first
+        },
+    ).flatten()
+
+    return vergerOgForeldre
 }
 
 data class MedlemskapResultat(
