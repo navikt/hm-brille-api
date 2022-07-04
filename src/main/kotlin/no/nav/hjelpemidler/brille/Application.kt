@@ -24,10 +24,11 @@ import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.db.DatabaseConfiguration
 import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
-import no.nav.hjelpemidler.brille.db.Virksomhet
+import no.nav.hjelpemidler.brille.db.VirksomhetModell
 import no.nav.hjelpemidler.brille.db.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
+import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -273,30 +274,59 @@ fun Application.setupRoutes() {
             call.respond(medlemskapBarn.sjekkMedlemskapBarn(fnr))
         }
 
+        // FIXME: Legg til under auth route når vi vet fungerer
         get("/test/virksomhet/{orgnr}") {
             if (Configuration.profile == Profile.PROD) {
                 call.respond(HttpStatusCode.Unauthorized)
                 return@get
             }
 
+            data class Organisasjon(
+                val orgnavn: String,
+                val postadresse: Postadresse,
+                val erOptikerVirksomet: Boolean,
+            )
+
+            data class Virksomhet(
+                val virksomhet: VirksomhetModell,
+                val organisasjon: Organisasjon,
+            )
+
             val organisasjonsnummer =
                 call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 
-            val virksomhet = virksomhetStore.hentVirksomhet(organisasjonsnummer)
+            val virksomhetModell = virksomhetStore.hentVirksomhet(organisasjonsnummer)
                 ?: return@get call.respond(
                     status = HttpStatusCode.NotFound,
                     "Ingen virksomhet funnet for orgnr. $organisasjonsnummer"
                 )
+
+            val organisasjon = enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+
+            val virksomhet = Virksomhet(
+                virksomhetModell,
+                Organisasjon(
+                    organisasjon.navn,
+                    organisasjon.postadresse,
+                    listOf(
+                        organisasjon.naeringskode1,
+                        organisasjon.naeringskode2,
+                        organisasjon.naeringskode3
+                    ).any { it?.kode == "47.782" }
+                )
+            )
+
             call.respond(virksomhet)
         }
 
+        // FIXME: Legg til under auth route når vi vet fungerer
         post("/test/virksomhet") {
             if (Configuration.profile == Profile.PROD) {
                 call.respond(HttpStatusCode.Unauthorized)
                 return@post
             }
 
-            val virksomhet = call.receive<Virksomhet>()
+            val virksomhet = call.receive<VirksomhetModell>()
 
             try {
                 virksomhetStore.lagreVirksomhet(virksomhet)

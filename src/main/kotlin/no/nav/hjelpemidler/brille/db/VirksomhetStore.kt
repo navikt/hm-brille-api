@@ -10,11 +10,11 @@ import javax.sql.DataSource
 private val log = KotlinLogging.logger {}
 
 interface VirksomhetStore {
-    fun hentVirksomhet(orgnr: String): Virksomhet?
-    fun lagreVirksomhet(virksomhet: Virksomhet)
+    fun hentVirksomhet(orgnr: String): VirksomhetModell?
+    fun lagreVirksomhet(virksomhetModell: VirksomhetModell)
 }
 
-data class Virksomhet(
+data class VirksomhetModell(
     val orgnr: String,
     val kontonr: String,
     val fnrInnsender: String,
@@ -25,7 +25,7 @@ data class Virksomhet(
 
 internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetStore {
 
-    override fun hentVirksomhet(orgnr: String): Virksomhet? = using(sessionOf(ds)) { session ->
+    override fun hentVirksomhet(orgnr: String): VirksomhetModell? = using(sessionOf(ds)) { session ->
         @Language("PostgreSQL")
         val sql = """
             SELECT *
@@ -37,7 +37,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
                 sql,
                 orgnr,
             ).map {
-                Virksomhet(
+                VirksomhetModell(
                     orgnr = it.string("orgnr"),
                     kontonr = it.string("kontonr"),
                     fnrInnsender = it.string("fnr_innsender"),
@@ -49,7 +49,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         )
     }
 
-    override fun lagreVirksomhet(virksomhet: Virksomhet) {
+    override fun lagreVirksomhet(virksomhetModell: VirksomhetModell) {
         val result = using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
             val sql = """
@@ -64,12 +64,12 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             session.run(
                 queryOf(
                     sql,
-                    virksomhet.orgnr,
-                    virksomhet.kontonr,
-                    virksomhet.fnrInnsender,
-                    virksomhet.navnInnsender,
-                    virksomhet.harNavAvtale,
-                    virksomhet.avtaleVersjon,
+                    virksomhetModell.orgnr,
+                    virksomhetModell.kontonr,
+                    virksomhetModell.fnrInnsender,
+                    virksomhetModell.navnInnsender,
+                    virksomhetModell.harNavAvtale,
+                    virksomhetModell.avtaleVersjon,
                 ).asUpdate
             )
         }
