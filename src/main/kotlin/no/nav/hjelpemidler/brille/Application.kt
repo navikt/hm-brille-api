@@ -102,7 +102,7 @@ fun Application.setupRoutes() {
     val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
 
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
-    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient)
+    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
 
     installAuthentication(httpClient())
 

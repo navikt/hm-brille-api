@@ -16,4 +16,8 @@ class RedisClient(val redisProps: Configuration.RedisProperties = Configuration.
     fun erOptiker(fnr: String): Boolean? = jedis.get("fnr:$fnr:hpr:er.optiker")?.toBoolean()
 
     fun setErOptiker(fnr: String, erOptiker: Boolean): String = jedis.setex("fnr:$fnr:hpr:er.optiker", redisProps.hprExpirySeconds, erOptiker.toString())
+
+    fun medlemskapBarn(fnr: String): String? = jedis.get("fnr:$fnr:medlemskapbarn:resultat")
+
+    fun setMedlemskapBarn(fnr: String, resultat: String): String = jedis.setex("fnr:$fnr:medlemskapbarn:resultat", redisProps.medlemskapBarnExpirySeconds, resultat)
 }
