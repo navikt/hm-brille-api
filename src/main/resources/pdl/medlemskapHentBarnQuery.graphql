@@ -28,6 +28,7 @@ query($ident: ID!){
         }
         forelderBarnRelasjon {
             relatertPersonsIdent
+            relatertPersonsRolle
             minRolleForPerson
             folkeregistermetadata {
                 gyldighetstidspunkt
