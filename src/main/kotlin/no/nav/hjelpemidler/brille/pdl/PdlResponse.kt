@@ -75,7 +75,6 @@ data class ForelderBarnRelasjon(
     val relatertPersonsIdent: String?,
     val relatertPersonsRolle: ForelderBarnRelasjonRolle,
     val minRolleForPerson: ForelderBarnRelasjonRolle?,
-    val relatertPersonUtenFolkeregisteridentifikator: RelatertBiPerson?,
     val folkeregistermetadata: Folkeregistermetadata?,
 )
 
@@ -104,12 +103,8 @@ enum class KjoennType {
 }
 
 data class Folkeregistermetadata(
-    val ajourholdstidspunkt: LocalDateTime?,
     val gyldighetstidspunkt: LocalDateTime?,
     val opphoerstidspunkt: LocalDateTime?,
-    val kilde: String?,
-    val aarsak: String?,
-    val sekvens: Int?,
 )
 
 data class VergemaalEllerFremtidsfullmakt(
