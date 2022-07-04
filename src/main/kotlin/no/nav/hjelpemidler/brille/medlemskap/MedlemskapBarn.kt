@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
+import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjon
 import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
@@ -30,11 +32,13 @@ class MedlemskapBarn(
         withLoggingContext(
             mapOf()
         ) {
-
-            val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
-            if (medlemskapBarnCache != null) {
-                tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
-                return@runBlocking medlemskapBarnCache
+            // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
+            if (Configuration.profile != Profile.DEV) {
+                val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
+                if (medlemskapBarnCache != null) {
+                    tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
+                    return@runBlocking medlemskapBarnCache
+                }
             }
 
             log.info("Sjekker medlemskap for barn")
