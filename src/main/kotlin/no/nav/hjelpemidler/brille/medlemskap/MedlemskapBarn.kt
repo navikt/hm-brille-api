@@ -31,7 +31,7 @@ class MedlemskapBarn(
             val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
             if (medlemskapBarnCache != null) {
                 tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
-                return@runBlocking jsonMapper.readValue(medlemskapBarnCache, MedlemskapResultat::class.java)
+                return@runBlocking medlemskapBarnCache
             }
 
             log.info("Sjekker medlemskap for barn")
@@ -56,7 +56,7 @@ class MedlemskapBarn(
                 // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
                 // stopper vi opp behandling tidlig her!
                 val medlemskapResultat = MedlemskapResultat(false, false, false, listOf())
-                redisClient.setMedlemskapBarn(fnrBarn, jsonMapper.writeValueAsString(medlemskapResultat))
+                redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
                 return@runBlocking medlemskapResultat
             }
 
@@ -118,7 +118,7 @@ class MedlemskapBarn(
             // Hvis man kommer sålangt så har man sjekket alle verger og foreldre, og ingen både bor på samme folk.reg.
             // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
             val medlemskapResultat = MedlemskapResultat(true, medlemskapBevist = false, uavklartMedlemskap = true, saksgrunnlag = listOf())
-            redisClient.setMedlemskapBarn(fnrBarn, jsonMapper.writeValueAsString(medlemskapResultat))
+            redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
             medlemskapResultat
         }
     }
