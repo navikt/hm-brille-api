@@ -96,13 +96,32 @@ class MedlemskapBarn(
                         log.info("Verge/forelder deler folkeregistrert adresse med barnet, sjekker medlemskap i folketrygden for verge/forelder mot LovMe")
 
                         // TODO: Sjekk medlemskap:
-                        val medlemskap = medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
+                        val medlemskap =
+                            medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
                         log.debug("LovMe response verge/forelder: ${jsonMapper.writeValueAsString(medlemskap)}")
 
                         val medlemskapResponse: MedlemskapResponse = jsonMapper.treeToValue(medlemskap)
-                        log.debug("LovMe response verge/forelder (parsed): ${jsonMapper.writeValueAsString(medlemskapResponse)}")
+                        log.debug(
+                            "LovMe response verge/forelder (parsed): ${
+                            jsonMapper.writeValueAsString(
+                                medlemskapResponse
+                            )
+                            }"
+                        )
 
-                        // TODO: Gitt medlemskap: svar ok med en return@runBlocking her
+                        if (medlemskapResponse.resultat.svar == MedlemskapResponseResultatSvar.JA) {
+                            log.debug("Medlemskap verifisert! Hopper over de andre i listen (hvis det var flere man kunne sjekke)")
+                            return@runBlocking MedlemskapResultat(
+                                true,
+                                medlemskapBevist = true,
+                                uavklartMedlemskap = false,
+                                saksgrunnlag = listOf()
+                            )
+                        } else if (medlemskapResponse.resultat.svar == MedlemskapResponseResultatSvar.UAVKLART) {
+                            log.debug("Medlemskap for verge/forelder er uavklart i følge LovMe, fortsetter å slå opp andre i listen om vi har flere å sjekke")
+                        } else {
+                            log.debug("Medlemskap avvist for vege/forelder i følge LovMe, fortsetter å slå opp andre i listen om vi har flere å sjekke")
+                        }
                     } else {
                         log.info("Verge/forelder delte ikke folkeregistrert adresse med barnet")
                     }
@@ -111,7 +130,8 @@ class MedlemskapBarn(
 
             // Hvis man kommer sålangt så har man sjekket alle verger og foreldre, og ingen både bor på samme folk.reg.
             // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
-            val medlemskapResultat = MedlemskapResultat(true, medlemskapBevist = false, uavklartMedlemskap = true, saksgrunnlag = listOf())
+            val medlemskapResultat =
+                MedlemskapResultat(true, medlemskapBevist = false, uavklartMedlemskap = true, saksgrunnlag = listOf())
             redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
             medlemskapResultat
         }
@@ -173,7 +193,9 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
     for (adresseBarn in bostedsadresserBarn) {
         if (adresseBarn.matrikkeladresse?.matrikkelId != null) {
             // Det eneste vi kan sammenligne her er om matrikkel IDen matcher
-            if (bostedsadresserAnnen.mapNotNull { it.matrikkeladresse?.matrikkelId }.contains(adresseBarn.matrikkeladresse.matrikkelId)) {
+            if (bostedsadresserAnnen.mapNotNull { it.matrikkeladresse?.matrikkelId }
+                .contains(adresseBarn.matrikkeladresse.matrikkelId)
+            ) {
                 // Fant overlappende matrikkelId mellom barn og annen part
                 log.debug("harSammeAdresse: fant overlappende matrikkelId mellom barn og annen part")
                 return true
