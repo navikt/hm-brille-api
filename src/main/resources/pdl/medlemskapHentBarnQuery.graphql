@@ -1,51 +1,37 @@
 query($ident: ID!){
+    # TODO: Dataminimering når vi finner ut hva vi trenger
     hentPerson(ident: $ident) {
         navn {
             fornavn
+            mellomnavn
             etternavn
         }
         bostedsadresse(historikk: false ) {
             gyldigFraOgMed
             gyldigTilOgMed
             vegadresse {
-                  matrikkelId,
-                  adressenavn,
-                  husnummer,
-                  husbokstav,
-                  tilleggsnavn,
-                  postnummer
-              },
-               matrikkeladresse {
-                    matrikkelId
-               }
+                matrikkelId
+                adressenavn
+                husnummer
+                husbokstav
+                tilleggsnavn
+                postnummer
+            }
+            matrikkeladresse {
+                matrikkelId
+            }
         }
         adressebeskyttelse(historikk: false) { gradering }
         foedsel {
             foedselsaar
             foedselsdato
         }
-        # TODO: Dataminimering når vi finner ut hva vi trenger
         forelderBarnRelasjon {
             relatertPersonsIdent
-            relatertPersonsRolle
             minRolleForPerson
-            relatertPersonUtenFolkeregisteridentifikator {
-                navn {
-                    fornavn
-                    mellomnavn
-                    etternavn
-                }
-                foedselsdato
-                statsborgerskap
-                kjoenn
-            }
             folkeregistermetadata {
-                ajourholdstidspunkt
                 gyldighetstidspunkt
                 opphoerstidspunkt
-                kilde
-                aarsak
-                sekvens
             }
         }
         vergemaalEllerFremtidsfullmakt {
@@ -62,12 +48,8 @@ query($ident: ID!){
                 omfangetErInnenPersonligOmraade
             }
             folkeregistermetadata {
-                ajourholdstidspunkt
                 gyldighetstidspunkt
                 opphoerstidspunkt
-                kilde
-                aarsak
-                sekvens
             }
         }
     }

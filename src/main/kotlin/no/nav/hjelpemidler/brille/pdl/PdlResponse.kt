@@ -58,6 +58,7 @@ data class Adressebeskyttelse(
 data class Bostedsadresse(val vegadresse: Vegadresse?, val matrikkeladresse: Matrikkeladresse?)
 
 data class Vegadresse(
+    val matrikkelId: Long?,
     val adressenavn: String?,
     val postnummer: String?,
     val husnummer: String? = null,
@@ -66,7 +67,7 @@ data class Vegadresse(
     val tilleggsnavn: String? = null,
 )
 
-data class Matrikkeladresse(val postnummer: String?, val kommunenummer: String?)
+data class Matrikkeladresse(val matrikkelId: Long?, val postnummer: String?, val kommunenummer: String?)
 
 data class Foedsel(val foedselsaar: String?, val foedselsdato: String?)
 
