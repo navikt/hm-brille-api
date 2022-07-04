@@ -15,9 +15,16 @@ value class Organisasjonsnummer(private val value: String) :
 data class Organisasjonsenhet(
     val organisasjonsnummer: String,
     val navn: String,
+    val postadresse: Postadresse,
     val naeringskode1: Næringskode,
     val naeringskode2: Næringskode?,
     val naeringskode3: Næringskode?,
+)
+
+data class Postadresse(
+    val postnummer: String,
+    val poststed: String,
+    val adresse: List<String>,
 )
 
 data class Næringskode(

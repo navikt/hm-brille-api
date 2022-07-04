@@ -28,6 +28,7 @@ import no.nav.hjelpemidler.brille.db.VirksomhetModell
 import no.nav.hjelpemidler.brille.db.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
+import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -282,13 +283,13 @@ fun Application.setupRoutes() {
 
             data class Organisasjon(
                 val orgnavn: String,
+                val postadresse: Postadresse,
                 val erOptikerVirksomet: Boolean,
             )
 
             data class Virksomhet(
                 val virksomhet: VirksomhetModell,
                 val organisasjon: Organisasjon,
-
             )
 
             val organisasjonsnummer =
@@ -306,6 +307,7 @@ fun Application.setupRoutes() {
                 virksomhetModell,
                 Organisasjon(
                     organisasjon.navn,
+                    organisasjon.postadresse,
                     listOf(
                         organisasjon.naeringskode1,
                         organisasjon.naeringskode2,
