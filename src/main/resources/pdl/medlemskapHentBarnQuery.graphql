@@ -1,11 +1,6 @@
 query($ident: ID!){
     # TODO: Dataminimering når vi finner ut hva vi trenger
     hentPerson(ident: $ident) {
-        navn {
-            fornavn
-            mellomnavn
-            etternavn
-        }
         bostedsadresse(historikk: false ) {
             gyldigFraOgMed
             gyldigTilOgMed
