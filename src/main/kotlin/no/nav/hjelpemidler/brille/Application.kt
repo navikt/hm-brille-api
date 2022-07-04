@@ -24,6 +24,8 @@ import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.db.DatabaseConfiguration
 import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
+import no.nav.hjelpemidler.brille.db.Virksomhet
+import no.nav.hjelpemidler.brille.db.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
@@ -40,6 +42,7 @@ import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
+import org.postgresql.util.PSQLException
 import org.slf4j.event.Level
 import java.util.TimeZone
 import java.util.UUID
@@ -92,6 +95,7 @@ fun Application.setupRoutes() {
     val redisClient = RedisClient()
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
+    val virksomhetStore = VirksomhetStorePostgres(dataSource)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(
         Configuration.syfohelsenettproxyProperties.baseUrl,
@@ -252,6 +256,7 @@ fun Application.setupRoutes() {
                 return@post
             }
             data class Request(val fnr: String)
+
             val fnr = call.receive<Request>().fnr
             call.respond(medlemskapClient.slåOppMedlemskap(fnr))
         }
@@ -263,8 +268,48 @@ fun Application.setupRoutes() {
                 return@post
             }
             data class Request(val fnr: String)
+
             val fnr = call.receive<Request>().fnr
             call.respond(medlemskapBarn.sjekkMedlemskapBarn(fnr))
+        }
+
+        get("/test/virksomhet/{orgnr}") {
+            if (Configuration.profile == Profile.PROD) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@get
+            }
+
+            val organisasjonsnummer =
+                call.parameters["orgnr"] ?: error("Mangler orgnr i url")
+
+            val virksomhet = virksomhetStore.hentVirksomhet(organisasjonsnummer)
+                ?: return@get call.respond(
+                    status = HttpStatusCode.NotFound,
+                    "Ingen virksomhet funnet for orgnr. $organisasjonsnummer"
+                )
+            call.respond(virksomhet)
+        }
+
+        post("/test/virksomhet") {
+            if (Configuration.profile == Profile.PROD) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+
+            val virksomhet = call.receive<Virksomhet>()
+
+            try {
+                virksomhetStore.lagreVirksomhet(virksomhet)
+            } catch (e: PSQLException) {
+                log.error(e) { "Lagring av virksomhet feilet" }
+                if (e.message?.contains("duplicate key") == true &&
+                    e.message?.contains("virksomhet_pkey") == true
+                ) {
+                    return@post call.response.status(HttpStatusCode.Conflict)
+                }
+            }
+
+            call.response.status(HttpStatusCode.Created)
         }
     }
 }
