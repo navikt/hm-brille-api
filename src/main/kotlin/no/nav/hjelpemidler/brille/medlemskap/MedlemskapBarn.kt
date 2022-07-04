@@ -180,20 +180,32 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
             }
         } else if (adresseBarn.vegadresse != null) {
             val adr1 = adresseBarn.vegadresse
-            if (bostedsadresserAnnen
-                .mapNotNull { it.vegadresse }
-                .any { adr2 ->
-                    adr1.matrikkelId == adr2.matrikkelId &&
-                        adr1.adressenavn == adr2.adressenavn &&
-                        adr1.husnummer == adr2.husnummer &&
-                        adr1.husbokstav == adr2.husbokstav &&
-                        adr1.postnummer == adr2.postnummer &&
-                        adr1.tilleggsnavn == adr2.tilleggsnavn
-                }
+            // Sjekk at vi i det minste har ét eller flere av disse feltene, slik at vi ikke aksepterer at barn og annen
+            // part begge har alle feltene == null.
+            // TODO: Vurder om dette funker eller om vi trenger noe fuzzy-søk lignende (små/store bokstaver,
+            //  ufullstendig adresse på en av de)
+            if (adr1.matrikkelId != null ||
+                adr1.adressenavn != null ||
+                adr1.husnummer != null ||
+                adr1.husbokstav != null ||
+                adr1.postnummer != null ||
+                adr1.tilleggsnavn != null
             ) {
-                // Fant overlappende vegadresse mellom barn og annen part
-                log.debug("harSammeAdresse: fant overlappende vegadresse mellom barn og annen part")
-                return true
+                if (bostedsadresserAnnen
+                    .mapNotNull { it.vegadresse }
+                    .any { adr2 ->
+                        adr1.matrikkelId == adr2.matrikkelId &&
+                            adr1.adressenavn == adr2.adressenavn &&
+                            adr1.husnummer == adr2.husnummer &&
+                            adr1.husbokstav == adr2.husbokstav &&
+                            adr1.postnummer == adr2.postnummer &&
+                            adr1.tilleggsnavn == adr2.tilleggsnavn
+                    }
+                ) {
+                    // Fant overlappende vegadresse mellom barn og annen part
+                    log.debug("harSammeAdresse: fant overlappende vegadresse mellom barn og annen part")
+                    return true
+                }
             }
         } else {
             log.debug("harSammeAdresse: kan ikke sammenligne en bostedsadresse av annen type (utenlandsk, etc.).")
