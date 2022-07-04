@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.medlemskap
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
@@ -8,11 +9,9 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.jsonMapper
-import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjon
 import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
-import no.nav.hjelpemidler.brille.pdl.VergemaalEllerFremtidsfullmakt
 import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import org.slf4j.MDC
@@ -21,6 +20,18 @@ import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 private val tjenestelogg = KotlinLogging.logger("tjenestekall")
+
+data class MedlemskapResultat(
+    val kanSøke: Boolean, // Ja eller antatt pga. folkereg. addresse i norge
+    val medlemskapBevist: Boolean,
+    val uavklartMedlemskap: Boolean,
+    val saksgrunnlag: List<Saksgrunnlag>,
+)
+
+data class Saksgrunnlag(
+    val kilde: String,
+    val saksgrunnlag: JsonNode,
+)
 
 class MedlemskapBarn(
     private val medlemskapClient: MedlemskapClient,
@@ -76,12 +87,25 @@ class MedlemskapBarn(
 
                     // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
                     val pdlVergeEllerForelder = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
+                    validerPdlOppslag(pdlVergeEllerForelder)
+
                     log.debug("PDL response verge/forelder: ${jsonMapper.writeValueAsString(pdlVergeEllerForelder)}")
 
-                    // TODO: Gitt adresse match: Sjekk medlemskap:
-                    //   val medlemskap = medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, innerCorrelationId)
+                    // TODO: Valider samme adresse som barn
+                    if (harSammeAdresse(pdlBarn, pdlVergeEllerForelder)) {
+                        log.info("Verge/forelder deler folkeregistrert adresse med barnet, sjekker medlemskap i folketrygden for verge/forelder mot LovMe")
 
-                    // TODO: Gitt medlemskap: svar ok med en return@runBlocking her
+                        // TODO: Sjekk medlemskap:
+                        val medlemskap = medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
+                        log.debug("LovMe response verge/forelder: ${jsonMapper.writeValueAsString(medlemskap)}")
+
+                        val medlemskapResponse: MedlemskapResponse = jsonMapper.treeToValue(medlemskap)
+                        log.debug("LovMe response verge/forelder (parsed): ${jsonMapper.writeValueAsString(medlemskapResponse)}")
+
+                        // TODO: Gitt medlemskap: svar ok med en return@runBlocking her
+                    } else {
+                        log.info("Verge/forelder delte ikke folkeregistrert adresse med barnet")
+                    }
                 }
             }
 
@@ -117,20 +141,20 @@ private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonRes
         vergemaalEllerFremtidsfullmakt.filter {
             // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
             it.vergeEllerFullmektig.motpartsPersonident != null &&
-                    // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                    (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                    (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
         }.map {
             Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
         },
         foreldreBarnRelasjon.filter {
             // Vi kan ikke slå opp medlemskap om forelder ikke har fnr
             it.relatertPersonsIdent != null &&
-                    // Bare se på foreldrerelasjoner
-                    it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
-                    // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                    (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                    (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                // Bare se på foreldrerelasjoner
+                it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
+                // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
         }.map {
             Pair(it.relatertPersonsRolle.name, it.relatertPersonsIdent!!)
         }.sortedBy {
@@ -142,14 +166,78 @@ private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonRes
     return vergerOgForeldre
 }
 
-data class MedlemskapResultat(
-    val kanSøke: Boolean, // Ja eller antatt pga. folkereg. addresse i norge
-    val medlemskapBevist: Boolean,
-    val uavklartMedlemskap: Boolean,
-    val saksgrunnlag: List<Saksgrunnlag>,
+private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): Boolean {
+    val bostedsadresserBarn = barn.data?.hentPerson?.bostedsadresse ?: listOf()
+    val bostedsadresserAnnen = annen.data?.hentPerson?.bostedsadresse ?: listOf()
+
+    for (adresseBarn in bostedsadresserBarn) {
+        if (adresseBarn.matrikkeladresse?.matrikkelId != null) {
+            // Det eneste vi kan sammenligne her er om matrikkel IDen matcher
+            if (bostedsadresserAnnen.mapNotNull { it.matrikkeladresse?.matrikkelId }.contains(adresseBarn.matrikkeladresse.matrikkelId)) {
+                // Fant overlappende matrikkelId mellom barn og annen part
+                log.debug("harSammeAdresse: fant overlappende matrikkelId mellom barn og annen part")
+                return true
+            }
+        } else if (adresseBarn.vegadresse != null) {
+            val adr1 = adresseBarn.vegadresse
+            // Sjekk at vi i det minste har ét eller flere av disse feltene, slik at vi ikke aksepterer at barn og annen
+            // part begge har alle feltene == null.
+            // TODO: Vurder om dette funker eller om vi trenger noe fuzzy-søk lignende (små/store bokstaver,
+            //  ufullstendig adresse på en av de)
+            if (adr1.matrikkelId != null ||
+                adr1.adressenavn != null ||
+                adr1.husnummer != null ||
+                adr1.husbokstav != null ||
+                adr1.postnummer != null ||
+                adr1.tilleggsnavn != null
+            ) {
+                if (bostedsadresserAnnen
+                    .mapNotNull { it.vegadresse }
+                    .any { adr2 ->
+                        adr1.matrikkelId == adr2.matrikkelId &&
+                            adr1.adressenavn == adr2.adressenavn &&
+                            adr1.husnummer == adr2.husnummer &&
+                            adr1.husbokstav == adr2.husbokstav &&
+                            adr1.postnummer == adr2.postnummer &&
+                            adr1.tilleggsnavn == adr2.tilleggsnavn
+                    }
+                ) {
+                    // Fant overlappende vegadresse mellom barn og annen part
+                    log.debug("harSammeAdresse: fant overlappende vegadresse mellom barn og annen part")
+                    return true
+                }
+            }
+        } else {
+            log.debug("harSammeAdresse: kan ikke sammenligne en bostedsadresse av annen type (utenlandsk, etc.).")
+        }
+    }
+
+    // Matchende adresse ikke funnet
+    log.debug("harSammeAdresse: fant ikke noe overlappende adresse mellom barn og annen part")
+    return false
+}
+
+private data class MedlemskapResponse(
+    val resultat: MedlemskapResponseResultat,
 )
 
-data class Saksgrunnlag(
-    val kilde: String,
-    val saksgrunnlag: JsonNode,
+private data class MedlemskapResponseResultat(
+    val regelId: MedlemskapResponseResultatRegelId,
+    val svar: MedlemskapResponseResultatSvar,
+    val årsaker: List<MedlemskapResultatÅrsaker>,
+)
+
+private enum class MedlemskapResponseResultatRegelId {
+    REGEL_MEDLEM_KONKLUSJON
+}
+
+private enum class MedlemskapResponseResultatSvar {
+    JA, UAVKLART, NEI
+}
+
+private data class MedlemskapResultatÅrsaker(
+    val regelId: String,
+    val avklaring: String,
+    val svar: MedlemskapResponseResultatSvar,
+    val begrunnelse: String,
 )

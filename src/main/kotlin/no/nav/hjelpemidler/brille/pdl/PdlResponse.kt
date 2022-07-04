@@ -37,7 +37,7 @@ data class PdlHentPerson(
 )
 
 data class PdlPerson(
-    val navn: List<PdlPersonNavn>,
+    val navn: List<PdlPersonNavn> = emptyList(),
     val adressebeskyttelse: List<Adressebeskyttelse>? = emptyList(),
     val bostedsadresse: List<Bostedsadresse> = emptyList(),
     val foedsel: List<Foedsel> = emptyList(),
@@ -58,6 +58,7 @@ data class Adressebeskyttelse(
 data class Bostedsadresse(val vegadresse: Vegadresse?, val matrikkeladresse: Matrikkeladresse?)
 
 data class Vegadresse(
+    val matrikkelId: Long?,
     val adressenavn: String?,
     val postnummer: String?,
     val husnummer: String? = null,
@@ -66,7 +67,7 @@ data class Vegadresse(
     val tilleggsnavn: String? = null,
 )
 
-data class Matrikkeladresse(val postnummer: String?, val kommunenummer: String?)
+data class Matrikkeladresse(val matrikkelId: Long?, val postnummer: String?, val kommunenummer: String?)
 
 data class Foedsel(val foedselsaar: String?, val foedselsdato: String?)
 
@@ -74,7 +75,6 @@ data class ForelderBarnRelasjon(
     val relatertPersonsIdent: String?,
     val relatertPersonsRolle: ForelderBarnRelasjonRolle,
     val minRolleForPerson: ForelderBarnRelasjonRolle?,
-    val relatertPersonUtenFolkeregisteridentifikator: RelatertBiPerson?,
     val folkeregistermetadata: Folkeregistermetadata?,
 )
 
@@ -103,12 +103,8 @@ enum class KjoennType {
 }
 
 data class Folkeregistermetadata(
-    val ajourholdstidspunkt: LocalDateTime?,
     val gyldighetstidspunkt: LocalDateTime?,
     val opphoerstidspunkt: LocalDateTime?,
-    val kilde: String?,
-    val aarsak: String?,
-    val sekvens: Int?,
 )
 
 data class VergemaalEllerFremtidsfullmakt(
