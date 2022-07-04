@@ -112,6 +112,11 @@ fun Application.setupRoutes() {
 
         // TODO: erstatt /sok når ferdig
         post("/sok_test") {
+            if (Configuration.profile != Profile.DEV) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+
             data class Request(
                 val fnr: String,
                 val orgnr: String,
