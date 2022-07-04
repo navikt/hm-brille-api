@@ -37,7 +37,7 @@ data class PdlHentPerson(
 )
 
 data class PdlPerson(
-    val navn: List<PdlPersonNavn>,
+    val navn: List<PdlPersonNavn> = emptyList(),
     val adressebeskyttelse: List<Adressebeskyttelse>? = emptyList(),
     val bostedsadresse: List<Bostedsadresse> = emptyList(),
     val foedsel: List<Foedsel> = emptyList(),
