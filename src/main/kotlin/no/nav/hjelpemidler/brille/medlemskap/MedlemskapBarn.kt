@@ -12,21 +12,31 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
 import no.nav.hjelpemidler.brille.pdl.VergemaalEllerFremtidsfullmakt
 import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
+import no.nav.hjelpemidler.brille.redis.RedisClient
 import org.slf4j.MDC
 import java.time.LocalDateTime
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
+private val tjenestelogg = KotlinLogging.logger("tjenestekall")
 
 class MedlemskapBarn(
     private val medlemskapClient: MedlemskapClient,
     private val pdlClient: PdlClient,
+    private val redisClient: RedisClient,
 ) {
     fun sjekkMedlemskapBarn(fnrBarn: String): MedlemskapResultat = runBlocking {
         val baseCorrelationId = MDC.get(MDC_CORRELATION_ID)
         withLoggingContext(
             mapOf()
         ) {
+
+            val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
+            if (medlemskapBarnCache != null) {
+                tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
+                return@runBlocking medlemskapBarnCache
+            }
+
             log.info("Sjekker medlemskap for barn")
 
             // Slå opp pdl informasjon om barnet
@@ -40,7 +50,9 @@ class MedlemskapBarn(
                 // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
                 // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
                 // stopper vi opp behandling tidlig her!
-                return@runBlocking MedlemskapResultat(false, false, false, listOf())
+                val medlemskapResultat = MedlemskapResultat(false, false, false, listOf())
+                redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
+                return@runBlocking medlemskapResultat
             }
 
             val vergerOgForeldre = prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)
@@ -71,7 +83,9 @@ class MedlemskapBarn(
 
             // Hvis man kommer sålangt så har man sjekket alle verger og foreldre, og ingen både bor på samme folk.reg.
             // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
-            MedlemskapResultat(true, medlemskapBevist = false, uavklartMedlemskap = true, saksgrunnlag = listOf())
+            val medlemskapResultat = MedlemskapResultat(true, medlemskapBevist = false, uavklartMedlemskap = true, saksgrunnlag = listOf())
+            redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
+            medlemskapResultat
         }
     }
 }

@@ -1,6 +1,8 @@
 package no.nav.hjelpemidler.brille.redis
 
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 import redis.clients.jedis.JedisPooled
 
@@ -16,4 +18,10 @@ class RedisClient(val redisProps: Configuration.RedisProperties = Configuration.
     fun erOptiker(fnr: String): Boolean? = jedis.get("fnr:$fnr:hpr:er.optiker")?.toBoolean()
 
     fun setErOptiker(fnr: String, erOptiker: Boolean): String = jedis.setex("fnr:$fnr:hpr:er.optiker", redisProps.hprExpirySeconds, erOptiker.toString())
+
+    fun medlemskapBarn(fnr: String): MedlemskapResultat? = jedis.get("fnr:$fnr:medlemskapbarn:resultat").let {
+        jsonMapper.readValue(it, MedlemskapResultat::class.java)
+    }
+
+    fun setMedlemskapBarn(fnr: String, medlemskapResultat: MedlemskapResultat): String = jedis.setex("fnr:$fnr:medlemskapbarn:resultat", redisProps.medlemskapBarnExpirySeconds, jsonMapper.writeValueAsString(medlemskapResultat))
 }

@@ -102,7 +102,7 @@ fun Application.setupRoutes() {
     val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
 
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
-    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient)
+    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
 
     installAuthentication(httpClient())
 
@@ -112,6 +112,11 @@ fun Application.setupRoutes() {
 
         // TODO: erstatt /sok når ferdig
         post("/sok_test") {
+            if (Configuration.profile != Profile.DEV) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+
             data class Request(
                 val fnr: String,
                 val orgnr: String,

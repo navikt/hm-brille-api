@@ -1,5 +1,9 @@
 query($ident: ID!){
     hentPerson(ident: $ident) {
+        navn {
+            fornavn
+            etternavn
+        }
         bostedsadresse(historikk: false ) {
             gyldigFraOgMed
             gyldigTilOgMed
