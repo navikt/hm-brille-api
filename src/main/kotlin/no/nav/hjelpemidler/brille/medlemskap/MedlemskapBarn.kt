@@ -100,7 +100,10 @@ class MedlemskapBarn(
             return@runBlocking medlemskapResultat
         }
 
-        for ((rolle, fnrVergeEllerForelder) in prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)) {
+        val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)
+        log.debug("prioritertListe = ${jsonMapper.writeValueAsString(prioritertListe)}")
+
+        for ((rolle, fnrVergeEllerForelder) in prioritertListe) {
             val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
             withLoggingContext(
                 mapOf(
@@ -185,7 +188,7 @@ private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boole
     return bostedsadresser.any { it.vegadresse != null || it.matrikkeladresse != null }
 }
 
-private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
+private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
     // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i medlemskap-oppslag tjenesten. Her
     // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
     // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
@@ -195,7 +198,7 @@ private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonRes
     val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
 
     val now = LocalDateTime.now()
-    val vergerOgForeldre: List<Pair<String, String>> = listOf(
+    val fullmektigeVergerOgForeldre: List<Pair<String, String>> = listOf(
         fullmakt.filter {
             // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot dagens dato
             (it.gyldigFraOgMed.isEqual(now.toLocalDate()) || it.gyldigFraOgMed.isBefore(now.toLocalDate())) &&
@@ -231,7 +234,18 @@ private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonRes
         },
     ).flatten()
 
-    return vergerOgForeldre
+    // Skip duplikater. Man kan ha flere roller ovenfor et barn samtidig (foreldre-relasjon og foreldre-ansvar). Og det
+    // blir fort rot i dolly (i dev) når man oppretter og endrer brukere (masse dupikate relasjoner osv). Skipper derfor
+    // her duplikate fnr da det ikke henger på grep å slå opp samme person flere ganger
+    val fnrSeen = mutableMapOf<String, Boolean>()
+    return fullmektigeVergerOgForeldre.filter {
+        if (fnrSeen[it.second] == null) {
+            fnrSeen[it.second] = true
+            true
+        } else {
+            false
+        }
+    }
 }
 
 private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): Boolean {
