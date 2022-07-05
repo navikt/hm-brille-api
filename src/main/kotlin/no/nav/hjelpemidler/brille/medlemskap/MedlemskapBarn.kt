@@ -45,6 +45,8 @@ class MedlemskapBarn(
     private val redisClient: RedisClient,
 ) {
     fun sjekkMedlemskapBarn(fnrBarn: String): MedlemskapResultat = runBlocking {
+        log.info("Sjekker medlemskap for barn")
+
         val baseCorrelationId = MDC.get(MDC_CORRELATION_ID)
         val saksgrunnlag = mutableListOf(
             Saksgrunnlag(
@@ -58,116 +60,89 @@ class MedlemskapBarn(
             )
         )
 
-        withLoggingContext(
-            mapOf()
-        ) {
-            // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
-            if (Configuration.profile != Profile.DEV) {
-                val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
-                if (medlemskapBarnCache != null) {
-                    tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
-                    return@runBlocking medlemskapBarnCache
-                }
+        // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
+        if (Configuration.profile != Profile.DEV) {
+            val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
+            if (medlemskapBarnCache != null) {
+                log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
+                tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
+                return@runBlocking medlemskapBarnCache
             }
+        }
 
-            log.info("Sjekker medlemskap for barn")
+        // Slå opp pdl informasjon om barnet
+        val pdlBarn = pdlClient.medlemskapHentBarn(fnrBarn)
+        validerPdlOppslag(pdlBarn)
 
-            // Slå opp pdl informasjon om barnet
-            val pdlBarn = pdlClient.medlemskapHentBarn(fnrBarn)
-            validerPdlOppslag(pdlBarn)
-
-            saksgrunnlag.add(
-                Saksgrunnlag(
-                    kilde = SaksgrunnlagType.PDL,
-                    saksgrunnlag = jsonMapper.valueToTree(
-                        mapOf(
-                            "fnr" to fnrBarn,
-                            "pdl" to pdlBarn,
-                        )
-                    ),
-                )
-            )
-
-            log.debug("PDL response: ${jsonMapper.writeValueAsString(pdlBarn)}")
-
-            if (!sjekkFolkeregistrertAdresseINorge(pdlBarn)) {
-                // Ingen av de folkeregistrerte bostedsadressene satt på barnet i PDL er en normal norsk adresse (kan
-                // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
-                // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
-                // stopper vi opp behandling tidlig her!
-                val medlemskapResultat = MedlemskapResultat(false, false, false, saksgrunnlag)
-                redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
-                return@runBlocking medlemskapResultat
-            }
-
-            val vergerOgForeldre = prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)
-            log.debug("Prioritert liste for oppslag: $vergerOgForeldre")
-
-            for ((rolle, fnrVergeEllerForelder) in vergerOgForeldre) {
-                log.debug("Slår opp i PDL for $rolle: $fnrVergeEllerForelder")
-
-                val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
-                withLoggingContext(
+        saksgrunnlag.add(
+            Saksgrunnlag(
+                kilde = SaksgrunnlagType.PDL,
+                saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
-                        "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
-                        "rolle" to rolle,
+                        "fnr" to fnrBarn,
+                        "pdl" to pdlBarn,
                     )
-                ) {
-                    log.info("Sjekker barns verge/forelder")
+                ),
+            )
+        )
 
-                    // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
-                    val pdlVergeEllerForelder = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
-                    validerPdlOppslag(pdlVergeEllerForelder)
+        if (!sjekkFolkeregistrertAdresseINorge(pdlBarn)) {
+            // Ingen av de folkeregistrerte bostedsadressene satt på barnet i PDL er en normal norsk adresse (kan
+            // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
+            // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
+            // stopper vi opp behandling tidlig her!
+            log.info("Barnet har ikke folkeregistrert adresse i Norge og vi antar derfor at hen ikke er medlem i folketrygden")
+            val medlemskapResultat = MedlemskapResultat(false, false, false, saksgrunnlag)
+            redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
+            return@runBlocking medlemskapResultat
+        }
+
+        for ((rolle, fnrVergeEllerForelder) in prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)) {
+            val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
+            withLoggingContext(
+                mapOf(
+                    "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
+                    "rolle" to rolle,
+                )
+            ) {
+                // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
+                val pdlVergeEllerForelder = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
+                validerPdlOppslag(pdlVergeEllerForelder)
+
+                saksgrunnlag.add(
+                    Saksgrunnlag(
+                        kilde = SaksgrunnlagType.PDL,
+                        saksgrunnlag = jsonMapper.valueToTree(
+                            mapOf(
+                                "rolle" to rolle,
+                                "fnr" to fnrVergeEllerForelder,
+                                "pdl" to pdlVergeEllerForelder,
+                            )
+                        ),
+                    )
+                )
+
+                if (harSammeAdresse(pdlBarn, pdlVergeEllerForelder)) {
+                    val medlemskap =
+                        medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
 
                     saksgrunnlag.add(
                         Saksgrunnlag(
-                            kilde = SaksgrunnlagType.PDL,
+                            kilde = SaksgrunnlagType.LOV_ME,
                             saksgrunnlag = jsonMapper.valueToTree(
                                 mapOf(
                                     "rolle" to rolle,
                                     "fnr" to fnrVergeEllerForelder,
-                                    "pdl" to pdlVergeEllerForelder,
+                                    "lov_me" to medlemskap,
+                                    "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
                                 )
                             ),
                         )
                     )
 
-                    log.debug("PDL response verge/forelder: ${jsonMapper.writeValueAsString(pdlVergeEllerForelder)}")
-
-                    // TODO: Valider samme adresse som barn
-                    if (harSammeAdresse(pdlBarn, pdlVergeEllerForelder)) {
-                        log.info("Verge/forelder deler folkeregistrert adresse med barnet, sjekker medlemskap i folketrygden for verge/forelder mot LovMe")
-
-                        // TODO: Sjekk medlemskap:
-                        val medlemskap =
-                            medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
-                        log.debug("LovMe response verge/forelder: ${jsonMapper.writeValueAsString(medlemskap)}")
-
-                        saksgrunnlag.add(
-                            Saksgrunnlag(
-                                kilde = SaksgrunnlagType.LOV_ME,
-                                saksgrunnlag = jsonMapper.valueToTree(
-                                    mapOf(
-                                        "rolle" to rolle,
-                                        "fnr" to fnrVergeEllerForelder,
-                                        "lov_me" to medlemskap,
-                                        "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
-                                    )
-                                ),
-                            )
-                        )
-
-                        val medlemskapResponse: MedlemskapResponse = jsonMapper.treeToValue(medlemskap)
-                        log.debug(
-                            "LovMe response verge/forelder (parsed): ${
-                            jsonMapper.writeValueAsString(
-                                medlemskapResponse
-                            )
-                            }"
-                        )
-
-                        if (medlemskapResponse.resultat.svar == MedlemskapResponseResultatSvar.JA) {
-                            log.debug("Medlemskap verifisert! Hopper over de andre i listen (hvis det var flere man kunne sjekke)")
+                    when (jsonMapper.treeToValue<MedlemskapResponse>(medlemskap).resultat.svar) {
+                        MedlemskapResponseResultatSvar.JA -> {
+                            log.info("Barnets medlemskap verifisert igjennom verges-/forelders medlemskap og bolig på samme adresse")
                             val medlemskapResultat = MedlemskapResultat(
                                 true,
                                 medlemskapBevist = true,
@@ -177,30 +152,26 @@ class MedlemskapBarn(
                             redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
                             log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
                             return@runBlocking medlemskapResultat
-                        } else if (medlemskapResponse.resultat.svar == MedlemskapResponseResultatSvar.UAVKLART) {
-                            log.debug("Medlemskap for verge/forelder er uavklart i følge LovMe, fortsetter å slå opp andre i listen om vi har flere å sjekke")
-                        } else {
-                            log.debug("Medlemskap avvist for vege/forelder i følge LovMe, fortsetter å slå opp andre i listen om vi har flere å sjekke")
                         }
-                    } else {
-                        log.info("Verge/forelder delte ikke folkeregistrert adresse med barnet")
+                        else -> { /* Sjekk de andre */ }
                     }
                 }
             }
-
-            // Hvis man kommer sålangt så har man sjekket alle verger og foreldre, og ingen både bor på samme folk.reg.
-            // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
-            val medlemskapResultat =
-                MedlemskapResultat(
-                    true,
-                    medlemskapBevist = false,
-                    uavklartMedlemskap = true,
-                    saksgrunnlag = saksgrunnlag
-                )
-            redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
-            log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
-            medlemskapResultat
         }
+
+        // Hvis man kommer sålangt så har man sjekket alle verger og foreldre, og ingen både bor på samme folk.reg.
+        // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
+        val medlemskapResultat =
+            MedlemskapResultat(
+                true,
+                medlemskapBevist = false,
+                uavklartMedlemskap = true,
+                saksgrunnlag = saksgrunnlag
+            )
+        redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
+        log.info("Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge")
+        log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
+        medlemskapResultat
     }
 }
 
