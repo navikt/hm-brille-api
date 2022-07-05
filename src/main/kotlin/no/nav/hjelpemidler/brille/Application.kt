@@ -181,7 +181,7 @@ fun Application.setupRoutes() {
                         val navn: String,
                         val alder: Int,
                         val kanSøke: Boolean,
-                        val begrunnelse: List<AvvisningsType>,
+                        val begrunnelse: AvvisningsType?,
                     )
 
                     val fnrBruker = call.receive<Request>().fnr
@@ -197,7 +197,7 @@ fun Application.setupRoutes() {
                             "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
                             personInformasjon.alder!!,
                             vilkår.valider(),
-                            vilkår.avvisningsGrunner(),
+                            vilkår.avvisningsGrunn(),
                         )
                     )
                 }
