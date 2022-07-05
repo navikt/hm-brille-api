@@ -27,8 +27,8 @@ data class Diopter(private val value: BigDecimal) : Comparable<Diopter> {
 
         val ZERO = Diopter(BigDecimal.ZERO)
         val ONE = Diopter(BigDecimal.ONE)
-        val MIN = Diopter(BigDecimal("-99.99"))
-        val MAX = Diopter(BigDecimal("+99.99"))
+        val MIN = Diopter("-99.99")
+        val MAX = Diopter("+99.99")
 
         val INGEN = ZERO..ZERO
 
