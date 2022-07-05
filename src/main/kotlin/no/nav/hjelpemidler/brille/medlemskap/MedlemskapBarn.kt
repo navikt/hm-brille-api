@@ -168,12 +168,15 @@ class MedlemskapBarn(
 
                         if (medlemskapResponse.resultat.svar == MedlemskapResponseResultatSvar.JA) {
                             log.debug("Medlemskap verifisert! Hopper over de andre i listen (hvis det var flere man kunne sjekke)")
-                            return@runBlocking MedlemskapResultat(
+                            val medlemskapResultat = MedlemskapResultat(
                                 true,
                                 medlemskapBevist = true,
                                 uavklartMedlemskap = false,
                                 saksgrunnlag = saksgrunnlag
                             )
+                            redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
+                            log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
+                            return@runBlocking medlemskapResultat
                         } else if (medlemskapResponse.resultat.svar == MedlemskapResponseResultatSvar.UAVKLART) {
                             log.debug("Medlemskap for verge/forelder er uavklart i følge LovMe, fortsetter å slå opp andre i listen om vi har flere å sjekke")
                         } else {
