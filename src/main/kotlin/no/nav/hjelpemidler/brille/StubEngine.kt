@@ -15,6 +15,8 @@ import io.ktor.http.headersOf
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.azuread.Token
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.Godkjenning
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.Kode
 import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger { }
@@ -86,8 +88,12 @@ object StubEngine {
         get("/syfohelsenettproxy/api/v2/behandler") {
             respond(
                 Behandler(
-                    godkjenninger = emptyList(),
-                    fnr = null,
+                    godkjenninger = listOf(
+                        Godkjenning(
+                            helsepersonellkategori = Kode(aktiv = true, oid = -1, verdi = "OP"),
+                        )
+                    ),
+                    fnr = "15084300133",
                     hprNummer = null,
                     fornavn = null,
                     mellomnavn = null,

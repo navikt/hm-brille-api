@@ -20,8 +20,8 @@ interface VedtakStore {
     fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker
     fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode)
     fun tellRader(): Int
-    fun hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2?
-    fun lagreVedtak(vedtak: Vedtak_v2): Vedtak_v2
+    fun <T> hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2<T>?
+    fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
@@ -45,7 +45,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         )
     } ?: false
 
-    override fun hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2? =
+    override fun <T> hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2<T>? =
         using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
             val sql = """
@@ -63,14 +63,14 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                         "bestillingsdato_ar" to bestillingsdato.year
                     )
                 ).map { row ->
-                    Vedtak_v2(
+                    Vedtak_v2<T>(
                         id = row.int("id"),
                         fnrBruker = row.string("fnr_bruker"),
                         fnrInnsender = row.string("fnr_innsender"),
                         orgnr = row.string("orgnr"),
                         bestillingsdato = row.localDate("bestillingsdato"),
                         brillepris = row.bigDecimal("brillepris"),
-                        bestillingsref = row.string("bestillingsref"),
+                        bestillingsreferanse = row.string("bestillingsreferanse"),
                         vilkarsvurdering = row.json("vilkarsvurdering"),
                         status = row.string("status"),
                         opprettet = row.localDateTime("opprettet"),
@@ -132,7 +132,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }
     }
 
-    override fun lagreVedtak(vedtak: Vedtak_v2): Vedtak_v2 {
+    override fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T> {
         val id = using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
             val sql = """
@@ -142,7 +142,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                     orgnr,
                     bestillingsdato,
                     brillepris,
-                    bestillingsref,
+                    bestillingsreferanse,
                     vilkarsvurdering,
                     status
                     )
@@ -152,7 +152,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                     :orgnr,
                     :bestillingsdato,
                     :brillepris,
-                    :bestillingsref,
+                    :bestillingsreferanse,
                     :vilkarsvurdering,
                     :status
                 )
@@ -167,7 +167,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                         "orgnr" to vedtak.orgnr,
                         "bestillingsdato" to vedtak.bestillingsdato,
                         "brillepris" to vedtak.brillepris,
-                        "bestillingsref" to vedtak.bestillingsref,
+                        "bestillingsreferanse" to vedtak.bestillingsreferanse,
                         "vilkarsvurdering" to pgObjectOf(vedtak.vilkarsvurdering),
                         "status" to vedtak.status
                     )

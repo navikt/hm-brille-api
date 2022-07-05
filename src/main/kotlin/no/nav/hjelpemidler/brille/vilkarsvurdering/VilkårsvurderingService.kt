@@ -2,47 +2,37 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.db.VedtakStore
-import no.nav.hjelpemidler.brille.nare.evaluering.Evaluering
+import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PdlService
-import no.nav.hjelpemidler.brille.sats.SatsGrunnlag
-import java.math.BigDecimal
-import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
 class VilkårsvurderingService(private val vedtakStore: VedtakStore, private val pdlService: PdlService) {
 
-    suspend fun vurderVilkår(vilkårsgrunnlagDto: VilkårsgrunnlagDto): VilkårsvurderingResultat {
-        val vedtakIBestillingsdatoAr =
-            vedtakStore.hentVedtakIBestillingsdatoAr(vilkårsgrunnlagDto.fnrBruker, vilkårsgrunnlagDto.bestillingsdato)
+    suspend fun vurderVilkårBrille(vilkårsgrunnlagDto: VilkårsgrunnlagDto): VilkårsvurderingResultat<Vilkår_v1.Grunnlag_v1> {
+        val eksisterendeVedtak = vedtakStore.hentVedtakIBestillingsdatoAr<Vilkår_v1.Grunnlag_v1>(
+            vilkårsgrunnlagDto.fnrBruker,
+            vilkårsgrunnlagDto.bestillingsdato
+        )
+        val personInformasjon = pdlService.hentPerson(vilkårsgrunnlagDto.fnrBruker)
         val grunnlag = Vilkår_v1.Grunnlag_v1(
-            vedtakIBestillingsdatoAr = vedtakIBestillingsdatoAr,
-            personInformasjon = pdlService.hentPerson(vilkårsgrunnlagDto.fnrBruker),
-            satsGrunnlag = vilkårsgrunnlagDto.brillestyrke,
+            eksisterendeVedtak = eksisterendeVedtak?.let {
+                Vilkår_v1.EksisterendeVedtak(
+                    id = it.id,
+                    fnrBruker = it.fnrBruker,
+                    bestillingsdato = it.bestillingsdato,
+                    status = it.status,
+                    opprettet = it.opprettet
+                )
+            },
+            personInformasjon = personInformasjon,
+            beregnSats = vilkårsgrunnlagDto.beregnSats.tilBeregnSats(),
             bestillingsdato = vilkårsgrunnlagDto.bestillingsdato
         )
-
-        val evaluering = Vilkår_v1.Brille_v1.evaluer(grunnlag)
-        return VilkårsvurderingResultat(grunnlag, evaluering)
+        return vurderVilkår(grunnlag, Vilkår_v1.Brille_v1)
     }
 
-    suspend fun vurderSøknad(søknadDto: SøknadDto) = vurderVilkår(søknadDto.vilkårsgrunnlagDto)
+    fun <T> vurderVilkår(grunnlag: T, spesifikasjon: Spesifikasjon<T>): VilkårsvurderingResultat<T> {
+        return VilkårsvurderingResultat(grunnlag, spesifikasjon.evaluer(grunnlag))
+    }
 }
-
-data class VilkårsgrunnlagDto(
-    val orgnr: String,
-    val fnrBruker: String,
-    val brillestyrke: SatsGrunnlag,
-    val bestillingsdato: LocalDate,
-    val brillepris: BigDecimal
-)
-
-data class SøknadDto(
-    val vilkårsgrunnlagDto: VilkårsgrunnlagDto,
-    val bestillingsreferanse: String
-)
-
-data class VilkårsvurderingResultat(
-    val grunnlag: Any, // todo: generisk type
-    val evaluering: Evaluering
-)

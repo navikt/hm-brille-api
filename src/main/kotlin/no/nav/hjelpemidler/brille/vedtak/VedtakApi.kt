@@ -9,7 +9,6 @@ import io.ktor.server.routing.post
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.extractFnr
-import no.nav.hjelpemidler.brille.vilkarsvurdering.SøknadDto
 
 fun Route.søknadApi(vedtakService: VedtakService) {
     post("/soknad") {

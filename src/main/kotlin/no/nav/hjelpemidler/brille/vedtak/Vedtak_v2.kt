@@ -5,15 +5,15 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class Vedtak_v2(
+data class Vedtak_v2<T>(
     val id: Int,
     val fnrBruker: String,
     val fnrInnsender: String,
     val orgnr: String,
     val bestillingsdato: LocalDate,
     val brillepris: BigDecimal,
-    val bestillingsref: String,
-    val vilkarsvurdering: VilkårsvurderingResultat,
+    val bestillingsreferanse: String,
+    val vilkarsvurdering: VilkårsvurderingResultat<T>,
     val status: String,
     val opprettet: LocalDateTime,
 )

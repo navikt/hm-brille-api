@@ -45,8 +45,8 @@ object Configuration {
             "TOKEN_X_WELL_KNOWN_URL" to "http://host.docker.internal:8080/default/.well-known/openid-configuration",
             "TOKEN_X_CLIENT_ID" to "local",
             "userclaim" to "sub",
-            "REDIS_HOST" to "dummy",
-            "REDIS_PASSWORD" to "dummy"
+            "REDIS_HOST" to "localhost",
+            "REDIS_PASSWORD" to ""
         )
     )
 
