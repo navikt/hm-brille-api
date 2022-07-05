@@ -40,8 +40,11 @@ data class PdlPerson(
     val navn: List<PdlPersonNavn> = emptyList(),
     val adressebeskyttelse: List<Adressebeskyttelse>? = emptyList(),
     val bostedsadresse: List<Bostedsadresse> = emptyList(),
+    val deltBosted: List<DeltBosted> = emptyList(),
     val foedsel: List<Foedsel> = emptyList(),
+    val foreldreansvar: List<Foreldreansvar> = emptyList(),
     val forelderBarnRelasjon: List<ForelderBarnRelasjon> = emptyList(),
+    val fullmakt: List<Fullmakt> = emptyList(),
     val vergemaalEllerFremtidsfullmakt: List<VergemaalEllerFremtidsfullmakt> = emptyList(),
 )
 
@@ -55,7 +58,18 @@ data class Adressebeskyttelse(
     val gradering: Gradering,
 )
 
-data class Bostedsadresse(val vegadresse: Vegadresse?, val matrikkeladresse: Matrikkeladresse?)
+data class Bostedsadresse(
+    val vegadresse: Vegadresse?,
+    val matrikkeladresse: Matrikkeladresse?
+)
+
+data class DeltBosted(
+    val startdatoForKontrakt: LocalDate,
+    val sluttdatoForKontrakt: LocalDate?,
+    val coAdressenavn: String?,
+    val vegadresse: Vegadresse?,
+    val matrikkeladresse: Matrikkeladresse?,
+)
 
 data class Vegadresse(
     val matrikkelId: Long?,
@@ -67,9 +81,19 @@ data class Vegadresse(
     val tilleggsnavn: String? = null,
 )
 
-data class Matrikkeladresse(val matrikkelId: Long?, val postnummer: String?, val kommunenummer: String?)
+data class Matrikkeladresse(
+    val matrikkelId: Long?,
+    val postnummer: String?,
+    val kommunenummer: String?
+)
 
 data class Foedsel(val foedselsaar: String?, val foedselsdato: String?)
+
+data class Foreldreansvar(
+    val ansvar: String?,
+    val ansvarlig: String?,
+    val folkeregistermetadata: Folkeregistermetadata?,
+)
 
 data class ForelderBarnRelasjon(
     val relatertPersonsIdent: String?,
@@ -83,6 +107,19 @@ enum class ForelderBarnRelasjonRolle {
     MOR,
     FAR,
     MEDMOR
+}
+
+data class Fullmakt(
+    val motpartsPersonident: String,
+    val motpartsRolle: MotpartsRolle,
+    val omraader: List<String>,
+    val gyldigFraOgMed: LocalDate,
+    val gyldigTilOgMed: LocalDate,
+)
+
+enum class MotpartsRolle {
+    FULLMAKTSGIVER,
+    FULLMEKTIG,
 }
 
 data class RelatertBiPerson(

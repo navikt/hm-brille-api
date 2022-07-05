@@ -16,10 +16,34 @@ query($ident: ID!){
                 matrikkelId
             }
         }
+        deltBosted {
+            startdatoForKontrakt
+            sluttdatoForKontrakt
+            coAdressenavn
+            vegadresse {
+                matrikkelId
+                adressenavn
+                husnummer
+                husbokstav
+                tilleggsnavn
+                postnummer
+            }
+            matrikkeladresse {
+                matrikkelId
+            }
+        }
         adressebeskyttelse(historikk: false) { gradering }
         foedsel {
             foedselsaar
             foedselsdato
+        }
+        foreldreansvar {
+            ansvar
+            ansvarlig
+            folkeregistermetadata {
+                gyldighetstidspunkt
+                opphoerstidspunkt
+            }
         }
         forelderBarnRelasjon {
             relatertPersonsIdent
@@ -29,6 +53,13 @@ query($ident: ID!){
                 gyldighetstidspunkt
                 opphoerstidspunkt
             }
+        }
+        fullmakt {
+            motpartsPersonident
+            motpartsRolle
+            omraader
+            gyldigFraOgMed
+            gyldigTilOgMed
         }
         vergemaalEllerFremtidsfullmakt {
             type
