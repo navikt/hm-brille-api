@@ -4,6 +4,7 @@ import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PersonDetaljerDto
 import no.nav.hjelpemidler.brille.sats.Diopter
 import no.nav.hjelpemidler.brille.sats.SatsGrunnlag
+import no.nav.hjelpemidler.brille.vedtak.Vedtak_v2
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
@@ -11,7 +12,7 @@ import java.time.format.FormatStyle
 
 object Vilkår_v1 {
     data class Grunnlag_v1(
-        val harFåttBrilleDetteKalenderåret: Boolean,
+        val vedtakIBestillingsdatoAr: Vedtak_v2?,
         val personInformasjon: PersonDetaljerDto,
         val satsGrunnlag: SatsGrunnlag,
         val bestillingsdato: LocalDate,
@@ -25,9 +26,9 @@ object Vilkår_v1 {
         beskrivelse = "Har barnet allerede fått brille i kalenderåret?",
         identifikator = "FåttBrilleIKalenderåret_v1"
     ) { grunnlag ->
-        when {
-            grunnlag.harFåttBrilleDetteKalenderåret -> ja("Barnet har allerede fått brille i kalenderåret")
-            else -> nei("Barnet har ikke fått brille i kalenderåret")
+        when (grunnlag.vedtakIBestillingsdatoAr) {
+            null -> nei("Barnet har ikke fått brille i kalenderåret")
+            else -> ja("Barnet har allerede fått brille i kalenderåret")
         }
     }
 
@@ -87,17 +88,17 @@ object Vilkår_v1 {
         val tidligsteMuligeBestillingsdatoFormatert =
             grunnlag.tidligsteMuligeBestillingsdato.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
         when {
-            grunnlag.bestillingsdato.isBefore(grunnlag.datoOrdningenStarter) -> nei("Bestillingsdato kan ikke være før $tidligsteMuligeBestillingsdatoFormatert")
+            grunnlag.bestillingsdato.isBefore(grunnlag.tidligsteMuligeBestillingsdato) -> nei("Bestillingsdato kan ikke være før $tidligsteMuligeBestillingsdatoFormatert")
             else -> ja("Bestillingsdato er $tidligsteMuligeBestillingsdatoFormatert eller senere")
         }
     }
 
     val Brille_v1 = (
-            IkkeFåttBrilleIKalenderåret_v1 og
-                    Under18ÅrPåBestillingsdato_v1 og
-                    MedlemAvFolketrygden_v1 og
-                    Brillestyrke_v1 og
-                    Bestillingsdato_v1 og
-                    BestillingsdatoTilbakeITid_v1
-            ).med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
+        IkkeFåttBrilleIKalenderåret_v1 og
+            Under18ÅrPåBestillingsdato_v1 og
+            MedlemAvFolketrygden_v1 og
+            Brillestyrke_v1 og
+            Bestillingsdato_v1 og
+            BestillingsdatoTilbakeITid_v1
+        ).med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
 }

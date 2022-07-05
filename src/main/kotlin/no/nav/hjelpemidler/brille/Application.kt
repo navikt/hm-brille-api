@@ -18,6 +18,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
@@ -42,7 +43,11 @@ import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import no.nav.hjelpemidler.brille.vedtak.søknadApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
+import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
+import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import org.postgresql.util.PSQLException
 import org.slf4j.event.Level
 import java.util.TimeZone
@@ -90,6 +95,7 @@ fun Application.setupRoutes() {
         Configuration.pdlProperties.graphqlUri,
         Configuration.pdlProperties.apiScope,
         azureAdClient,
+        StubEngine.pdl()
     )
     val pdlService = PdlService(pdlClient)
 
@@ -104,6 +110,8 @@ fun Application.setupRoutes() {
         azureAdClient
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
+    val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlService)
+    val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService)
     val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
 
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
@@ -174,6 +182,11 @@ fun Application.setupRoutes() {
 
         authenticate(TOKEN_X_AUTH) {
             authenticateOptiker(syfohelsenettproxyClient, redisClient) {
+                route("/api") {
+                    vilkårApi(vilkårsvurderingService)
+                    søknadApi(vedtakService)
+                }
+
                 post("/sjekk-kan-soke") {
                     data class Request(val fnr: String)
                     data class Response(

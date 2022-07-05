@@ -96,4 +96,14 @@ object StubEngine {
             )
         }
     }
+
+    fun pdl(): HttpClientEngine = mockEngine {
+        post("/pdl") {
+            respond(
+                javaClass.getResourceAsStream("/mock/pdl.json").use {
+                    jsonMapper.readTree(it)
+                }
+            )
+        }
+    }
 }
