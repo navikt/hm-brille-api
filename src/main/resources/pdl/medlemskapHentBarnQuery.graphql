@@ -19,7 +19,6 @@ query($ident: ID!){
         deltBosted {
             startdatoForKontrakt
             sluttdatoForKontrakt
-            coAdressenavn
             vegadresse {
                 matrikkelId
                 adressenavn
