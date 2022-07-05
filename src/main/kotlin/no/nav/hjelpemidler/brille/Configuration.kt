@@ -60,6 +60,7 @@ object Configuration {
             "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.dev.nav.no/",
             "medlemskap.oppslag.scope" to "api://dev-gcp.medlemskap.medlemskap-oppslag/.default",
+            "enhetsregisteret_base_url" to "http://hm-mocks/brille/enhetsregisteret/api"
         )
     )
 
