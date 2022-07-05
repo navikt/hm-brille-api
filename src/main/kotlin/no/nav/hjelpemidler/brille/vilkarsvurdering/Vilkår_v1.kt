@@ -4,16 +4,25 @@ import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PersonDetaljerDto
 import no.nav.hjelpemidler.brille.sats.Diopter
 import no.nav.hjelpemidler.brille.sats.SatsGrunnlag
+import java.time.LocalDate
+import java.time.Month
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 object Vilkår_v1 {
     data class Grunnlag_v1(
         val harFåttBrilleDetteKalenderåret: Boolean,
         val personInformasjon: PersonDetaljerDto,
         val satsGrunnlag: SatsGrunnlag,
+        val bestillingsdato: LocalDate,
+        val dagsDato: LocalDate = LocalDate.now(),
+        val datoOrdningenStarter: LocalDate = LocalDate.of(2022, Month.AUGUST, 1),
+        val tidligsteMuligeBestillingsdato: LocalDate = LocalDate.now().minusMonths(6),
     ) : VilkårsvurderingGrunnlag
 
+    // ingen andre vedtak med samme bestillingsdato-år lik denne
     val FåttBrilleIKalenderåret_v1 = Spesifikasjon<Grunnlag_v1>(
-        beskrivelse = "Har personen allerede fått brille i kalenderåret?",
+        beskrivelse = "Har barnet allerede fått brille i kalenderåret?",
         identifikator = "FåttBrilleIKalenderåret_v1"
     ) { grunnlag ->
         when {
@@ -24,26 +33,27 @@ object Vilkår_v1 {
 
     val IkkeFåttBrilleIKalenderåret_v1 = FåttBrilleIKalenderåret_v1.ikke()
 
-    val Under18År_v1 = Spesifikasjon<Grunnlag_v1>(
-        beskrivelse = "Er personen under 18 år?",
-        identifikator = "Under18År_v1"
+    val Under18ÅrPåBestillingsdato_v1 = Spesifikasjon<Grunnlag_v1>(
+        beskrivelse = "Var barnet under 18 år på bestillingsdatoen?",
+        identifikator = "Under18ÅrPåBestillingsdato_v1"
     ) { grunnlag ->
+        val fodselsdato = grunnlag.personInformasjon.fodselsdato
         when {
-            grunnlag.personInformasjon.alder == null -> kanskje("Personens alder er ukjent")
-            grunnlag.personInformasjon.alder < 18 -> ja("Personen er under 18 år")
-            else -> nei("Personen er 18 år eller eldre")
+            fodselsdato == null -> kanskje("Barnets fødselsdato er ukjent")
+            fodselsdato.until(grunnlag.bestillingsdato).years < 18 -> ja("Barnet var under 18 år på bestillingsdatoen")
+            else -> nei("Barnet var 18 år eller eldre på bestillingsdatoen")
         }
     }
 
     val MedlemAvFolketrygden_v1 = Spesifikasjon<Grunnlag_v1>(
-        beskrivelse = "Er personen medlem av folketrygden?",
+        beskrivelse = "Er barnet medlem av folketrygden?",
         identifikator = "MedlemAvFolketrygden_v1"
     ) { grunnlag ->
-        kanskje("Personens medlemskap i folketrygden er ukjent")
+        kanskje("Barnets medlemskap i folketrygden er ukjent")
     }
 
     val Brillestyrke_v1 = Spesifikasjon<Grunnlag_v1>(
-        beskrivelse = "",
+        beskrivelse = "Er brillestyrken innenfor de fastsatte rammene?",
         identifikator = "Brillestyrke_v1"
     ) { grunnlag ->
         val satsGrunnlag = grunnlag.satsGrunnlag
@@ -58,6 +68,36 @@ object Vilkår_v1 {
         }
     }
 
-    val Brille_V1 = (IkkeFåttBrilleIKalenderåret_v1 og Under18År_v1 og MedlemAvFolketrygden_v1 og Brillestyrke_v1)
-        .med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
+    val Bestillingsdato_v1 = Spesifikasjon<Grunnlag_v1>(
+        beskrivelse = "Er bestillingsdato 01.08.2022 eller senere?",
+        identifikator = "Bestillingsdato_v1"
+    ) { grunnlag ->
+        val datoOrdningenStarterFormatert =
+            grunnlag.datoOrdningenStarter.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+        when {
+            grunnlag.bestillingsdato.isBefore(grunnlag.datoOrdningenStarter) -> nei("Bestillingsdato kan ikke være før $datoOrdningenStarterFormatert")
+            else -> ja("Bestillingsdato er $datoOrdningenStarterFormatert eller senere")
+        }
+    }
+
+    val BestillingsdatoTilbakeITid_v1 = Spesifikasjon<Grunnlag_v1>(
+        beskrivelse = "Er bestillingsdato innenfor siste 6 måneder fra dags dato?",
+        identifikator = "BestillingsdatoTilbakeITid_v1"
+    ) { grunnlag ->
+        val tidligsteMuligeBestillingsdatoFormatert =
+            grunnlag.tidligsteMuligeBestillingsdato.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+        when {
+            grunnlag.bestillingsdato.isBefore(grunnlag.datoOrdningenStarter) -> nei("Bestillingsdato kan ikke være før $tidligsteMuligeBestillingsdatoFormatert")
+            else -> ja("Bestillingsdato er $tidligsteMuligeBestillingsdatoFormatert eller senere")
+        }
+    }
+
+    val Brille_v1 = (
+            IkkeFåttBrilleIKalenderåret_v1 og
+                    Under18ÅrPåBestillingsdato_v1 og
+                    MedlemAvFolketrygden_v1 og
+                    Brillestyrke_v1 og
+                    Bestillingsdato_v1 og
+                    BestillingsdatoTilbakeITid_v1
+            ).med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
 }

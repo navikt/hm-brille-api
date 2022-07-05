@@ -4,9 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.model.TidligereBrukteOrgnrForOptiker
 import no.nav.hjelpemidler.brille.pgObjectOf
+import no.nav.hjelpemidler.brille.vedtak.Vedak_v2
 import org.intellij.lang.annotations.Language
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.util.UUID
@@ -40,6 +43,40 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         )
     } ?: false
 
+    fun hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedak_v2? =
+        using(sessionOf(ds)) { session ->
+            @Language("PostgreSQL")
+            val sql = """
+            SELECT *
+            FROM vedtak_v2
+            WHERE
+                fnr_bruker = :fnr_bruker AND
+                DATE_PART('year', bestillingsdato) = :bestillingsdato_ar
+            """.trimIndent()
+            session.run(
+                queryOf(
+                    sql,
+                    mapOf(
+                        "fnr_bruker" to fnrBruker,
+                        "bestillingsdato_ar" to bestillingsdato.year
+                    )
+                ).map { row ->
+                    Vedak_v2(
+                        id = row.int("id"),
+                        fnrBruker = row.string("fnr_bruker"),
+                        fnrInnsender = row.string("fnr_innsender"),
+                        orgnr = row.string("orgnr"),
+                        bestillingsdato = row.localDate("bestillingsdato"),
+                        brillepris = row.bigDecimal("brillepris"),
+                        bestillingsref = row.string("bestillingsref"),
+                        vilkarsvurdering = row.json("vilkarsvurdering"),
+                        status = row.string("status"),
+                        opprettet = row.localDateTime("opprettet"),
+                    )
+                }.asSingle
+            )
+        }
+
     override fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker {
         val resultater = using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
@@ -65,7 +102,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
     }
 
     override fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode) {
-        val result = using(sessionOf(ds)) { session ->
+        val resultat = using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
             val sql = """
                 INSERT INTO vedtak (id,
@@ -88,16 +125,16 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 ).asUpdate
             )
         }
-        if (result == 0) {
-            throw RuntimeException("VedtakStore.opprettVedtak: feilet i å opprette vedtak (result=false)")
+        if (resultat == 0) {
+            throw RuntimeException("VedtakStore.opprettVedtak: feilet i å opprette vedtak (resultat=0)")
         }
     }
 
     override fun tellRader(): Int {
-        val rowCount = using(sessionOf(ds)) { session ->
+        return using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
             val sql = """
-                SELECT COUNT (id) as count
+                SELECT COUNT (id) AS count
                 FROM vedtak
             """.trimIndent()
             session.run(
@@ -105,12 +142,6 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                     sql
                 ).map { row -> row.int("count") }.asSingle
             )
-        }
-
-        if (rowCount == null) {
-            throw RuntimeException("VedtakStore.countRows: feilet i å telle rader")
-        }
-
-        return rowCount
+        } ?: throw RuntimeException("VedtakStore.countRows: feilet i å telle rader")
     }
 }

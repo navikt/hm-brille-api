@@ -236,6 +236,11 @@ fun PdlHentPerson.alder(): Int? {
     return alder
 }
 
+fun PdlHentPerson.fodselsdato(): LocalDate? {
+    val foedselsdato = this.hentPerson?.foedsel?.firstOrNull()?.foedselsdato ?: return null
+    return LocalDate.parse(foedselsdato, ISO_LOCAL_DATE)
+}
+
 private fun beregnAlder(foedselsdato: LocalDate) = Period.between(foedselsdato, LocalDate.now()).years
 
 private fun String.capitalizeWord(): String {
@@ -261,6 +266,7 @@ fun PdlPersonResponse.toPersonDto(fnr: String, hentPoststed: (String) -> String?
         postnummer = postnummer,
         poststed = poststed?.capitalizeWord(),
         alder = alder,
+        fodselsdato = person.fodselsdato(),
         kommunenummer = kommunenummer
     )
 }

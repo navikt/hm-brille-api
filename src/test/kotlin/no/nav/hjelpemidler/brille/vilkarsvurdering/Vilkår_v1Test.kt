@@ -4,13 +4,15 @@ import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.PersonDetaljerDto
 import no.nav.hjelpemidler.brille.sats.Diopter
 import no.nav.hjelpemidler.brille.sats.SatsGrunnlag
+import java.time.LocalDate
+import java.time.Month
 import kotlin.test.Test
 
 internal class Vilkår_v1Test {
     @Test
     internal fun `foo bar`() {
         val grunnlag = lagGrunnlag(false, 10)
-        val evaluering = Vilkår_v1.Brille_V1.evaluer(grunnlag)
+        val evaluering = Vilkår_v1.Brille_v1.evaluer(grunnlag)
         println(jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(evaluering))
     }
 
@@ -24,6 +26,7 @@ internal class Vilkår_v1Test {
             postnummer = "",
             poststed = "",
             alder = alder,
+            fodselsdato = LocalDate.of(2014, Month.AUGUST, 1),
             kommunenummer = ""
         ),
         satsGrunnlag = SatsGrunnlag(
@@ -31,6 +34,7 @@ internal class Vilkår_v1Test {
             høyreSylinder = Diopter.ZERO,
             venstreSfære = Diopter.ZERO,
             venstreSylinder = Diopter.ZERO
-        )
+        ),
+        bestillingsdato = LocalDate.now()
     )
 }
