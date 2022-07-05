@@ -22,17 +22,15 @@ data class Vilkår(
     val forGammel: Boolean,
     val harVedtak: Boolean,
 ) {
-    fun avvisningsGrunner(): List<AvvisningsType> {
-        val avvisningsTyper = mutableListOf<AvvisningsType>()
+    fun avvisningsGrunn(): AvvisningsType? {
+        if (forGammel) return AvvisningsType.ALDER
+        if (harVedtak) return AvvisningsType.ANNET
 
-        if (forGammel) avvisningsTyper.add(AvvisningsType.ALDER)
-        if (harVedtak) avvisningsTyper.add(AvvisningsType.HAR_VEDTAK_I_ÅR)
-
-        return avvisningsTyper
+        return null
     }
 
     fun valider(): Boolean {
-        return avvisningsGrunner().isEmpty()
+        return avvisningsGrunn() == null
     }
 
     fun json(): String = jsonMapper.writeValueAsString(this)
