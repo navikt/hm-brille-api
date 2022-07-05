@@ -9,12 +9,15 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.pdl.Bostedsadresse
 import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
+import no.nav.hjelpemidler.brille.pdl.MotpartsRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
 import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import org.slf4j.MDC
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -74,6 +77,8 @@ class MedlemskapBarn(
         val pdlBarn = pdlClient.medlemskapHentBarn(fnrBarn)
         validerPdlOppslag(pdlBarn)
 
+        log.debug("PDL BARN: ${jsonMapper.writeValueAsString(pdlBarn)}")
+
         saksgrunnlag.add(
             Saksgrunnlag(
                 kilde = SaksgrunnlagType.PDL,
@@ -97,7 +102,10 @@ class MedlemskapBarn(
             return@runBlocking medlemskapResultat
         }
 
-        for ((rolle, fnrVergeEllerForelder) in prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)) {
+        val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)
+        log.debug("prioritertListe = ${jsonMapper.writeValueAsString(prioritertListe)}")
+
+        for ((rolle, fnrVergeEllerForelder) in prioritertListe) {
             val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
             withLoggingContext(
                 mapOf(
@@ -182,19 +190,30 @@ private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boole
     return bostedsadresser.any { it.vegadresse != null || it.matrikkeladresse != null }
 }
 
-private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
+private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
     // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i medlemskap-oppslag tjenesten. Her
     // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
     // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
 
+    val fullmakt = pdlBarn.data?.hentPerson?.fullmakt ?: listOf()
     val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
+    val foreldreAnsvar = pdlBarn.data?.hentPerson?.foreldreansvar ?: listOf()
     val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
 
-    log.debug("vergemaalEllerFremtidsfullmakt: ${jsonMapper.writeValueAsString(vergemaalEllerFremtidsfullmakt)}")
-    log.debug("foreldreBarnRelasjon: ${jsonMapper.writeValueAsString(foreldreBarnRelasjon)}")
-
     val now = LocalDateTime.now()
-    val vergerOgForeldre: List<Pair<String, String>> = listOf(
+    val fullmektigeVergerOgForeldre: List<Pair<String, String>> = listOf(
+
+        fullmakt.filter {
+            // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot dagens dato
+            (it.gyldigFraOgMed.isEqual(now.toLocalDate()) || it.gyldigFraOgMed.isBefore(now.toLocalDate())) &&
+                (it.gyldigTilOgMed.isEqual(now.toLocalDate()) || it.gyldigTilOgMed.isAfter(now.toLocalDate())) &&
+                // Fullmektig ovenfor barnet
+                it.motpartsRolle == MotpartsRolle.FULLMEKTIG
+            // TODO: Vurder å sjekke "omraader" feltet, og begrense til visse typer fullmektige
+        }.map {
+            Pair("FULLMAKT-${it.motpartsRolle}", it.motpartsPersonident)
+        },
+
         vergemaalEllerFremtidsfullmakt.filter {
             // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
             it.vergeEllerFullmektig.motpartsPersonident != null &&
@@ -204,6 +223,17 @@ private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonRes
         }.map {
             Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
         },
+
+        foreldreAnsvar.filter {
+            // Må ha et fnr vi kan slå opp på
+            it.ansvarlig != null &&
+                // Bare se på foreldreansvar som ikke har opphørt (feltet er null eller i fremtiden)
+                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+        }.map {
+            Pair("FORELDER_ANSVAR-${it.ansvar ?: "ukjent"}", it.ansvarlig!!)
+        },
+
         foreldreBarnRelasjon.filter {
             // Vi kan ikke slå opp medlemskap om forelder ikke har fnr
             it.relatertPersonsIdent != null &&
@@ -218,16 +248,42 @@ private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonRes
             // Sorter rekkefølgen vi sjekker basert på rolle.
             it.first
         },
+
     ).flatten()
 
-    return vergerOgForeldre
+    // Skip duplikater. Man kan ha flere roller ovenfor et barn samtidig (foreldre-relasjon og foreldre-ansvar). Og det
+    // blir fort rot i dolly (i dev) når man oppretter og endrer brukere (masse dupikate relasjoner osv). Skipper derfor
+    // her duplikate fnr da det ikke henger på grep å slå opp samme person flere ganger
+    val fnrSeen = mutableMapOf<String, Boolean>()
+    return fullmektigeVergerOgForeldre.filter {
+        if (fnrSeen[it.second] == null) {
+            fnrSeen[it.second] = true
+            true
+        } else {
+            false
+        }
+    }
 }
 
 private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): Boolean {
     val bostedsadresserBarn = barn.data?.hentPerson?.bostedsadresse ?: listOf()
+    val bostedsadresserBarnDelt = barn.data?.hentPerson?.deltBosted ?: listOf()
     val bostedsadresserAnnen = annen.data?.hentPerson?.bostedsadresse ?: listOf()
 
-    for (adresseBarn in bostedsadresserBarn) {
+    // Finn aktive delte bosted for barnet og transformer de til samme format som hoved-folkereg. adresse, så vi kan
+    // sjekke alle adresser sammen under
+    val now = LocalDate.now()
+    val bostedsadresserBarnDeltFiltrert = bostedsadresserBarnDelt.filter {
+        (it.startdatoForKontrakt.isEqual(now) || it.startdatoForKontrakt.isBefore(now)) &&
+            (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now) || it.sluttdatoForKontrakt.isAfter(now))
+    }.map {
+        Bostedsadresse(
+            vegadresse = it.vegadresse,
+            matrikkeladresse = it.matrikkeladresse,
+        )
+    }
+
+    for (adresseBarn in listOf(bostedsadresserBarn, bostedsadresserBarnDeltFiltrert).flatten()) {
         if (adresseBarn.matrikkeladresse?.matrikkelId != null) {
             // Det eneste vi kan sammenligne her er om matrikkel IDen matcher
             if (bostedsadresserAnnen.mapNotNull { it.matrikkeladresse?.matrikkelId }

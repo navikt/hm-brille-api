@@ -5,7 +5,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.hjelpemidler.brille.json
-import no.nav.hjelpemidler.brille.model.TidligereBrukteOrgnrForOptiker
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.vedtak.Vedtak_v2
 import org.intellij.lang.annotations.Language
@@ -17,7 +16,7 @@ import javax.sql.DataSource
 
 interface VedtakStore {
     fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean
-    fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker
+    fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): List<String>
     fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode)
     fun tellRader(): Int
     fun <T> hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2<T>?
@@ -79,7 +78,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             )
         }
 
-    override fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): TidligereBrukteOrgnrForOptiker {
+    override fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): List<String> {
         val resultater = using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
             val sql = """
@@ -97,10 +96,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 }.asList
             )
         }
-        return TidligereBrukteOrgnrForOptiker(
-            resultater.getOrElse(0) { "" },
-            resultater.toSet().toList()
-        )
+        return resultater.toSet().toList()
     }
 
     override fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode) {

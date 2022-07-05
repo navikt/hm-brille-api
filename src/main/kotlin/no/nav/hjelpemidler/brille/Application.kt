@@ -30,6 +30,8 @@ import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.db.VirksomhetModell
 import no.nav.hjelpemidler.brille.db.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
+import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
@@ -39,6 +41,8 @@ import no.nav.hjelpemidler.brille.kafka.KafkaProducer
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.model.AvvisningsType
+import no.nav.hjelpemidler.brille.model.Organisasjon
+import no.nav.hjelpemidler.brille.model.TidligereBrukteOrganisasjonerForOptiker
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.redis.RedisClient
@@ -222,7 +226,28 @@ fun Application.setupRoutes() {
 
                 get("/orgnr") {
                     val fnrOptiker = call.extractFnr()
-                    call.respond(vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker))
+
+                    val tidligereBrukteOrgnrForOptikker: List<String> =
+                        vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker)
+
+                    try {
+                        val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptikker.map {
+                            val orgEnhet: Organisasjonsenhet =
+                                enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(it))
+                            Organisasjon(
+                                orgnummer = orgEnhet.organisasjonsnummer,
+                                navn = orgEnhet.navn,
+                                adresse = "${orgEnhet.forretningsadresse}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}"
+                            )
+                        }
+                        val response = TidligereBrukteOrganisasjonerForOptiker(
+                            sistBrukteOrganisasjon = organisasjoner.firstOrNull(),
+                            tidligereBrukteOrganisasjoner = organisasjoner
+                        )
+                        call.respond(response)
+                    } catch (e: EnhetsregisteretClientException) {
+                        call.respond(TidligereBrukteOrganisasjonerForOptiker(null, emptyList()))
+                    }
                 }
 
                 get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
