@@ -1,9 +1,9 @@
 package no.nav.hjelpemidler.brille.sats
 
-class SatsKalkulator(private val grunnlag: SatsGrunnlag) {
+class SatsKalkulator(private val beregnSats: BeregnSats) {
     fun kalkuler(): SatsType {
-        val sfære = maxOf(grunnlag.høyreSfære, grunnlag.venstreSfære)
-        val sylinder = maxOf(grunnlag.høyreSylinder, grunnlag.venstreSylinder)
+        val sfære = maxOf(beregnSats.høyreSfære, beregnSats.venstreSfære)
+        val sylinder = maxOf(beregnSats.høyreSylinder, beregnSats.venstreSylinder)
         return when {
             sfære in SatsType.SATS_5.sfære || sylinder in SatsType.SATS_5.sylinder -> SatsType.SATS_5
             sfære in SatsType.SATS_4.sfære && sylinder in SatsType.SATS_4.sylinder -> SatsType.SATS_4

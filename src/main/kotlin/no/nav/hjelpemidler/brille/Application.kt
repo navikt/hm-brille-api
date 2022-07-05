@@ -3,6 +3,8 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.cio.CIO
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
@@ -18,6 +20,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
@@ -34,7 +37,6 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
-import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
 import no.nav.hjelpemidler.brille.kafka.KafkaProducer
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
@@ -46,7 +48,11 @@ import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import no.nav.hjelpemidler.brille.vedtak.søknadApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
+import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
+import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import org.postgresql.util.PSQLException
 import org.slf4j.event.Level
 import java.util.TimeZone
@@ -87,6 +93,11 @@ fun Application.configure() {
     install(IgnoreTrailingSlash)
 }
 
+fun engineFactory(block: () -> HttpClientEngine): HttpClientEngine = when (Configuration.profile) {
+    Profile.LOCAL -> block()
+    else -> CIO.create()
+}
+
 // Wire up services and routes
 fun Application.setupRoutes() {
     val azureAdClient = AzureAdClient()
@@ -108,12 +119,14 @@ fun Application.setupRoutes() {
         azureAdClient
     )
     val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
-    val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
+    val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlService)
+    val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService)
+    // val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
 
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
 
-    installAuthentication(httpClient())
+    installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {
         selfTestRoutes()
@@ -169,15 +182,20 @@ fun Application.setupRoutes() {
                 sakId = (antallRader + 1).toString()
             )
             val event = jsonMapper.writeValueAsString(barneBrilleVedtakData)
-            kafkaProducer.produceEvent(request.fnr, event)
+            // kafkaProducer.produceEvent(request.fnr, event)
 
             // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
 
             call.respond(HttpStatusCode.Created, "201 Created")
         }
 
-        authenticate(TOKEN_X_AUTH) {
+        authenticate(if (Configuration.profile == Profile.LOCAL) "local" else TOKEN_X_AUTH) {
             authenticateOptiker(syfohelsenettproxyClient, redisClient) {
+                route("/api") {
+                    vilkårApi(vilkårsvurderingService)
+                    søknadApi(vedtakService)
+                }
+
                 post("/sjekk-kan-soke") {
                     data class Request(val fnr: String)
                     data class Response(

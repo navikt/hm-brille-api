@@ -9,14 +9,7 @@ import io.ktor.server.routing.post
 fun Route.satsApi() {
     post("/beregn-sats") {
         val dto = call.receive<BeregnSatsDto>()
-        val satsKalkulator = SatsKalkulator(
-            SatsGrunnlag(
-                høyreSfære = dto.høyreSfære,
-                høyreSylinder = dto.høyreSylinder,
-                venstreSfære = dto.venstreSfære,
-                venstreSylinder = dto.venstreSylinder
-            )
-        )
+        val satsKalkulator = SatsKalkulator(dto.tilBeregnSats())
         val satsType = satsKalkulator.kalkuler()
         call.respond(BeregnetSatsDto(satsType, satsType.beskrivelse, satsType.beløp))
     }
