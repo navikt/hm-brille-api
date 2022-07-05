@@ -10,9 +10,9 @@ private val log = KotlinLogging.logger {}
 class PdlService(
     private val pdlClient: PdlClient,
 ) {
-    suspend fun hentPersonDetaljer(fnummer: String): PersonDetaljerDto {
+    suspend fun hentPerson(fnummer: String): PersonDetaljerDto {
         try {
-            val pdlResponse = pdlClient.hentPersonDetaljer(fnummer)
+            val pdlResponse = pdlClient.hentPerson(fnummer)
             validerPdlOppslag(pdlResponse)
             if (Configuration.profile == Profile.DEV) {
                 log.info {

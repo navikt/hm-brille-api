@@ -131,7 +131,7 @@ fun Application.setupRoutes() {
             if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
             /*
-            val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
+            val personInformasjon = pdlService.hentPerson(request.fnr)
             log.info { "personInformasjon <$personInformasjon>" }
 
 
@@ -187,7 +187,7 @@ fun Application.setupRoutes() {
                     val fnrBruker = call.receive<Request>().fnr
                     if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
-                    val personInformasjon = pdlService.hentPersonDetaljer(fnrBruker)
+                    val personInformasjon = pdlService.hentPerson(fnrBruker)
 
                     val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
 
@@ -225,7 +225,7 @@ fun Application.setupRoutes() {
 
                     if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
-                    val personInformasjon = pdlService.hentPersonDetaljer(request.fnr)
+                    val personInformasjon = pdlService.hentPerson(request.fnr)
 
                     // Valider vilkår for å forsikre oss om at alle sjekker er gjort
                     val vilkår = vilkårsvurdering.kanSøke(personInformasjon)

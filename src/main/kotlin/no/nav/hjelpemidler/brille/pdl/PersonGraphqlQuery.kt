@@ -9,9 +9,9 @@ data class Variables(
     val ident: String,
 )
 
-fun hentPersonDetaljerQuery(fnummer: String): PersonGraphqlQuery {
+fun hentPersonQuery(fnummer: String): PersonGraphqlQuery {
     val query =
-        PersonGraphqlQuery::class.java.getResource("/pdl/hentPersonDetaljer.graphql").readText().replace("[\n]", "")
+        PersonGraphqlQuery::class.java.getResource("/pdl/hentPerson.graphql").readText().replace("[\n]", "")
     return PersonGraphqlQuery(query, Variables(ident = fnummer))
 }
 

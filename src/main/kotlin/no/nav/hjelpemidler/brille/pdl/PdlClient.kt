@@ -50,8 +50,8 @@ class PdlClient(
         }
     }
 
-    suspend fun hentPersonDetaljer(fnummer: String): PdlPersonResponse {
-        val hentPersonDetaljerQuery = hentPersonDetaljerQuery(fnummer)
+    suspend fun hentPerson(fnummer: String): PdlPersonResponse {
+        val hentPersonDetaljerQuery = hentPersonQuery(fnummer)
         return pdlRequest(hentPersonDetaljerQuery)
     }
 

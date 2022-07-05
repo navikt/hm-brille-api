@@ -4,7 +4,10 @@ query($ident: ID!){
             fornavn,
             mellomnavn,
             etternavn,
-            forkortetNavn
+        }
+        foedsel {
+            foedselsaar
+            foedselsdato
         }
         adressebeskyttelse(historikk: false) { gradering }
     }
