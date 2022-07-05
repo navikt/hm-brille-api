@@ -93,11 +93,11 @@ object Vilkår_v1 {
     }
 
     val Brille_v1 = (
-            IkkeFåttBrilleIKalenderåret_v1 og
-                    Under18ÅrPåBestillingsdato_v1 og
-                    MedlemAvFolketrygden_v1 og
-                    Brillestyrke_v1 og
-                    Bestillingsdato_v1 og
-                    BestillingsdatoTilbakeITid_v1
-            ).med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
+        IkkeFåttBrilleIKalenderåret_v1 og
+            Under18ÅrPåBestillingsdato_v1 og
+            MedlemAvFolketrygden_v1 og
+            Brillestyrke_v1 og
+            Bestillingsdato_v1 og
+            BestillingsdatoTilbakeITid_v1
+        ).med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
 }

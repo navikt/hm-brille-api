@@ -74,6 +74,8 @@ class MedlemskapBarn(
         val pdlBarn = pdlClient.medlemskapHentBarn(fnrBarn)
         validerPdlOppslag(pdlBarn)
 
+        log.debug("PDL BARN: ${jsonMapper.writeValueAsString(pdlBarn)}")
+
         saksgrunnlag.add(
             Saksgrunnlag(
                 kilde = SaksgrunnlagType.PDL,
