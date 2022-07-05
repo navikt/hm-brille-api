@@ -190,9 +190,6 @@ private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonRes
     val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
     val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
 
-    log.debug("vergemaalEllerFremtidsfullmakt: ${jsonMapper.writeValueAsString(vergemaalEllerFremtidsfullmakt)}")
-    log.debug("foreldreBarnRelasjon: ${jsonMapper.writeValueAsString(foreldreBarnRelasjon)}")
-
     val now = LocalDateTime.now()
     val vergerOgForeldre: List<Pair<String, String>> = listOf(
         vergemaalEllerFremtidsfullmakt.filter {
