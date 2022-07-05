@@ -10,6 +10,7 @@ import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
+import no.nav.hjelpemidler.brille.pdl.MotpartsRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
 import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
@@ -189,11 +190,22 @@ private fun prioriterVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonRes
     // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
     // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
 
+    val fullmakt = pdlBarn.data?.hentPerson?.fullmakt ?: listOf()
     val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
     val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
 
     val now = LocalDateTime.now()
     val vergerOgForeldre: List<Pair<String, String>> = listOf(
+        fullmakt.filter {
+            // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot dagens dato
+            (it.gyldigFraOgMed.isEqual(now.toLocalDate()) || it.gyldigFraOgMed.isBefore(now.toLocalDate())) &&
+                (it.gyldigTilOgMed.isEqual(now.toLocalDate()) || it.gyldigTilOgMed.isAfter(now.toLocalDate())) &&
+                // Fullmektig ovenfor barnet
+                it.motpartsRolle == MotpartsRolle.FULLMEKTIG
+            // TODO: Vurder å sjekke "omraader" feltet, og begrense til visse typer fullmektige
+        }.map {
+            Pair("FULLMAKT-${it.motpartsRolle}", it.motpartsPersonident)
+        },
         vergemaalEllerFremtidsfullmakt.filter {
             // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
             it.vergeEllerFullmektig.motpartsPersonident != null &&
