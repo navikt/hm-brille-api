@@ -27,6 +27,7 @@ import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.db.VirksomhetModell
 import no.nav.hjelpemidler.brille.db.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
@@ -211,20 +212,24 @@ fun Application.setupRoutes() {
                     val tidligereBrukteOrgnrForOptikker: List<String> =
                         vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker)
 
-                    val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptikker.map {
-                        val orgEnhet: Organisasjonsenhet =
-                            enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(it))
-                        Organisasjon(
-                            orgnummer = orgEnhet.organisasjonsnummer,
-                            navn = orgEnhet.navn,
-                            adresse = "${orgEnhet.forretningsadresse}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}"
+                    try {
+                        val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptikker.map {
+                            val orgEnhet: Organisasjonsenhet =
+                                enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(it))
+                            Organisasjon(
+                                orgnummer = orgEnhet.organisasjonsnummer,
+                                navn = orgEnhet.navn,
+                                adresse = "${orgEnhet.forretningsadresse}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}"
+                            )
+                        }
+                        val response = TidligereBrukteOrganisasjonerForOptiker(
+                            sistBrukteOrganisasjon = organisasjoner.firstOrNull(),
+                            tidligereBrukteOrganisasjoner = organisasjoner
                         )
+                        call.respond(response)
+                    } catch (e: EnhetsregisteretClientException) {
+                        call.respond(TidligereBrukteOrganisasjonerForOptiker(null, emptyList()))
                     }
-                    val response = TidligereBrukteOrganisasjonerForOptiker(
-                        sistBrukteOrganisasjon = organisasjoner.firstOrNull(),
-                        tidligereBrukteOrganisasjoner = organisasjoner
-                    )
-                    call.respond(response)
                 }
 
                 get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
