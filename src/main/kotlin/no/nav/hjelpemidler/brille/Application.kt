@@ -283,7 +283,7 @@ fun Application.setupRoutes() {
 
             data class Organisasjon(
                 val orgnavn: String,
-                val postadresse: Postadresse,
+                val forretningsadresse: Postadresse,
                 val erOptikerVirksomet: Boolean,
             )
 
@@ -307,7 +307,7 @@ fun Application.setupRoutes() {
                 virksomhetModell,
                 Organisasjon(
                     organisasjon.navn,
-                    organisasjon.postadresse,
+                    organisasjon.forretningsadresse,
                     listOf(
                         organisasjon.naeringskode1,
                         organisasjon.naeringskode2,
