@@ -2,16 +2,17 @@ package no.nav.hjelpemidler.brille.redis
 
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.Profile
+import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
+import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig
-import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPooled
 import redis.clients.jedis.commands.StringCommands
 
-class RedisClient(val redisProps: Configuration.RedisProperties = Configuration.redisProperties) {
+class RedisClient(private val redisProps: Configuration.RedisProperties = Configuration.redisProperties) {
     private val jedis: StringCommands = when (Configuration.profile) {
-        Profile.LOCAL -> Jedis()
+        Profile.LOCAL -> JedisMock()
         else -> JedisPooled(
             GenericObjectPoolConfig(),
             redisProps.host,
@@ -21,18 +22,37 @@ class RedisClient(val redisProps: Configuration.RedisProperties = Configuration.
         )
     }
 
-    fun erOptiker(fnr: String): Boolean? = jedis.get("fnr:$fnr:hpr:er.optiker")?.toBoolean()
+    fun erOptiker(fnr: String): Boolean? = jedis.get(erOptikerKey(fnr))?.toBoolean()
 
-    fun setErOptiker(fnr: String, erOptiker: Boolean): String =
-        jedis.setex("fnr:$fnr:hpr:er.optiker", redisProps.hprExpirySeconds, erOptiker.toString())
+    fun setErOptiker(fnr: String, erOptiker: Boolean) {
+        jedis.setex(erOptikerKey(fnr), redisProps.hprExpirySeconds, erOptiker.toString())
+    }
 
-    fun medlemskapBarn(fnr: String): MedlemskapResultat? = jedis.get("fnr:$fnr:medlemskapbarn:resultat").let {
+    fun medlemskapBarn(fnr: String): MedlemskapResultat? = jedis.get(medlemskapBarnKey(fnr))?.let {
         jsonMapper.readValue(it, MedlemskapResultat::class.java)
     }
 
-    fun setMedlemskapBarn(fnr: String, medlemskapResultat: MedlemskapResultat): String = jedis.setex(
-        "fnr:$fnr:medlemskapbarn:resultat",
-        redisProps.medlemskapBarnExpirySeconds,
-        jsonMapper.writeValueAsString(medlemskapResultat)
-    )
+    fun setMedlemskapBarn(fnr: String, medlemskapResultat: MedlemskapResultat) {
+        jedis.setex(
+            medlemskapBarnKey(fnr),
+            redisProps.medlemskapBarnExpirySeconds,
+            jsonMapper.writeValueAsString(medlemskapResultat)
+        )
+    }
+
+    fun organisasjonsenhet(orgnr: Organisasjonsnummer): Organisasjonsenhet? = jedis.get(orgenhetKey(orgnr))?.let {
+        jsonMapper.readValue(it, Organisasjonsenhet::class.java)
+    }
+
+    fun setOrganisasjonsenhet(orgnr: Organisasjonsnummer, orgenhet: Organisasjonsenhet) {
+        jedis.setex(
+            orgenhetKey(orgnr),
+            redisProps.orgenhetExpirySeconds,
+            jsonMapper.writeValueAsString(orgenhet)
+        )
+    }
 }
+
+private fun erOptikerKey(fnr: String) = "fnr:$fnr:hpr:er.optiker"
+private fun medlemskapBarnKey(fnr: String) = "fnr:$fnr:medlemskapbarn:resultat"
+private fun orgenhetKey(orgnr: Organisasjonsnummer) = "orgnr:$orgnr:orgenhet"

@@ -14,6 +14,6 @@ internal class EnhetsregisteretClientTest {
         val organisasjonsnummer = Organisasjonsnummer("936314783")
         val organisasjonsenhet = client.hentOrganisasjonsenhet(organisasjonsnummer)
 
-        organisasjonsenhet.organisasjonsnummer shouldBe organisasjonsnummer.toString()
+        organisasjonsenhet?.organisasjonsnummer shouldBe organisasjonsnummer.toString()
     }
 }

@@ -1,0 +1,11 @@
+version: '3'
+services:
+  database:
+    image: postgres:13-alpine
+    ports:
+      - 5440:5432
+    environment:
+      - POSTGRES_USER=cloudsqliamuser
+      - POSTGRES_PASSWORD=dockerpass
+      - POSTGRES_DB=hm-brille-api-db-local
+    hostname: host.docker.internal

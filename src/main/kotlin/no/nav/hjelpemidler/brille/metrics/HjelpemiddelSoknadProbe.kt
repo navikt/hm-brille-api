@@ -1,12 +1,12 @@
 package no.nav.hjelpemidler.brille.metrics
 
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.kafka.KafkaProducer
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 
 private val log = KotlinLogging.logger {}
 
 class HjelpemiddelSoknadProbe(
-    private val kafkaProducer: KafkaProducer,
+    private val kafkaService: KafkaService,
 ) {
 
 //    private suspend fun finnFlereEnnEnHjelpemidler(soknad: Soknad) {

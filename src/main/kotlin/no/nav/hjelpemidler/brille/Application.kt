@@ -25,13 +25,15 @@ import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
-import no.nav.hjelpemidler.brille.kafka.KafkaProducer
+import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.model.Organisasjon
@@ -49,6 +51,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetModell
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
+import org.apache.kafka.clients.producer.MockProducer
 import org.postgresql.util.PSQLException
 import org.slf4j.event.Level
 import java.util.TimeZone
@@ -104,12 +107,18 @@ fun Application.setupRoutes() {
     val vedtakStore = VedtakStorePostgres(dataSource)
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
+    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(
         Configuration.syfohelsenettproxyProperties.baseUrl,
         Configuration.syfohelsenettproxyProperties.scope,
         azureAdClient
     )
-    // val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
+    val kafkaService = KafkaService {
+        when (Configuration.profile) {
+            Profile.LOCAL -> MockProducer()
+            else -> AivenKafkaConfiguration().aivenKafkaProducer()
+        }
+    }
 
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
@@ -167,7 +176,7 @@ fun Application.setupRoutes() {
                 vedtakStore.tellRader() // TODO: vi må finne ut hvordan vi faktisk sender sakId. Skal vi heller legge inn en sakId-kolonne som autoinkrementer?
 
             // Journalfør søknad/vedtak som dokument i joark på barnet
-            val barneBrilleVedtakData = KafkaProducer.BarnebrilleVedtakData(
+            val barneBrilleVedtakData = KafkaService.BarnebrilleVedtakData(
                 fnr = request.fnr,
                 orgnr = request.orgnr,
                 eventId = UUID.randomUUID(),
@@ -176,7 +185,7 @@ fun Application.setupRoutes() {
                 sakId = (antallRader + 1).toString()
             )
             val event = jsonMapper.writeValueAsString(barneBrilleVedtakData)
-            // kafkaProducer.produceEvent(request.fnr, event)
+            kafkaService.produceEvent(request.fnr, event)
 
             // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
 
@@ -220,11 +229,15 @@ fun Application.setupRoutes() {
                         try {
                             val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptikker.map {
                                 val orgEnhet: Organisasjonsenhet =
-                                    enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(it))
+                                    enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(it))
+                                        ?: return@get call.respond(
+                                            HttpStatusCode.NotFound,
+                                            "Fant ikke orgenhet for orgnr $it"
+                                        )
                                 Organisasjon(
                                     orgnummer = orgEnhet.organisasjonsnummer,
                                     navn = orgEnhet.navn,
-                                    adresse = "${orgEnhet.forretningsadresse}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}"
+                                    adresse = "${orgEnhet.forretningsadresse}, ${orgEnhet.forretningsadresse?.postnummer} ${orgEnhet.forretningsadresse?.poststed}"
                                 )
                             }
                             val response = TidligereBrukteOrganisasjonerForOptiker(
@@ -241,7 +254,11 @@ fun Application.setupRoutes() {
                         val organisasjonsnummer =
                             call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
                         val organisasjonsenhet =
-                            enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+                            enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+                                ?: return@get call.respond(
+                                    HttpStatusCode.NotFound,
+                                    "Fant ikke orgenhet for orgnr $organisasjonsnummer"
+                                )
                         call.respond(organisasjonsenhet)
                     }
 
@@ -321,14 +338,15 @@ fun Application.setupRoutes() {
                     "Ingen virksomhet funnet for orgnr. $organisasjonsnummer"
                 )
 
-            val organisasjon = enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+            val organisasjon = enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+                ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke orgenhet for orgnr $organisasjonsnummer")
 
             data class Response(
                 val orgnr: String,
                 val kontonr: String,
                 val harNavAvtale: Boolean,
                 val orgnavn: String,
-                val forretningsadresse: Postadresse,
+                val forretningsadresse: Postadresse?,
                 val erOptikerVirksomet: Boolean,
             )
 

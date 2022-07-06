@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
-import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import java.time.LocalDateTime
 import java.util.UUID
@@ -14,11 +14,11 @@ import java.util.concurrent.TimeUnit
 
 private val log = KotlinLogging.logger {}
 
-class KafkaProducer(
-    private val kafkaProducer: KafkaProducer<String, String>,
-    kafkaProperties: Configuration.KafkaProperties = Configuration.kafkaProperties,
+class KafkaService(
+    private val topic: String = Configuration.kafkaProperties.topic,
+    kafkaProducerFactory: () -> Producer<String, String>,
 ) {
-    private val topic = kafkaProperties.topic
+    private val kafkaProducer = kafkaProducerFactory()
     private val mapper = jacksonMapperBuilder()
         .addModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
