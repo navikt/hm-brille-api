@@ -210,9 +210,8 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
                 (it.gyldigTilOgMed.isEqual(now.toLocalDate()) || it.gyldigTilOgMed.isAfter(now.toLocalDate())) &&
                 // Fullmektig ovenfor barnet
                 it.motpartsRolle == MotpartsRolle.FULLMEKTIG
-            // TODO: Vurder å sjekke "omraader" feltet, og begrense til visse typer fullmektige
         }.map {
-            Pair("FULLMAKT-${it.motpartsRolle}", it.motpartsPersonident)
+            Pair("FULLMEKTIG-${it.motpartsRolle}", it.motpartsPersonident)
         },
 
         vergemaalEllerFremtidsfullmakt.filter {
@@ -228,7 +227,9 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
         // TODO: Trenger vi begge disse under?
 
         foreldreAnsvar.filter {
-            // Må ha et fnr vi kan slå opp på
+            // Må ha et fnr vi kan slå opp på. Dette bekrefter også at relasjonen gjelder en forelder, ikke at oppslått
+            // barn har foreldreansvar for noen:
+            // "Alltid tomt ved oppslag på ansvarlig." ref.: https://pdldocs-navno.msappproxy.net/ekstern/index.html#_foreldreansvar
             it.ansvarlig != null &&
                 // Bare se på foreldreansvar som ikke har opphørt (feltet er null eller i fremtiden)
                 (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
@@ -246,7 +247,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
                 (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
                 (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
         }.map {
-            Pair(it.relatertPersonsRolle.name, it.relatertPersonsIdent!!)
+            Pair("FORELDER_BARN_RELASJON-${it.relatertPersonsRolle.name}", it.relatertPersonsIdent!!)
         }.sortedBy {
             // Sorter rekkefølgen vi sjekker basert på rolle.
             it.first
