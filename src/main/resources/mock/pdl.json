@@ -1,0 +1,27 @@
+{
+  "data": {
+    "hentPerson": {
+      "navn": [
+        {
+          "fornavn": "UROKKELIG",
+          "mellomnavn": "VERTIKAL",
+          "etternavn": "FAMILIE"
+        }
+      ],
+      "adressebeskyttelse": [
+        {
+          "gradering": "UGRADERT"
+        },
+        {
+          "gradering": "UGRADERT"
+        }
+      ],
+      "foedsel": [
+        {
+          "foedselsaar": "2014",
+          "foedselsdato": "2014-08-15"
+        }
+      ]
+    }
+  }
+}

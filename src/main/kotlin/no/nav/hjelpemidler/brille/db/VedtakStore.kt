@@ -6,7 +6,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.pgObjectOf
-import no.nav.hjelpemidler.brille.vedtak.Vedak_v2
+import no.nav.hjelpemidler.brille.vedtak.Vedtak_v2
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -19,6 +19,8 @@ interface VedtakStore {
     fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): List<String>
     fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode)
     fun tellRader(): Int
+    fun <T> hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2<T>?
+    fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
@@ -42,7 +44,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         )
     } ?: false
 
-    fun hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedak_v2? =
+    override fun <T> hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2<T>? =
         using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
             val sql = """
@@ -60,14 +62,14 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                         "bestillingsdato_ar" to bestillingsdato.year
                     )
                 ).map { row ->
-                    Vedak_v2(
+                    Vedtak_v2<T>(
                         id = row.int("id"),
                         fnrBruker = row.string("fnr_bruker"),
                         fnrInnsender = row.string("fnr_innsender"),
                         orgnr = row.string("orgnr"),
                         bestillingsdato = row.localDate("bestillingsdato"),
                         brillepris = row.bigDecimal("brillepris"),
-                        bestillingsref = row.string("bestillingsref"),
+                        bestillingsreferanse = row.string("bestillingsreferanse"),
                         vilkarsvurdering = row.json("vilkarsvurdering"),
                         status = row.string("status"),
                         opprettet = row.localDateTime("opprettet"),
@@ -124,6 +126,54 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         if (resultat == 0) {
             throw RuntimeException("VedtakStore.opprettVedtak: feilet i å opprette vedtak (resultat=0)")
         }
+    }
+
+    override fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T> {
+        val id = using(sessionOf(ds)) { session ->
+            @Language("PostgreSQL")
+            val sql = """
+                INSERT INTO vedtak_v2 (
+                    fnr_bruker,
+                    fnr_innsender,
+                    orgnr,
+                    bestillingsdato,
+                    brillepris,
+                    bestillingsreferanse,
+                    vilkarsvurdering,
+                    status
+                    )
+                VALUES (
+                    :fnr_bruker,
+                    :fnr_innsender,
+                    :orgnr,
+                    :bestillingsdato,
+                    :brillepris,
+                    :bestillingsreferanse,
+                    :vilkarsvurdering,
+                    :status
+                )
+                RETURNING id
+            """.trimIndent()
+            session.run(
+                queryOf(
+                    sql,
+                    mapOf(
+                        "fnr_bruker" to vedtak.fnrBruker,
+                        "fnr_innsender" to vedtak.fnrInnsender,
+                        "orgnr" to vedtak.orgnr,
+                        "bestillingsdato" to vedtak.bestillingsdato,
+                        "brillepris" to vedtak.brillepris,
+                        "bestillingsreferanse" to vedtak.bestillingsreferanse,
+                        "vilkarsvurdering" to pgObjectOf(vedtak.vilkarsvurdering),
+                        "status" to vedtak.status
+                    )
+                ).map {
+                    it.int("id")
+                }.asSingle
+            )
+        }
+        requireNotNull(id) { "Lagring av vedtak feilet" }
+        return vedtak.copy(id = id)
     }
 
     override fun tellRader(): Int {

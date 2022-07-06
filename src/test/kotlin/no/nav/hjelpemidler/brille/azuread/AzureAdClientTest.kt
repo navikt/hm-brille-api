@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.azuread
 
+import io.ktor.client.engine.cio.CIO
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.Configuration.AzureAdProperties
@@ -13,7 +14,8 @@ internal class AzureAdClientTest {
             tenantId = "default",
             clientId = "default",
             clientSecret = ""
-        )
+        ),
+        engine = CIO.create()
     )
 
     @Test

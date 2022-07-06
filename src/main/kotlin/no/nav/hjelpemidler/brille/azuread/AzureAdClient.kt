@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.submitForm
@@ -17,13 +16,15 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.StubEngine
+import no.nav.hjelpemidler.brille.engineFactory
 import java.time.Instant
 
 private val log = KotlinLogging.logger {}
 
 class AzureAdClient(
     private val props: Configuration.AzureAdProperties = Configuration.azureAdProperties,
-    engine: HttpClientEngine = CIO.create(),
+    engine: HttpClientEngine = engineFactory { StubEngine.azureAd() },
 ) {
     private val client = HttpClient(engine) {
         expectSuccess = false

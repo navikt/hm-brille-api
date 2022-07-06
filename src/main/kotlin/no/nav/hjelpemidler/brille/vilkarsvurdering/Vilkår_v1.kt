@@ -2,46 +2,56 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PersonDetaljerDto
+import no.nav.hjelpemidler.brille.sats.BeregnSats
 import no.nav.hjelpemidler.brille.sats.Diopter
-import no.nav.hjelpemidler.brille.sats.SatsGrunnlag
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-object Vilkår_v1 {
-    data class Grunnlag_v1(
-        val harFåttBrilleDetteKalenderåret: Boolean,
-        val personInformasjon: PersonDetaljerDto,
-        val satsGrunnlag: SatsGrunnlag,
-        val bestillingsdato: LocalDate,
-        val dagsDato: LocalDate = LocalDate.now(),
-        val datoOrdningenStarter: LocalDate = LocalDate.of(2022, Month.AUGUST, 1),
-        val tidligsteMuligeBestillingsdato: LocalDate = LocalDate.now().minusMonths(6),
-    ) : VilkårsvurderingGrunnlag
+private val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 
-    // ingen andre vedtak med samme bestillingsdato-år lik denne
-    val FåttBrilleIKalenderåret_v1 = Spesifikasjon<Grunnlag_v1>(
+object Vilkår_v1 {
+    data class EksisterendeVedtak(
+        val id: Int,
+        val fnrBruker: String,
+        val bestillingsdato: LocalDate,
+        val status: String,
+        val opprettet: LocalDateTime,
+    )
+
+    data class Grunnlag_v1(
+        val eksisterendeVedtak: EksisterendeVedtak?, // todo -> egen, begrenset modell her
+        val personInformasjon: PersonDetaljerDto, // todo -> egen, begrenset modell her
+        val beregnSats: BeregnSats,
+        val bestillingsdato: LocalDate,
+        val dagensDato: LocalDate = LocalDate.now(),
+        val datoOrdningenStartet: LocalDate = DATO_ORDNINGEN_STARTET,
+        val seksMånederSiden: LocalDate = LocalDate.now().minusMonths(6),
+    )
+
+    val HarEksisterendeVedtakIKalenderåret_v1 = Spesifikasjon<Grunnlag_v1>(
         beskrivelse = "Har barnet allerede fått brille i kalenderåret?",
-        identifikator = "FåttBrilleIKalenderåret_v1"
+        identifikator = "HarEksisterendeVedtakIKalenderåret_v1"
     ) { grunnlag ->
-        when {
-            grunnlag.harFåttBrilleDetteKalenderåret -> ja("Barnet har allerede fått brille i kalenderåret")
-            else -> nei("Barnet har ikke fått brille i kalenderåret")
+        when (grunnlag.eksisterendeVedtak) {
+            null -> nei("Barnet har ikke fått brille i kalenderåret")
+            else -> ja("Barnet har allerede fått brille i kalenderåret")
         }
     }
 
-    val IkkeFåttBrilleIKalenderåret_v1 = FåttBrilleIKalenderåret_v1.ikke()
+    val HarIkkeEksisterendeVedtakIKalenderåret_v1 = HarEksisterendeVedtakIKalenderåret_v1.ikke()
 
     val Under18ÅrPåBestillingsdato_v1 = Spesifikasjon<Grunnlag_v1>(
-        beskrivelse = "Var barnet under 18 år på bestillingsdatoen?",
+        beskrivelse = "Var barnet under 18 år på bestillingsdato?",
         identifikator = "Under18ÅrPåBestillingsdato_v1"
     ) { grunnlag ->
         val fodselsdato = grunnlag.personInformasjon.fodselsdato
         when {
             fodselsdato == null -> kanskje("Barnets fødselsdato er ukjent")
-            fodselsdato.until(grunnlag.bestillingsdato).years < 18 -> ja("Barnet var under 18 år på bestillingsdatoen")
-            else -> nei("Barnet var 18 år eller eldre på bestillingsdatoen")
+            fodselsdato.until(grunnlag.bestillingsdato).years < 18 -> ja("Barnet var under 18 år på bestillingsdato")
+            else -> nei("Barnet var 18 år eller eldre på bestillingsdato")
         }
     }
 
@@ -49,14 +59,14 @@ object Vilkår_v1 {
         beskrivelse = "Er barnet medlem av folketrygden?",
         identifikator = "MedlemAvFolketrygden_v1"
     ) { grunnlag ->
-        kanskje("Barnets medlemskap i folketrygden er ukjent")
+        ja("TODO")
     }
 
     val Brillestyrke_v1 = Spesifikasjon<Grunnlag_v1>(
         beskrivelse = "Er brillestyrken innenfor de fastsatte rammene?",
         identifikator = "Brillestyrke_v1"
     ) { grunnlag ->
-        val satsGrunnlag = grunnlag.satsGrunnlag
+        val satsGrunnlag = grunnlag.beregnSats
         val minsteSfære = Diopter.ONE
         val minsteSylinder = Diopter.ONE
         when {
@@ -69,35 +79,35 @@ object Vilkår_v1 {
     }
 
     val Bestillingsdato_v1 = Spesifikasjon<Grunnlag_v1>(
-        beskrivelse = "Er bestillingsdato 01.08.2022 eller senere?",
+        beskrivelse = "Er bestillingsdato ${DATO_ORDNINGEN_STARTET.formatert()} eller senere?",
         identifikator = "Bestillingsdato_v1"
     ) { grunnlag ->
-        val datoOrdningenStarterFormatert =
-            grunnlag.datoOrdningenStarter.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+        val datoOrdningenStarterFormatert = grunnlag.datoOrdningenStartet.formatert()
         when {
-            grunnlag.bestillingsdato.isBefore(grunnlag.datoOrdningenStarter) -> nei("Bestillingsdato kan ikke være før $datoOrdningenStarterFormatert")
+            grunnlag.bestillingsdato.isBefore(grunnlag.datoOrdningenStartet) -> nei("Bestillingsdato kan ikke være før $datoOrdningenStarterFormatert")
             else -> ja("Bestillingsdato er $datoOrdningenStarterFormatert eller senere")
         }
     }
 
     val BestillingsdatoTilbakeITid_v1 = Spesifikasjon<Grunnlag_v1>(
-        beskrivelse = "Er bestillingsdato innenfor siste 6 måneder fra dags dato?",
+        beskrivelse = "Er bestillingsdato innenfor siste 6 måneder fra dagens dato?",
         identifikator = "BestillingsdatoTilbakeITid_v1"
     ) { grunnlag ->
-        val tidligsteMuligeBestillingsdatoFormatert =
-            grunnlag.tidligsteMuligeBestillingsdato.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+        val tidligsteMuligeBestillingsdatoFormatert = grunnlag.seksMånederSiden.formatert()
         when {
-            grunnlag.bestillingsdato.isBefore(grunnlag.datoOrdningenStarter) -> nei("Bestillingsdato kan ikke være før $tidligsteMuligeBestillingsdatoFormatert")
+            grunnlag.bestillingsdato.isBefore(grunnlag.seksMånederSiden) -> nei("Bestillingsdato kan ikke være før $tidligsteMuligeBestillingsdatoFormatert")
             else -> ja("Bestillingsdato er $tidligsteMuligeBestillingsdatoFormatert eller senere")
         }
     }
 
     val Brille_v1 = (
-        IkkeFåttBrilleIKalenderåret_v1 og
+        HarIkkeEksisterendeVedtakIKalenderåret_v1 og
             Under18ÅrPåBestillingsdato_v1 og
             MedlemAvFolketrygden_v1 og
             Brillestyrke_v1 og
             Bestillingsdato_v1 og
             BestillingsdatoTilbakeITid_v1
         ).med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
+
+    private fun LocalDate.formatert(): String = this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
 }
