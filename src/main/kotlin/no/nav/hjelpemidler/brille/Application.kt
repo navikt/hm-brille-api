@@ -3,8 +3,6 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.engine.cio.CIO
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
@@ -91,11 +89,6 @@ fun Application.configure() {
         callIdMdc(MDC_CORRELATION_ID)
     }
     install(IgnoreTrailingSlash)
-}
-
-fun engineFactory(block: () -> HttpClientEngine): HttpClientEngine = when (Configuration.profile) {
-    Profile.LOCAL -> block()
-    else -> CIO.create()
 }
 
 // Wire up services and routes
