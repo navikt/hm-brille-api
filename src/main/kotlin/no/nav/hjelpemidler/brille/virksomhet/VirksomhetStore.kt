@@ -9,11 +9,11 @@ import javax.sql.DataSource
 private val log = KotlinLogging.logger {}
 
 interface VirksomhetStore {
-    fun hentVirksomhet(orgnr: String): VirksomhetModell?
-    fun lagreVirksomhet(virksomhetModell: VirksomhetModell)
+    fun hentVirksomhet(orgnr: String): Virksomhet?
+    fun lagreVirksomhet(virksomhetModell: Virksomhet)
 }
 
-data class VirksomhetModell(
+data class Virksomhet(
     val orgnr: String,
     val kontonr: String,
     val fnrInnsender: String,
@@ -24,7 +24,7 @@ data class VirksomhetModell(
 
 internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetStore {
 
-    override fun hentVirksomhet(orgnr: String): VirksomhetModell? {
+    override fun hentVirksomhet(orgnr: String): Virksomhet? {
         @Language("PostgreSQL")
         val sql = """
             SELECT *
@@ -32,7 +32,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             WHERE orgnr = :orgnr
         """.trimIndent()
         return ds.query(sql, mapOf("orgnr" to orgnr)) { row ->
-            VirksomhetModell(
+            Virksomhet(
                 orgnr = row.string("orgnr"),
                 kontonr = row.string("kontonr"),
                 fnrInnsender = row.string("fnr_innsender"),
@@ -43,7 +43,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         }
     }
 
-    override fun lagreVirksomhet(virksomhetModell: VirksomhetModell) {
+    override fun lagreVirksomhet(virksomhetModell: Virksomhet) {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO virksomhet (orgnr,

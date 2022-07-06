@@ -14,7 +14,7 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
-import no.nav.hjelpemidler.brille.virksomhet.VirksomhetModell
+import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
 import org.postgresql.util.PSQLException
 
@@ -82,7 +82,7 @@ fun Route.testApi(
         }
 
         post("/virksomhet") {
-            val virksomhet = call.receive<VirksomhetModell>()
+            val virksomhet = call.receive<Virksomhet>()
 
             try {
                 virksomhetStore.lagreVirksomhet(virksomhet)
