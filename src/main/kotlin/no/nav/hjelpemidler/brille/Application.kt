@@ -317,28 +317,17 @@ fun Application.setupRoutes() {
             call.respond(medlemskapBarn.sjekkMedlemskapBarn(fnr))
         }
 
-        // FIXME: Legg til under auth route når vi vet fungerer
+        // FIXME: Legg til under auth route når vi vet fungerer (kan nok erstatte /enhetsregisteret/enheter/{organisasjonsnummer})
         get("/test/virksomhet/{orgnr}") {
             if (Configuration.profile == Profile.PROD) {
                 call.respond(HttpStatusCode.Unauthorized)
                 return@get
             }
 
-            data class Organisasjon(
-                val orgnavn: String,
-                val forretningsadresse: Postadresse,
-                val erOptikerVirksomet: Boolean,
-            )
-
-            data class Virksomhet(
-                val virksomhet: VirksomhetModell,
-                val organisasjon: Organisasjon,
-            )
-
             val organisasjonsnummer =
                 call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 
-            val virksomhetModell = virksomhetStore.hentVirksomhet(organisasjonsnummer)
+            val virksomhet = virksomhetStore.hentVirksomhet(organisasjonsnummer)
                 ?: return@get call.respond(
                     status = HttpStatusCode.NotFound,
                     "Ingen virksomhet funnet for orgnr. $organisasjonsnummer"
@@ -346,23 +335,32 @@ fun Application.setupRoutes() {
 
             val organisasjon = enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
 
-            val virksomhet = Virksomhet(
-                virksomhetModell,
-                Organisasjon(
-                    organisasjon.navn,
-                    organisasjon.forretningsadresse,
-                    listOf(
-                        organisasjon.naeringskode1,
-                        organisasjon.naeringskode2,
-                        organisasjon.naeringskode3
-                    ).any { it?.kode == "47.782" }
-                )
+            data class Response(
+                val orgnr: String,
+                val kontonr: String,
+                val harNavAvtale: Boolean,
+                val orgnavn: String,
+                val forretningsadresse: Postadresse,
+                val erOptikerVirksomet: Boolean,
             )
 
-            call.respond(virksomhet)
+            val response = Response(
+                orgnr = organisasjon.organisasjonsnummer,
+                kontonr = virksomhet.kontonr,
+                harNavAvtale = virksomhet.harNavAvtale,
+                orgnavn = organisasjon.navn,
+                forretningsadresse = organisasjon.forretningsadresse,
+                erOptikerVirksomet = listOf(
+                    organisasjon.naeringskode1,
+                    organisasjon.naeringskode2,
+                    organisasjon.naeringskode3
+                ).any { it?.kode == "47.782" },
+            )
+
+            call.respond(response)
         }
 
-        // FIXME: Legg til under auth route når vi vet fungerer
+        // FIXME: Legg til under auth route når vi vet fungerer. Hvilken auth-routing skal denne ligge under?
         post("/test/virksomhet") {
             if (Configuration.profile == Profile.PROD) {
                 call.respond(HttpStatusCode.Unauthorized)
@@ -380,6 +378,7 @@ fun Application.setupRoutes() {
                 ) {
                     return@post call.response.status(HttpStatusCode.Conflict)
                 }
+                return@post call.response.status(HttpStatusCode.InternalServerError)
             }
 
             call.response.status(HttpStatusCode.Created)
