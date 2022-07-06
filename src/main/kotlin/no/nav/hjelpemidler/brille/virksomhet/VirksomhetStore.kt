@@ -1,8 +1,8 @@
 package no.nav.hjelpemidler.brille.virksomhet
 
-import kotliquery.queryOf
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.execute
+import no.nav.hjelpemidler.brille.query
+import no.nav.hjelpemidler.brille.update
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
@@ -24,54 +24,47 @@ data class VirksomhetModell(
 
 internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetStore {
 
-    override fun hentVirksomhet(orgnr: String): VirksomhetModell? = ds.execute { session ->
+    override fun hentVirksomhet(orgnr: String): VirksomhetModell? {
         @Language("PostgreSQL")
         val sql = """
             SELECT *
             FROM virksomhet
-            WHERE orgnr = ?
+            WHERE orgnr = :orgnr
         """.trimIndent()
-        session.run(
-            queryOf(
-                sql,
-                orgnr,
-            ).map {
-                VirksomhetModell(
-                    orgnr = it.string("orgnr"),
-                    kontonr = it.string("kontonr"),
-                    fnrInnsender = it.string("fnr_innsender"),
-                    navnInnsender = it.string("navn_innsender"),
-                    harNavAvtale = it.boolean("har_nav_avtale"),
-                    avtaleVersjon = it.stringOrNull("avtale_versjon")
-                )
-            }.asSingle
-        )
+        return ds.query(sql, mapOf("orgnr" to orgnr)) { row ->
+            VirksomhetModell(
+                orgnr = row.string("orgnr"),
+                kontonr = row.string("kontonr"),
+                fnrInnsender = row.string("fnr_innsender"),
+                navnInnsender = row.string("navn_innsender"),
+                harNavAvtale = row.boolean("har_nav_avtale"),
+                avtaleVersjon = row.stringOrNull("avtale_versjon")
+            )
+        }
     }
 
     override fun lagreVirksomhet(virksomhetModell: VirksomhetModell) {
-        val result = ds.execute { session ->
-            @Language("PostgreSQL")
-            val sql = """
-                INSERT INTO virksomhet (orgnr,
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO virksomhet (orgnr,
                                     kontonr,
                                     fnr_innsender,
                                     navn_innsender,
                                     har_nav_avtale,
                                     avtale_versjon)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """.trimIndent()
-            session.run(
-                queryOf(
-                    sql,
-                    virksomhetModell.orgnr,
-                    virksomhetModell.kontonr,
-                    virksomhetModell.fnrInnsender,
-                    virksomhetModell.navnInnsender,
-                    virksomhetModell.harNavAvtale,
-                    virksomhetModell.avtaleVersjon,
-                ).asUpdate
+            VALUES (:orgnr, :kontonr, :fnr_innsender, :navn_innsender, :har_nav_avtale, :avtale_versjon)
+        """.trimIndent()
+        val result = ds.update(
+            sql,
+            mapOf(
+                "orgnr" to virksomhetModell.orgnr,
+                "kontonr" to virksomhetModell.kontonr,
+                "fnr_innsender" to virksomhetModell.fnrInnsender,
+                "navn_innsender" to virksomhetModell.navnInnsender,
+                "har_nav_avtale" to virksomhetModell.harNavAvtale,
+                "avtale_versjon" to virksomhetModell.avtaleVersjon,
             )
-        }
+        )
         if (result == 0) {
             throw RuntimeException("VirksomhetStore.lagreVirksomhet: feilet i å opprette virksomhet (result==0)")
         }

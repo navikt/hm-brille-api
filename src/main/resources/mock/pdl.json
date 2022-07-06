@@ -8,6 +8,16 @@
           "etternavn": "FAMILIE"
         }
       ],
+      "bostedsadresseList": [
+        {
+          "vegadresse": {
+            "husnummer": "5",
+            "adressenavn": "Dronningringen",
+            "postnummer": "3188",
+            "kommunenummer": "3801"
+          }
+        }
+      ],
       "adressebeskyttelse": [
         {
           "gradering": "UGRADERT"

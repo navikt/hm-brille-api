@@ -28,17 +28,18 @@ object Vilkår_v1 {
         val medlemskapResultat: MedlemskapResultat,
     )
 
-    val HarEksisterendeVedtakIKalenderåret_v1 = Spesifikasjon<Grunnlag_v1>(
+    val HarIkkeVedtakIKalenderåret_v1 = Spesifikasjon<Grunnlag_v1>(
         beskrivelse = "Har barnet allerede vedtak om brille i kalenderåret?",
-        identifikator = "HarEksisterendeVedtakIKalenderåret_v1"
+        identifikator = "HarIkkeVedtakIKalenderåret_v1"
     ) { grunnlag ->
-        when (grunnlag.vedtakForBruker) {
-            null -> nei("Barnet har ikke vedtak om brille i kalenderåret")
-            else -> ja("Barnet har allerede vedtak om brille i kalenderåret")
+        val harIkkeVedtakIKalenderåret = grunnlag.vedtakForBruker.none { vedtak ->
+            vedtak.bestillingsdato.year == grunnlag.bestillingsdato.year
+        }
+        when (harIkkeVedtakIKalenderåret) {
+            true -> ja("Barnet har ikke vedtak om brille i kalenderåret")
+            false -> nei("Barnet har allerede vedtak om brille i kalenderåret")
         }
     }
-
-    val HarIkkeEksisterendeVedtakIKalenderåret_v1 = HarEksisterendeVedtakIKalenderåret_v1.ikke()
 
     val Under18ÅrPåBestillingsdato_v1 = Spesifikasjon<Grunnlag_v1>(
         beskrivelse = "Var barnet under 18 år på bestillingsdato?",
@@ -102,8 +103,8 @@ object Vilkår_v1 {
     }
 
     val Brille_v1 = (
-        HarIkkeEksisterendeVedtakIKalenderåret_v1 og
-            Under18ÅrPåBestillingsdato_v1 og
+            HarIkkeVedtakIKalenderåret_v1 og
+                    Under18ÅrPåBestillingsdato_v1 og
             MedlemAvFolketrygden_v1 og
             Brillestyrke_v1 og
             Bestillingsdato_v1 og

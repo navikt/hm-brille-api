@@ -1,9 +1,6 @@
 package no.nav.hjelpemidler.brille
 
 import com.zaxxer.hikari.HikariDataSource
-import kotliquery.Session
-import kotliquery.sessionOf
-import kotliquery.using
 import mu.KotlinLogging
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateResult
@@ -59,5 +56,3 @@ class DatabaseConfiguration(
     private fun migrate(dataSource: HikariDataSource, initSql: String = ""): MigrateResult =
         Flyway.configure().dataSource(dataSource).initSql(initSql).load().migrate()
 }
-
-fun <T> DataSource.execute(block: (Session) -> T) = using(sessionOf(this), block)
