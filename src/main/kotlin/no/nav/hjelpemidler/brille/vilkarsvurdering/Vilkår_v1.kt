@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import java.util.Locale
 
 private val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 
@@ -22,7 +23,7 @@ object Vilkår_v1 {
     )
 
     data class Grunnlag_v1(
-        val eksisterendeVedtak: EksisterendeVedtak?, // todo -> egen, begrenset modell her
+        val eksisterendeVedtak: EksisterendeVedtak?,
         val personInformasjon: PersonDetaljerDto, // todo -> egen, begrenset modell her
         val beregnSats: BeregnSats,
         val bestillingsdato: LocalDate,
@@ -32,12 +33,12 @@ object Vilkår_v1 {
     )
 
     val HarEksisterendeVedtakIKalenderåret_v1 = Spesifikasjon<Grunnlag_v1>(
-        beskrivelse = "Har barnet allerede fått brille i kalenderåret?",
+        beskrivelse = "Har barnet allerede vedtak om brille i kalenderåret?",
         identifikator = "HarEksisterendeVedtakIKalenderåret_v1"
     ) { grunnlag ->
         when (grunnlag.eksisterendeVedtak) {
-            null -> nei("Barnet har ikke fått brille i kalenderåret")
-            else -> ja("Barnet har allerede fått brille i kalenderåret")
+            null -> nei("Barnet har ikke vedtak om brille i kalenderåret")
+            else -> ja("Barnet har allerede vedtak om brille i kalenderåret")
         }
     }
 
@@ -82,10 +83,10 @@ object Vilkår_v1 {
         beskrivelse = "Er bestillingsdato ${DATO_ORDNINGEN_STARTET.formatert()} eller senere?",
         identifikator = "Bestillingsdato_v1"
     ) { grunnlag ->
-        val datoOrdningenStarterFormatert = grunnlag.datoOrdningenStartet.formatert()
+        val datoOrdningenStartet = grunnlag.datoOrdningenStartet
         when {
-            grunnlag.bestillingsdato.isBefore(grunnlag.datoOrdningenStartet) -> nei("Bestillingsdato kan ikke være før $datoOrdningenStarterFormatert")
-            else -> ja("Bestillingsdato er $datoOrdningenStarterFormatert eller senere")
+            grunnlag.bestillingsdato.isBefore(datoOrdningenStartet) -> nei("Bestillingsdato kan ikke være før ${datoOrdningenStartet.formatert()}")
+            else -> ja("Bestillingsdato er ${datoOrdningenStartet.formatert()} eller senere")
         }
     }
 
@@ -93,10 +94,10 @@ object Vilkår_v1 {
         beskrivelse = "Er bestillingsdato innenfor siste 6 måneder fra dagens dato?",
         identifikator = "BestillingsdatoTilbakeITid_v1"
     ) { grunnlag ->
-        val tidligsteMuligeBestillingsdatoFormatert = grunnlag.seksMånederSiden.formatert()
+        val seksMånederSiden = grunnlag.seksMånederSiden
         when {
-            grunnlag.bestillingsdato.isBefore(grunnlag.seksMånederSiden) -> nei("Bestillingsdato kan ikke være før $tidligsteMuligeBestillingsdatoFormatert")
-            else -> ja("Bestillingsdato er $tidligsteMuligeBestillingsdatoFormatert eller senere")
+            grunnlag.bestillingsdato.isBefore(seksMånederSiden) -> nei("Bestillingsdato kan ikke være før ${seksMånederSiden.formatert()}")
+            else -> ja("Bestillingsdato er ${seksMånederSiden.formatert()} eller senere")
         }
     }
 
@@ -109,5 +110,6 @@ object Vilkår_v1 {
             BestillingsdatoTilbakeITid_v1
         ).med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
 
-    private fun LocalDate.formatert(): String = this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
+    private fun LocalDate.formatert(): String =
+        this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))
 }
