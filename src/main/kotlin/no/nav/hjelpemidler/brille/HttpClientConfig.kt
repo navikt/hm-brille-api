@@ -23,3 +23,8 @@ object HttpClientConfig {
         install(HttpTimeout)
     }
 }
+
+fun engineFactory(block: () -> HttpClientEngine): HttpClientEngine = when (Configuration.profile) {
+    Profile.LOCAL -> block()
+    else -> CIO.create()
+}
