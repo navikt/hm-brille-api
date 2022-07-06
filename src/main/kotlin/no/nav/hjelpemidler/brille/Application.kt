@@ -196,30 +196,23 @@ fun Application.setupRoutes() {
                     søknadApi(vedtakService)
                 }
 
-                post("/sjekk-kan-soke") {
+                post("/hent-bruker") {
                     data class Request(val fnr: String)
                     data class Response(
                         val fnr: String,
                         val navn: String,
-                        val alder: Int,
-                        val kanSøke: Boolean,
-                        val begrunnelse: AvvisningsType?,
-                    )
+                        val alder: Int, )
 
                     val fnrBruker = call.receive<Request>().fnr
                     if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
                     val personInformasjon = pdlService.hentPerson(fnrBruker)
 
-                    val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
-
                     call.respond(
                         Response(
                             fnrBruker,
                             "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
                             personInformasjon.alder!!,
-                            vilkår.valider(),
-                            vilkår.avvisningsGrunn(),
                         )
                     )
                 }
