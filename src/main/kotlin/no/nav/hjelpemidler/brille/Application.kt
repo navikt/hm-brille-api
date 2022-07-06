@@ -195,94 +195,94 @@ fun Application.setupRoutes() {
                 route("/api") {
                     vilkårApi(vilkårsvurderingService)
                     søknadApi(vedtakService)
-                }
 
-                post("/hent-bruker") {
-                    data class Request(val fnr: String)
-                    data class Response(
-                        val fnr: String,
-                        val navn: String,
-                        val alder: Int, )
+                    post("/hent-bruker") {
+                        data class Request(val fnr: String)
+                        data class Response(
+                            val fnr: String,
+                            val navn: String,
+                            val alder: Int, )
 
-                    val fnrBruker = call.receive<Request>().fnr
-                    if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+                        val fnrBruker = call.receive<Request>().fnr
+                        if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
-                    val personInformasjon = pdlService.hentPerson(fnrBruker)
+                        val personInformasjon = pdlService.hentPerson(fnrBruker)
 
-                    call.respond(
-                        Response(
-                            fnrBruker,
-                            "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
-                            personInformasjon.alder!!,
-                        )
-                    )
-                }
-
-                get("/orgnr") {
-                    val fnrOptiker = call.extractFnr()
-
-                    val tidligereBrukteOrgnrForOptikker: List<String> =
-                        vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker)
-
-                    try {
-                        val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptikker.map {
-                            val orgEnhet: Organisasjonsenhet =
-                                enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(it))
-                            Organisasjon(
-                                orgnummer = orgEnhet.organisasjonsnummer,
-                                navn = orgEnhet.navn,
-                                adresse = "${orgEnhet.forretningsadresse}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}"
+                        call.respond(
+                            Response(
+                                fnrBruker,
+                                "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
+                                personInformasjon.alder!!,
                             )
-                        }
-                        val response = TidligereBrukteOrganisasjonerForOptiker(
-                            sistBrukteOrganisasjon = organisasjoner.firstOrNull(),
-                            tidligereBrukteOrganisasjoner = organisasjoner
                         )
-                        call.respond(response)
-                    } catch (e: EnhetsregisteretClientException) {
-                        call.respond(TidligereBrukteOrganisasjonerForOptiker(null, emptyList()))
-                    }
-                }
-
-                get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
-                    val organisasjonsnummer =
-                        call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
-                    val organisasjonsenhet =
-                        enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
-                    call.respond(organisasjonsenhet)
-                }
-
-                post("/sok") {
-                    data class Request(
-                        val fnr: String,
-                        val orgnr: String,
-                    )
-
-                    val request = call.receive<Request>()
-
-                    if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
-
-                    val personInformasjon = pdlService.hentPerson(request.fnr)
-
-                    // Valider vilkår for å forsikre oss om at alle sjekker er gjort
-                    val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
-                    if (!vilkår.valider()) {
-                        call.respond(HttpStatusCode.BadRequest, "{}")
-                        return@post
                     }
 
-                    // Innvilg søknad og opprett vedtak
-                    vedtakStore.opprettVedtak(
-                        request.fnr,
-                        call.extractFnr(),
-                        request.orgnr,
-                        jsonMapper.valueToTree(request)
-                    )
+                    get("/orgnr") {
+                        val fnrOptiker = call.extractFnr()
 
-                    // TODO: Journalfør søknad/vedtak som dokument i joark på barnet (se /sok_test)
-                    // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+                        val tidligereBrukteOrgnrForOptikker: List<String> =
+                            vedtakStore.hentTidligereBrukteOrgnrForOptikker(fnrOptiker)
 
-                    call.respond(HttpStatusCode.Created, "201 Created")
+                        try {
+                            val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptikker.map {
+                                val orgEnhet: Organisasjonsenhet =
+                                    enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(it))
+                                Organisasjon(
+                                    orgnummer = orgEnhet.organisasjonsnummer,
+                                    navn = orgEnhet.navn,
+                                    adresse = "${orgEnhet.forretningsadresse}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}"
+                                )
+                            }
+                            val response = TidligereBrukteOrganisasjonerForOptiker(
+                                sistBrukteOrganisasjon = organisasjoner.firstOrNull(),
+                                tidligereBrukteOrganisasjoner = organisasjoner
+                            )
+                            call.respond(response)
+                        } catch (e: EnhetsregisteretClientException) {
+                            call.respond(TidligereBrukteOrganisasjonerForOptiker(null, emptyList()))
+                        }
+                    }
+
+                    get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
+                        val organisasjonsnummer =
+                            call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
+                        val organisasjonsenhet =
+                            enhetsregisteretClient.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
+                        call.respond(organisasjonsenhet)
+                    }
+
+                    post("/sok") {
+                        data class Request(
+                            val fnr: String,
+                            val orgnr: String,
+                        )
+
+                        val request = call.receive<Request>()
+
+                        if (request.fnr.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+
+                        val personInformasjon = pdlService.hentPerson(request.fnr)
+
+                        // Valider vilkår for å forsikre oss om at alle sjekker er gjort
+                        val vilkår = vilkårsvurdering.kanSøke(personInformasjon)
+                        if (!vilkår.valider()) {
+                            call.respond(HttpStatusCode.BadRequest, "{}")
+                            return@post
+                        }
+
+                        // Innvilg søknad og opprett vedtak
+                        vedtakStore.opprettVedtak(
+                            request.fnr,
+                            call.extractFnr(),
+                            request.orgnr,
+                            jsonMapper.valueToTree(request)
+                        )
+
+                        // TODO: Journalfør søknad/vedtak som dokument i joark på barnet (se /sok_test)
+                        // TODO: Varsle foreldre/verge (ikke i kode 6/7 saker) om vedtaket
+
+                        call.respond(HttpStatusCode.Created, "201 Created")
+                    }
                 }
             }
         }
