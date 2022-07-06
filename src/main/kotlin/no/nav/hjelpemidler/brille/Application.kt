@@ -124,7 +124,9 @@ fun Application.setupRoutes() {
 
     routing {
         selfTestRoutes()
-        satsApi()
+        route("/api") {
+            satsApi()
+        }
 
         // TODO: erstatt /sok når ferdig
         post("/sok_test") {
