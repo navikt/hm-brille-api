@@ -10,6 +10,7 @@ import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.Bostedsadresse
+import no.nav.hjelpemidler.brille.pdl.DeltBosted
 import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
 import no.nav.hjelpemidler.brille.pdl.MotpartsRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
@@ -161,7 +162,8 @@ class MedlemskapBarn(
                             log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
                             return@runBlocking medlemskapResultat
                         }
-                        else -> { /* Sjekk de andre */ }
+                        else -> { /* Sjekk de andre */
+                        }
                     }
                 }
             }
@@ -185,9 +187,9 @@ class MedlemskapBarn(
 
 private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boolean {
     // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
-    // TODO: Hva med delt bostedsadresse (skilte foreldre), må kanskje ansees som en ekstra folkeregistrert adresse?
     val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
-    return bostedsadresser.any { it.vegadresse != null || it.matrikkeladresse != null }
+    val deltBostedBarn = pdlBarn.data?.hentPerson?.deltBosted ?: listOf()
+    return slåSammenMedAktiveDelteBosted(bostedsadresser, deltBostedBarn).any { it.vegadresse != null || it.matrikkeladresse != null }
 }
 
 private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
@@ -272,20 +274,7 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
     val deltBostedBarn = barn.data?.hentPerson?.deltBosted ?: listOf()
     val bostedsadresserAnnen = annen.data?.hentPerson?.bostedsadresse ?: listOf()
 
-    // Finn aktive delte bosted for barnet og transformer de til samme format som hoved-folkereg. adresse, så vi kan
-    // sjekke alle adresser sammen under
-    val now = LocalDate.now()
-    val deltBostedBarnFiltrert = deltBostedBarn.filter {
-        (it.startdatoForKontrakt.isEqual(now) || it.startdatoForKontrakt.isBefore(now)) &&
-            (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now) || it.sluttdatoForKontrakt.isAfter(now))
-    }.map {
-        Bostedsadresse(
-            vegadresse = it.vegadresse,
-            matrikkeladresse = it.matrikkeladresse,
-        )
-    }
-
-    for (adresseBarn in listOf(bostedsadresserBarn, deltBostedBarnFiltrert).flatten()) {
+    for (adresseBarn in slåSammenMedAktiveDelteBosted(bostedsadresserBarn, deltBostedBarn)) {
         if (adresseBarn.matrikkeladresse?.matrikkelId != null) {
             // Det eneste vi kan sammenligne her er om matrikkel IDen matcher
             if (bostedsadresserAnnen.mapNotNull { it.matrikkeladresse?.matrikkelId }
@@ -332,6 +321,27 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
     // Matchende adresse ikke funnet
     log.debug("harSammeAdresse: fant ikke noe overlappende adresse mellom barn og annen part")
     return false
+}
+
+private fun slåSammenMedAktiveDelteBosted(
+    base: List<Bostedsadresse>,
+    delteBosted: List<DeltBosted>
+): List<Bostedsadresse> {
+    // Finn aktive delte bosted for barnet og transformer de til samme format som hoved-folkereg. adresse, så vi kan
+    // sjekke alle adresser sammen
+    val now = LocalDate.now()
+    return listOf(
+        base,
+        delteBosted.filter {
+            (it.startdatoForKontrakt.isEqual(now) || it.startdatoForKontrakt.isBefore(now)) &&
+                (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now) || it.sluttdatoForKontrakt.isAfter(now))
+        }.map {
+            Bostedsadresse(
+                vegadresse = it.vegadresse,
+                matrikkeladresse = it.matrikkeladresse,
+            )
+        }
+    ).flatten()
 }
 
 private data class MedlemskapResponse(
