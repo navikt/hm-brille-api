@@ -224,6 +224,8 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
             Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
         },
 
+        // TODO: Trenger vi begge disse under?
+
         foreldreAnsvar.filter {
             // Må ha et fnr vi kan slå opp på
             it.ansvarlig != null &&
@@ -267,13 +269,13 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
 
 private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): Boolean {
     val bostedsadresserBarn = barn.data?.hentPerson?.bostedsadresse ?: listOf()
-    val bostedsadresserBarnDelt = barn.data?.hentPerson?.deltBosted ?: listOf()
+    val deltBostedBarn = barn.data?.hentPerson?.deltBosted ?: listOf()
     val bostedsadresserAnnen = annen.data?.hentPerson?.bostedsadresse ?: listOf()
 
     // Finn aktive delte bosted for barnet og transformer de til samme format som hoved-folkereg. adresse, så vi kan
     // sjekke alle adresser sammen under
     val now = LocalDate.now()
-    val bostedsadresserBarnDeltFiltrert = bostedsadresserBarnDelt.filter {
+    val deltBostedBarnFiltrert = deltBostedBarn.filter {
         (it.startdatoForKontrakt.isEqual(now) || it.startdatoForKontrakt.isBefore(now)) &&
             (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now) || it.sluttdatoForKontrakt.isAfter(now))
     }.map {
@@ -283,7 +285,7 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
         )
     }
 
-    for (adresseBarn in listOf(bostedsadresserBarn, bostedsadresserBarnDeltFiltrert).flatten()) {
+    for (adresseBarn in listOf(bostedsadresserBarn, deltBostedBarnFiltrert).flatten()) {
         if (adresseBarn.matrikkeladresse?.matrikkelId != null) {
             // Det eneste vi kan sammenligne her er om matrikkel IDen matcher
             if (bostedsadresserAnnen.mapNotNull { it.matrikkeladresse?.matrikkelId }
