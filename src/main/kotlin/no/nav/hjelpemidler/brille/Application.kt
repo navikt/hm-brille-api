@@ -118,13 +118,14 @@ fun Application.setupRoutes() {
         Configuration.syfohelsenettproxyProperties.scope,
         azureAdClient
     )
-    val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
-    val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlService)
-    val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService)
     // val kafkaProducer = KafkaProducer(AivenKafkaConfiguration().aivenKafkaProducer())
 
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
+
+    val vilkårsvurdering = Vilkårsvurdering(vedtakStore)
+    val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
+    val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService)
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 

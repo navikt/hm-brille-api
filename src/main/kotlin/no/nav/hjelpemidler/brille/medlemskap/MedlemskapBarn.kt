@@ -15,7 +15,6 @@ import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
 import no.nav.hjelpemidler.brille.pdl.MotpartsRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
-import no.nav.hjelpemidler.brille.pdl.validerPdlOppslag
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import org.slf4j.MDC
 import java.time.LocalDate
@@ -75,8 +74,8 @@ class MedlemskapBarn(
         }
 
         // Slå opp pdl informasjon om barnet
-        val pdlBarn = pdlClient.medlemskapHentBarn(fnrBarn)
-        validerPdlOppslag(pdlBarn)
+        val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
+        val pdlBarn = pdlResponse.pdlPersonResponse
 
         log.debug("PDL BARN: ${jsonMapper.writeValueAsString(pdlBarn)}")
 
@@ -86,7 +85,7 @@ class MedlemskapBarn(
                 saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
-                        "pdl" to pdlBarn,
+                        "pdl" to pdlResponse.saksgrunnlag,
                     )
                 ),
             )
@@ -115,8 +114,8 @@ class MedlemskapBarn(
                 )
             ) {
                 // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
-                val pdlVergeEllerForelder = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
-                validerPdlOppslag(pdlVergeEllerForelder)
+                val pdlResponseVerge = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
+                val pdlVergeEllerForelder = pdlResponseVerge.pdlPersonResponse
 
                 saksgrunnlag.add(
                     Saksgrunnlag(
@@ -125,7 +124,7 @@ class MedlemskapBarn(
                             mapOf(
                                 "rolle" to rolle,
                                 "fnr" to fnrVergeEllerForelder,
-                                "pdl" to pdlVergeEllerForelder,
+                                "pdl" to pdlResponseVerge.saksgrunnlag,
                             )
                         ),
                     )

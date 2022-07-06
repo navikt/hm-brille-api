@@ -1,11 +1,15 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import no.nav.hjelpemidler.brille.jsonMapper
-import no.nav.hjelpemidler.brille.pdl.PersonDetaljerDto
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
+import no.nav.hjelpemidler.brille.pdl.Foedsel
+import no.nav.hjelpemidler.brille.pdl.PdlHentPerson
+import no.nav.hjelpemidler.brille.pdl.PdlOppslag
+import no.nav.hjelpemidler.brille.pdl.PdlPerson
+import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
 import no.nav.hjelpemidler.brille.sats.BeregnSats
 import no.nav.hjelpemidler.brille.sats.Diopter
 import java.time.LocalDate
-import java.time.Month
 import kotlin.test.Test
 
 internal class Vilkår_v1Test {
@@ -17,17 +21,16 @@ internal class Vilkår_v1Test {
     }
 
     private fun lagGrunnlag(harFåttBrilleDetteKalenderåret: Boolean, alder: Int?) = Vilkår_v1.Grunnlag_v1(
-        eksisterendeVedtak = null,
-        personInformasjon = PersonDetaljerDto(
-            fnr = "",
-            fornavn = "",
-            etternavn = "",
-            adresse = "",
-            postnummer = "",
-            poststed = "",
-            alder = alder,
-            fodselsdato = LocalDate.of(2014, Month.AUGUST, 1),
-            kommunenummer = ""
+        vedtakForBruker = emptyList(),
+        pdlOppslagBruker = PdlOppslag(
+            PdlPersonResponse(
+                data = PdlHentPerson(
+                    PdlPerson(
+                        foedsel = listOf(Foedsel("2014", "2014-08-01"))
+                    )
+                )
+            ),
+            jsonMapper.nullNode()
         ),
         beregnSats = BeregnSats(
             høyreSfære = Diopter.ONE,
@@ -35,6 +38,12 @@ internal class Vilkår_v1Test {
             venstreSfære = Diopter.ZERO,
             venstreSylinder = Diopter.ZERO
         ),
-        bestillingsdato = LocalDate.now()
+        bestillingsdato = LocalDate.now(),
+        medlemskapResultat = MedlemskapResultat(
+            kanSøke = true,
+            medlemskapBevist = true,
+            uavklartMedlemskap = false,
+            emptyList()
+        )
     )
 }

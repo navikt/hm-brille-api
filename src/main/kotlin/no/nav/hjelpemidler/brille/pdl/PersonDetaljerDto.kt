@@ -8,7 +8,6 @@ data class PersonDetaljerDto(
     val etternavn: String,
     val adresse: String?,
     val postnummer: String?,
-    val poststed: String?,
     val alder: Int?, // todo -> fjern?
     val fodselsdato: LocalDate?,
     val kommunenummer: String?,

@@ -12,16 +12,13 @@ class PdlService(
 ) {
     suspend fun hentPerson(fnummer: String): PersonDetaljerDto {
         try {
-            val pdlResponse = pdlClient.hentPerson(fnummer)
-            validerPdlOppslag(pdlResponse)
+            val pdlOppslag = pdlClient.hentPerson(fnummer)
             if (Configuration.profile == Profile.DEV) {
                 log.info {
-                    "DEBUG: PDL raw result: ${jsonMapper.writeValueAsString(pdlResponse)}"
+                    "DEBUG: PDL raw result: ${jsonMapper.writeValueAsString(pdlOppslag)}"
                 }
             }
-            return pdlResponse.toPersonDto(fnummer) {
-                "UKJENT"
-            }
+            return pdlOppslag.pdlPersonResponse.toPersonDto(fnummer)
         } catch (e: Exception) {
             log.error(e) {
                 "Klarte ikke å hente person fra PDL"

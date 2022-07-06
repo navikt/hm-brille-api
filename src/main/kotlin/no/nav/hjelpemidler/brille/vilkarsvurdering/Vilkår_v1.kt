@@ -1,11 +1,13 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
-import no.nav.hjelpemidler.brille.pdl.PersonDetaljerDto
+import no.nav.hjelpemidler.brille.pdl.PdlOppslag
+import no.nav.hjelpemidler.brille.pdl.fodselsdato
 import no.nav.hjelpemidler.brille.sats.BeregnSats
 import no.nav.hjelpemidler.brille.sats.Diopter
+import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -14,29 +16,23 @@ import java.util.Locale
 private val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 
 object Vilkår_v1 {
-    data class EksisterendeVedtak(
-        val id: Int,
-        val fnrBruker: String,
-        val bestillingsdato: LocalDate,
-        val status: String,
-        val opprettet: LocalDateTime,
-    )
 
     data class Grunnlag_v1(
-        val eksisterendeVedtak: EksisterendeVedtak?,
-        val personInformasjon: PersonDetaljerDto, // todo -> egen, begrenset modell her
+        val vedtakForBruker: List<EksisterendeVedtak>,
+        val pdlOppslagBruker: PdlOppslag,
         val beregnSats: BeregnSats,
         val bestillingsdato: LocalDate,
         val dagensDato: LocalDate = LocalDate.now(),
         val datoOrdningenStartet: LocalDate = DATO_ORDNINGEN_STARTET,
         val seksMånederSiden: LocalDate = LocalDate.now().minusMonths(6),
+        val medlemskapResultat: MedlemskapResultat
     )
 
     val HarEksisterendeVedtakIKalenderåret_v1 = Spesifikasjon<Grunnlag_v1>(
         beskrivelse = "Har barnet allerede vedtak om brille i kalenderåret?",
         identifikator = "HarEksisterendeVedtakIKalenderåret_v1"
     ) { grunnlag ->
-        when (grunnlag.eksisterendeVedtak) {
+        when (grunnlag.vedtakForBruker) {
             null -> nei("Barnet har ikke vedtak om brille i kalenderåret")
             else -> ja("Barnet har allerede vedtak om brille i kalenderåret")
         }
@@ -48,7 +44,7 @@ object Vilkår_v1 {
         beskrivelse = "Var barnet under 18 år på bestillingsdato?",
         identifikator = "Under18ÅrPåBestillingsdato_v1"
     ) { grunnlag ->
-        val fodselsdato = grunnlag.personInformasjon.fodselsdato
+        val fodselsdato = grunnlag.pdlOppslagBruker.pdlPersonResponse.data?.fodselsdato()
         when {
             fodselsdato == null -> kanskje("Barnets fødselsdato er ukjent")
             fodselsdato.until(grunnlag.bestillingsdato).years < 18 -> ja("Barnet var under 18 år på bestillingsdato")
@@ -60,7 +56,11 @@ object Vilkår_v1 {
         beskrivelse = "Er barnet medlem av folketrygden?",
         identifikator = "MedlemAvFolketrygden_v1"
     ) { grunnlag ->
-        ja("TODO")
+        when {
+            grunnlag.medlemskapResultat.medlemskapBevist -> ja("Barnet er medlem i folketrygden")
+            grunnlag.medlemskapResultat.uavklartMedlemskap -> ja("Barnet er antatt medlem i folketrygden basert på folkeregistrert adresse i Norge")
+            else -> nei("Barnet er antatt ikke medlem i folketrygden fordi vi ikke har klart å påvise folkeregistrert adresse i Norge")
+        }
     }
 
     val Brillestyrke_v1 = Spesifikasjon<Grunnlag_v1>(

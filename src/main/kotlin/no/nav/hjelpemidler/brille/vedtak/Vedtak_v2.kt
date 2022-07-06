@@ -17,3 +17,11 @@ data class Vedtak_v2<T>(
     val status: String,
     val opprettet: LocalDateTime,
 )
+
+data class EksisterendeVedtak(
+    val id: Int,
+    val fnrBruker: String,
+    val bestillingsdato: LocalDate,
+    val status: String,
+    val opprettet: LocalDateTime,
+)

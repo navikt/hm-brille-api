@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.pdl
 
+import com.fasterxml.jackson.databind.JsonNode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Period
@@ -26,6 +27,8 @@ data class PdlErrorExtension(
 )
 
 // HentPerson
+
+data class PdlOppslag(val pdlPersonResponse: PdlPersonResponse, val saksgrunnlag: JsonNode)
 
 data class PdlPersonResponse(
     val errors: List<PdlError> = emptyList(),
@@ -287,12 +290,11 @@ private fun String.capitalizeWord(): String {
         }
 }
 
-fun PdlPersonResponse.toPersonDto(fnr: String, hentPoststed: (String) -> String?): PersonDetaljerDto {
+fun PdlPersonResponse.toPersonDto(fnr: String): PersonDetaljerDto {
     println(this)
     val person = this.data ?: throw RuntimeException("PDL response mangler data")
     val (fornavn, etternavn) = person.navn()
     val (adresse, postnummer, kommunenummer) = person.adresse()
-    val poststed = if (postnummer != null) hentPoststed(postnummer) else ""
     val alder = person.alder()
     return PersonDetaljerDto(
         fnr = fnr,
@@ -300,7 +302,6 @@ fun PdlPersonResponse.toPersonDto(fnr: String, hentPoststed: (String) -> String?
         etternavn = etternavn.capitalizeWord(),
         adresse = adresse?.capitalizeWord(),
         postnummer = postnummer,
-        poststed = poststed?.capitalizeWord(),
         alder = alder,
         fodselsdato = person.fodselsdato(),
         kommunenummer = kommunenummer

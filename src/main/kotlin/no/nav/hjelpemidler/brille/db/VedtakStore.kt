@@ -4,11 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.pgObjectOf
+import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.Vedtak_v2
 import org.intellij.lang.annotations.Language
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Month
 import java.util.UUID
@@ -19,7 +18,7 @@ interface VedtakStore {
     fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): List<String>
     fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode)
     fun tellRader(): Int
-    fun <T> hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2<T>?
+    fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T>
 }
 
@@ -44,37 +43,27 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         )
     } ?: false
 
-    override fun <T> hentVedtakIBestillingsdatoAr(fnrBruker: String, bestillingsdato: LocalDate): Vedtak_v2<T>? =
+    override fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak> =
         using(sessionOf(ds)) { session ->
             @Language("PostgreSQL")
             val sql = """
-            SELECT *
+            SELECT id, fnr_bruker, bestillingsdato, status, opprettet
             FROM vedtak_v2
-            WHERE
-                fnr_bruker = :fnr_bruker AND
-                DATE_PART('year', bestillingsdato) = :bestillingsdato_ar
+            WHERE fnr_bruker = :fnr_bruker 
             """.trimIndent()
             session.run(
                 queryOf(
                     sql,
-                    mapOf(
-                        "fnr_bruker" to fnrBruker,
-                        "bestillingsdato_ar" to bestillingsdato.year
-                    )
+                    mapOf("fnr_bruker" to fnrBruker)
                 ).map { row ->
-                    Vedtak_v2<T>(
+                    EksisterendeVedtak(
                         id = row.int("id"),
                         fnrBruker = row.string("fnr_bruker"),
-                        fnrInnsender = row.string("fnr_innsender"),
-                        orgnr = row.string("orgnr"),
                         bestillingsdato = row.localDate("bestillingsdato"),
-                        brillepris = row.bigDecimal("brillepris"),
-                        bestillingsreferanse = row.string("bestillingsreferanse"),
-                        vilkarsvurdering = row.json("vilkarsvurdering"),
                         status = row.string("status"),
                         opprettet = row.localDateTime("opprettet"),
                     )
-                }.asSingle
+                }.asList
             )
         }
 

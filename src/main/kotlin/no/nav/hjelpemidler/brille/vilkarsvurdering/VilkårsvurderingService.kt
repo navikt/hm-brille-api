@@ -2,32 +2,29 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.db.VedtakStore
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
-import no.nav.hjelpemidler.brille.pdl.PdlService
+import no.nav.hjelpemidler.brille.pdl.PdlClient
 
 private val log = KotlinLogging.logger {}
 
-class VilkårsvurderingService(private val vedtakStore: VedtakStore, private val pdlService: PdlService) {
+class VilkårsvurderingService(
+    private val vedtakStore: VedtakStore,
+    private val pdlClient: PdlClient,
+    private val medlemskapBarn: MedlemskapBarn
+) {
 
     suspend fun vurderVilkårBrille(vilkårsgrunnlagDto: VilkårsgrunnlagDto): VilkårsvurderingResultat<Vilkår_v1.Grunnlag_v1> {
-        val eksisterendeVedtak = vedtakStore.hentVedtakIBestillingsdatoAr<Vilkår_v1.Grunnlag_v1>(
-            vilkårsgrunnlagDto.fnrBruker,
-            vilkårsgrunnlagDto.bestillingsdato
-        )
-        val personInformasjon = pdlService.hentPerson(vilkårsgrunnlagDto.fnrBruker)
+        val vedtakForBruker = vedtakStore.hentVedtakForBruker(vilkårsgrunnlagDto.fnrBruker)
+        val pdlResponse = pdlClient.hentPerson(vilkårsgrunnlagDto.fnrBruker)
+        val medlemskapResultat = medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBruker)
+
         val grunnlag = Vilkår_v1.Grunnlag_v1(
-            eksisterendeVedtak = eksisterendeVedtak?.let {
-                Vilkår_v1.EksisterendeVedtak(
-                    id = it.id,
-                    fnrBruker = it.fnrBruker,
-                    bestillingsdato = it.bestillingsdato,
-                    status = it.status,
-                    opprettet = it.opprettet
-                )
-            },
-            personInformasjon = personInformasjon,
+            vedtakForBruker = vedtakForBruker,
+            pdlOppslagBruker = pdlResponse,
             beregnSats = vilkårsgrunnlagDto.beregnSats.tilBeregnSats(),
-            bestillingsdato = vilkårsgrunnlagDto.bestillingsdato
+            bestillingsdato = vilkårsgrunnlagDto.bestillingsdato,
+            medlemskapResultat = medlemskapResultat
         )
         return vurderVilkår(grunnlag, Vilkår_v1.Brille_v1)
     }
