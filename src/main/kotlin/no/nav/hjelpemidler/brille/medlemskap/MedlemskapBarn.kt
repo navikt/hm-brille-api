@@ -185,7 +185,7 @@ class MedlemskapBarn(
 }
 
 private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boolean {
-    // TODO: Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
+    // Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
     val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
     val deltBostedBarn = pdlBarn.data?.hentPerson?.deltBosted ?: listOf()
     return slåSammenMedAktiveDelteBosted(bostedsadresser, deltBostedBarn).any { it.vegadresse != null || it.matrikkeladresse != null }
@@ -269,51 +269,65 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
 }
 
 private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): Boolean {
+    // Vi sammenligner adresser for å se om barn og foresatte (foreldre, verger, fullmektige) bor sammen. For slike
+    // formål anbefaler PDL at man sammenligner matrikkelId og bruksenhetsnummeret. Begge disse datapunktene skal ha
+    // relativt god kvalitet. Da vi har toleranse for småfeil så godtar vi at minimum bare matrikkelId er lik hvis det
+    // ikke er satt bruksenhetsnummer på noen av de vi sammenligner. Men om én av de har bruksenhetsnummer må begge ha
+    // det og de må være like. Les mer her: https://pdldocs-navno.msappproxy.net/ekstern/index.html#_tps_5.
+
+    // Obs: for barn med aktive delt bosted kontrakter mellom feks. skilte foreldre, så anser vi begge adressene som
+    // folkeregistrerte adresser (gitt at kontrakten er aktiv).
+
+    // Barnets adresser
     val bostedsadresserBarn = barn.data?.hentPerson?.bostedsadresse ?: listOf()
     val deltBostedBarn = barn.data?.hentPerson?.deltBosted ?: listOf()
+
+    // Sammenlignes med "annen"
     val bostedsadresserAnnen = annen.data?.hentPerson?.bostedsadresse ?: listOf()
 
+    // For hver adresse barnet har (vanlig og delt), så sammenligner vi basert på type mot den andre partens adresser
+    // av samme type
     for (adresseBarn in slåSammenMedAktiveDelteBosted(bostedsadresserBarn, deltBostedBarn)) {
-        if (adresseBarn.matrikkeladresse?.matrikkelId != null) {
-            // Det eneste vi kan sammenligne her er om matrikkel IDen matcher
-            if (bostedsadresserAnnen.mapNotNull { it.matrikkeladresse?.matrikkelId }
-                .contains(adresseBarn.matrikkeladresse.matrikkelId)
-            ) {
-                // Fant overlappende matrikkelId mellom barn og annen part
-                log.debug("harSammeAdresse: fant overlappende matrikkelId mellom barn og annen part")
-                return true
-            }
-        } else if (adresseBarn.vegadresse != null) {
-            val adr1 = adresseBarn.vegadresse
-            // Sjekk at vi i det minste har ét eller flere av disse feltene, slik at vi ikke aksepterer at barn og annen
-            // part begge har alle feltene == null.
-            // TODO: Vurder om dette funker eller om vi trenger noe fuzzy-søk lignende (små/store bokstaver,
-            //  ufullstendig adresse på en av de)
-            if (adr1.matrikkelId != null ||
-                adr1.adressenavn != null ||
-                adr1.husnummer != null ||
-                adr1.husbokstav != null ||
-                adr1.postnummer != null ||
-                adr1.tilleggsnavn != null
-            ) {
-                if (bostedsadresserAnnen
-                    .mapNotNull { it.vegadresse }
-                    .any { adr2 ->
-                        adr1.matrikkelId == adr2.matrikkelId &&
-                            adr1.adressenavn == adr2.adressenavn &&
-                            adr1.husnummer == adr2.husnummer &&
-                            adr1.husbokstav == adr2.husbokstav &&
-                            adr1.postnummer == adr2.postnummer &&
-                            adr1.tilleggsnavn == adr2.tilleggsnavn
+        when {
+            adresseBarn.matrikkeladresse != null -> {
+                val madr1 = adresseBarn.matrikkeladresse
+                if (madr1.matrikkelId != null) {
+                    if (bostedsadresserAnnen
+                        .mapNotNull { it.matrikkeladresse }
+                        .any { madr2 ->
+                            madr1.matrikkelId == madr2.matrikkelId &&
+                                madr1.bruksenhetsnummer == madr2.bruksenhetsnummer
+                        }
+                    ) {
+                        // Fant overlappende matrikkelId mellom barn og annen part
+                        log.debug("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (matrikkeladresse) mellom barn og annen part")
+                        return true
                     }
-                ) {
-                    // Fant overlappende vegadresse mellom barn og annen part
-                    log.debug("harSammeAdresse: fant overlappende vegadresse mellom barn og annen part")
-                    return true
                 }
             }
-        } else {
-            log.debug("harSammeAdresse: kan ikke sammenligne en bostedsadresse av annen type (utenlandsk, etc.).")
+
+            adresseBarn.vegadresse != null -> {
+                val adr1 = adresseBarn.vegadresse
+                if (adr1.matrikkelId != null) {
+                    if (bostedsadresserAnnen
+                        .mapNotNull { it.vegadresse }
+                        .any { adr2 ->
+                            adr1.matrikkelId == adr2.matrikkelId &&
+                                adr1.bruksenhetsnummer == adr2.bruksenhetsnummer
+                        }
+                    ) {
+                        // Fant overlappende vegadresse mellom barn og annen part
+                        log.debug("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (vegadresse) mellom barn og annen part")
+                        return true
+                    }
+                }
+            }
+
+            else -> {
+                // Dette forekommer kanskje ikke, da vi ikke ber om resultater som har andre typer adresser:
+                // UkjentAdresse / Utenlandsk adresse
+                log.debug("harSammeAdresse: kan ikke sammenligne en bostedsadresse av annen type (utenlandsk, etc.).")
+            }
         }
     }
 

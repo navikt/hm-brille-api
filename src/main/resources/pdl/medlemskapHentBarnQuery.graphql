@@ -6,14 +6,11 @@ query($ident: ID!){
             gyldigTilOgMed
             vegadresse {
                 matrikkelId
-                adressenavn
-                husnummer
-                husbokstav
-                tilleggsnavn
-                postnummer
+                bruksenhetsnummer
             }
             matrikkeladresse {
                 matrikkelId
+                bruksenhetsnummer
             }
         }
         deltBosted {
@@ -21,14 +18,11 @@ query($ident: ID!){
             sluttdatoForKontrakt
             vegadresse {
                 matrikkelId
-                adressenavn
-                husnummer
-                husbokstav
-                tilleggsnavn
-                postnummer
+                bruksenhetsnummer
             }
             matrikkeladresse {
                 matrikkelId
+                bruksenhetsnummer
             }
         }
         adressebeskyttelse(historikk: false) { gradering }

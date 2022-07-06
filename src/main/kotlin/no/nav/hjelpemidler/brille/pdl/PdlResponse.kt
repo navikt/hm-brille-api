@@ -75,18 +75,12 @@ data class DeltBosted(
 
 data class Vegadresse(
     val matrikkelId: Long?,
-    val adressenavn: String?,
-    val postnummer: String?,
-    val husnummer: String? = null,
-    val kommunenummer: String? = null,
-    val husbokstav: String? = null,
-    val tilleggsnavn: String? = null,
+    val bruksenhetsnummer: String?,
 )
 
 data class Matrikkeladresse(
     val matrikkelId: Long?,
-    val postnummer: String?,
-    val kommunenummer: String?
+    val bruksenhetsnummer: String?,
 )
 
 data class Foedsel(val foedselsaar: String?, val foedselsdato: String?)
@@ -182,11 +176,6 @@ fun PdlPersonResponse.feilType(): PdlFeiltype {
     ) PdlFeiltype.IKKE_FUNNET else PdlFeiltype.TEKNISK_FEIL
 }
 
-fun PdlPersonResponse.kommunenummer(): String? {
-    val bostedsadresse = this.data?.hentPerson?.bostedsadresse?.get(0)
-    return bostedsadresse?.vegadresse?.kommunenummer ?: bostedsadresse?.matrikkeladresse?.kommunenummer
-}
-
 fun PdlPersonResponse.feilmeldinger(): String {
     return this.errors.joinToString(",") { "${it.message}. Type ${it.extensions.classification}:${it.extensions.code}" }
 }
@@ -210,29 +199,6 @@ fun PdlHentPerson.navn(): Pair<String, String> {
         }
         return Pair(fornavn, it.etternavn)
     }
-}
-
-fun PdlHentPerson.adresse(): Adresse {
-    val bostedsadresseList = this.hentPerson?.bostedsadresse
-
-    if (bostedsadresseList.isNullOrEmpty()) {
-        return Adresse(null, null, null)
-    }
-
-    val vegAdresse = bostedsadresseList[0].vegadresse
-    val matrikkelAdresse = bostedsadresseList[0].matrikkeladresse
-    val adresse = vegAdresse?.let {
-        listOfNotNull(
-            it.adressenavn,
-            it.husnummer,
-            it.husbokstav
-        ).joinToString(separator = " ")
-    }.orEmpty()
-
-    val postnummer = vegAdresse?.postnummer ?: matrikkelAdresse?.postnummer ?: ""
-    val kommunenummer = vegAdresse?.kommunenummer ?: matrikkelAdresse?.kommunenummer ?: ""
-
-    return Adresse(adresse, postnummer, kommunenummer)
 }
 
 data class Adresse(
@@ -294,17 +260,13 @@ fun PdlPersonResponse.toPersonDto(fnr: String): PersonDetaljerDto {
     println(this)
     val person = this.data ?: throw RuntimeException("PDL response mangler data")
     val (fornavn, etternavn) = person.navn()
-    val (adresse, postnummer, kommunenummer) = person.adresse()
     val alder = person.alder()
     return PersonDetaljerDto(
         fnr = fnr,
         fornavn = fornavn.capitalizeWord(),
         etternavn = etternavn.capitalizeWord(),
-        adresse = adresse?.capitalizeWord(),
-        postnummer = postnummer,
         alder = alder,
         fodselsdato = person.fodselsdato(),
-        kommunenummer = kommunenummer
     )
 }
 

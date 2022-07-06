@@ -5,14 +5,11 @@ query($ident: ID!){
             gyldigTilOgMed
             vegadresse {
                 matrikkelId
-                adressenavn
-                husnummer
-                husbokstav
-                tilleggsnavn
-                postnummer
+                bruksenhetsnummer
             }
             matrikkeladresse {
                 matrikkelId
+                bruksenhetsnummer
             }
         }
     }
