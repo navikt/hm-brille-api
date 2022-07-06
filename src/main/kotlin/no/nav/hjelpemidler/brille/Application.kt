@@ -360,7 +360,7 @@ fun Application.setupRoutes() {
             call.respond(response)
         }
 
-        // FIXME: Legg til under auth route når vi vet fungerer
+        // FIXME: Legg til under auth route når vi vet fungerer. Hvilken auth-routing skal denne ligge under?
         post("/test/virksomhet") {
             if (Configuration.profile == Profile.PROD) {
                 call.respond(HttpStatusCode.Unauthorized)
@@ -378,6 +378,7 @@ fun Application.setupRoutes() {
                 ) {
                     return@post call.response.status(HttpStatusCode.Conflict)
                 }
+                return@post call.response.status(HttpStatusCode.InternalServerError)
             }
 
             call.response.status(HttpStatusCode.Created)
