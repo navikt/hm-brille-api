@@ -25,11 +25,11 @@ object Configuration {
     private val localProperties = ConfigurationMap(
         mapOf(
             "application.profile" to "LOCAL",
-            "DB_DATABASE" to "digihotdev",
-            "DB_USERNAME" to "postgres",
+            "DB_DATABASE" to "hm-brille-api-db-local",
+            "DB_USERNAME" to "cloudsqliamuser",
             "DB_PASSWORD" to "dockerpass",
             "DB_HOST" to "localhost",
-            "DB_PORT" to "5433",
+            "DB_PORT" to "5440",
             "pdfgen.rest-uri" to "http://host.docker.internal:8088",
             "pdl.graphql-uri" to "http://host.docker.internal:8089/pdl",
             "pdl.apiScope" to "api://dev-gcp.pdl.pdl-api/.default",
@@ -167,6 +167,7 @@ object Configuration {
         val password: String = this["REDIS_PASSWORD"],
         val hprExpirySeconds: Long = Duration.ofDays(1).seconds, // TODO: Hva er en OK lengde på cache?
         val medlemskapBarnExpirySeconds: Long = Duration.ofDays(1).seconds, // TODO: Hva er en OK lengde på cache?
+        val orgenhetExpirySeconds: Long = Duration.ofHours(2).seconds, // TODO: Hva er en OK lengde på cache?
     )
 }
 
