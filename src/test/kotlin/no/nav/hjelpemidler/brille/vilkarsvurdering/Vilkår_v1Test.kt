@@ -40,7 +40,6 @@ internal class Vilkår_v1Test {
         ),
         bestillingsdato = LocalDate.now(),
         medlemskapResultat = MedlemskapResultat(
-            kanSøke = true,
             medlemskapBevist = true,
             uavklartMedlemskap = false,
             emptyList()

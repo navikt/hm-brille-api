@@ -25,7 +25,6 @@ private val log = KotlinLogging.logger {}
 private val tjenestelogg = KotlinLogging.logger("tjenestekall")
 
 data class MedlemskapResultat(
-    val kanSøke: Boolean, // Ja eller antatt pga. folkereg. addresse i norge
     val medlemskapBevist: Boolean,
     val uavklartMedlemskap: Boolean,
     val saksgrunnlag: List<Saksgrunnlag>,
@@ -97,7 +96,7 @@ class MedlemskapBarn(
             // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
             // stopper vi opp behandling tidlig her!
             log.info("Barnet har ikke folkeregistrert adresse i Norge og vi antar derfor at hen ikke er medlem i folketrygden")
-            val medlemskapResultat = MedlemskapResultat(false, false, false, saksgrunnlag)
+            val medlemskapResultat = MedlemskapResultat(false, false, saksgrunnlag)
             redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
             return@runBlocking medlemskapResultat
         }
@@ -152,7 +151,6 @@ class MedlemskapBarn(
                         MedlemskapResponseResultatSvar.JA -> {
                             log.info("Barnets medlemskap verifisert igjennom verges-/forelders medlemskap og bolig på samme adresse")
                             val medlemskapResultat = MedlemskapResultat(
-                                true,
                                 medlemskapBevist = true,
                                 uavklartMedlemskap = false,
                                 saksgrunnlag = saksgrunnlag
@@ -172,7 +170,6 @@ class MedlemskapBarn(
         // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
         val medlemskapResultat =
             MedlemskapResultat(
-                true,
                 medlemskapBevist = false,
                 uavklartMedlemskap = true,
                 saksgrunnlag = saksgrunnlag
