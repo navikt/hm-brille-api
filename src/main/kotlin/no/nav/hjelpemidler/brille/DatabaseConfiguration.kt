@@ -1,8 +1,10 @@
-package no.nav.hjelpemidler.brille.db
+package no.nav.hjelpemidler.brille
 
 import com.zaxxer.hikari.HikariDataSource
+import kotliquery.Session
+import kotliquery.sessionOf
+import kotliquery.using
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.output.MigrateResult
 import java.net.Socket
@@ -12,7 +14,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-private val log = KotlinLogging.logger {}
+private val log = KotlinLogging.logger { }
 
 class DatabaseConfiguration(
     private val dbProperties: Configuration.DatabaseProperties = Configuration.dbProperties,
@@ -57,3 +59,5 @@ class DatabaseConfiguration(
     private fun migrate(dataSource: HikariDataSource, initSql: String = ""): MigrateResult =
         Flyway.configure().dataSource(dataSource).initSql(initSql).load().migrate()
 }
+
+fun <T> DataSource.execute(block: (Session) -> T) = using(sessionOf(this), block)

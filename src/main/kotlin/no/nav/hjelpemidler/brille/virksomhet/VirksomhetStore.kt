@@ -1,9 +1,8 @@
-package no.nav.hjelpemidler.brille.db
+package no.nav.hjelpemidler.brille.virksomhet
 
 import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.execute
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
@@ -20,12 +19,12 @@ data class VirksomhetModell(
     val fnrInnsender: String,
     val navnInnsender: String,
     val harNavAvtale: Boolean,
-    val avtaleVersjon: String? = null
+    val avtaleVersjon: String? = null,
 )
 
 internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetStore {
 
-    override fun hentVirksomhet(orgnr: String): VirksomhetModell? = using(sessionOf(ds)) { session ->
+    override fun hentVirksomhet(orgnr: String): VirksomhetModell? = ds.execute { session ->
         @Language("PostgreSQL")
         val sql = """
             SELECT *
@@ -50,7 +49,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
     }
 
     override fun lagreVirksomhet(virksomhetModell: VirksomhetModell) {
-        val result = using(sessionOf(ds)) { session ->
+        val result = ds.execute { session ->
             @Language("PostgreSQL")
             val sql = """
                 INSERT INTO virksomhet (orgnr,

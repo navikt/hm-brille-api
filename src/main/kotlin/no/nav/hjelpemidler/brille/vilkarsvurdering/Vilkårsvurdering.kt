@@ -1,9 +1,9 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
-import no.nav.hjelpemidler.brille.db.VedtakStore
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.pdl.PersonDetaljerDto
+import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 
 class Vilkårsvurdering(val vedtakStore: VedtakStore) {
     fun kanSøke(personInformasjon: PersonDetaljerDto): Vilkår {

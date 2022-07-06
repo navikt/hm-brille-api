@@ -25,7 +25,7 @@ object Vilkår_v1 {
         val dagensDato: LocalDate = LocalDate.now(),
         val datoOrdningenStartet: LocalDate = DATO_ORDNINGEN_STARTET,
         val seksMånederSiden: LocalDate = LocalDate.now().minusMonths(6),
-        val medlemskapResultat: MedlemskapResultat
+        val medlemskapResultat: MedlemskapResultat,
     )
 
     val HarEksisterendeVedtakIKalenderåret_v1 = Spesifikasjon<Grunnlag_v1>(

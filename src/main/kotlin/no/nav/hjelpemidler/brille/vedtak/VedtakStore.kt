@@ -1,12 +1,9 @@
-package no.nav.hjelpemidler.brille.db
+package no.nav.hjelpemidler.brille.vedtak
 
 import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
+import no.nav.hjelpemidler.brille.execute
 import no.nav.hjelpemidler.brille.pgObjectOf
-import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
-import no.nav.hjelpemidler.brille.vedtak.Vedtak_v2
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import java.time.Month
@@ -23,7 +20,7 @@ interface VedtakStore {
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
-    override fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean = using(sessionOf(ds)) { session ->
+    override fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean = ds.execute { session ->
         @Language("PostgreSQL")
         val sql = """
             SELECT 1
@@ -43,32 +40,31 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         )
     } ?: false
 
-    override fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak> =
-        using(sessionOf(ds)) { session ->
-            @Language("PostgreSQL")
-            val sql = """
+    override fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak> = ds.execute { session ->
+        @Language("PostgreSQL")
+        val sql = """
             SELECT id, fnr_bruker, bestillingsdato, status, opprettet
             FROM vedtak_v2
             WHERE fnr_bruker = :fnr_bruker 
-            """.trimIndent()
-            session.run(
-                queryOf(
-                    sql,
-                    mapOf("fnr_bruker" to fnrBruker)
-                ).map { row ->
-                    EksisterendeVedtak(
-                        id = row.int("id"),
-                        fnrBruker = row.string("fnr_bruker"),
-                        bestillingsdato = row.localDate("bestillingsdato"),
-                        status = row.string("status"),
-                        opprettet = row.localDateTime("opprettet"),
-                    )
-                }.asList
-            )
-        }
+        """.trimIndent()
+        session.run(
+            queryOf(
+                sql,
+                mapOf("fnr_bruker" to fnrBruker)
+            ).map { row ->
+                EksisterendeVedtak(
+                    id = row.int("id"),
+                    fnrBruker = row.string("fnr_bruker"),
+                    bestillingsdato = row.localDate("bestillingsdato"),
+                    status = row.string("status"),
+                    opprettet = row.localDateTime("opprettet"),
+                )
+            }.asList
+        )
+    }
 
     override fun hentTidligereBrukteOrgnrForOptikker(fnrOptiker: String): List<String> {
-        val resultater = using(sessionOf(ds)) { session ->
+        val resultater = ds.execute { session ->
             @Language("PostgreSQL")
             val sql = """
                 SELECT orgnr
@@ -89,7 +85,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
     }
 
     override fun opprettVedtak(fnrBruker: String, fnrInnsender: String, orgnr: String, data: JsonNode) {
-        val resultat = using(sessionOf(ds)) { session ->
+        val resultat = ds.execute { session ->
             @Language("PostgreSQL")
             val sql = """
                 INSERT INTO vedtak (id,
@@ -118,7 +114,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
     }
 
     override fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T> {
-        val id = using(sessionOf(ds)) { session ->
+        val id = ds.execute { session ->
             @Language("PostgreSQL")
             val sql = """
                 INSERT INTO vedtak_v2 (
@@ -166,7 +162,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
     }
 
     override fun tellRader(): Int {
-        return using(sessionOf(ds)) { session ->
+        return ds.execute { session ->
             @Language("PostgreSQL")
             val sql = """
                 SELECT COUNT (id) AS count

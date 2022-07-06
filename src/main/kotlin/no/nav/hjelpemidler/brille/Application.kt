@@ -23,10 +23,6 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
-import no.nav.hjelpemidler.brille.db.DatabaseConfiguration
-import no.nav.hjelpemidler.brille.db.VedtakStorePostgres
-import no.nav.hjelpemidler.brille.db.VirksomhetModell
-import no.nav.hjelpemidler.brille.db.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
@@ -38,7 +34,6 @@ import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.KafkaProducer
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
-import no.nav.hjelpemidler.brille.model.AvvisningsType
 import no.nav.hjelpemidler.brille.model.Organisasjon
 import no.nav.hjelpemidler.brille.model.TidligereBrukteOrganisasjonerForOptiker
 import no.nav.hjelpemidler.brille.pdl.PdlClient
@@ -47,10 +42,13 @@ import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.søknadApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
+import no.nav.hjelpemidler.brille.virksomhet.VirksomhetModell
+import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import org.postgresql.util.PSQLException
 import org.slf4j.event.Level
 import java.util.TimeZone
@@ -196,7 +194,8 @@ fun Application.setupRoutes() {
                         data class Response(
                             val fnr: String,
                             val navn: String,
-                            val alder: Int, )
+                            val alder: Int,
+                        )
 
                         val fnrBruker = call.receive<Request>().fnr
                         if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")

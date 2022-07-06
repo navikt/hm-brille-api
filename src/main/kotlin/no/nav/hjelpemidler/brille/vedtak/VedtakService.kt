@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.db.VedtakStore
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkår_v1
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
