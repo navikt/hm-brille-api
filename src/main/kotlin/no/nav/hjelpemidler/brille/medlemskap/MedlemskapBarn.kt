@@ -47,7 +47,6 @@ class MedlemskapBarn(
 ) {
     fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsDato: LocalDate): MedlemskapResultat = runBlocking {
         log.info("Sjekker medlemskap for barn")
-        log.debug("bestillingsDato: $bestillingsDato")
 
         val baseCorrelationId = MDC.get(MDC_CORRELATION_ID)
         val saksgrunnlag = mutableListOf(
@@ -77,8 +76,6 @@ class MedlemskapBarn(
         val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
         val pdlBarn = pdlResponse.pdlPersonResponse
 
-        log.debug("PDL BARN: ${jsonMapper.writeValueAsString(pdlBarn)}")
-
         saksgrunnlag.add(
             Saksgrunnlag(
                 kilde = SaksgrunnlagKilde.PDL,
@@ -103,7 +100,6 @@ class MedlemskapBarn(
         }
 
         val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsDato, pdlBarn)
-        log.debug("prioritertListe = ${jsonMapper.writeValueAsString(prioritertListe)}")
 
         for ((rolle, fnrVergeEllerForelder) in prioritertListe) {
             val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
@@ -157,7 +153,6 @@ class MedlemskapBarn(
                                 saksgrunnlag = saksgrunnlag
                             )
                             redisClient.setMedlemskapBarn(fnrBarn, bestillingsDato, medlemskapResultat)
-                            log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
                             return@runBlocking medlemskapResultat
                         }
                         else -> { /* Sjekk de andre */
@@ -177,7 +172,6 @@ class MedlemskapBarn(
             )
         redisClient.setMedlemskapBarn(fnrBarn, bestillingsDato, medlemskapResultat)
         log.info("Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge")
-        log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
         medlemskapResultat
     }
 }
@@ -301,7 +295,7 @@ private fun harSammeAdresse(bestillingsDato: LocalDate, barn: PdlPersonResponse,
                         }
                     ) {
                         // Fant overlappende matrikkelId mellom barn og annen part
-                        log.debug("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (matrikkeladresse) mellom barn og annen part")
+                        log.info("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (matrikkeladresse) mellom barn og annen part")
                         return true
                     }
                 }
@@ -318,7 +312,7 @@ private fun harSammeAdresse(bestillingsDato: LocalDate, barn: PdlPersonResponse,
                         }
                     ) {
                         // Fant overlappende vegadresse mellom barn og annen part
-                        log.debug("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (vegadresse) mellom barn og annen part")
+                        log.info("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (vegadresse) mellom barn og annen part")
                         return true
                     }
                 }
@@ -326,13 +320,13 @@ private fun harSammeAdresse(bestillingsDato: LocalDate, barn: PdlPersonResponse,
 
             else -> {
                 // Hvis adresse-typen er ukjent så er det ikke noe vi kan sammenlige med andre, så vi skipper den her.
-                log.debug("harSammeAdresse: kan ikke sammenligne en bostedsadresse av annen type (utenlandsk, etc.).")
+                log.info("harSammeAdresse: kan ikke sammenligne en bostedsadresse av annen type (utenlandsk, etc.).")
             }
         }
     }
 
     // Matchende adresse ikke funnet
-    log.debug("harSammeAdresse: fant ikke noe overlappende adresse mellom barn og annen part")
+    log.info("harSammeAdresse: fant ikke noe overlappende adresse mellom barn og annen part")
     return false
 }
 
