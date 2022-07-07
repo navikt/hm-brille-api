@@ -2,7 +2,6 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
@@ -16,21 +15,22 @@ class VilkårsvurderingService(
     private val pdlClient: PdlClient,
     private val medlemskapBarn: MedlemskapBarn,
 ) {
-    suspend fun vurderVilkårBrille(vilkårsgrunnlagDto: VilkårsgrunnlagDto): VilkårsvurderingResultat<Vilkår_v1.Grunnlag_v1> {
+    suspend fun vurderVilkårBrille(vilkårsgrunnlagDto: VilkårsgrunnlagDto): VilkårsvurderingResultat<Vilkårsgrunnlag> {
         val vedtakForBruker = vedtakStore.hentVedtakForBruker(vilkårsgrunnlagDto.fnrBruker)
         val pdlOppslagBruker = pdlClient.hentPerson(vilkårsgrunnlagDto.fnrBruker)
         val medlemskapResultat = medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBruker)
-        val grunnlag = Vilkår_v1.Grunnlag_v1(
+        val grunnlag = Vilkårsgrunnlag(
             vedtakForBruker = vedtakForBruker,
             pdlOppslagBruker = pdlOppslagBruker,
-            beregnSats = vilkårsgrunnlagDto.beregnSats.tilBeregnSats(),
+            brilleseddel = vilkårsgrunnlagDto.brilleseddel.tilBrilleseddel(),
             bestillingsdato = vilkårsgrunnlagDto.bestillingsdato,
             medlemskapResultat = medlemskapResultat
         )
-        val vilkarsvurdering = vurderVilkår(grunnlag, Vilkår_v1.Brille_v1)
+        val vilkarsvurdering = vurderVilkår(grunnlag, Vilkårene.Brille)
         log.info {
             val vilkarsvurderingJson = when (Configuration.profile) {
-                Profile.LOCAL -> "\n" + jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(vilkarsvurdering)
+                Configuration.Profile.LOCAL -> "\n" + jsonMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(vilkarsvurdering)
                 else -> " " + vilkarsvurdering.utfall
             }
             "Resultat av vilkårsvurdering:$vilkarsvurderingJson"

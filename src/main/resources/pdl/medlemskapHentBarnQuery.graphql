@@ -12,6 +12,9 @@ query($ident: ID!){
                 matrikkelId
                 bruksenhetsnummer
             }
+            ukjentBosted {
+                bostedskommune
+            }
         }
         deltBosted {
             startdatoForKontrakt
@@ -23,6 +26,9 @@ query($ident: ID!){
             matrikkeladresse {
                 matrikkelId
                 bruksenhetsnummer
+            }
+            ukjentBosted {
+                bostedskommune
             }
         }
         adressebeskyttelse(historikk: false) { gradering }

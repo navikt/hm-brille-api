@@ -101,7 +101,7 @@ fun Application.setupRoutes() {
     )
     val kafkaService = KafkaService {
         when (Configuration.profile) {
-            Profile.LOCAL -> MockProducer()
+            Configuration.Profile.LOCAL -> MockProducer()
             else -> AivenKafkaConfiguration().aivenKafkaProducer()
         }
     }
@@ -117,14 +117,14 @@ fun Application.setupRoutes() {
     routing {
         selfTestRoutes()
 
-        if (Configuration.profile != Profile.PROD) {
+        if (!Configuration.prod) {
             testApi(medlemskapClient, medlemskapBarn, virksomhetStore, enhetsregisteretService)
         }
 
         route("/api") {
             satsApi()
 
-            authenticate(if (Configuration.profile == Profile.LOCAL) "local" else TOKEN_X_AUTH) {
+            authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     pdlApi(pdlService)
                     vilkårApi(vilkårsvurderingService)

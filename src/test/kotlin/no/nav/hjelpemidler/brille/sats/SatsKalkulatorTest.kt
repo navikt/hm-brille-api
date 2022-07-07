@@ -15,7 +15,7 @@ internal class SatsKalkulatorTest {
         sats: String,
     ) {
         val kalkulator = SatsKalkulator(
-            BeregnSats(
+            Brilleseddel(
                 høyreSfære = høyreSfære.tilDiopter(),
                 høyreSylinder = høyreSylinder.tilDiopter(),
                 venstreSfære = venstreSfære.tilDiopter(),

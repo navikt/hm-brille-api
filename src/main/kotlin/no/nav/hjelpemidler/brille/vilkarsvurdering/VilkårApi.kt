@@ -7,12 +7,11 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService) {
     post("/vilkarsgrunnlag") {
-        if (Configuration.profile == Profile.PROD) { // TODO: fjern før prodsetting
+        if (Configuration.prod) { // TODO: fjern før prodsetting
             call.respond(HttpStatusCode.Unauthorized)
             return@post
         }

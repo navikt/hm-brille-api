@@ -25,6 +25,6 @@ object HttpClientConfig {
 }
 
 fun engineFactory(block: () -> HttpClientEngine): HttpClientEngine = when (Configuration.profile) {
-    Profile.LOCAL -> block()
+    Configuration.Profile.LOCAL -> block()
     else -> CIO.create()
 }

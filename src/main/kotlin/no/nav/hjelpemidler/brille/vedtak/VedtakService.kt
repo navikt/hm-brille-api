@@ -4,7 +4,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
-import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkår_v1
+import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import java.time.LocalDateTime
 import java.util.UUID
@@ -16,7 +16,7 @@ class VedtakService(
     private val vilkårsvurderingService: VilkårsvurderingService,
     private val kafkaService: KafkaService,
 ) {
-    suspend fun lagVedtak(søknadDto: SøknadDto, fnrInnsender: String): Vedtak_v2<Vilkår_v1.Grunnlag_v1> {
+    suspend fun lagVedtak(søknadDto: SøknadDto, fnrInnsender: String): Vedtak<Vilkårsgrunnlag> {
         val vilkarsvurdering = vilkårsvurderingService.vurderVilkårBrille(søknadDto.vilkårsgrunnlag)
 
         if (vilkarsvurdering.utfall != Resultat.JA) {
@@ -30,7 +30,7 @@ class VedtakService(
 
         val opprettet = LocalDateTime.now()
         val vedtak = vedtakStore.lagreVedtak(
-            Vedtak_v2(
+            Vedtak(
                 id = -1,
                 fnrBruker = søknadDto.vilkårsgrunnlag.fnrBruker,
                 fnrInnsender = fnrInnsender,
