@@ -57,18 +57,6 @@ fun Route.virksomhetApi(
         }
     }
 
-    get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
-        val organisasjonsnummer =
-            call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
-        val organisasjonsenhet =
-            enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
-                ?: return@get call.respond(
-                    HttpStatusCode.NotFound,
-                    "Fant ikke orgenhet for orgnr $organisasjonsnummer"
-                )
-        call.respond(organisasjonsenhet)
-    }
-
     get("/virksomhet/{orgnr}") {
         val organisasjonsnummer =
             call.parameters["orgnr"] ?: error("Mangler orgnr i url")
@@ -99,7 +87,7 @@ fun Route.virksomhetApi(
             val harNavAvtale: Boolean,
             val orgnavn: String,
             val forretningsadresse: Postadresse?,
-            val erOptikerVirksomet: Boolean,
+            val erOptikerVirksomhet: Boolean,
         )
 
         val response = Response(
@@ -108,7 +96,7 @@ fun Route.virksomhetApi(
             harNavAvtale = virksomhet.harNavAvtale,
             orgnavn = organisasjon.navn,
             forretningsadresse = organisasjon.forretningsadresse,
-            erOptikerVirksomet = listOf(
+            erOptikerVirksomhet = listOf(
                 organisasjon.naeringskode1,
                 organisasjon.naeringskode2,
                 organisasjon.naeringskode3

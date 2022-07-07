@@ -1,8 +1,6 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
-import no.nav.hjelpemidler.brille.pdl.fodselsdato
-import no.nav.hjelpemidler.brille.sats.Diopter
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
@@ -29,7 +27,7 @@ object Vilkårene {
         beskrivelse = "Var barnet under 18 år på bestillingsdato?",
         identifikator = "Under18ÅrPåBestillingsdato v1"
     ) { grunnlag ->
-        val fodselsdato = grunnlag.pdlOppslagBruker.pdlPersonResponse.data?.fodselsdato()
+        val fodselsdato = grunnlag.fodselsdatoBruker
         when {
             fodselsdato == null -> nei("Barnets fødselsdato er ukjent")
             fodselsdato.until(grunnlag.bestillingsdato).years < 18 -> ja("Barnet var under 18 år på bestillingsdato")
@@ -54,8 +52,8 @@ object Vilkårene {
         identifikator = "Brillestyrke v1"
     ) { grunnlag ->
         val brilleseddel = grunnlag.brilleseddel
-        val minsteSfære = Diopter.ONE
-        val minsteSylinder = Diopter.ONE
+        val minsteSfære = grunnlag.minsteSfære
+        val minsteSylinder = grunnlag.minsteSylinder
         when {
             brilleseddel.høyreSfære >= minsteSfære -> ja("Høyre sfære oppfyller vilkår om brillestyrke ≥ $minsteSfære")
             brilleseddel.høyreSylinder >= minsteSylinder -> ja("Høyre sylinder oppfyller vilkår om sylinderstyrke ≥ $minsteSylinder")
