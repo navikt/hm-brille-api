@@ -37,7 +37,7 @@ internal class VilkårApiTest {
     )
 
     private val routing = TestRouting {
-        vilkårApi(vilkårsvurderingService)
+        vilkårApi(vilkårsvurderingService, mockk(relaxed = true))
     }
 
     @Test
@@ -68,7 +68,7 @@ internal class VilkårApiTest {
         } returns lagPdlOppslag()
 
         every {
-            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBruker)
+            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBruker, vilkårsgrunnlag.bestillingsdato)
         } returns MedlemskapResultat(medlemskapBevist = true, uavklartMedlemskap = false, saksgrunnlag = emptyList())
 
         routing.test {
