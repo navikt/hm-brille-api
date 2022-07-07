@@ -16,6 +16,8 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
+import no.nav.hjelpemidler.brille.audit.AuditService
+import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -92,6 +94,8 @@ fun Application.setupRoutes() {
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
     val vedtakStore = VedtakStorePostgres(dataSource)
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
+    val auditStore = AuditStorePostgres(dataSource)
+    val auditService = AuditService(auditStore)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
     val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(
@@ -126,7 +130,7 @@ fun Application.setupRoutes() {
 
             authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
-                    pdlApi(pdlService)
+                    pdlApi(pdlService, auditService)
                     vilkårApi(vilkårsvurderingService)
                     søknadApi(vedtakService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
