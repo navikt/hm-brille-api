@@ -18,11 +18,13 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlOppslag
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
 import no.nav.hjelpemidler.brille.sats.BrilleseddelDto
+import no.nav.hjelpemidler.brille.sats.Diopter
 import no.nav.hjelpemidler.brille.sats.tilDiopter
 import no.nav.hjelpemidler.brille.test.TestRouting
+import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
+import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import kotlin.test.Test
 
 internal class VilkårApiTest {
     private val vedtakStore = mockk<VedtakStore>()
@@ -34,7 +36,7 @@ internal class VilkårApiTest {
         vedtakStore,
         pdlClient,
         medlemskapBarn,
-        dagensDatoFactory,
+        dagensDatoFactory
     )
 
     private val routing = TestRouting {
@@ -44,35 +46,131 @@ internal class VilkårApiTest {
     }
 
     @Test
-    internal fun `foo bar`() {
-        val vilkårsgrunnlag = VilkårsgrunnlagDto(
-            orgnr = "",
-            fnrBruker = "07480966982",
-            brilleseddel = BrilleseddelDto(
-                høyreSfære = "1".tilDiopter(),
-                høyreSylinder = "0".tilDiopter(),
-                venstreSfære = "0".tilDiopter(),
-                venstreSylinder = "0".tilDiopter(),
-            ),
-            bestillingsdato = DATO_ORDNINGEN_STARTET,
-            brillepris = "1500".toBigDecimal()
-        )
+    internal fun `happy case`() = kjørTest(forventetResultat = Resultat.JA)
 
+    @Test
+    internal fun `har vedtak i kalenderåret`() = kjørTest(
+        vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET)),
+        forventetResultat = Resultat.NEI
+    )
+
+    @Test
+    internal fun `har vedtak i annet år`() = kjørTest(
+        vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET.minusYears(1))),
+        forventetResultat = Resultat.JA
+    )
+
+    @Test
+    internal fun `barnet fyller 18 år på bestillingsdato`() = kjørTest(
+        fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).toString(),
+        forventetResultat = Resultat.NEI
+    )
+
+    @Test
+    internal fun `barnet fyller 18 år dagen etter bestillingsdato`() = kjørTest(
+        fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).plusDays(1).toString(),
+        forventetResultat = Resultat.JA
+    )
+
+    @Test
+    internal fun `barnet fyller 18 år dagen før bestillingsdato`() = kjørTest(
+        fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).minusDays(1).toString(),
+        forventetResultat = Resultat.NEI
+    )
+
+    @Test
+    internal fun `barnet er bevist ikke medlem i folktrygden`() = kjørTest(
+        medlemskapResultat = MedlemskapResultat(
+            medlemskapBevist = false,
+            uavklartMedlemskap = false,
+            saksgrunnlag = emptyList()
+        ),
+        forventetResultat = Resultat.NEI
+    )
+
+    @Test
+    internal fun `barnets medlemskap i folktrygden er uavklart`() = kjørTest(
+        medlemskapResultat = MedlemskapResultat(false, uavklartMedlemskap = true, saksgrunnlag = emptyList()),
+        forventetResultat = Resultat.JA
+    )
+
+    @Test
+    internal fun `brillestyrke under minstgrense`() = kjørTest(
+        vilkårsgrunnlag = defaulVilkårMedBrilleseddel(),
+        forventetResultat = Resultat.NEI
+    )
+
+    @Test
+    internal fun `brillestyrke høyreSylinder over minstegrense`() = kjørTest(
+        vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
+            høyreSylinder = "2".tilDiopter()
+        ),
+        forventetResultat = Resultat.JA
+    )
+
+    @Test
+    internal fun `brillestyrke venstreSfære over minstegrense`() = kjørTest(
+        vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
+            venstreSfære = "3".tilDiopter()
+        ),
+        forventetResultat = Resultat.JA
+    )
+
+    @Test
+    internal fun `brillestyrke venstreSylinder over minstegrense`() = kjørTest(
+        vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
+            venstreSylinder = "1".tilDiopter()
+        ),
+        forventetResultat = Resultat.JA
+    )
+
+    @Test
+    internal fun `bestillingsdato i fremtiden`() = kjørTest(
+        vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.plusDays(1)),
+        forventetResultat = Resultat.NEI
+    )
+
+    @Test
+    internal fun `bestillingsdato før ordningen startet`() = kjørTest(
+        vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.minusDays(1)),
+        dagensDato = DATO_ORDNINGEN_STARTET.plusDays(1),
+        forventetResultat = Resultat.NEI
+    )
+
+    @Test
+    internal fun `bestillingsdato mer enn 6 måneder tilbake i tid`() = kjørTest(
+        vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.plusMonths(1)),
+        dagensDato = DATO_ORDNINGEN_STARTET.plusMonths(8),
+        forventetResultat = Resultat.NEI
+    )
+
+    private fun kjørTest(
+        vilkårsgrunnlag: VilkårsgrunnlagDto = defaultVilkårsgrunnlag,
+        vedtakForBruker: List<EksisterendeVedtak> = emptyList(),
+        fødselsdato: String = "2014-08-15",
+        medlemskapResultat: MedlemskapResultat = MedlemskapResultat(
+            medlemskapBevist = true,
+            uavklartMedlemskap = false,
+            saksgrunnlag = emptyList()
+        ),
+        dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
+        forventetResultat: Resultat
+    ) {
         every {
             dagensDatoFactory()
-        } returns DATO_ORDNINGEN_STARTET
+        } returns dagensDato
 
         every {
             vedtakStore.hentVedtakForBruker(vilkårsgrunnlag.fnrBruker)
-        } returns emptyList()
+        } returns vedtakForBruker
 
         coEvery {
             pdlClient.hentPerson(vilkårsgrunnlag.fnrBruker)
-        } returns lagPdlOppslag()
+        } returns lagPdlOppslag(fødselsdato)
 
         every {
             medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBruker, vilkårsgrunnlag.bestillingsdato)
-        } returns MedlemskapResultat(medlemskapBevist = true, uavklartMedlemskap = false, saksgrunnlag = emptyList())
+        } returns medlemskapResultat
 
         routing.test {
             val response = client.post("/vilkarsgrunnlag") {
@@ -80,14 +178,53 @@ internal class VilkårApiTest {
             }
 
             response.status shouldBe HttpStatusCode.OK
-            response.body<VilkårsvurderingDto>().resultat shouldBe Resultat.JA
+            response.body<VilkårsvurderingDto>().resultat shouldBe forventetResultat
         }
     }
 
-    private fun lagPdlOppslag(): PdlOppslag {
+    private fun lagPdlOppslag(fødselsdato: String): PdlOppslag {
         val pdlPersonResponse = javaClass.getResourceAsStream("/mock/pdl.json").use {
-            jsonMapper.readValue<PdlPersonResponse>(requireNotNull(it))
+            val pdlMockTekst = it.bufferedReader().readText().replace("2014-08-15", fødselsdato)
+            jsonMapper.readValue<PdlPersonResponse>(pdlMockTekst)
         }
+
         return PdlOppslag(pdlPersonResponse, jsonMapper.nullNode())
     }
+
+    private fun lagEksisterendeVedtak(bestillingsDato: LocalDate) =
+        EksisterendeVedtak(
+            id = 1,
+            fnrBruker = "12345678910",
+            bestillingsdato = bestillingsDato,
+            status = "",
+            opprettet = bestillingsDato.atStartOfDay()
+        )
+
+    private fun defaulVilkårMedBrilleseddel(
+        høyreSfære: Diopter = "0".tilDiopter(),
+        høyreSylinder: Diopter = "0".tilDiopter(),
+        venstreSfære: Diopter = "0".tilDiopter(),
+        venstreSylinder: Diopter = "0".tilDiopter()
+    ) =
+        defaultVilkårsgrunnlag.copy(
+            brilleseddel = BrilleseddelDto(
+                høyreSfære = høyreSfære,
+                høyreSylinder = høyreSylinder,
+                venstreSfære = venstreSfære,
+                venstreSylinder = venstreSylinder
+            )
+        )
+
+    private val defaultVilkårsgrunnlag = VilkårsgrunnlagDto(
+        orgnr = "",
+        fnrBruker = "07480966982",
+        brilleseddel = BrilleseddelDto(
+            høyreSfære = "1".tilDiopter(),
+            høyreSylinder = "0".tilDiopter(),
+            venstreSfære = "0".tilDiopter(),
+            venstreSylinder = "0".tilDiopter()
+        ),
+        bestillingsdato = DATO_ORDNINGEN_STARTET,
+        brillepris = "1500".toBigDecimal()
+    )
 }
