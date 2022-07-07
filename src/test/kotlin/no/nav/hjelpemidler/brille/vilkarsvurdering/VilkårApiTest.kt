@@ -6,6 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.authenticate
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -37,7 +38,9 @@ internal class VilkårApiTest {
     )
 
     private val routing = TestRouting {
-        vilkårApi(vilkårsvurderingService, mockk(relaxed = true))
+        authenticate("test") {
+            vilkårApi(vilkårsvurderingService, mockk(relaxed = true))
+        }
     }
 
     @Test

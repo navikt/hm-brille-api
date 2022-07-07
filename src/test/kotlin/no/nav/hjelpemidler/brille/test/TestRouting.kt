@@ -10,10 +10,12 @@ import io.ktor.client.request.accept
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
+import io.ktor.server.auth.authentication
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplication
+import no.nav.hjelpemidler.brille.UserPrincipal
 import no.nav.hjelpemidler.brille.configure
 
 class TestRouting(configuration: Routing.() -> Unit) {
@@ -23,6 +25,13 @@ class TestRouting(configuration: Routing.() -> Unit) {
         }
         application {
             configure()
+            authentication {
+                provider("test") {
+                    authenticate { context ->
+                        context.principal(UserPrincipal("15084300133"))
+                    }
+                }
+            }
             routing(configuration)
         }
     }
@@ -41,7 +50,7 @@ class TestRouting(configuration: Routing.() -> Unit) {
         }
     }
 
-    fun test(block: suspend TestRouting.() -> Unit) = runBlocking {
+    internal fun test(block: suspend TestRouting.() -> Unit) = runBlocking {
         block(this)
     }
 }
