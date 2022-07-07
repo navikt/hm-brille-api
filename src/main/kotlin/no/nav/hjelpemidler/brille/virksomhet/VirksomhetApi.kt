@@ -54,6 +54,7 @@ fun Route.virksomhetApi(vedtakStore: VedtakStore, enhetsregisteretService: Enhet
         }
     }
 
+    // TODO: fjern denne
     get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
         val organisasjonsnummer =
             call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
@@ -96,7 +97,7 @@ fun Route.virksomhetApi(vedtakStore: VedtakStore, enhetsregisteretService: Enhet
             val harNavAvtale: Boolean,
             val orgnavn: String,
             val forretningsadresse: Postadresse?,
-            val erOptikerVirksomet: Boolean,
+            val erOptikerVirksomhet: Boolean,
         )
 
         val response = Response(
@@ -105,7 +106,7 @@ fun Route.virksomhetApi(vedtakStore: VedtakStore, enhetsregisteretService: Enhet
             harNavAvtale = virksomhet.harNavAvtale,
             orgnavn = organisasjon.navn,
             forretningsadresse = organisasjon.forretningsadresse,
-            erOptikerVirksomet = listOf(
+            erOptikerVirksomhet = listOf(
                 organisasjon.naeringskode1,
                 organisasjon.naeringskode2,
                 organisasjon.naeringskode3
