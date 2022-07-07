@@ -31,11 +31,11 @@ data class MedlemskapResultat(
 )
 
 data class Saksgrunnlag(
-    val kilde: SaksgrunnlagType,
+    val kilde: SaksgrunnlagKilde,
     val saksgrunnlag: JsonNode,
 )
 
-enum class SaksgrunnlagType {
+enum class SaksgrunnlagKilde {
     MEDLEMSKAP_BARN,
     PDL,
     LOV_ME,
@@ -52,7 +52,7 @@ class MedlemskapBarn(
         val baseCorrelationId = MDC.get(MDC_CORRELATION_ID)
         val saksgrunnlag = mutableListOf(
             Saksgrunnlag(
-                kilde = SaksgrunnlagType.MEDLEMSKAP_BARN,
+                kilde = SaksgrunnlagKilde.MEDLEMSKAP_BARN,
                 saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
@@ -80,7 +80,7 @@ class MedlemskapBarn(
 
         saksgrunnlag.add(
             Saksgrunnlag(
-                kilde = SaksgrunnlagType.PDL,
+                kilde = SaksgrunnlagKilde.PDL,
                 saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
@@ -118,7 +118,7 @@ class MedlemskapBarn(
 
                 saksgrunnlag.add(
                     Saksgrunnlag(
-                        kilde = SaksgrunnlagType.PDL,
+                        kilde = SaksgrunnlagKilde.PDL,
                         saksgrunnlag = jsonMapper.valueToTree(
                             mapOf(
                                 "rolle" to rolle,
@@ -135,7 +135,7 @@ class MedlemskapBarn(
 
                     saksgrunnlag.add(
                         Saksgrunnlag(
-                            kilde = SaksgrunnlagType.LOV_ME,
+                            kilde = SaksgrunnlagKilde.LOV_ME,
                             saksgrunnlag = jsonMapper.valueToTree(
                                 mapOf(
                                     "rolle" to rolle,
