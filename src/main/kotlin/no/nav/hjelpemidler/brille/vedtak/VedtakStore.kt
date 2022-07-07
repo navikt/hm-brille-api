@@ -78,7 +78,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 "bestillingsdato" to vedtak.bestillingsdato,
                 "brillepris" to vedtak.brillepris,
                 "bestillingsreferanse" to vedtak.bestillingsreferanse,
-                "vilkarsvurdering" to pgObjectOf(vedtak.vilkarsvurdering),
+                "vilkarsvurdering" to pgObjectOf(vedtak.vilkårsvurdering),
                 "status" to vedtak.status
             )
         ) { row ->

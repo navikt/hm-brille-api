@@ -19,10 +19,10 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService) {
         val vilkårsgrunnlag = call.receive<VilkårsgrunnlagDto>()
         val vilkarsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)
 
-        call.respond(VilkårsvurderingResultatDto(vilkarsvurdering.utfall))
+        data class VilkårsvurderingDto(
+            val resultat: Resultat,
+        )
+
+        call.respond(VilkårsvurderingDto(vilkarsvurdering.utfall))
     }
 }
-
-data class VilkårsvurderingResultatDto(
-    val resultat: Resultat,
-)

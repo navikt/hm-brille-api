@@ -15,6 +15,8 @@ val jsonMapper: JsonMapper = jacksonMapperBuilder()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     .build()
 
+fun JsonMapper.writePrettyString(value: Any?): String = writerWithDefaultPrettyPrinter().writeValueAsString(value)
+
 inline fun <reified T> Row.json(columnLabel: String): T = string(columnLabel).let {
     jsonMapper.readValue(it)
 }

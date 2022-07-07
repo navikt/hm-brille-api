@@ -32,29 +32,21 @@ class KafkaService(
     ) {
         produceEvent(
             measurement,
-            mapper.writeValueAsString(
-                mapOf(
-                    "eventId" to UUID.randomUUID(),
-                    "eventName" to "hm-bigquery-sink-hendelse",
-                    "schemaId" to "hendelse_v2",
-                    "payload" to mapOf(
-                        "opprettet" to LocalDateTime.now(),
-                        "navn" to measurement,
-                        "kilde" to "hm-brille-api",
-                        "data" to fields.mapValues { it.value.toString() }
-                            .plus(tags)
-                            .filterKeys { it != "counter" }
-                    )
-                )
+            mapOf(
+                "eventId" to UUID.randomUUID(),
+                "eventName" to "hm-bigquery-sink-hendelse",
+                "schemaId" to "TODO",
+                "payload" to emptyMap<String, String>()
             )
         )
     }
 
-    fun produceEvent(key: String, event: String) {
+    fun <T> produceEvent(key: String, event: T) {
         try {
-            kafkaProducer.send(ProducerRecord(topic, key, event)).get(10, TimeUnit.SECONDS)
+            val record = ProducerRecord(topic, key, mapper.writeValueAsString(event))
+            kafkaProducer.send(record).get(10, TimeUnit.SECONDS)
         } catch (e: Exception) {
-            log.error("Sending av event til $topic feilet")
+            log.error("Sending av event til '$topic' feilet")
             throw RuntimeException(e)
         }
     }
