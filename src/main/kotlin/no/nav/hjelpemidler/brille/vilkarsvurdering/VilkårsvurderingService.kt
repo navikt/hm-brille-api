@@ -6,6 +6,7 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
+import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
@@ -13,19 +14,22 @@ class VilkårsvurderingService(
     private val vedtakStore: VedtakStore,
     private val pdlClient: PdlClient,
     private val medlemskapBarn: MedlemskapBarn,
+    private val dagensDatoFactory: () -> LocalDate = { LocalDate.now() },
 ) {
     suspend fun vurderVilkårBrille(vilkårsgrunnlagDto: VilkårsgrunnlagDto): Vilkårsvurdering<Vilkårsgrunnlag> {
         val vedtakForBruker = vedtakStore.hentVedtakForBruker(vilkårsgrunnlagDto.fnrBruker)
         val pdlOppslagBruker = pdlClient.hentPerson(vilkårsgrunnlagDto.fnrBruker)
-        val medlemskapResultat = medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBruker, vilkårsgrunnlagDto.bestillingsdato)
-        val grunnlag = Vilkårsgrunnlag(
+        val medlemskapResultat =
+            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBruker, vilkårsgrunnlagDto.bestillingsdato)
+        val vilkårsgrunnlag = Vilkårsgrunnlag(
             vedtakForBruker = vedtakForBruker,
             pdlOppslagBruker = pdlOppslagBruker,
+            medlemskapResultat = medlemskapResultat,
             brilleseddel = vilkårsgrunnlagDto.brilleseddel.tilBrilleseddel(),
             bestillingsdato = vilkårsgrunnlagDto.bestillingsdato,
-            medlemskapResultat = medlemskapResultat
+            dagensDato = dagensDatoFactory(),
         )
-        val vilkårsvurdering = vurderVilkår(grunnlag, Vilkårene.Brille)
+        val vilkårsvurdering = vurderVilkår(vilkårsgrunnlag, Vilkårene.Brille)
         if (!Configuration.prod) {
             log.info {
                 "Resultat av vilkårsvurdering: ${vilkårsvurdering.toJson()}"

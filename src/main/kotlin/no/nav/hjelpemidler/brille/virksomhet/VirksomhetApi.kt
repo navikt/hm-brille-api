@@ -30,11 +30,11 @@ fun Route.virksomhetApi(
     get("/orgnr") {
         val fnrOptiker = call.extractFnr()
 
-        val tidligereBrukteOrgnrForOptikker: List<String> =
+        val tidligereBrukteOrgnrForOptiker: List<String> =
             vedtakStore.hentTidligereBrukteOrgnrForOptiker(fnrOptiker)
 
         try {
-            val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptikker.map {
+            val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptiker.map {
                 val orgEnhet: Organisasjonsenhet =
                     enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(it))
                         ?: return@get call.respond(

@@ -9,7 +9,6 @@ import io.ktor.server.routing.post
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
     post("/vilkarsgrunnlag") {
@@ -25,10 +24,6 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
             oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om innbygger og bestilling oppfyller vilkår for støtte"
         )
         val vilkarsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)
-
-        data class VilkårsvurderingDto(
-            val resultat: Resultat
-        )
 
         call.respond(VilkårsvurderingDto(vilkarsvurdering.utfall))
     }

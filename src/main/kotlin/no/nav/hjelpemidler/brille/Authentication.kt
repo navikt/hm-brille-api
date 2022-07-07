@@ -7,9 +7,8 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.install
-import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.Principal
+import io.ktor.server.auth.authentication
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +37,7 @@ fun Application.installAuthentication(httpClient: HttpClient) {
         .rateLimited(100, 1, TimeUnit.MINUTES)
         .build()
 
-    install(Authentication) {
+    authentication {
         jwt(TOKEN_X_AUTH) {
             verifier(jwkProviderTokenx, tokenXConfig.metadata.issuer)
             validate { credentials ->
