@@ -11,6 +11,7 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
+import java.time.LocalDate
 
 private val log = KotlinLogging.logger { }
 
@@ -31,10 +32,10 @@ fun Route.testApi(
         }
 
         post("/medlemskap-barn") {
-            data class Request(val fnr: String)
+            data class Request(val fnr: String, val bestillingsDato: LocalDate)
 
-            val fnr = call.receive<Request>().fnr
-            call.respond(medlemskapBarn.sjekkMedlemskapBarn(fnr))
+            val r = call.receive<Request>()
+            call.respond(medlemskapBarn.sjekkMedlemskapBarn(r.fnr, r.bestillingsDato))
         }
     }
 }

@@ -45,7 +45,7 @@ class MedlemskapBarn(
     private val pdlClient: PdlClient,
     private val redisClient: RedisClient,
 ) {
-    fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsDato: LocalDate = LocalDate.now()): MedlemskapResultat = runBlocking {
+    fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsDato: LocalDate): MedlemskapResultat = runBlocking {
         log.info("Sjekker medlemskap for barn")
         log.debug("bestillingsDato: $bestillingsDato")
 

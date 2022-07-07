@@ -17,7 +17,7 @@ class VilkårsvurderingService(
     suspend fun vurderVilkårBrille(vilkårsgrunnlagDto: VilkårsgrunnlagDto): Vilkårsvurdering<Vilkårsgrunnlag> {
         val vedtakForBruker = vedtakStore.hentVedtakForBruker(vilkårsgrunnlagDto.fnrBruker)
         val pdlOppslagBruker = pdlClient.hentPerson(vilkårsgrunnlagDto.fnrBruker)
-        val medlemskapResultat = medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBruker)
+        val medlemskapResultat = medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBruker, vilkårsgrunnlagDto.bestillingsdato)
         val grunnlag = Vilkårsgrunnlag(
             vedtakForBruker = vedtakForBruker,
             pdlOppslagBruker = pdlOppslagBruker,
