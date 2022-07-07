@@ -21,7 +21,7 @@ import no.nav.hjelpemidler.brille.model.TidligereBrukteOrganisasjonerForOptiker
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import org.postgresql.util.PSQLException
 
-private val log = KotlinLogging.logger{}
+private val log = KotlinLogging.logger {}
 
 fun Route.virksomhetApi(vedtakStore: VedtakStore, enhetsregisteretService: EnhetsregisteretService, virksomhetStore: VirksomhetStore) {
     get("/orgnr") {
@@ -70,7 +70,7 @@ fun Route.virksomhetApi(vedtakStore: VedtakStore, enhetsregisteretService: Enhet
         val organisasjonsnummer =
             call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 
-        val virksomhet = when(Configuration.profile) {
+        val virksomhet = when (Configuration.profile) {
             // TODO: fjern denne ekstra sjekken når vi har på plass en måte (UI) å faktisk lagre virksomheter til databasen på (se POST /virksomhet)
             Profile.DEV -> Virksomhet(
                 orgnr = organisasjonsnummer,

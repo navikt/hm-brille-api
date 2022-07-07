@@ -17,7 +17,6 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import org.slf4j.MDC
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -185,7 +184,7 @@ private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boole
     // Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
     val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
     val deltBostedBarn = pdlBarn.data?.hentPerson?.deltBosted ?: listOf()
-    return slåSammenMedAktiveDelteBosted(bostedsadresser, deltBostedBarn).any { it.vegadresse != null || it.matrikkeladresse != null }
+    return slåSammenAktiveBosteder(bostedsadresser, deltBostedBarn).any { it.vegadresse != null || it.matrikkeladresse != null || it.ukjentBosted != null }
 }
 
 private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
@@ -281,11 +280,16 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
     val deltBostedBarn = barn.data?.hentPerson?.deltBosted ?: listOf()
 
     // Sammenlignes med "annen"
-    val bostedsadresserAnnen = annen.data?.hentPerson?.bostedsadresse ?: listOf()
+    val now = LocalDateTime.now()
+    val bostedsadresserAnnen = (annen.data?.hentPerson?.bostedsadresse ?: listOf()).filter {
+        // TODO: Hva med gyldighetsdatoer her?
+        (it.gyldigFraOgMed == null || it.gyldigFraOgMed.isBefore(now)) &&
+            (it.gyldigTilOgMed == null || it.gyldigTilOgMed.isAfter(now))
+    }
 
     // For hver adresse barnet har (vanlig og delt), så sammenligner vi basert på type mot den andre partens adresser
     // av samme type
-    for (adresseBarn in slåSammenMedAktiveDelteBosted(bostedsadresserBarn, deltBostedBarn)) {
+    for (adresseBarn in slåSammenAktiveBosteder(bostedsadresserBarn, deltBostedBarn)) {
         when {
             adresseBarn.matrikkeladresse != null -> {
                 val madr1 = adresseBarn.matrikkeladresse
@@ -322,8 +326,7 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
             }
 
             else -> {
-                // Dette forekommer kanskje ikke, da vi ikke ber om resultater som har andre typer adresser:
-                // UkjentAdresse / Utenlandsk adresse
+                // Hvis adresse-typen er ukjent så er det ikke noe vi kan sammenlige med andre, så vi skipper den her.
                 log.debug("harSammeAdresse: kan ikke sammenligne en bostedsadresse av annen type (utenlandsk, etc.).")
             }
         }
@@ -334,22 +337,29 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
     return false
 }
 
-private fun slåSammenMedAktiveDelteBosted(
-    base: List<Bostedsadresse>,
+private fun slåSammenAktiveBosteder(
+    bosted: List<Bostedsadresse>,
     delteBosted: List<DeltBosted>
 ): List<Bostedsadresse> {
     // Finn aktive delte bosted for barnet og transformer de til samme format som hoved-folkereg. adresse, så vi kan
     // sjekke alle adresser sammen
-    val now = LocalDate.now()
+    val now = LocalDateTime.now()
     return listOf(
-        base,
+        bosted.filter {
+            // Sjekk gyldig fra/til felter
+            (it.gyldigFraOgMed == null || it.gyldigFraOgMed.isBefore(now)) &&
+                (it.gyldigTilOgMed == null || it.gyldigTilOgMed.isAfter(now))
+        },
         delteBosted.filter {
-            (it.startdatoForKontrakt.isEqual(now) || it.startdatoForKontrakt.isBefore(now)) &&
-                (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now) || it.sluttdatoForKontrakt.isAfter(now))
+            (it.startdatoForKontrakt.isEqual(now.toLocalDate()) || it.startdatoForKontrakt.isBefore(now.toLocalDate())) &&
+                (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now.toLocalDate()) || it.sluttdatoForKontrakt.isAfter(now.toLocalDate()))
         }.map {
             Bostedsadresse(
+                gyldigFraOgMed = it.startdatoForKontrakt.atStartOfDay(),
+                gyldigTilOgMed = it.sluttdatoForKontrakt?.plusDays(1)?.atStartOfDay(),
                 vegadresse = it.vegadresse,
                 matrikkeladresse = it.matrikkeladresse,
+                ukjentBosted = it.ukjentBosted,
             )
         }
     ).flatten()

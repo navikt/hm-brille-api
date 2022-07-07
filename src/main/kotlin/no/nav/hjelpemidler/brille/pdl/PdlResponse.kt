@@ -62,8 +62,11 @@ data class Adressebeskyttelse(
 )
 
 data class Bostedsadresse(
+    val gyldigFraOgMed: LocalDateTime?,
+    val gyldigTilOgMed: LocalDateTime?,
     val vegadresse: Vegadresse?,
-    val matrikkeladresse: Matrikkeladresse?
+    val matrikkeladresse: Matrikkeladresse?,
+    val ukjentBosted: UkjentBosted?,
 )
 
 data class DeltBosted(
@@ -71,6 +74,7 @@ data class DeltBosted(
     val sluttdatoForKontrakt: LocalDate?,
     val vegadresse: Vegadresse?,
     val matrikkeladresse: Matrikkeladresse?,
+    val ukjentBosted: UkjentBosted?,
 )
 
 data class Vegadresse(
@@ -81,6 +85,10 @@ data class Vegadresse(
 data class Matrikkeladresse(
     val matrikkelId: Long?,
     val bruksenhetsnummer: String?,
+)
+
+data class UkjentBosted(
+    val bostedskommune: String?,
 )
 
 data class Foedsel(val foedselsaar: String?, val foedselsdato: String?)
