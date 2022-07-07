@@ -12,7 +12,7 @@ interface VedtakStore {
     fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean
     fun hentTidligereBrukteOrgnrForOptiker(fnrOptiker: String): List<String>
     fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak>
-    fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T>
+    fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
@@ -67,7 +67,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }.toSet().toList()
     }
 
-    override fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T> {
+    override fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T> {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO vedtak_v2 (

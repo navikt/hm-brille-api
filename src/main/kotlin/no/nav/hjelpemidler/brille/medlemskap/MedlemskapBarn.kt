@@ -7,7 +7,6 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
-import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.Bostedsadresse
 import no.nav.hjelpemidler.brille.pdl.DeltBosted
@@ -63,7 +62,7 @@ class MedlemskapBarn(
         )
 
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
-        if (Configuration.profile != Profile.DEV) {
+        if (Configuration.profile != Configuration.Profile.DEV) {
             val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
             if (medlemskapBarnCache != null) {
                 log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
@@ -185,7 +184,10 @@ private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boole
     // Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
     val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
     val deltBostedBarn = pdlBarn.data?.hentPerson?.deltBosted ?: listOf()
-    return slåSammenMedAktiveDelteBosted(bostedsadresser, deltBostedBarn).any { it.vegadresse != null || it.matrikkeladresse != null }
+    return slåSammenMedAktiveDelteBosted(
+        bostedsadresser,
+        deltBostedBarn
+    ).any { it.vegadresse != null || it.matrikkeladresse != null }
 }
 
 private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
@@ -336,7 +338,7 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
 
 private fun slåSammenMedAktiveDelteBosted(
     base: List<Bostedsadresse>,
-    delteBosted: List<DeltBosted>
+    delteBosted: List<DeltBosted>,
 ): List<Bostedsadresse> {
     // Finn aktive delte bosted for barnet og transformer de til samme format som hoved-folkereg. adresse, så vi kan
     // sjekke alle adresser sammen
@@ -345,7 +347,11 @@ private fun slåSammenMedAktiveDelteBosted(
         base,
         delteBosted.filter {
             (it.startdatoForKontrakt.isEqual(now) || it.startdatoForKontrakt.isBefore(now)) &&
-                (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now) || it.sluttdatoForKontrakt.isAfter(now))
+                    (
+                            it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now) || it.sluttdatoForKontrakt.isAfter(
+                                now
+                            )
+                            )
         }.map {
             Bostedsadresse(
                 vegadresse = it.vegadresse,

@@ -169,8 +169,8 @@ object Configuration {
         val medlemskapBarnExpirySeconds: Long = Duration.ofDays(1).seconds, // TODO: Hva er en OK lengde på cache?
         val orgenhetExpirySeconds: Long = Duration.ofHours(2).seconds, // TODO: Hva er en OK lengde på cache?
     )
-}
 
-enum class Profile {
-    LOCAL, DEV, PROD
+    enum class Profile {
+        LOCAL, DEV, PROD
+    }
 }

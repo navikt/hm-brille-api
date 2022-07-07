@@ -7,20 +7,20 @@ import no.nav.hjelpemidler.brille.pdl.PdlHentPerson
 import no.nav.hjelpemidler.brille.pdl.PdlOppslag
 import no.nav.hjelpemidler.brille.pdl.PdlPerson
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
-import no.nav.hjelpemidler.brille.sats.BeregnSats
+import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.Diopter
 import java.time.LocalDate
 import kotlin.test.Test
 
-internal class Vilkår_v1Test {
+internal class VilkåreneTest {
     @Test
     internal fun `foo bar`() {
         val grunnlag = lagGrunnlag(false, 10)
-        val evaluering = Vilkår_v1.Brille_v1.evaluer(grunnlag)
+        val evaluering = Vilkårene.Brille.evaluer(grunnlag)
         println(jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(evaluering))
     }
 
-    private fun lagGrunnlag(harFåttBrilleDetteKalenderåret: Boolean, alder: Int?) = Vilkår_v1.Grunnlag_v1(
+    private fun lagGrunnlag(harFåttBrilleDetteKalenderåret: Boolean, alder: Int?) = Vilkårsgrunnlag(
         vedtakForBruker = emptyList(),
         pdlOppslagBruker = PdlOppslag(
             PdlPersonResponse(
@@ -32,7 +32,7 @@ internal class Vilkår_v1Test {
             ),
             jsonMapper.nullNode()
         ),
-        beregnSats = BeregnSats(
+        brilleseddel = Brilleseddel(
             høyreSfære = Diopter.ONE,
             høyreSylinder = Diopter.ZERO,
             venstreSfære = Diopter.ZERO,
