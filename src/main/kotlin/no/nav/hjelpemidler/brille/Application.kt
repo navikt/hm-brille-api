@@ -129,7 +129,7 @@ fun Application.setupRoutes() {
                     pdlApi(pdlService)
                     vilkårApi(vilkårsvurderingService)
                     søknadApi(vedtakService)
-                    virksomhetApi(vedtakStore, enhetsregisteretService)
+                    virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
                 }
             }
         }
