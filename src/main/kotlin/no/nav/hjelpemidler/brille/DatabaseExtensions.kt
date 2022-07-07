@@ -13,37 +13,54 @@ import kotliquery.using
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
-private fun <T> DataSource.session(block: (Session) -> T) = using(sessionOf(this), block)
+private fun <T> DataSource.usingSession(block: (Session) -> T) = using(sessionOf(this), block)
 
-private fun <T> DataSource.action(action: NullableResultQueryAction<T>): T? = session { it.run(action) }
-private fun <T> DataSource.action(action: ListResultQueryAction<T>): List<T> = session { it.run(action) }
-private fun DataSource.action(action: UpdateQueryAction): Int = session { it.run(action) }
-private fun DataSource.action(action: UpdateAndReturnGeneratedKeyQueryAction): Long? = session { it.run(action) }
-private fun DataSource.action(action: ExecuteQueryAction): Boolean = session { it.run(action) }
+private fun <T> DataSource.runAction(action: NullableResultQueryAction<T>): T? = usingSession {
+    it.run(action)
+}
+
+private fun <T> DataSource.runAction(action: ListResultQueryAction<T>): List<T> = usingSession {
+    it.run(action)
+}
+
+private fun DataSource.runAction(action: UpdateQueryAction): Int = usingSession {
+    it.run(action)
+}
+
+private fun DataSource.runAction(action: UpdateAndReturnGeneratedKeyQueryAction): Long? = usingSession {
+    it.run(action)
+}
+
+private fun DataSource.runAction(action: ExecuteQueryAction): Boolean = usingSession {
+    it.run(action)
+}
+
+typealias QueryParameters = Map<String, Any?>
+typealias ResultMapper<T> = (Row) -> T?
 
 fun <T> DataSource.query(
     @Language("PostgreSQL") sql: String,
-    params: Map<String, Any?> = emptyMap(),
-    mapper: (Row) -> T?,
-): T? = action(queryOf(sql, params).map(mapper).asSingle)
+    queryParameters: QueryParameters = emptyMap(),
+    mapper: ResultMapper<T>,
+): T? = runAction(queryOf(sql, queryParameters).map(mapper).asSingle)
 
 fun <T> DataSource.queryList(
     @Language("PostgreSQL") sql: String,
-    params: Map<String, Any?> = emptyMap(),
-    mapper: (Row) -> T?,
-): List<T> = action(queryOf(sql, params).map(mapper).asList)
+    queryParameters: QueryParameters = emptyMap(),
+    mapper: ResultMapper<T>,
+): List<T> = runAction(queryOf(sql, queryParameters).map(mapper).asList)
 
 fun DataSource.update(
     @Language("PostgreSQL") sql: String,
-    params: Map<String, Any?> = emptyMap(),
-) = action(queryOf(sql, params).asUpdate)
+    queryParameters: QueryParameters = emptyMap(),
+) = runAction(queryOf(sql, queryParameters).asUpdate)
 
 fun DataSource.updateAndReturnGeneratedKey(
     @Language("PostgreSQL") sql: String,
-    params: Map<String, Any?> = emptyMap(),
-) = action(queryOf(sql, params).asUpdateAndReturnGeneratedKey)
+    queryParameters: QueryParameters = emptyMap(),
+) = runAction(queryOf(sql, queryParameters).asUpdateAndReturnGeneratedKey)
 
 fun DataSource.execute(
     @Language("PostgreSQL") sql: String,
-    params: Map<String, Any?> = emptyMap(),
-) = action(queryOf(sql, params).asExecute)
+    queryParameters: QueryParameters = emptyMap(),
+) = runAction(queryOf(sql, queryParameters).asExecute)

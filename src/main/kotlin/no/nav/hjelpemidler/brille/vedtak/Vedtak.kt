@@ -5,7 +5,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class Vedtak_v2<T>(
+data class Vedtak<T>(
     val id: Int,
     val fnrBruker: String,
     val fnrInnsender: String,

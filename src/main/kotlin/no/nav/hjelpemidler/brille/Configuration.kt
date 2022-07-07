@@ -88,6 +88,9 @@ object Configuration {
         systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
 
     val profile: Profile = this["application.profile"].let { Profile.valueOf(it) }
+    val local: Boolean = profile == Profile.LOCAL
+    val dev: Boolean = profile == Profile.DEV
+    val prod: Boolean = profile == Profile.PROD
 
     val azureAdProperties = AzureAdProperties()
     val dbProperties = DatabaseProperties()
@@ -169,8 +172,8 @@ object Configuration {
         val medlemskapBarnExpirySeconds: Long = Duration.ofDays(1).seconds, // TODO: Hva er en OK lengde på cache?
         val orgenhetExpirySeconds: Long = Duration.ofHours(2).seconds, // TODO: Hva er en OK lengde på cache?
     )
-}
 
-enum class Profile {
-    LOCAL, DEV, PROD
+    enum class Profile {
+        LOCAL, DEV, PROD
+    }
 }

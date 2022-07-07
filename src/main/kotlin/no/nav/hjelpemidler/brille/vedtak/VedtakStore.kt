@@ -4,38 +4,15 @@ import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.query
 import no.nav.hjelpemidler.brille.queryList
 import org.intellij.lang.annotations.Language
-import java.time.LocalDateTime
-import java.time.Month
 import javax.sql.DataSource
 
 interface VedtakStore {
-    fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean
     fun hentTidligereBrukteOrgnrForOptiker(fnrOptiker: String): List<String>
     fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak>
-    fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T>
+    fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
-    override fun harFåttBrilleDetteKalenderÅret(fnrBruker: String): Boolean {
-        @Language("PostgreSQL")
-        val sql = """
-            SELECT 1
-            FROM vedtak
-            WHERE
-                fnr_bruker = :fnr_bruker AND
-                opprettet > :opprettet
-        """.trimIndent()
-        return ds.query(
-            sql,
-            mapOf(
-                "fnr_bruker" to fnrBruker,
-                "opprettet" to LocalDateTime.of(LocalDateTime.now().year, Month.JANUARY, 1, 0, 0),
-            )
-        ) {
-            true
-        } ?: false
-    }
-
     override fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak> {
         @Language("PostgreSQL")
         val sql = """
@@ -67,7 +44,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }.toSet().toList()
     }
 
-    override fun <T> lagreVedtak(vedtak: Vedtak_v2<T>): Vedtak_v2<T> {
+    override fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T> {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO vedtak_v2 (
@@ -79,7 +56,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 bestillingsreferanse,
                 vilkarsvurdering,
                 status
-                )
+            )
             VALUES (
                 :fnr_bruker,
                 :fnr_innsender,

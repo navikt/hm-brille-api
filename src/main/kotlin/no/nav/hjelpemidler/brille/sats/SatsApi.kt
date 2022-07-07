@@ -8,9 +8,9 @@ import io.ktor.server.routing.post
 
 fun Route.satsApi() {
     post("/beregn-sats") {
-        val dto = call.receive<BeregnSatsDto>()
-        val satsKalkulator = SatsKalkulator(dto.tilBeregnSats())
+        val brilleseddel = call.receive<BrilleseddelDto>()
+        val satsKalkulator = SatsKalkulator(brilleseddel.tilBrilleseddel())
         val satsType = satsKalkulator.kalkuler()
-        call.respond(BeregnetSatsDto(satsType, satsType.beskrivelse, satsType.beløp))
+        call.respond(BeregnetSatsDto(satsType, satsType.beskrivelse, satsType.beløp.toString()))
     }
 }

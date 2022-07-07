@@ -1,12 +1,12 @@
 package no.nav.hjelpemidler.brille.sats
 
-data class BeregnSatsDto(
+data class BrilleseddelDto(
     val høyreSfære: Diopter,
     val høyreSylinder: Diopter,
     val venstreSfære: Diopter,
     val venstreSylinder: Diopter,
 ) {
-    fun tilBeregnSats(): BeregnSats = BeregnSats(
+    fun tilBrilleseddel(): Brilleseddel = Brilleseddel(
         høyreSfære = this.høyreSfære,
         høyreSylinder = this.høyreSylinder,
         venstreSfære = this.venstreSfære,

@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.redis
 
 import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.Profile
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.jsonMapper
@@ -12,7 +11,7 @@ import redis.clients.jedis.commands.StringCommands
 
 class RedisClient(private val redisProps: Configuration.RedisProperties = Configuration.redisProperties) {
     private val jedis: StringCommands = when (Configuration.profile) {
-        Profile.LOCAL -> JedisMock()
+        Configuration.Profile.LOCAL -> JedisMock()
         else -> JedisPooled(
             GenericObjectPoolConfig(),
             redisProps.host,
