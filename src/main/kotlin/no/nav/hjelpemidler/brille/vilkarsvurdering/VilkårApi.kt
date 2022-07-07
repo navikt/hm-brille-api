@@ -11,7 +11,7 @@ import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService) {
     post("/vilkarsgrunnlag") {
-        if (Configuration.profile == Configuration.Profile.PROD) { // TODO: fjern før prodsetting
+        if (Configuration.prod) { // TODO: fjern før prodsetting
             call.respond(HttpStatusCode.Unauthorized)
             return@post
         }

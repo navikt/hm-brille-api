@@ -117,14 +117,14 @@ fun Application.setupRoutes() {
     routing {
         selfTestRoutes()
 
-        if (Configuration.profile != Configuration.Profile.PROD) {
+        if (!Configuration.prod) {
             testApi(medlemskapClient, medlemskapBarn, virksomhetStore, enhetsregisteretService)
         }
 
         route("/api") {
             satsApi()
 
-            authenticate(if (Configuration.profile == Configuration.Profile.LOCAL) "local" else TOKEN_X_AUTH) {
+            authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     pdlApi(pdlService)
                     vilkårApi(vilkårsvurderingService)

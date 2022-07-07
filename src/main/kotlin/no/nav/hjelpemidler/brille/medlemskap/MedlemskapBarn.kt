@@ -62,7 +62,7 @@ class MedlemskapBarn(
         )
 
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
-        if (Configuration.profile != Configuration.Profile.DEV) {
+        if (!Configuration.dev) {
             val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
             if (medlemskapBarnCache != null) {
                 log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
@@ -206,9 +206,9 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
         fullmakt.filter {
             // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot dagens dato
             (it.gyldigFraOgMed.isEqual(now.toLocalDate()) || it.gyldigFraOgMed.isBefore(now.toLocalDate())) &&
-                (it.gyldigTilOgMed.isEqual(now.toLocalDate()) || it.gyldigTilOgMed.isAfter(now.toLocalDate())) &&
-                // Fullmektig ovenfor barnet
-                it.motpartsRolle == MotpartsRolle.FULLMEKTIG
+                    (it.gyldigTilOgMed.isEqual(now.toLocalDate()) || it.gyldigTilOgMed.isAfter(now.toLocalDate())) &&
+                    // Fullmektig ovenfor barnet
+                    it.motpartsRolle == MotpartsRolle.FULLMEKTIG
         }.map {
             Pair("FULLMEKTIG-${it.motpartsRolle}", it.motpartsPersonident)
         },
@@ -216,9 +216,9 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
         vergemaalEllerFremtidsfullmakt.filter {
             // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
             it.vergeEllerFullmektig.motpartsPersonident != null &&
-                // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                    // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                    (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                    (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
         }.map {
             Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
         },
@@ -230,9 +230,9 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
             // barn har foreldreansvar for noen:
             // "Alltid tomt ved oppslag på ansvarlig." ref.: https://pdldocs-navno.msappproxy.net/ekstern/index.html#_foreldreansvar
             it.ansvarlig != null &&
-                // Bare se på foreldreansvar som ikke har opphørt (feltet er null eller i fremtiden)
-                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                    // Bare se på foreldreansvar som ikke har opphørt (feltet er null eller i fremtiden)
+                    (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                    (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
         }.map {
             Pair("FORELDER_ANSVAR-${it.ansvar ?: "ukjent"}", it.ansvarlig!!)
         },
@@ -240,11 +240,11 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
         foreldreBarnRelasjon.filter {
             // Vi kan ikke slå opp medlemskap om forelder ikke har fnr
             it.relatertPersonsIdent != null &&
-                // Bare se på foreldrerelasjoner
-                it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
-                // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                    // Bare se på foreldrerelasjoner
+                    it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
+                    // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                    (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                    (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
         }.map {
             Pair("FORELDER_BARN_RELASJON-${it.relatertPersonsRolle.name}", it.relatertPersonsIdent!!)
         }.sortedBy {
@@ -252,7 +252,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
             it.first
         },
 
-    ).flatten()
+        ).flatten()
 
     // Skip duplikater. Man kan ha flere roller ovenfor et barn samtidig (foreldre-relasjon og foreldre-ansvar). Og det
     // blir fort rot i dolly (i dev) når man oppretter og endrer brukere (masse dupikate relasjoner osv). Skipper derfor
@@ -293,11 +293,11 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
                 val madr1 = adresseBarn.matrikkeladresse
                 if (madr1.matrikkelId != null) {
                     if (bostedsadresserAnnen
-                        .mapNotNull { it.matrikkeladresse }
-                        .any { madr2 ->
-                            madr1.matrikkelId == madr2.matrikkelId &&
-                                madr1.bruksenhetsnummer == madr2.bruksenhetsnummer
-                        }
+                            .mapNotNull { it.matrikkeladresse }
+                            .any { madr2 ->
+                                madr1.matrikkelId == madr2.matrikkelId &&
+                                        madr1.bruksenhetsnummer == madr2.bruksenhetsnummer
+                            }
                     ) {
                         // Fant overlappende matrikkelId mellom barn og annen part
                         log.debug("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (matrikkeladresse) mellom barn og annen part")
@@ -310,11 +310,11 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
                 val adr1 = adresseBarn.vegadresse
                 if (adr1.matrikkelId != null) {
                     if (bostedsadresserAnnen
-                        .mapNotNull { it.vegadresse }
-                        .any { adr2 ->
-                            adr1.matrikkelId == adr2.matrikkelId &&
-                                adr1.bruksenhetsnummer == adr2.bruksenhetsnummer
-                        }
+                            .mapNotNull { it.vegadresse }
+                            .any { adr2 ->
+                                adr1.matrikkelId == adr2.matrikkelId &&
+                                        adr1.bruksenhetsnummer == adr2.bruksenhetsnummer
+                            }
                     ) {
                         // Fant overlappende vegadresse mellom barn og annen part
                         log.debug("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (vegadresse) mellom barn og annen part")

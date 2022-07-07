@@ -88,6 +88,9 @@ object Configuration {
         systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
 
     val profile: Profile = this["application.profile"].let { Profile.valueOf(it) }
+    val local: Boolean = profile == Profile.LOCAL
+    val dev: Boolean = profile == Profile.DEV
+    val prod: Boolean = profile == Profile.PROD
 
     val azureAdProperties = AzureAdProperties()
     val dbProperties = DatabaseProperties()

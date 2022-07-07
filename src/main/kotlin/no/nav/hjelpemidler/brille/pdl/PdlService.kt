@@ -12,7 +12,7 @@ class PdlService(
     suspend fun hentPerson(fnummer: String): PersonDetaljerDto {
         try {
             val pdlOppslag = pdlClient.hentPerson(fnummer)
-            if (Configuration.profile == Configuration.Profile.DEV) {
+            if (Configuration.dev) {
                 log.info {
                     "DEBUG: PDL raw result: ${jsonMapper.writeValueAsString(pdlOppslag)}"
                 }
