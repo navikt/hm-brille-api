@@ -57,19 +57,6 @@ fun Route.virksomhetApi(
         }
     }
 
-    // TODO: fjern denne
-    get("/enhetsregisteret/enheter/{organisasjonsnummer}") {
-        val organisasjonsnummer =
-            call.parameters["organisasjonsnummer"] ?: error("Mangler organisasjonsnummer i url")
-        val organisasjonsenhet =
-            enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
-                ?: return@get call.respond(
-                    HttpStatusCode.NotFound,
-                    "Fant ikke orgenhet for orgnr $organisasjonsnummer"
-                )
-        call.respond(organisasjonsenhet)
-    }
-
     get("/virksomhet/{orgnr}") {
         val organisasjonsnummer =
             call.parameters["orgnr"] ?: error("Mangler orgnr i url")
