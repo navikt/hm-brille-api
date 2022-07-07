@@ -1,7 +1,7 @@
 query($ident: ID!){
     # TODO: Dataminimering når vi finner ut hva vi trenger
     hentPerson(ident: $ident) {
-        bostedsadresse(historikk: false) {
+        bostedsadresse(historikk: true) {
             gyldigFraOgMed
             gyldigTilOgMed
             vegadresse {
@@ -16,7 +16,7 @@ query($ident: ID!){
                 bostedskommune
             }
         }
-        deltBosted {
+        deltBosted(historikk: true) {
             startdatoForKontrakt
             sluttdatoForKontrakt
             vegadresse {
@@ -36,7 +36,7 @@ query($ident: ID!){
             foedselsaar
             foedselsdato
         }
-        foreldreansvar {
+        foreldreansvar(historikk: true) {
             ansvar
             ansvarlig
             folkeregistermetadata {
@@ -53,14 +53,14 @@ query($ident: ID!){
                 opphoerstidspunkt
             }
         }
-        fullmakt {
+        fullmakt(historikk: true) {
             motpartsPersonident
             motpartsRolle
             omraader
             gyldigFraOgMed
             gyldigTilOgMed
         }
-        vergemaalEllerFremtidsfullmakt {
+        vergemaalEllerFremtidsfullmakt(historikk: true) {
             type
             embete
             vergeEllerFullmektig {

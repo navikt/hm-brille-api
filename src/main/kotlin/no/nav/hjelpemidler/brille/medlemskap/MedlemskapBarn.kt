@@ -10,13 +10,14 @@ import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.Bostedsadresse
 import no.nav.hjelpemidler.brille.pdl.DeltBosted
+import no.nav.hjelpemidler.brille.pdl.Folkeregistermetadata
 import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
 import no.nav.hjelpemidler.brille.pdl.MotpartsRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import org.slf4j.MDC
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -44,8 +45,9 @@ class MedlemskapBarn(
     private val pdlClient: PdlClient,
     private val redisClient: RedisClient,
 ) {
-    fun sjekkMedlemskapBarn(fnrBarn: String): MedlemskapResultat = runBlocking {
+    fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsDato: LocalDate = LocalDate.now()): MedlemskapResultat = runBlocking {
         log.info("Sjekker medlemskap for barn")
+        log.debug("bestillingsDato: $bestillingsDato")
 
         val baseCorrelationId = MDC.get(MDC_CORRELATION_ID)
         val saksgrunnlag = mutableListOf(
@@ -54,6 +56,7 @@ class MedlemskapBarn(
                 saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
+                        "bestillingsDato" to bestillingsDato,
                         "correlation-id" to baseCorrelationId
                     )
                 )
@@ -62,7 +65,7 @@ class MedlemskapBarn(
 
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
         if (!Configuration.dev) {
-            val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn)
+            val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsDato)
             if (medlemskapBarnCache != null) {
                 log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
                 tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
@@ -88,18 +91,18 @@ class MedlemskapBarn(
             )
         )
 
-        if (!sjekkFolkeregistrertAdresseINorge(pdlBarn)) {
+        if (!sjekkFolkeregistrertAdresseINorge(bestillingsDato, pdlBarn)) {
             // Ingen av de folkeregistrerte bostedsadressene satt på barnet i PDL er en normal norsk adresse (kan
             // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
             // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
             // stopper vi opp behandling tidlig her!
             log.info("Barnet har ikke folkeregistrert adresse i Norge og vi antar derfor at hen ikke er medlem i folketrygden")
             val medlemskapResultat = MedlemskapResultat(false, false, saksgrunnlag)
-            redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
+            redisClient.setMedlemskapBarn(fnrBarn, bestillingsDato, medlemskapResultat)
             return@runBlocking medlemskapResultat
         }
 
-        val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn)
+        val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsDato, pdlBarn)
         log.debug("prioritertListe = ${jsonMapper.writeValueAsString(prioritertListe)}")
 
         for ((rolle, fnrVergeEllerForelder) in prioritertListe) {
@@ -127,7 +130,7 @@ class MedlemskapBarn(
                     )
                 )
 
-                if (harSammeAdresse(pdlBarn, pdlVergeEllerForelder)) {
+                if (harSammeAdresse(bestillingsDato, pdlBarn, pdlVergeEllerForelder)) {
                     val medlemskap =
                         medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
 
@@ -153,7 +156,7 @@ class MedlemskapBarn(
                                 uavklartMedlemskap = false,
                                 saksgrunnlag = saksgrunnlag
                             )
-                            redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
+                            redisClient.setMedlemskapBarn(fnrBarn, bestillingsDato, medlemskapResultat)
                             log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
                             return@runBlocking medlemskapResultat
                         }
@@ -172,24 +175,25 @@ class MedlemskapBarn(
                 uavklartMedlemskap = true,
                 saksgrunnlag = saksgrunnlag
             )
-        redisClient.setMedlemskapBarn(fnrBarn, medlemskapResultat)
+        redisClient.setMedlemskapBarn(fnrBarn, bestillingsDato, medlemskapResultat)
         log.info("Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge")
         log.debug("medlemskapResultat: ${jsonMapper.writeValueAsString(medlemskapResultat)}")
         medlemskapResultat
     }
 }
 
-private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boolean {
+private fun sjekkFolkeregistrertAdresseINorge(bestillingsDato: LocalDate, pdlBarn: PdlPersonResponse): Boolean {
     // Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
     val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
     val deltBostedBarn = pdlBarn.data?.hentPerson?.deltBosted ?: listOf()
     return slåSammenAktiveBosteder(
+        bestillingsDato,
         bostedsadresser,
         deltBostedBarn,
     ).any { it.vegadresse != null || it.matrikkeladresse != null || it.ukjentBosted != null }
 }
 
-private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
+private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsDato: LocalDate, pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
     // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i medlemskap-oppslag tjenesten. Her
     // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
     // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
@@ -199,13 +203,12 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
     val foreldreAnsvar = pdlBarn.data?.hentPerson?.foreldreansvar ?: listOf()
     val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
 
-    val now = LocalDateTime.now()
     val fullmektigeVergerOgForeldre: List<Pair<String, String>> = listOf(
 
         fullmakt.filter {
             // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot dagens dato
-            (it.gyldigFraOgMed.isEqual(now.toLocalDate()) || it.gyldigFraOgMed.isBefore(now.toLocalDate())) &&
-                (it.gyldigTilOgMed.isEqual(now.toLocalDate()) || it.gyldigTilOgMed.isAfter(now.toLocalDate())) &&
+            (it.gyldigFraOgMed.isEqual(bestillingsDato) || it.gyldigFraOgMed.isBefore(bestillingsDato)) &&
+                (it.gyldigTilOgMed.isEqual(bestillingsDato) || it.gyldigTilOgMed.isAfter(bestillingsDato)) &&
                 // Fullmektig ovenfor barnet
                 it.motpartsRolle == MotpartsRolle.FULLMEKTIG
         }.map {
@@ -216,8 +219,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
             // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
             it.vergeEllerFullmektig.motpartsPersonident != null &&
                 // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsDato, it.folkeregistermetadata)
         }.map {
             Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
         },
@@ -230,8 +232,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
             // "Alltid tomt ved oppslag på ansvarlig." ref.: https://pdldocs-navno.msappproxy.net/ekstern/index.html#_foreldreansvar
             it.ansvarlig != null &&
                 // Bare se på foreldreansvar som ikke har opphørt (feltet er null eller i fremtiden)
-                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsDato, it.folkeregistermetadata)
         }.map {
             Pair("FORELDER_ANSVAR-${it.ansvar ?: "ukjent"}", it.ansvarlig!!)
         },
@@ -242,8 +243,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
                 // Bare se på foreldrerelasjoner
                 it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
                 // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsDato, it.folkeregistermetadata)
         }.map {
             Pair("FORELDER_BARN_RELASJON-${it.relatertPersonsRolle.name}", it.relatertPersonsIdent!!)
         }.sortedBy {
@@ -267,7 +267,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
     }
 }
 
-private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): Boolean {
+private fun harSammeAdresse(bestillingsDato: LocalDate, barn: PdlPersonResponse, annen: PdlPersonResponse): Boolean {
     // Vi sammenligner adresser for å se om barn og foresatte (foreldre, verger, fullmektige) bor sammen. For slike
     // formål anbefaler PDL at man sammenligner matrikkelId og bruksenhetsnummeret. Begge disse datapunktene skal ha
     // relativt god kvalitet. Da vi har toleranse for småfeil så godtar vi at minimum bare matrikkelId er lik hvis det
@@ -282,16 +282,13 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
     val deltBostedBarn = barn.data?.hentPerson?.deltBosted ?: listOf()
 
     // Sammenlignes med "annen"
-    val now = LocalDateTime.now()
     val bostedsadresserAnnen = (annen.data?.hentPerson?.bostedsadresse ?: listOf()).filter {
-        // TODO: Hva med gyldighetsdatoer her?
-        (it.gyldigFraOgMed == null || it.gyldigFraOgMed.isBefore(now)) &&
-            (it.gyldigTilOgMed == null || it.gyldigTilOgMed.isAfter(now))
+        sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsDato, it)
     }
 
     // For hver adresse barnet har (vanlig og delt), så sammenligner vi basert på type mot den andre partens adresser
     // av samme type
-    for (adresseBarn in slåSammenAktiveBosteder(bostedsadresserBarn, deltBostedBarn)) {
+    for (adresseBarn in slåSammenAktiveBosteder(bestillingsDato, bostedsadresserBarn, deltBostedBarn)) {
         when {
             adresseBarn.matrikkeladresse != null -> {
                 val madr1 = adresseBarn.matrikkeladresse
@@ -340,31 +337,59 @@ private fun harSammeAdresse(barn: PdlPersonResponse, annen: PdlPersonResponse): 
 }
 
 private fun slåSammenAktiveBosteder(
+    bestillingsDato: LocalDate,
     bosted: List<Bostedsadresse>,
     delteBosted: List<DeltBosted>,
 ): List<Bostedsadresse> {
     // Finn aktive delte bosted for barnet og transformer de til samme format som hoved-folkereg. adresse, så vi kan
     // sjekke alle adresser sammen
-    val now = LocalDateTime.now()
     return listOf(
         bosted.filter {
             // Sjekk gyldig fra/til felter
-            (it.gyldigFraOgMed == null || it.gyldigFraOgMed.isBefore(now)) &&
-                (it.gyldigTilOgMed == null || it.gyldigTilOgMed.isAfter(now))
+            sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsDato, it)
         },
         delteBosted.filter {
-            (it.startdatoForKontrakt.isEqual(now.toLocalDate()) || it.startdatoForKontrakt.isBefore(now.toLocalDate())) &&
-                (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(now.toLocalDate()) || it.sluttdatoForKontrakt.isAfter(now.toLocalDate()))
+            (it.startdatoForKontrakt.isEqual(bestillingsDato) || it.startdatoForKontrakt.isBefore(bestillingsDato)) &&
+                (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(bestillingsDato) || it.sluttdatoForKontrakt.isAfter(bestillingsDato))
         }.map {
             Bostedsadresse(
                 gyldigFraOgMed = it.startdatoForKontrakt.atStartOfDay(),
-                gyldigTilOgMed = it.sluttdatoForKontrakt?.plusDays(1)?.atStartOfDay(),
+                // Vi oversetter her dato til dato+tid ved å sette gyldigTilOgMed siste sekund denne dagen. Å sette
+                // starten av neste dag kan være fristende men vi gjør gyldigTilOgMed-feltet om tilbake til dato andre
+                // steder igjen. Så da må det være samme døgn. Derfor gyldig til og med siste sekund det samme døgn.
+                gyldigTilOgMed = it.sluttdatoForKontrakt?.plusDays(1)?.atStartOfDay()?.minusSeconds(1),
                 vegadresse = it.vegadresse,
                 matrikkeladresse = it.matrikkeladresse,
                 ukjentBosted = it.ukjentBosted,
             )
         }
     ).flatten()
+}
+
+private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsDato: LocalDate, folkeregistermetadata: Folkeregistermetadata?): Boolean {
+    return (
+        folkeregistermetadata?.opphoerstidspunkt == null ||
+            folkeregistermetadata.opphoerstidspunkt.toLocalDate().isEqual(bestillingsDato) ||
+            folkeregistermetadata.opphoerstidspunkt.toLocalDate().isAfter(bestillingsDato)
+        ) &&
+        (
+            folkeregistermetadata?.gyldighetstidspunkt == null ||
+                folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isEqual(bestillingsDato) ||
+                folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isBefore(bestillingsDato)
+            )
+}
+
+private fun sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsDato: LocalDate, adresse: Bostedsadresse): Boolean {
+    return (
+        adresse.gyldigFraOgMed == null ||
+            adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsDato) ||
+            adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsDato)
+        ) &&
+        (
+            adresse.gyldigTilOgMed == null ||
+                adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsDato) ||
+                adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsDato)
+            )
 }
 
 private data class MedlemskapResponse(

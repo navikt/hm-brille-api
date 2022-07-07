@@ -8,6 +8,7 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 import redis.clients.jedis.JedisPooled
 import redis.clients.jedis.commands.StringCommands
+import java.time.LocalDate
 
 class RedisClient(private val redisProps: Configuration.RedisProperties = Configuration.redisProperties) {
     private val jedis: StringCommands = when (Configuration.profile) {
@@ -27,13 +28,13 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
         jedis.setex(erOptikerKey(fnr), redisProps.hprExpirySeconds, erOptiker.toString())
     }
 
-    fun medlemskapBarn(fnr: String): MedlemskapResultat? = jedis.get(medlemskapBarnKey(fnr))?.let {
+    fun medlemskapBarn(fnr: String, bestillingsDato: LocalDate): MedlemskapResultat? = jedis.get(medlemskapBarnKey(fnr, bestillingsDato))?.let {
         jsonMapper.readValue(it, MedlemskapResultat::class.java)
     }
 
-    fun setMedlemskapBarn(fnr: String, medlemskapResultat: MedlemskapResultat) {
+    fun setMedlemskapBarn(fnr: String, bestillingsDato: LocalDate, medlemskapResultat: MedlemskapResultat) {
         jedis.setex(
-            medlemskapBarnKey(fnr),
+            medlemskapBarnKey(fnr, bestillingsDato),
             redisProps.medlemskapBarnExpirySeconds,
             jsonMapper.writeValueAsString(medlemskapResultat)
         )
@@ -53,5 +54,5 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
 }
 
 private fun erOptikerKey(fnr: String) = "fnr:$fnr:hpr:er.optiker"
-private fun medlemskapBarnKey(fnr: String) = "fnr:$fnr:medlemskapbarn:resultat"
+private fun medlemskapBarnKey(fnr: String, bestillingsDato: LocalDate) = "fnr:$fnr:bestillingsDato:$bestillingsDato:medlemskapbarn:resultat"
 private fun orgenhetKey(orgnr: Organisasjonsnummer) = "orgnr:$orgnr:orgenhet"
