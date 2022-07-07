@@ -7,9 +7,11 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.audit.AuditService
+import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 
-fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService) {
+fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
     post("/vilkarsgrunnlag") {
         if (Configuration.prod) { // TODO: fjern før prodsetting
             call.respond(HttpStatusCode.Unauthorized)
@@ -17,10 +19,15 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService) {
         }
 
         val vilkårsgrunnlag = call.receive<VilkårsgrunnlagDto>()
+        auditService.lagreOppslag(
+            fnrInnlogget = call.extractFnr(),
+            fnrOppslag = vilkårsgrunnlag.fnrBruker,
+            oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om innbygger og bestilling oppfyller vilkår for støtte"
+        )
         val vilkarsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)
 
         data class VilkårsvurderingDto(
-            val resultat: Resultat,
+            val resultat: Resultat
         )
 
         call.respond(VilkårsvurderingDto(vilkarsvurdering.utfall))

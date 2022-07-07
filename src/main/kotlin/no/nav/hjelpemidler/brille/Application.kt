@@ -131,8 +131,8 @@ fun Application.setupRoutes() {
             authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     pdlApi(pdlService, auditService)
-                    vilkårApi(vilkårsvurderingService)
-                    søknadApi(vedtakService)
+                    vilkårApi(vilkårsvurderingService, auditService)
+                    søknadApi(vedtakService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
                 }
             }

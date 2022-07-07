@@ -21,7 +21,11 @@ fun Route.pdlApi(pdlService: PdlService, auditService: AuditService) {
         val fnrBruker = call.receive<Request>().fnr
         if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
 
-        auditService.lagreOppslag(fnrInnlogget = fnrInnlogget, fnrOppslag = fnrBruker)
+        auditService.lagreOppslag(
+            fnrInnlogget = fnrInnlogget,
+            fnrOppslag = fnrBruker,
+            "[POST] /hent-bruker - brukeroppslag mot PDL"
+        )
 
         val personInformasjon = pdlService.hentPerson(fnrBruker)
 
