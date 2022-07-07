@@ -11,12 +11,12 @@ import java.time.LocalDate
 data class Vilkårsgrunnlag(
     val vedtakForBruker: List<EksisterendeVedtak>,
     val pdlOppslagBruker: PdlOppslag,
+    val medlemskapResultat: MedlemskapResultat,
     val brilleseddel: Brilleseddel,
     val bestillingsdato: LocalDate,
-    val dagensDato: LocalDate = LocalDate.now(),
+    val dagensDato: LocalDate,
     val datoOrdningenStartet: LocalDate = DATO_ORDNINGEN_STARTET,
-    val seksMånederSiden: LocalDate = LocalDate.now().minusMonths(6),
-    val medlemskapResultat: MedlemskapResultat,
+    val seksMånederSiden: LocalDate = dagensDato.minusMonths(6),
     val minsteSfære: Diopter = Diopter.ONE,
     val minsteSylinder: Diopter = Diopter.ONE,
 ) {

@@ -107,7 +107,7 @@ object StubEngine {
         post("/pdl") {
             respond(
                 javaClass.getResourceAsStream("/mock/pdl.json").use {
-                    jsonMapper.readTree(it)
+                    jsonMapper.readTree(requireNotNull(it))
                 }
             )
         }
