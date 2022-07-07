@@ -185,7 +185,7 @@ private fun sjekkFolkeregistrertAdresseINorge(pdlBarn: PdlPersonResponse): Boole
     val deltBostedBarn = pdlBarn.data?.hentPerson?.deltBosted ?: listOf()
     return slåSammenAktiveBosteder(
         bostedsadresser,
-        deltBostedBarn
+        deltBostedBarn,
     ).any { it.vegadresse != null || it.matrikkeladresse != null || it.ukjentBosted != null }
 }
 
@@ -215,9 +215,9 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(pdlBarn: P
         vergemaalEllerFremtidsfullmakt.filter {
             // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
             it.vergeEllerFullmektig.motpartsPersonident != null &&
-                    // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                    (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
-                    (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
+                // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
+                (it.folkeregistermetadata?.opphoerstidspunkt?.isAfter(now) ?: true) &&
+                (it.folkeregistermetadata?.gyldighetstidspunkt?.isBefore(now) ?: true)
         }.map {
             Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
         },
