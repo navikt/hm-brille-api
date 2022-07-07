@@ -229,6 +229,9 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestilling
                 sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsDato, it.folkeregistermetadata)
         }.map {
             Pair("FORELDER_ANSVAR-${it.ansvar ?: "ukjent"}", it.ansvarlig!!)
+        }.sortedBy {
+            // Sorter rekkefølgen vi sjekker basert på rolle.
+            it.first
         },
 
         foreldreBarnRelasjon.filter {
