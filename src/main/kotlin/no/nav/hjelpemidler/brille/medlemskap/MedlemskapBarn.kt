@@ -5,7 +5,6 @@ import com.fasterxml.jackson.module.kotlin.treeToValue
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import mu.withLoggingContext
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.Bostedsadresse
@@ -63,14 +62,15 @@ class MedlemskapBarn(
         )
 
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
-        if (!Configuration.dev) {
-            val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsDato)
-            if (medlemskapBarnCache != null) {
-                log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
-                tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
-                return@runBlocking medlemskapBarnCache
-            }
+        val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsDato)
+        if (medlemskapBarnCache != null) {
+            log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
+            tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
+            return@runBlocking medlemskapBarnCache
         }
+
+        // TODO: Sjekk med barnetrygd: hvis noen har mottatt barnetrygd for barnet så vet vi at det er medlem av
+        //  folketrygden og trenger trolig ikke sjekke noe annet.
 
         // Slå opp pdl informasjon om barnet
         val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
@@ -88,6 +88,7 @@ class MedlemskapBarn(
             )
         )
 
+        // Sjekk minimumskravet vårt for å anta medlemskap for barnet i folketrygden.
         if (!sjekkFolkeregistrertAdresseINorge(bestillingsDato, pdlBarn)) {
             // Ingen av de folkeregistrerte bostedsadressene satt på barnet i PDL er en normal norsk adresse (kan
             // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
@@ -99,6 +100,13 @@ class MedlemskapBarn(
             return@runBlocking medlemskapResultat
         }
 
+        // Vi har her det minimale vi trenger for å si "OK vi antar medlemskap". Resten av koden under forsøker å øke
+        // sannsynligheten for at dette er korrekt ved å sjekk om fullmektige/verger/foreldre som bor på samme
+        // folkeregistrerte adresse er medlemmer.
+
+        // Vi sjekker alle relasjoner vi har én etter én i denne prioriterte rekkefølgen inntil vi finner noen som
+        // LovMe-tjenesten kan si at er medlem. I så tilfelle sier vi at vi har bevist medlemskapet til barnet siden
+        // "foresatt" er medlem.
         val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsDato, pdlBarn)
 
         for ((rolle, fnrVergeEllerForelder) in prioritertListe) {
@@ -126,6 +134,8 @@ class MedlemskapBarn(
                     )
                 )
 
+                // Hvis relasjon bor på samme adresse kan vi bruke de til å sannsynliggjøre medlemskapet til barnet,
+                // hvis de ikke bor på samme adresse så er de ikke interessant for dette formålet.
                 if (harSammeAdresse(bestillingsDato, pdlBarn, pdlVergeEllerForelder)) {
                     val medlemskap =
                         medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
@@ -144,6 +154,8 @@ class MedlemskapBarn(
                         )
                     )
 
+                    // Hvis svaret fra LovMe er "JA" så sier vi at medlemskapet til barnet er bevist, hvis svaret er
+                    // "UAVKLART" eller "NEI" så sjekker vi videre på andre relasjoner.
                     when (jsonMapper.treeToValue<MedlemskapResponse>(medlemskap).resultat.svar) {
                         MedlemskapResponseResultatSvar.JA -> {
                             log.info("Barnets medlemskap verifisert igjennom verges-/forelders medlemskap og bolig på samme adresse")
@@ -162,8 +174,9 @@ class MedlemskapBarn(
             }
         }
 
-        // Hvis man kommer sålangt så har man sjekket alle verger og foreldre, og ingen både bor på samme folk.reg.
-        // adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten.
+        // Hvis man kommer sålangt så har man sjekket alle fullmektige, verger og foreldre, og ingen både bor på samme
+        // folk.reg. adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten. Vi svarer derfor at
+        // vi har antatt medlemskap bare basert på folkereg. adresse i Norge.
         val medlemskapResultat =
             MedlemskapResultat(
                 medlemskapBevist = false,
@@ -177,7 +190,7 @@ class MedlemskapBarn(
 }
 
 private fun sjekkFolkeregistrertAdresseINorge(bestillingsDato: LocalDate, pdlBarn: PdlPersonResponse): Boolean {
-    // Avklar folkeregistrert adresse i Norge, ellers stopp behandling?
+    // Avklar folkeregistrert adresse i Norge, ellers stopp behandling.
     val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
     val deltBostedBarn = pdlBarn.data?.hentPerson?.deltBosted ?: listOf()
     return slåSammenAktiveBosteder(
@@ -188,9 +201,10 @@ private fun sjekkFolkeregistrertAdresseINorge(bestillingsDato: LocalDate, pdlBar
 }
 
 private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsDato: LocalDate, pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
-    // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i medlemskap-oppslag tjenesten. Her
-    // prioriterer vi først verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
-    // barnet har fått en annen verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
+    // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i LovMe/medlemskap-oppslag tjenesten. Her
+    // prioriterer vi først fullmektige/verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
+    // barnet har fått en annen fullmektig/verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
+    // Foreldreansvar først, så andre foreldre roller: man bor trolig med forelder som har et aktivt foreldreansvar.
 
     val fullmakt = pdlBarn.data?.hentPerson?.fullmakt ?: listOf()
     val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
@@ -200,7 +214,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestilling
     val fullmektigeVergerOgForeldre: List<Pair<String, String>> = listOf(
 
         fullmakt.filter {
-            // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot dagens dato
+            // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot bestillingsdato
             (it.gyldigFraOgMed.isEqual(bestillingsDato) || it.gyldigFraOgMed.isBefore(bestillingsDato)) &&
                 (it.gyldigTilOgMed.isEqual(bestillingsDato) || it.gyldigTilOgMed.isAfter(bestillingsDato)) &&
                 // Fullmektig ovenfor barnet
@@ -222,8 +236,8 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestilling
 
         foreldreAnsvar.filter {
             // Må ha et fnr vi kan slå opp på. Dette bekrefter også at relasjonen gjelder en forelder, ikke at oppslått
-            // barn har foreldreansvar for noen:
-            // "Alltid tomt ved oppslag på ansvarlig." ref.: https://pdldocs-navno.msappproxy.net/ekstern/index.html#_foreldreansvar
+            // barn som har foreldreansvar for noen:
+            // Feltet er "Alltid tomt ved oppslag på ansvarlig." ref.: https://pdldocs-navno.msappproxy.net/ekstern/index.html#_foreldreansvar
             it.ansvarlig != null &&
                 // Bare se på foreldreansvar som ikke har opphørt (feltet er null eller i fremtiden)
                 sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsDato, it.folkeregistermetadata)
