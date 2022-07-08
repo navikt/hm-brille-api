@@ -44,7 +44,7 @@ fun Route.virksomhetApi(
                 Organisasjon(
                     orgnummer = orgEnhet.organisasjonsnummer,
                     navn = orgEnhet.navn,
-                    forretningadresse = if(orgEnhet.forretningsadresse != null) "${orgEnhet.forretningsadresse.adresse}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}" else null,
+                    forretningsadresse = if(orgEnhet.forretningsadresse != null) "${orgEnhet.forretningsadresse.adresse}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}" else null,
                     beliggenhetsadresse = if(orgEnhet.beliggenhetsadresse != null) "${orgEnhet.beliggenhetsadresse.adresse}, ${orgEnhet.beliggenhetsadresse.postnummer} ${orgEnhet.beliggenhetsadresse.poststed}" else null,
                 )
             }
