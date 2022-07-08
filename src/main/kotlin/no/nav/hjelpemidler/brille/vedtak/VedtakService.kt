@@ -14,12 +14,13 @@ private val sikkerLog = KotlinLogging.logger("tjenestekall")
 class VedtakService(
     private val vedtakStore: VedtakStore,
     private val vilkårsvurderingService: VilkårsvurderingService,
-    private val kafkaService: KafkaService,
+    private val kafkaService: KafkaService
 ) {
     suspend fun lagVedtak(søknadDto: SøknadDto, fnrInnsender: String): Vedtak<Vilkårsgrunnlag> {
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkårBrille(søknadDto.vilkårsgrunnlag)
 
-        if (vilkårsvurdering.utfall != Resultat.JA) {
+        // TODO: Fjern prodsjekk
+        if (Configuration.profile != Configuration.Profile.PROD && vilkårsvurdering.utfall != Resultat.JA) {
             sikkerLog.info {
                 "Vilkårsvurderingen ga uventet resultat:\n${vilkårsvurdering.toJson()}"
             }
@@ -36,7 +37,7 @@ class VedtakService(
                 bestillingsdato = søknadDto.vilkårsgrunnlag.bestillingsdato,
                 brillepris = søknadDto.vilkårsgrunnlag.brillepris,
                 bestillingsreferanse = søknadDto.bestillingsreferanse,
-                vilkårsvurdering = vilkårsvurdering,
+                vilkårsvurdering = vilkårsvurdering
             )
         )
 
@@ -45,11 +46,17 @@ class VedtakService(
             vedtak.fnrBruker,
             KafkaService.BarnebrilleVedtakData(
                 fnr = vedtak.fnrBruker,
+                brukersNavn = søknadDto.brukersNavn,
                 orgnr = vedtak.orgnr,
+                orgNavn = søknadDto.orgNavn,
+                orgAdresse = søknadDto.orgAdresse,
                 eventId = UUID.randomUUID(),
                 "hm-barnebrillevedtak-opprettet",
                 navnAvsender = "Ole Brumm", // TODO: hvilket navn skal dette egentlig være? Navnet til bruker (barn) eller optiker?
-                sakId = vedtak.id.toString()
+                sakId = vedtak.id.toString(),
+                brilleseddel = søknadDto.vilkårsgrunnlag.brilleseddel.tilBrilleseddel(),
+                bestillingsdato = søknadDto.vilkårsgrunnlag.bestillingsdato,
+                bestillingsreferanse = søknadDto.bestillingsreferanse
             )
         )
 

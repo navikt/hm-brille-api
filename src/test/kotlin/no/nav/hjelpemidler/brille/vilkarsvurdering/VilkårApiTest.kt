@@ -154,7 +154,7 @@ internal class VilkårApiTest {
             saksgrunnlag = emptyList()
         ),
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
-        forventetResultat: Resultat
+        forventetResultat: Resultat,
     ) {
         every {
             dagensDatoFactory()
@@ -184,27 +184,27 @@ internal class VilkårApiTest {
 
     private fun lagPdlOppslag(fødselsdato: String): PdlOppslag {
         val pdlPersonResponse = javaClass.getResourceAsStream("/mock/pdl.json").use {
-            val pdlMockTekst = it.bufferedReader().readText().replace("2014-08-15", fødselsdato)
+            val pdlMockTekst = requireNotNull(it).bufferedReader().readText().replace("2014-08-15", fødselsdato)
             jsonMapper.readValue<PdlPersonResponse>(pdlMockTekst)
         }
 
         return PdlOppslag(pdlPersonResponse, jsonMapper.nullNode())
     }
 
-    private fun lagEksisterendeVedtak(bestillingsDato: LocalDate) =
+    private fun lagEksisterendeVedtak(bestillingsdato: LocalDate) =
         EksisterendeVedtak(
             id = 1,
             fnrBruker = "12345678910",
-            bestillingsdato = bestillingsDato,
+            bestillingsdato = bestillingsdato,
             status = "",
-            opprettet = bestillingsDato.atStartOfDay()
+            opprettet = bestillingsdato.atStartOfDay()
         )
 
     private fun defaulVilkårMedBrilleseddel(
         høyreSfære: Diopter = "0".tilDiopter(),
         høyreSylinder: Diopter = "0".tilDiopter(),
         venstreSfære: Diopter = "0".tilDiopter(),
-        venstreSylinder: Diopter = "0".tilDiopter()
+        venstreSylinder: Diopter = "0".tilDiopter(),
     ) =
         defaultVilkårsgrunnlag.copy(
             brilleseddel = BrilleseddelDto(

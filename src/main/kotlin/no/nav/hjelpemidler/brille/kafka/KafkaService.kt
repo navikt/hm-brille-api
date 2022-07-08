@@ -6,8 +6,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
+import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -16,7 +19,7 @@ private val log = KotlinLogging.logger {}
 
 class KafkaService(
     private val topic: String = Configuration.kafkaProperties.topic,
-    kafkaProducerFactory: () -> Producer<String, String>,
+    kafkaProducerFactory: () -> Producer<String, String>
 ) {
     private val kafkaProducer = kafkaProducerFactory()
     private val mapper = jacksonMapperBuilder()
@@ -28,7 +31,7 @@ class KafkaService(
     fun hendelseOpprettet(
         measurement: String,
         fields: Map<String, Any>,
-        tags: Map<String, String>,
+        tags: Map<String, String>
     ) {
         produceEvent(
             measurement,
@@ -53,11 +56,17 @@ class KafkaService(
 
     internal data class BarnebrilleVedtakData(
         val fnr: String,
+        val brukersNavn: String,
         val orgnr: String,
+        val orgNavn: String,
+        val orgAdresse: String,
         val eventId: UUID,
         val eventName: String,
         val opprettetDato: LocalDateTime = LocalDateTime.now(),
         val navnAvsender: String,
         val sakId: String,
+        val brilleseddel: Brilleseddel,
+        val bestillingsdato: LocalDate,
+        val bestillingsreferanse: String
     )
 }
