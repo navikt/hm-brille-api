@@ -6,6 +6,6 @@ data class PersonDetaljerDto(
     val fnr: String,
     val fornavn: String,
     val etternavn: String,
-    val alder: Int?, // todo -> fjern?
+    val alder: Int?,
     val fodselsdato: LocalDate?,
 )

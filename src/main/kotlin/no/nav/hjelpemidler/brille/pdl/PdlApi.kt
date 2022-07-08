@@ -6,6 +6,8 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import no.nav.hjelpemidler.brille.audit.AuditService
+import no.nav.hjelpemidler.brille.exceptions.PersonNotAccessibleInPdl
+import no.nav.hjelpemidler.brille.exceptions.PersonNotFoundInPdl
 import no.nav.hjelpemidler.brille.extractFnr
 
 fun Route.pdlApi(pdlService: PdlService, auditService: AuditService) {
@@ -14,7 +16,7 @@ fun Route.pdlApi(pdlService: PdlService, auditService: AuditService) {
         data class Response(
             val fnr: String,
             val navn: String,
-            val alder: Int
+            val alder: Int? = null,
         )
 
         val fnrInnlogget = call.extractFnr()
@@ -27,14 +29,21 @@ fun Route.pdlApi(pdlService: PdlService, auditService: AuditService) {
             "[POST] /hent-bruker - brukeroppslag mot PDL"
         )
 
-        val personInformasjon = pdlService.hentPerson(fnrBruker)
+        val message = try {
+            pdlService.hentPerson(fnrBruker).let {
+                Response(
+                    fnr = fnrBruker,
+                    navn = "${it.fornavn} ${it.etternavn}",
+                    alder = it.alder
+                )
+            }
+        } catch (e: Exception) {
+            when (e) {
+                is PersonNotFoundInPdl, is PersonNotAccessibleInPdl -> Response(fnr = "", navn = "")
+                else -> throw e
+            }
+        }
 
-        call.respond(
-            Response(
-                fnrBruker,
-                "${personInformasjon.fornavn} ${personInformasjon.etternavn}",
-                personInformasjon.alder!!
-            )
-        )
+        call.respond(message)
     }
 }
