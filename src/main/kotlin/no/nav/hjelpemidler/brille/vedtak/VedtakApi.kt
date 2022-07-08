@@ -6,12 +6,9 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
-
-private val log = KotlinLogging.logger {}
 
 fun Route.søknadApi(vedtakService: VedtakService, auditService: AuditService) {
     post("/soknad") {
@@ -28,8 +25,6 @@ fun Route.søknadApi(vedtakService: VedtakService, auditService: AuditService) {
             fnrOppslag = søknadDto.vilkårsgrunnlag.fnrBruker,
             oppslagBeskrivelse = "[POST] /soknad - Innsending av søknad"
         )
-
-        log.info("søknadDto: $søknadDto")
 
         val vedtak = vedtakService.lagVedtak(søknadDto, fnrInnsender)
 
