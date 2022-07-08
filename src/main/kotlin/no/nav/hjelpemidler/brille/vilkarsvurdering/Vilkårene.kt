@@ -69,7 +69,7 @@ object Vilkårene {
     ) { grunnlag ->
         val datoOrdningenStartet = grunnlag.datoOrdningenStartet
         when {
-            grunnlag.bestillingsdato.isAfter(grunnlag.dagensDato) -> nei("Bestillingsdato kan ikke være i fremtiden (etter ${grunnlag.dagensDato.formatert()}")
+            grunnlag.bestillingsdato.isAfter(grunnlag.dagensDato) -> nei("Bestillingsdato kan ikke være i fremtiden (etter ${grunnlag.dagensDato.formatert()})")
             grunnlag.bestillingsdato.isBefore(datoOrdningenStartet) -> nei("Bestillingsdato kan ikke være før ${datoOrdningenStartet.formatert()}")
             else -> ja("Bestillingsdato er ${datoOrdningenStartet.formatert()} eller senere")
         }
