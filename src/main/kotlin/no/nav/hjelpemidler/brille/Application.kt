@@ -41,6 +41,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
+import org.apache.kafka.clients.producer.MockProducer
 import org.slf4j.event.Level
 import java.util.TimeZone
 
