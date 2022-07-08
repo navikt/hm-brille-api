@@ -11,7 +11,7 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 
-private val log = KotlinLogging.logger{}
+private val log = KotlinLogging.logger {}
 
 fun Route.søknadApi(vedtakService: VedtakService, auditService: AuditService) {
     post("/soknad") {
