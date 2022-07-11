@@ -2,6 +2,7 @@ package no.nav.hjelpemidler.brille.altinn
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -21,6 +22,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.jsonMapper
 
 private val log = KotlinLogging.logger { }
 
@@ -43,7 +45,7 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
     }
     private val baseUrl = properties.baseUrl
 
-    suspend fun get(path: String, queryParameters: Parameters): Map<String, Any> {
+    suspend fun get(path: String, queryParameters: Parameters): JsonNode {
         val url = "$baseUrl/$path"
         log.info { "URL: $url, queryParameters: $queryParameters" }
         val response = client.get(url) {
@@ -57,7 +59,7 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
             val body = response.body<String>()
             log.warn { body }
         }
-        return emptyMap()
+        return jsonMapper.nullNode()
     }
 
     suspend fun hentReportee(fnr: String, etternavn: String): Reportee? {
