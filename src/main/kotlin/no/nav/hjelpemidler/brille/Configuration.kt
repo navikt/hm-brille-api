@@ -19,6 +19,8 @@ object Configuration {
             "enhetsregisteret_base_url" to "https://data.brreg.no/enhetsregisteret/api",
             "altinn.altinnUrl" to "",
             "altinn.proxyConsumerId" to "",
+            "ALTINN_APIKEY" to "",
+            "ALTINN_APIGW_APIKEY" to "",
         )
     )
 
