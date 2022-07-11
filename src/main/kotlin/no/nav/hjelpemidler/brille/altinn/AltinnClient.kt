@@ -15,6 +15,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
@@ -41,10 +42,12 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
     }
     private val baseUrl = properties.baseUrl
 
-    suspend fun get(path: String): Map<String, Any> {
+    suspend fun get(path: String, parameters: Parameters): Map<String, Any> {
         val url = "$baseUrl/$path"
         log.info { "URL: $url" }
-        val response = client.get(url)
+        val response = client.get(url) {
+            this.url.parameters.appendAll(parameters)
+        }
         if (response.status == HttpStatusCode.OK) {
             return response.body()
         }
