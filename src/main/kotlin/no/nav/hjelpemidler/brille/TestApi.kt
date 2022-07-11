@@ -17,8 +17,8 @@ fun Route.testApi(
     altinnClient: AltinnClient,
 ) {
     route("/test") {
-        get("/altinn/{...}") {
-            val path = call.parameters.getAll("param")!!.joinToString("/")
+        get("/altinn/{path...}") {
+            val path = requireNotNull(call.parameters.getAll("path")).joinToString("/")
             val data = altinnClient.get(path)
             call.respond(HttpStatusCode.OK, data)
         }
