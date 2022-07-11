@@ -16,6 +16,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
+import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
@@ -92,6 +93,7 @@ fun Application.setupRoutes() {
 
     val redisClient = RedisClient()
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
+    val altinnClient = AltinnClient(Configuration.altinnProperties)
     val vedtakStore = VedtakStorePostgres(dataSource)
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
     val auditStore = AuditStorePostgres(dataSource)
@@ -122,7 +124,7 @@ fun Application.setupRoutes() {
         selfTestRoutes()
 
         if (!Configuration.prod) {
-            testApi(medlemskapClient, medlemskapBarn, virksomhetStore, enhetsregisteretService)
+            testApi(altinnClient)
         }
 
         route("/api") {

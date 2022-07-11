@@ -44,8 +44,8 @@ fun Route.virksomhetApi(
                 Organisasjon(
                     orgnummer = orgEnhet.organisasjonsnummer,
                     navn = orgEnhet.navn,
-                    forretningsadresse = if(orgEnhet.forretningsadresse != null) "${orgEnhet.forretningsadresse.adresse.first()}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}" else null,
-                    beliggenhetsadresse = if(orgEnhet.beliggenhetsadresse != null) "${orgEnhet.beliggenhetsadresse.adresse.first()}, ${orgEnhet.beliggenhetsadresse.postnummer} ${orgEnhet.beliggenhetsadresse.poststed}" else null,
+                    forretningsadresse = if (orgEnhet.forretningsadresse != null) "${orgEnhet.forretningsadresse.adresse.first()}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}" else null,
+                    beliggenhetsadresse = if (orgEnhet.beliggenhetsadresse != null) "${orgEnhet.beliggenhetsadresse.adresse.first()}, ${orgEnhet.beliggenhetsadresse.postnummer} ${orgEnhet.beliggenhetsadresse.poststed}" else null,
                 )
             }
             val response = TidligereBrukteOrganisasjonerForOptiker(

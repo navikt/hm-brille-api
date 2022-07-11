@@ -9,7 +9,6 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID

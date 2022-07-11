@@ -37,6 +37,7 @@ spec:
   {{/each}}
   envFrom:
     - secret: redis-password
+    - secret: hm-soknad-api-secret
   tokenx:
     enabled: true
   azure:

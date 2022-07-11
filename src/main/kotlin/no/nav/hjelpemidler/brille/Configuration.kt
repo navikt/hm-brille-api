@@ -14,11 +14,11 @@ object Configuration {
             "unleash.unleash-uri" to "https://unleash.nais.io/api/",
             "kafka.client-id" to "hm-brille-api-v1",
             "kafka.topic" to "teamdigihot.hm-soknadsbehandling-v1",
-            "altinn.serviceCode" to "5614",
-            "altinn.serviceEditionCode" to "1",
             "digihot-oppslag.oppslagUrl" to "http://digihot-oppslag/api",
             "userclaim" to "pid",
-            "enhetsregisteret_base_url" to "https://data.brreg.no/enhetsregisteret/api"
+            "enhetsregisteret_base_url" to "https://data.brreg.no/enhetsregisteret/api",
+            "altinn.altinnUrl" to "",
+            "altinn.proxyConsumerId" to "",
         )
     )
 
@@ -46,7 +46,7 @@ object Configuration {
             "TOKEN_X_CLIENT_ID" to "local",
             "userclaim" to "sub",
             "REDIS_HOST" to "localhost",
-            "REDIS_PASSWORD" to ""
+            "REDIS_PASSWORD" to "",
         )
     )
 
@@ -60,7 +60,9 @@ object Configuration {
             "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.dev.nav.no/",
             "medlemskap.oppslag.scope" to "api://dev-gcp.medlemskap.medlemskap-oppslag/.default",
-            "enhetsregisteret_base_url" to "http://hm-mocks/brille/enhetsregisteret/api"
+            "enhetsregisteret_base_url" to "http://hm-mocks/brille/enhetsregisteret/api",
+            "altinn.altinnUrl" to "https://api-gw-q1.oera.no/ekstern/altinn/api",
+            "altinn.proxyConsumerId" to "hjelpemidlerdigitalsoknad-api-dev",
         )
     )
 
@@ -74,6 +76,8 @@ object Configuration {
             "syfohelsenettproxy.scope" to "api://prod-fss.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.intern.nav.no/",
             "medlemskap.oppslag.scope" to "api://prod-gcp.medlemskap.medlemskap-oppslag/.default",
+            "altinn.altinnUrl" to "TODO",
+            "altinn.proxyConsumerId" to "TODO",
         )
     )
 
@@ -102,6 +106,7 @@ object Configuration {
     val syfohelsenettproxyProperties = SyfohelsenettproxyProperties()
     val medlemskapOppslagProperties = MedlemskapOppslagProperties()
     val redisProperties = RedisProperties()
+    val altinnProperties = AltinnProperties()
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
@@ -171,6 +176,13 @@ object Configuration {
         val hprExpirySeconds: Long = Duration.ofDays(1).seconds, // TODO: Hva er en OK lengde på cache?
         val medlemskapBarnExpirySeconds: Long = Duration.ofDays(1).seconds, // TODO: Hva er en OK lengde på cache?
         val orgenhetExpirySeconds: Long = Duration.ofHours(2).seconds, // TODO: Hva er en OK lengde på cache?
+    )
+
+    data class AltinnProperties(
+        val baseUrl: String = this["altinn.altinnUrl"],
+        val proxyConsumerId: String = this["altinn.proxyConsumerId"],
+        val apiKey: String = this["ALTINN_APIKEY"],
+        val apiGWKey: String = this["ALTINN_APIGW_APIKEY"],
     )
 
     enum class Profile {
