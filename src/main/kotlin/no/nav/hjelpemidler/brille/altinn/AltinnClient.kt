@@ -13,6 +13,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
@@ -42,12 +43,13 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
     }
     private val baseUrl = properties.baseUrl
 
-    suspend fun get(path: String, parameters: Parameters): Map<String, Any> {
+    suspend fun get(path: String, queryParameters: Parameters): Map<String, Any> {
         val url = "$baseUrl/$path"
-        log.info { "URL: $url" }
+        log.info { "URL: $url, queryParameters: $queryParameters" }
         val response = client.get(url) {
-            this.url.parameters.appendAll(parameters)
+            this.url.parameters.appendAll(queryParameters)
         }
+        log.info { "Final URL: ${response.request.url}" }
         if (response.status == HttpStatusCode.OK) {
             return response.body()
         }
