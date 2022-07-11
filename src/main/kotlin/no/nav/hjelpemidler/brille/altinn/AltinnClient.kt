@@ -41,6 +41,20 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
     }
     private val baseUrl = properties.baseUrl
 
+    suspend fun get(path: String): Map<String, Any> {
+        val url = "$baseUrl/$path"
+        log.info { "URL: $url" }
+        val response = client.get(url)
+        if (response.status == HttpStatusCode.OK) {
+            return response.body()
+        }
+        kotlin.runCatching {
+            val body = response.body<String>()
+            log.warn { body }
+        }
+        return emptyMap()
+    }
+
     suspend fun hentReportee(fnr: String, etternavn: String): Reportee? {
         val response = client.post("$baseUrl/reportees/ReporteeConversion") {
             log.info { "Henter reportee med fnr: $fnr, etternavn: $etternavn" }
@@ -56,8 +70,6 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
         }
         return null // todo -> feilhåndtering
     }
-
-    // authorization/Delegations
 
     suspend fun hentRightHolder(reporteeId: String): RightHolder? {
         val response = client.get("$baseUrl/authorization/Delegations/$reporteeId")

@@ -17,21 +17,10 @@ fun Route.testApi(
     altinnClient: AltinnClient,
 ) {
     route("/test") {
-        get("/altinn/{fnr}/{etternavn}") {
-            val fnr = call.parameters["fnr"] ?: error("mangler fnr")
-            val etternavn = call.parameters["etternavn"] ?: error("mangler etternavn")
-            val reportee = altinnClient.hentReportee(fnr, etternavn)
-            if (reportee == null) {
-                call.respond(HttpStatusCode.NotFound, "Fant ikke reportee")
-                return@get
-            }
-            log.info { "Hentet reportee med reporteeId: ${reportee.reporteeId}" }
-            val rightHolder = altinnClient.hentRightHolder(reportee.reporteeId)
-            if (rightHolder == null) {
-                call.respond(HttpStatusCode.NotFound, "Fant ikke rightHolder")
-                return@get
-            }
-            call.respond(HttpStatusCode.OK, rightHolder)
+        get("/altinn/{...}") {
+            val path = call.parameters.getAll("param")!!.joinToString("/")
+            val data = altinnClient.get(path)
+            call.respond(HttpStatusCode.OK, data)
         }
     }
 }
