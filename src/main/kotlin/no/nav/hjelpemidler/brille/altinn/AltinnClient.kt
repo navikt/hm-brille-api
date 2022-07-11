@@ -17,7 +17,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+
+private val log = KotlinLogging.logger { }
 
 class AltinnClient(properties: Configuration.AltinnProperties) {
     private val client: HttpClient = HttpClient(CIO) {
@@ -40,20 +43,31 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
 
     suspend fun hentReportee(fnr: String, etternavn: String): Reportee? {
         val response = client.post("$baseUrl/reportees/ReporteeConversion") {
+            log.info { "Henter reportee med fnr: $fnr, etternavn: $etternavn" }
             setBody(ReporteeConversion(fnr, etternavn))
         }
         if (response.status == HttpStatusCode.OK) {
             return response.body()
+        }
+        log.warn { "Fant ikke reportee, status: ${response.status}" }
+        kotlin.runCatching {
+            val body = response.body<String>()
+            log.warn { body }
         }
         return null // todo -> feilhåndtering
     }
 
     // authorization/Delegations
 
-    suspend fun hentDelegations(reporteeId: String): RightHolder? {
+    suspend fun hentRightHolder(reporteeId: String): RightHolder? {
         val response = client.get("$baseUrl/authorization/Delegations/$reporteeId")
         if (response.status == HttpStatusCode.OK) {
             return response.body()
+        }
+        log.warn { "Fant ikke right holder, status: ${response.status}" }
+        kotlin.runCatching {
+            val body = response.body<String>()
+            log.warn { body }
         }
         return null // todo -> feilhåndtering
     }

@@ -26,7 +26,7 @@ fun Route.testApi(
                 return@get
             }
             log.info { "Hentet reportee med reporteeId: ${reportee.reporteeId}" }
-            val rightHolder = altinnClient.hentDelegations(reportee.reporteeId)
+            val rightHolder = altinnClient.hentRightHolder(reportee.reporteeId)
             if (rightHolder == null) {
                 call.respond(HttpStatusCode.NotFound, "Fant ikke rightHolder")
                 return@get
