@@ -5,7 +5,6 @@ import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
-import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger { }
 
@@ -53,19 +52,19 @@ class AvtaleService(
             opprettet = virksomhet.opprettet,
         )
     }
+
+    fun redigerAvtale(orgnr: String, redigerAvtale: RedigerAvtale): Avtale {
+        val virksomhet = requireNotNull(virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
+            "Fant ikke virksomhet med orgnr: $orgnr"
+        }.copy(kontonr = redigerAvtale.kontonr)
+        virksomhetStore.oppdaterKontonummer(orgnr, redigerAvtale.kontonr)
+        return Avtale(
+            orgnr = virksomhet.orgnr,
+            navn = redigerAvtale.navn,
+            harNavAvtale = virksomhet.harNavAvtale,
+            kontonr = virksomhet.kontonr,
+            avtaleVersjon = virksomhet.avtaleVersjon,
+            opprettet = virksomhet.opprettet,
+        )
+    }
 }
-
-data class Avtale(
-    val orgnr: String,
-    val navn: String,
-    val harNavAvtale: Boolean,
-    val kontonr: String? = null,
-    val avtaleVersjon: String? = null,
-    val opprettet: LocalDateTime? = null,
-)
-
-data class OpprettAvtale(
-    val orgnr: String,
-    val navn: String,
-    val kontonr: String,
-)

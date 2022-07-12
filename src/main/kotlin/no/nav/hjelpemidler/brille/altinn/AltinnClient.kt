@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille.altinn
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.HttpClient
@@ -15,16 +14,16 @@ import io.ktor.client.request.headers
 import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.jsonMapper
+
+const val LANGUAGE_NORSK_BOKMÅL = "1044"
+const val ROLE_DEFINITION_ID_HOVEDADMINISTRATOR = "24869"
 
 private val log = KotlinLogging.logger { }
-
-const val ROLE_DEFINITION_ID_HOVEDADMINISTRATOR = "24869"
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class AltinnClient(properties: Configuration.AltinnProperties) {
     private val client: HttpClient = HttpClient(CIO) {
@@ -45,57 +44,37 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
     }
     private val baseUrl = properties.baseUrl
 
-    suspend fun get(path: String, queryParameters: Parameters): JsonNode {
-        val url = "$baseUrl/$path"
-        log.info { "URL: $url, queryParameters: $queryParameters" }
-        val response = client.get(url) {
-            this.url.parameters.appendAll(queryParameters)
-        }
-        log.info { "Final URL: ${response.request.url}" }
-        if (response.status == HttpStatusCode.OK) {
-            return response.body()
-        }
-        kotlin.runCatching {
-            val body = response.body<String>()
-            log.warn { body }
-        }
-        return jsonMapper.nullNode()
-    }
-
     suspend fun hentAvgivere(fnr: String): List<Avgiver> {
-        val response =
-            client.get("$baseUrl/reportees?ForceEIAuthentication&subject=$fnr&\$filter=Type+ne+'Person'+and+Status+eq+'Active'")
+        val response = client.get("$baseUrl/reportees") {
+            url {
+                parameters.append("ForceEIAuthentication", "true")
+                parameters.append("subject", fnr)
+                parameters.append("\$filter", "Type ne 'Person' and Status eq 'Active'")
+            }
+        }
+        sikkerLog.info { "Hentet avgivere med url: ${response.request.url}" }
         if (response.status == HttpStatusCode.OK) {
             return response.body() ?: emptyList()
         }
-        log.warn { "Fant ikke avgivere, status: ${response.status}" }
-        kotlin.runCatching {
-            val body = response.body<String>()
-            log.warn { body }
-        }
-        return emptyList() // todo -> feilhåndtering
+        log.warn { "Kunne ikke hente avgivere, status: ${response.status}" }
+        return emptyList()
     }
 
     suspend fun erHovedadministratorFor(fnr: String, orgnr: String): Boolean {
-        val response =
-            client.get("$baseUrl/authorization/roles?ForceEIAuthentication&subject=$fnr&reportee=$orgnr&language=1044&\$filter=RoleDefinitionId+eq+$ROLE_DEFINITION_ID_HOVEDADMINISTRATOR")
+        val response = client.get("$baseUrl/authorization/roles") {
+            url {
+                parameters.append("ForceEIAuthentication", "true")
+                parameters.append("subject", fnr)
+                parameters.append("reportee", orgnr)
+                parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
+                parameters.append("\$filter", "RoleDefinitionId eq $ROLE_DEFINITION_ID_HOVEDADMINISTRATOR")
+            }
+        }
+        sikkerLog.info { "Hentet roller med url: ${response.request.url}" }
         if (response.status == HttpStatusCode.OK) {
             return response.body<List<JsonNode>?>()?.isNotEmpty() ?: false
         }
-        log.warn { "Fant ikke hovedadministrator, status: ${response.status}" }
-        kotlin.runCatching {
-            val body = response.body<String>()
-            log.warn { body }
-        }
-        return false // todo -> feilhåndtering
+        log.warn { "Kunne ikke hente roller, status: ${response.status}" }
+        return false
     }
 }
-
-data class Avgiver(
-    @JsonProperty("Name")
-    val navn: String,
-    @JsonProperty("OrganizationNumber")
-    val orgnr: String,
-    @JsonProperty("ParentOrganizationNumber")
-    val parentOrgnr: String?,
-)

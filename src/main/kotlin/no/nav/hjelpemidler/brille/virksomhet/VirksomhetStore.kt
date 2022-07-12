@@ -14,6 +14,7 @@ interface VirksomhetStore {
     fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet?
     fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet)
+    fun oppdaterKontonummer(orgnr: String, kontonr: String)
 }
 
 data class Virksomhet(
@@ -95,6 +96,25 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         )
         if (result == 0) {
             throw RuntimeException("VirksomhetStore.lagreVirksomhet: feilet i å opprette virksomhet (result==0)")
+        }
+    }
+
+    override fun oppdaterKontonummer(orgnr: String, kontonr: String) {
+        @Language("PostgreSQL")
+        val sql = """
+            UPDATE virksomhet
+            SET kontonr = :kontonr
+            WHERE orgnr = :orgnr
+        """.trimIndent()
+        val result = ds.update(
+            sql,
+            mapOf(
+                "kontonr" to kontonr,
+                "orgnr" to orgnr,
+            )
+        )
+        if (result == 0) {
+            throw RuntimeException("VirksomhetStore.oppdaterKontonummer: feilet i å oppdatere kontonummer (result==0)")
         }
     }
 }
