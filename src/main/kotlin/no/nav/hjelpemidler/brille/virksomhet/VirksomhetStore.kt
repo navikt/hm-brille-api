@@ -5,6 +5,7 @@ import no.nav.hjelpemidler.brille.query
 import no.nav.hjelpemidler.brille.queryList
 import no.nav.hjelpemidler.brille.update
 import org.intellij.lang.annotations.Language
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 private val log = KotlinLogging.logger {}
@@ -22,6 +23,7 @@ data class Virksomhet(
     val navnInnsender: String,
     val harNavAvtale: Boolean,
     val avtaleVersjon: String? = null,
+    val opprettet: LocalDateTime = LocalDateTime.now(),
 )
 
 internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetStore {
@@ -40,7 +42,8 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
                 fnrInnsender = row.string("fnr_innsender"),
                 navnInnsender = row.string("navn_innsender"),
                 harNavAvtale = row.boolean("har_nav_avtale"),
-                avtaleVersjon = row.stringOrNull("avtale_versjon")
+                avtaleVersjon = row.stringOrNull("avtale_versjon"),
+                opprettet = row.localDateTime("opprettet")
             )
         }
     }
@@ -59,7 +62,8 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
                 fnrInnsender = row.string("fnr_innsender"),
                 navnInnsender = row.string("navn_innsender"),
                 harNavAvtale = row.boolean("har_nav_avtale"),
-                avtaleVersjon = row.stringOrNull("avtale_versjon")
+                avtaleVersjon = row.stringOrNull("avtale_versjon"),
+                opprettet = row.localDateTime("opprettet"),
             )
         }
     }
@@ -74,6 +78,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
                                     har_nav_avtale,
                                     avtale_versjon)
             VALUES (:orgnr, :kontonr, :fnr_innsender, :navn_innsender, :har_nav_avtale, :avtale_versjon)
+            ON CONFLICT DO NOTHING
         """.trimIndent()
         val result = ds.update(
             sql,
