@@ -30,7 +30,8 @@ class KafkaService(
     fun avtaleOpprettet(orgnr: String, navn: String, opprettet: LocalDateTime) {
         // todo -> send til tss-sink
         produceEvent(
-            orgnr, mapOf(
+            orgnr,
+            mapOf(
                 "eventId" to UUID.randomUUID(),
                 "eventName" to "hm-bigquery-sink-hendelse",
                 "schemaId" to "avtale_v1",
