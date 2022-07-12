@@ -72,7 +72,7 @@ fun Route.virksomhetApi(
                 harNavAvtale = true,
                 avtaleVersjon = "123abc"
             )
-            else -> virksomhetStore.hentVirksomhet(organisasjonsnummer)
+            else -> virksomhetStore.hentVirksomhetForOrganisasjon(organisasjonsnummer)
                 ?: return@get call.respond(
                     status = HttpStatusCode.NotFound,
                     "Ingen virksomhet funnet for orgnr. $organisasjonsnummer"

@@ -1,8 +1,10 @@
 package no.nav.hjelpemidler.brille.altinn
 
 class AltinnService(private val altinnClient: AltinnClient) {
-    suspend fun hentRoller(fnr: String, etternavn: String): RightHolder? {
-        val reportee = altinnClient.hentReportee(fnr, etternavn) ?: return null
-        return altinnClient.hentRightHolder(reportee.reporteeId)
+    suspend fun hentAvgivereHovedadministrator(fnr: String): List<Avgiver> {
+        val avgivere = altinnClient.hentAvgivere(fnr)
+        return avgivere.filter {
+            altinnClient.erHovedadministratorFor(fnr, it.orgnr)
+        }
     }
 }

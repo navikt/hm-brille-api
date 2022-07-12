@@ -17,8 +17,11 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
+import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
+import no.nav.hjelpemidler.brille.avtale.AvtaleService
+import no.nav.hjelpemidler.brille.avtale.avtaleApi
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -93,7 +96,7 @@ fun Application.setupRoutes() {
 
     val redisClient = RedisClient()
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
-    val altinnClient = AltinnClient(Configuration.altinnProperties)
+    val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
     val vedtakStore = VedtakStorePostgres(dataSource)
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
     val auditStore = AuditStorePostgres(dataSource)
@@ -117,15 +120,12 @@ fun Application.setupRoutes() {
 
     val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
     val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService)
+    val avtaleService = AvtaleService(virksomhetStore, altinnService)
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {
         selfTestRoutes()
-
-        if (!Configuration.prod) {
-            testApi(altinnClient)
-        }
 
         route("/api") {
             satsApi()
@@ -137,6 +137,7 @@ fun Application.setupRoutes() {
                     søknadApi(vedtakService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
                 }
+                avtaleApi(avtaleService)
             }
         }
     }

@@ -12,8 +12,6 @@ import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
 import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -25,6 +23,8 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.jsonMapper
 
 private val log = KotlinLogging.logger { }
+
+const val ROLE_DEFINITION_ID_HOVEDADMINISTRATOR = "24869"
 
 class AltinnClient(properties: Configuration.AltinnProperties) {
     private val client: HttpClient = HttpClient(CIO) {
@@ -62,83 +62,40 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
         return jsonMapper.nullNode()
     }
 
-    suspend fun hentReportee(fnr: String, etternavn: String): Reportee? {
-        val response = client.post("$baseUrl/reportees/ReporteeConversion") {
-            log.info { "Henter reportee med fnr: $fnr, etternavn: $etternavn" }
-            setBody(ReporteeConversion(fnr, etternavn))
-        }
+    suspend fun hentAvgivere(fnr: String): List<Avgiver> {
+        val response =
+            client.get("$baseUrl/reportees?ForceEIAuthentication&subject=$fnr&\$filter=Type+ne+'Person'+and+Status+eq+'Active'")
         if (response.status == HttpStatusCode.OK) {
-            return response.body()
+            return response.body() ?: emptyList()
         }
-        log.warn { "Fant ikke reportee, status: ${response.status}" }
+        log.warn { "Fant ikke avgivere, status: ${response.status}" }
         kotlin.runCatching {
             val body = response.body<String>()
             log.warn { body }
         }
-        return null // todo -> feilhåndtering
+        return emptyList() // todo -> feilhåndtering
     }
 
-    suspend fun hentRightHolder(reporteeId: String): RightHolder? {
-        val response = client.get("$baseUrl/authorization/Delegations/$reporteeId")
+    suspend fun erHovedadministratorFor(fnr: String, orgnr: String): Boolean {
+        val response =
+            client.get("$baseUrl/authorization/roles?ForceEIAuthentication&subject=$fnr&reportee=$orgnr&language=1044&\$filter=RoleDefinitionId+eq+$ROLE_DEFINITION_ID_HOVEDADMINISTRATOR")
         if (response.status == HttpStatusCode.OK) {
-            return response.body()
+            return response.body<List<JsonNode>?>()?.isNotEmpty() ?: false
         }
-        log.warn { "Fant ikke right holder, status: ${response.status}" }
+        log.warn { "Fant ikke hovedadministrator, status: ${response.status}" }
         kotlin.runCatching {
             val body = response.body<String>()
             log.warn { body }
         }
-        return null // todo -> feilhåndtering
+        return false // todo -> feilhåndtering
     }
 }
 
-data class ReporteeConversion(
-    @JsonProperty("SocialSecurityNumber")
-    val socialSecurityNumber: String,
-    @JsonProperty("LastName")
-    val lastName: String,
-)
-
-data class Reportee(
-    @JsonProperty("ReporteeId")
-    val reporteeId: String,
-)
-
-/*
-{
-    "RightHolderId":"r50828869",
-    "Name":"TOM HEIS",
-    "LastName":"HEIS",
-    "SocialSecurityNumber":"268992*****",
-    "Roles":{
-        "_links":{
-            "self":{
-                "href": ".../api/my/authorization/delegations/r50828869/roles"
-            }
-        },
-        "_embedded":{
-            "roles":[
-                {
-                    "RoleType":"Local",
-                    "RoleDefinitionId":0,
-                    "RoleName":"Single Rights",
-                    "RoleDescription":"Collection of single rights",
-                    "Delegator":"",
-                    "DelegatedTime":"2021-12-01T11:57:43.373",
-                    "_links":{
-                        "roledefinition":{
-                            "href": "...i/my/authorization/roledefinitions/0"
-                        }
-                    }
-                },
-                ...
-            ]
-        }
-    },
-}
- */
-
-data class RightHolder(
-    @JsonProperty("Roles")
-    val roles: Map<String, Any?>,
+data class Avgiver(
+    @JsonProperty("Name")
+    val navn: String,
+    @JsonProperty("OrganizationNumber")
+    val orgnr: String,
+    @JsonProperty("ParentOrganizationNumber")
+    val parentOrgnr: String?,
 )
