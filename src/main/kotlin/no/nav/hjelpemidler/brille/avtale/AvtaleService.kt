@@ -30,7 +30,7 @@ class AvtaleService(
         }
     }
 
-    fun opprettAvtale(fnr: String, opprettAvtale: OpprettAvtale) {
+    fun opprettAvtale(fnr: String, opprettAvtale: OpprettAvtale): Avtale {
         log.info { "Oppretter avtale for orgnr: ${opprettAvtale.orgnr}" }
         val virksomhet = Virksomhet(
             orgnr = opprettAvtale.orgnr,
@@ -44,6 +44,14 @@ class AvtaleService(
             virksomhet
         )
         kafkaService.avtaleOpprettet(opprettAvtale.orgnr, opprettAvtale.navn, virksomhet.opprettet)
+        return Avtale(
+            orgnr = virksomhet.orgnr,
+            navn = opprettAvtale.navn,
+            harNavAvtale = virksomhet.harNavAvtale,
+            kontonr = virksomhet.kontonr,
+            avtaleVersjon = virksomhet.avtaleVersjon,
+            opprettet = virksomhet.opprettet,
+        )
     }
 }
 

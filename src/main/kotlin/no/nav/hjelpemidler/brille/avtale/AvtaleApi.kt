@@ -33,8 +33,8 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
             }
             post("/") {
                 val opprettAvtale = call.receive<OpprettAvtale>()
-                avtaleService.opprettAvtale(call.extractFnr(), opprettAvtale)
-                call.response.status(HttpStatusCode.Created)
+                val avtale = avtaleService.opprettAvtale(call.extractFnr(), opprettAvtale)
+                call.respond(HttpStatusCode.Created, avtale)
             }
         }
     }
