@@ -18,7 +18,7 @@ private val log = KotlinLogging.logger {}
 
 class KafkaService(
     private val topic: String = Configuration.kafkaProperties.topic,
-    kafkaProducerFactory: () -> Producer<String, String>
+    kafkaProducerFactory: () -> Producer<String, String>,
 ) {
     private val kafkaProducer = kafkaProducerFactory()
     private val mapper = jacksonMapperBuilder()
@@ -27,20 +27,28 @@ class KafkaService(
         .serializationInclusion(JsonInclude.Include.NON_NULL)
         .build()
 
-    fun hendelseOpprettet(
-        measurement: String,
-        fields: Map<String, Any>,
-        tags: Map<String, String>
-    ) {
+    fun avtaleOpprettet(orgnr: String, navn: String, opprettet: LocalDateTime) {
+        // todo -> send til tss-sink
         produceEvent(
-            measurement,
-            mapOf(
+            orgnr, mapOf(
                 "eventId" to UUID.randomUUID(),
                 "eventName" to "hm-bigquery-sink-hendelse",
-                "schemaId" to "TODO",
-                "payload" to emptyMap<String, String>()
+                "schemaId" to "avtale_v1",
+                "payload" to mapOf(
+                    "orgnr" to orgnr,
+                    "navn" to navn,
+                    "opprettet" to opprettet,
+                )
             )
         )
+    }
+
+    fun vedtakFattet() {
+        // todo -> send til bq-sink
+    }
+
+    fun vilkårVurdert() {
+        // todo -> send til bq-sink
     }
 
     fun <T> produceEvent(key: String, event: T) {
@@ -66,6 +74,6 @@ class KafkaService(
         val sakId: String,
         val brilleseddel: Brilleseddel,
         val bestillingsdato: LocalDate,
-        val bestillingsreferanse: String
+        val bestillingsreferanse: String,
     )
 }

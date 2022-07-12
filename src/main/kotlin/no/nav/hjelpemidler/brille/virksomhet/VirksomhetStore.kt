@@ -13,7 +13,7 @@ private val log = KotlinLogging.logger {}
 interface VirksomhetStore {
     fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet?
     fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet>
-    fun lagreVirksomhet(virksomhetModell: Virksomhet)
+    fun lagreVirksomhet(virksomhet: Virksomhet)
 }
 
 data class Virksomhet(
@@ -68,7 +68,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         }
     }
 
-    override fun lagreVirksomhet(virksomhetModell: Virksomhet) {
+    override fun lagreVirksomhet(virksomhet: Virksomhet) {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO virksomhet (orgnr,
@@ -76,19 +76,21 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
                                     fnr_innsender,
                                     navn_innsender,
                                     har_nav_avtale,
-                                    avtale_versjon)
-            VALUES (:orgnr, :kontonr, :fnr_innsender, :navn_innsender, :har_nav_avtale, :avtale_versjon)
+                                    avtale_versjon,
+                                    opprettet)
+            VALUES (:orgnr, :kontonr, :fnr_innsender, :navn_innsender, :har_nav_avtale, :avtale_versjon, :opprettet)
             ON CONFLICT DO NOTHING
         """.trimIndent()
         val result = ds.update(
             sql,
             mapOf(
-                "orgnr" to virksomhetModell.orgnr,
-                "kontonr" to virksomhetModell.kontonr,
-                "fnr_innsender" to virksomhetModell.fnrInnsender,
-                "navn_innsender" to virksomhetModell.navnInnsender,
-                "har_nav_avtale" to virksomhetModell.harNavAvtale,
-                "avtale_versjon" to virksomhetModell.avtaleVersjon,
+                "orgnr" to virksomhet.orgnr,
+                "kontonr" to virksomhet.kontonr,
+                "fnr_innsender" to virksomhet.fnrInnsender,
+                "navn_innsender" to virksomhet.navnInnsender,
+                "har_nav_avtale" to virksomhet.harNavAvtale,
+                "avtale_versjon" to virksomhet.avtaleVersjon,
+                "opprettet" to virksomhet.opprettet
             )
         )
         if (result == 0) {
