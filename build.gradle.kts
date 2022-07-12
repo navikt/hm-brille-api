@@ -5,8 +5,9 @@ version = "1.0-SNAPSHOT"
 
 plugins {
     application
-    kotlin("jvm") version "1.7.0"
+    kotlin("jvm") version "1.7.10"
     id("com.diffplug.spotless") version "6.7.2"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 application {
@@ -19,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
+    implementation(kotlin("stdlib-jdk8"))
     implementation("com.natpryce:konfig:1.6.10.0")
     implementation("io.micrometer:micrometer-registry-prometheus:1.9.1")
 
@@ -33,7 +34,7 @@ dependencies {
     implementation("org.apache.kafka:kafka-clients:3.1.0")
 
     // Ktor Shared
-    val ktorVersion = "2.0.2"
+    val ktorVersion = "2.0.3"
     fun ktor(name: String) = "io.ktor:ktor-$name:$ktorVersion"
     implementation(ktor("serialization-jackson"))
 
@@ -67,7 +68,7 @@ dependencies {
     runtimeOnly("ch.qos.logback:logback-classic:1.2.11")
 
     // Redis
-    implementation("redis.clients:jedis:4.2.0")
+    implementation("redis.clients:jedis:4.2.3")
 
     // Testing
     testImplementation(kotlin("test"))
@@ -105,16 +106,4 @@ tasks.withType<Wrapper> {
 tasks.named("compileKotlin") {
     dependsOn("spotlessApply")
     dependsOn("spotlessCheck")
-}
-
-tasks.withType<Jar> {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    manifest {
-        attributes["Main-Class"] = application.mainClass
-    }
-    from(
-        configurations.runtimeClasspath.get().map {
-            if (it.isDirectory) it else zipTree(it)
-        }
-    )
 }
