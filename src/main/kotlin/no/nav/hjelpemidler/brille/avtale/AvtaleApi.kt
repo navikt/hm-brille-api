@@ -14,5 +14,16 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
             val virksomheter = avtaleService.hentVirksomheter(call.extractFnr())
             call.respond(HttpStatusCode.OK, virksomheter)
         }
+        get("/virksomheter/{orgnr}") {
+            val orgnr = call.parameters["orgnr"] ?: error("Mangler orgnr i URL")
+            val virksomhet = avtaleService.hentVirksomheter(call.extractFnr()).associateBy {
+                it.orgnr
+            }[orgnr]
+            if (virksomhet == null) {
+                call.response.status(HttpStatusCode.NotFound)
+                return@get
+            }
+            call.respond(HttpStatusCode.OK, virksomhet)
+        }
     }
 }
