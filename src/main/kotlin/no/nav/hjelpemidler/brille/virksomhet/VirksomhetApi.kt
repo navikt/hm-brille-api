@@ -59,22 +59,11 @@ fun Route.virksomhetApi(
         val organisasjonsnummer =
             call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 
-        val virksomhet = when (Configuration.profile) {
-            // TODO: fjern denne ekstra sjekken når vi har på plass en måte (UI) å faktisk lagre virksomheter til databasen på (se POST /virksomhet)
-            Configuration.Profile.DEV -> Virksomhet(
-                orgnr = organisasjonsnummer,
-                kontonr = "12345678910",
-                fnrInnsender = "15084300133",
-                navnInnsender = "Sedat Kronjuvel",
-                harNavAvtale = true,
-                avtaleVersjon = "123abc"
+        val virksomhet = virksomhetStore.hentVirksomhetForOrganisasjon(organisasjonsnummer)
+            ?: return@get call.respond(
+                status = HttpStatusCode.NotFound,
+                "Ingen virksomhet funnet for orgnr. $organisasjonsnummer"
             )
-            else -> virksomhetStore.hentVirksomhetForOrganisasjon(organisasjonsnummer)
-                ?: return@get call.respond(
-                    status = HttpStatusCode.NotFound,
-                    "Ingen virksomhet funnet for orgnr. $organisasjonsnummer"
-                )
-        }
 
         val organisasjon = enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
             ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke orgenhet for orgnr $organisasjonsnummer")
