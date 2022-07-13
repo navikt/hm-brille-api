@@ -200,7 +200,10 @@ private fun sjekkFolkeregistrertAdresseINorge(bestillingsDato: LocalDate, pdlBar
     ).any { it.vegadresse != null || it.matrikkeladresse != null || it.ukjentBosted != null }
 }
 
-private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsDato: LocalDate, pdlBarn: PdlPersonResponse): List<Pair<String, String>> {
+private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
+    bestillingsDato: LocalDate,
+    pdlBarn: PdlPersonResponse,
+): List<Pair<String, String>> {
     // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i LovMe/medlemskap-oppslag tjenesten. Her
     // prioriterer vi først fullmektige/verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
     // barnet har fått en annen fullmektig/verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
@@ -361,7 +364,11 @@ private fun slåSammenAktiveBosteder(
         },
         delteBosted.filter {
             (it.startdatoForKontrakt.isEqual(bestillingsDato) || it.startdatoForKontrakt.isBefore(bestillingsDato)) &&
-                (it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(bestillingsDato) || it.sluttdatoForKontrakt.isAfter(bestillingsDato))
+                (
+                    it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(bestillingsDato) || it.sluttdatoForKontrakt.isAfter(
+                        bestillingsDato
+                    )
+                    )
         }.map {
             Bostedsadresse(
                 gyldigFraOgMed = it.startdatoForKontrakt.atStartOfDay(),
@@ -377,7 +384,10 @@ private fun slåSammenAktiveBosteder(
     ).flatten()
 }
 
-private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsDato: LocalDate, folkeregistermetadata: Folkeregistermetadata?): Boolean {
+private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(
+    bestillingsDato: LocalDate,
+    folkeregistermetadata: Folkeregistermetadata?,
+): Boolean {
     return (
         folkeregistermetadata?.opphoerstidspunkt == null ||
             folkeregistermetadata.opphoerstidspunkt.toLocalDate().isEqual(bestillingsDato) ||

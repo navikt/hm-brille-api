@@ -14,7 +14,7 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 fun Route.authenticateOptiker(
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     redisClient: RedisClient,
-    build: Route.() -> Unit
+    build: Route.() -> Unit,
 ): Route {
     val authenticatedRoute = createChild(AuthenticationRouteSelector(listOf("sjekkOptikerPlugin")))
     authenticatedRoute.install(SjekkOptikerPlugin) {

@@ -14,7 +14,7 @@ private val sikkerLog = KotlinLogging.logger("tjenestekall")
 class VedtakService(
     private val vedtakStore: VedtakStore,
     private val vilkårsvurderingService: VilkårsvurderingService,
-    private val kafkaService: KafkaService
+    private val kafkaService: KafkaService,
 ) {
     suspend fun lagVedtak(søknadDto: SøknadDto, fnrInnsender: String): Vedtak<Vilkårsgrunnlag> {
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkårBrille(søknadDto.vilkårsgrunnlag)
@@ -45,14 +45,14 @@ class VedtakService(
         kafkaService.produceEvent(
             vedtak.fnrBruker,
             KafkaService.BarnebrilleVedtakData(
+                eventId = UUID.randomUUID(),
+                eventName = "hm-barnebrillevedtak-opprettet",
                 fnr = vedtak.fnrBruker,
                 brukersNavn = søknadDto.brukersNavn,
                 orgnr = vedtak.orgnr,
                 orgNavn = søknadDto.orgNavn,
                 orgAdresse = søknadDto.orgAdresse,
-                eventId = UUID.randomUUID(),
-                "hm-barnebrillevedtak-opprettet",
-                navnAvsender = "Ole Brumm", // TODO: hvilket navn skal dette egentlig være? Navnet til bruker (barn) eller optiker?
+                navnAvsender = "", // TODO: hvilket navn skal dette egentlig være? Navnet til innbygger (barn) eller optiker?
                 sakId = vedtak.id.toString(),
                 brilleseddel = søknadDto.vilkårsgrunnlag.brilleseddel.tilBrilleseddel(),
                 bestillingsdato = søknadDto.vilkårsgrunnlag.bestillingsdato,

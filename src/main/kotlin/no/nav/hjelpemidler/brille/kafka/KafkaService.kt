@@ -63,14 +63,14 @@ class KafkaService(
     }
 
     internal data class BarnebrilleVedtakData(
+        val eventId: UUID,
+        val eventName: String,
+        val opprettetDato: LocalDateTime = LocalDateTime.now(),
         val fnr: String,
         val brukersNavn: String,
         val orgnr: String,
         val orgNavn: String,
         val orgAdresse: String,
-        val eventId: UUID,
-        val eventName: String,
-        val opprettetDato: LocalDateTime = LocalDateTime.now(),
         val navnAvsender: String,
         val sakId: String,
         val brilleseddel: Brilleseddel,

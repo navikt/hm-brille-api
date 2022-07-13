@@ -5,4 +5,9 @@ data class TidligereBrukteOrganisasjonerForOptiker(
     val tidligereBrukteOrganisasjoner: List<Organisasjon>,
 )
 
-data class Organisasjon(val orgnummer: String, val navn: String, val forretningsadresse: String?, val beliggenhetsadresse: String?)
+data class Organisasjon(
+    val orgnr: String,
+    val navn: String,
+    val forretningsadresse: String?,
+    val beliggenhetsadresse: String?,
+)

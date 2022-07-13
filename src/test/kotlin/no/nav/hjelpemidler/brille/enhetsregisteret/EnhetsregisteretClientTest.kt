@@ -11,9 +11,9 @@ internal class EnhetsregisteretClientTest {
 
     @Test
     internal fun `henter organisasjonsenhet`() = runBlocking(Dispatchers.IO) {
-        val organisasjonsnummer = Organisasjonsnummer("936314783")
-        val organisasjonsenhet = client.hentOrganisasjonsenhet(organisasjonsnummer)
+        val orgnr = "936314783"
+        val enhet = client.hentOrganisasjonsenhet(orgnr)
 
-        organisasjonsenhet?.organisasjonsnummer shouldBe organisasjonsnummer.toString()
+        enhet?.orgnr shouldBe orgnr
     }
 }

@@ -6,11 +6,9 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
-import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsnummer
 import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.model.Organisasjon
@@ -32,17 +30,17 @@ fun Route.virksomhetApi(
 
         try {
             val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptiker.map {
-                val orgEnhet: Organisasjonsenhet =
-                    enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(it))
+                val enhet: Organisasjonsenhet =
+                    enhetsregisteretService.hentOrganisasjonsenhet(it)
                         ?: return@get call.respond(
                             HttpStatusCode.NotFound,
-                            "Fant ikke orgenhet for orgnr $it"
+                            "Fant ikke organisasjonsenhet for orgnr: $it"
                         )
                 Organisasjon(
-                    orgnummer = orgEnhet.organisasjonsnummer,
-                    navn = orgEnhet.navn,
-                    forretningsadresse = if (orgEnhet.forretningsadresse != null) "${orgEnhet.forretningsadresse.adresse.first()}, ${orgEnhet.forretningsadresse.postnummer} ${orgEnhet.forretningsadresse.poststed}" else null,
-                    beliggenhetsadresse = if (orgEnhet.beliggenhetsadresse != null) "${orgEnhet.beliggenhetsadresse.adresse.first()}, ${orgEnhet.beliggenhetsadresse.postnummer} ${orgEnhet.beliggenhetsadresse.poststed}" else null,
+                    orgnr = enhet.orgnr,
+                    navn = enhet.navn,
+                    forretningsadresse = if (enhet.forretningsadresse != null) "${enhet.forretningsadresse.adresse.first()}, ${enhet.forretningsadresse.postnummer} ${enhet.forretningsadresse.poststed}" else null,
+                    beliggenhetsadresse = if (enhet.beliggenhetsadresse != null) "${enhet.beliggenhetsadresse.adresse.first()}, ${enhet.beliggenhetsadresse.postnummer} ${enhet.beliggenhetsadresse.poststed}" else null,
                 )
             }
             val response = TidligereBrukteOrganisasjonerForOptiker(
@@ -56,34 +54,34 @@ fun Route.virksomhetApi(
     }
 
     get("/virksomhet/{orgnr}") {
-        val organisasjonsnummer =
+        val orgnr =
             call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 
-        val virksomhet = virksomhetStore.hentVirksomhetForOrganisasjon(organisasjonsnummer)
+        val virksomhet = virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)
             ?: return@get call.respond(
                 status = HttpStatusCode.NotFound,
-                "Ingen virksomhet funnet for orgnr. $organisasjonsnummer"
+                "Ingen virksomhet funnet for orgnr. $orgnr"
             )
 
-        val organisasjon = enhetsregisteretService.hentOrganisasjonsenhet(Organisasjonsnummer(organisasjonsnummer))
-            ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke orgenhet for orgnr $organisasjonsnummer")
+        val organisasjon = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+            ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke orgenhet for orgnr $orgnr")
 
         data class Response(
-            val organisasjonsnummer: String,
+            val orgnr: String,
+            val orgNavn: String,
             val kontonr: String,
             val harNavAvtale: Boolean,
-            val orgnavn: String,
             val forretningsadresse: Postadresse?,
             val erOptikerVirksomhet: Boolean,
         )
 
         val response = Response(
-            organisasjonsnummer = organisasjon.organisasjonsnummer,
+            orgnr = organisasjon.orgnr,
+            orgNavn = organisasjon.navn,
             kontonr = virksomhet.kontonr,
             harNavAvtale = virksomhet.harNavAvtale,
-            orgnavn = organisasjon.navn,
             forretningsadresse = organisasjon.forretningsadresse,
-            erOptikerVirksomhet = listOf(
+            erOptikerVirksomhet = setOf(
                 organisasjon.naeringskode1,
                 organisasjon.naeringskode2,
                 organisasjon.naeringskode3

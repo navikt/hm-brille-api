@@ -24,11 +24,11 @@ class EnhetsregisteretClient(private val baseUrl: String) {
         }
     }
 
-    suspend fun hentOrganisasjonsenhet(organisasjonsnummer: Organisasjonsnummer): Organisasjonsenhet? =
-        hentEnhetHelper("$baseUrl/enheter/$organisasjonsnummer")
+    suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet? =
+        hentEnhetHelper("$baseUrl/enheter/$orgnr")
 
-    suspend fun hentUnderenhet(organisasjonsnummer: Organisasjonsnummer): Organisasjonsenhet? =
-        hentEnhetHelper("$baseUrl/underenheter/$organisasjonsnummer")
+    suspend fun hentUnderenhet(orgnr: String): Organisasjonsenhet? =
+        hentEnhetHelper("$baseUrl/underenheter/$orgnr")
 
     private suspend fun hentEnhetHelper(url: String): Organisasjonsenhet? {
         try {

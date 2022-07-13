@@ -7,26 +7,26 @@ private val log = KotlinLogging.logger { }
 
 class EnhetsregisteretService(
     private val enhetsregisteretClient: EnhetsregisteretClient,
-    private val redisClient: RedisClient
+    private val redisClient: RedisClient,
 ) {
 
-    suspend fun hentOrganisasjonsenhet(organisasjonsnummer: Organisasjonsnummer): Organisasjonsenhet? {
-        val cachedOrgEnhet = redisClient.organisasjonsenhet(organisasjonsnummer)
-        if (cachedOrgEnhet != null) return cachedOrgEnhet
+    suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet? {
+        val cachedEnhet = redisClient.organisasjonsenhet(orgnr)
+        if (cachedEnhet != null) return cachedEnhet
 
-        val orgenhet = enhetsregisteretClient.hentOrganisasjonsenhet(organisasjonsnummer)
-        if (orgenhet != null) {
-            redisClient.setOrganisasjonsenhet(organisasjonsnummer, orgenhet)
-            return orgenhet
+        val enhet = enhetsregisteretClient.hentOrganisasjonsenhet(orgnr)
+        if (enhet != null) {
+            redisClient.setOrganisasjonsenhet(orgnr, enhet)
+            return enhet
         }
 
-        val underenhet = enhetsregisteretClient.hentUnderenhet(organisasjonsnummer)
+        val underenhet = enhetsregisteretClient.hentUnderenhet(orgnr)
         if (underenhet != null) {
-            redisClient.setOrganisasjonsenhet(organisasjonsnummer, underenhet)
+            redisClient.setOrganisasjonsenhet(orgnr, underenhet)
             return underenhet
         }
 
-        log.info { "Klarte ikke å finne en organisasjonsenhet eller underenhet for orgnr $organisasjonsnummer" }
+        log.info { "Klarte ikke å finne en organisasjonsenhet eller underenhet for orgnr: $orgnr" }
         return null
     }
 }

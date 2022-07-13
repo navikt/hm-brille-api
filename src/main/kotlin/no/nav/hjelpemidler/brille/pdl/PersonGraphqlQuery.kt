@@ -17,12 +17,14 @@ fun hentPersonQuery(fnummer: String): PersonGraphqlQuery {
 
 fun medlemskapHentBarnQuery(fnummer: String): PersonGraphqlQuery {
     val query =
-        PersonGraphqlQuery::class.java.getResource("/pdl/medlemskapHentBarnQuery.graphql").readText().replace("[\n]", "")
+        PersonGraphqlQuery::class.java.getResource("/pdl/medlemskapHentBarnQuery.graphql").readText()
+            .replace("[\n]", "")
     return PersonGraphqlQuery(query, Variables(ident = fnummer))
 }
 
 fun medlemskapHentVergeEllerForelderQuery(fnummer: String): PersonGraphqlQuery {
     val query =
-        PersonGraphqlQuery::class.java.getResource("/pdl/medlemskapHentVergeEllerForelderQuery.graphql").readText().replace("[\n]", "")
+        PersonGraphqlQuery::class.java.getResource("/pdl/medlemskapHentVergeEllerForelderQuery.graphql").readText()
+            .replace("[\n]", "")
     return PersonGraphqlQuery(query, Variables(ident = fnummer))
 }

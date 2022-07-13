@@ -65,7 +65,8 @@ class PdlClient(
 
     suspend fun medlemskapHentBarn(fnummer: String): PdlOppslag = pdlHelper(medlemskapHentBarnQuery(fnummer))
 
-    suspend fun medlemskapHentVergeEllerForelder(fnummer: String): PdlOppslag = pdlHelper(medlemskapHentVergeEllerForelderQuery(fnummer))
+    suspend fun medlemskapHentVergeEllerForelder(fnummer: String): PdlOppslag =
+        pdlHelper(medlemskapHentVergeEllerForelderQuery(fnummer))
 
     private suspend inline fun <reified T : Any> pdlRequest(pdlQuery: PersonGraphqlQuery): T {
         return withContext(Dispatchers.IO) {

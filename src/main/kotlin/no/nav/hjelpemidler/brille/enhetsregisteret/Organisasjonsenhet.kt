@@ -1,19 +1,10 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
-@JvmInline
-value class Organisasjonsnummer(private val value: String) :
-    CharSequence by value {
-    init {
-        require(value.length == 9) {
-            "Organisasjonsnummer må bestå av ni siffer"
-        }
-    }
-
-    override fun toString(): String = value
-}
+import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Organisasjonsenhet(
-    val organisasjonsnummer: String,
+    @JsonProperty("organisasjonsnummer")
+    val orgnr: String,
     val overordnetEnhet: String?,
     val navn: String,
     val forretningsadresse: Postadresse?, // orgenhet bruker forretningsadresse
