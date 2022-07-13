@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.virksomhet
 
+import kotliquery.Row
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.query
 import no.nav.hjelpemidler.brille.queryList
@@ -27,6 +28,8 @@ data class Virksomhet(
     val opprettet: LocalDateTime = LocalDateTime.now(),
 )
 
+class VirksomhetStoreException(message: String) : RuntimeException(message)
+
 internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetStore {
 
     override fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet? {
@@ -36,17 +39,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             FROM virksomhet
             WHERE orgnr = :orgnr
         """.trimIndent()
-        return ds.query(sql, mapOf("orgnr" to orgnr)) { row ->
-            Virksomhet(
-                orgnr = row.string("orgnr"),
-                kontonr = row.string("kontonr"),
-                fnrInnsender = row.string("fnr_innsender"),
-                navnInnsender = row.string("navn_innsender"),
-                harNavAvtale = row.boolean("har_nav_avtale"),
-                avtaleVersjon = row.stringOrNull("avtale_versjon"),
-                opprettet = row.localDateTime("opprettet")
-            )
-        }
+        return ds.query(sql, mapOf("orgnr" to orgnr), ::mapper)
     }
 
     override fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet> {
@@ -56,17 +49,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             FROM virksomhet
             WHERE fnr_innsender = :fnrInnsender
         """.trimIndent()
-        return ds.queryList(sql, mapOf("fnrInnsender" to fnrInnsender)) { row ->
-            Virksomhet(
-                orgnr = row.string("orgnr"),
-                kontonr = row.string("kontonr"),
-                fnrInnsender = row.string("fnr_innsender"),
-                navnInnsender = row.string("navn_innsender"),
-                harNavAvtale = row.boolean("har_nav_avtale"),
-                avtaleVersjon = row.stringOrNull("avtale_versjon"),
-                opprettet = row.localDateTime("opprettet"),
-            )
-        }
+        return ds.queryList(sql, mapOf("fnrInnsender" to fnrInnsender), ::mapper)
     }
 
     override fun lagreVirksomhet(virksomhet: Virksomhet) {
@@ -95,7 +78,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             )
         )
         if (result == 0) {
-            throw RuntimeException("VirksomhetStore.lagreVirksomhet: feilet i å opprette virksomhet (result==0)")
+            throw VirksomhetStoreException("VirksomhetStore.lagreVirksomhet: feilet i å opprette virksomhet (result==0)")
         }
     }
 
@@ -114,7 +97,17 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             )
         )
         if (result == 0) {
-            throw RuntimeException("VirksomhetStore.oppdaterKontonummer: feilet i å oppdatere kontonummer (result==0)")
+            throw VirksomhetStoreException("VirksomhetStore.oppdaterKontonummer: feilet i å oppdatere kontonummer (result==0)")
         }
     }
+
+    private fun mapper(row: Row): Virksomhet = Virksomhet(
+        orgnr = row.string("orgnr"),
+        kontonr = row.string("kontonr"),
+        fnrInnsender = row.string("fnr_innsender"),
+        navnInnsender = row.string("navn_innsender"),
+        harNavAvtale = row.boolean("har_nav_avtale"),
+        avtaleVersjon = row.stringOrNull("avtale_versjon"),
+        opprettet = row.localDateTime("opprettet"),
+    )
 }
