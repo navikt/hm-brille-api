@@ -63,7 +63,7 @@ fun Route.virksomhetApi(
                 "Ingen virksomhet funnet for orgnr. $orgnr"
             )
 
-        val organisasjon = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+        val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
             ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke orgenhet for orgnr $orgnr")
 
         data class Response(
@@ -76,15 +76,15 @@ fun Route.virksomhetApi(
         )
 
         val response = Response(
-            orgnr = organisasjon.orgnr,
-            orgNavn = organisasjon.navn,
+            orgnr = enhet.orgnr,
+            orgNavn = enhet.navn,
             kontonr = virksomhet.kontonr,
             harNavAvtale = virksomhet.harNavAvtale,
-            forretningsadresse = organisasjon.forretningsadresse,
+            forretningsadresse = enhet.forretningsadresse,
             erOptikerVirksomhet = setOf(
-                organisasjon.naeringskode1,
-                organisasjon.naeringskode2,
-                organisasjon.naeringskode3
+                enhet.naeringskode1,
+                enhet.naeringskode2,
+                enhet.naeringskode3
             ).any { it?.kode == "47.782" },
         )
 
