@@ -22,8 +22,8 @@ class VilkårsvurderingService(
         val medlemskapResultat =
             medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBruker, vilkårsgrunnlagDto.bestillingsdato)
         val vilkårsgrunnlag = Vilkårsgrunnlag(
-            vedtakForBruker = vedtakForBruker,
-            pdlOppslagBruker = pdlOppslagBruker,
+            vedtakForInnbygger = vedtakForBruker,
+            pdlOppslagInnbygger = pdlOppslagBruker,
             medlemskapResultat = medlemskapResultat,
             brilleseddel = vilkårsgrunnlagDto.brilleseddel.tilBrilleseddel(),
             bestillingsdato = vilkårsgrunnlagDto.bestillingsdato,

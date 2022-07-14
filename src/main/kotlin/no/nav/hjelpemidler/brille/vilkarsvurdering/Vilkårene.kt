@@ -14,7 +14,7 @@ object Vilkårene {
         beskrivelse = "Har barnet allerede vedtak om brille i kalenderåret?",
         identifikator = "HarIkkeVedtakIKalenderåret v1"
     ) { grunnlag ->
-        val harIkkeVedtakIKalenderåret = grunnlag.vedtakForBruker.none { vedtak ->
+        val harIkkeVedtakIKalenderåret = grunnlag.vedtakForInnbygger.none { vedtak ->
             vedtak.bestillingsdato.year == grunnlag.bestillingsdato.year
         }
         when (harIkkeVedtakIKalenderåret) {

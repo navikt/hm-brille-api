@@ -2,7 +2,7 @@ package no.nav.hjelpemidler.brille.pdl
 
 import java.time.LocalDate
 
-data class PersonDetaljerDto(
+data class PersonDto(
     val fnr: String,
     val fornavn: String,
     val etternavn: String,

@@ -14,7 +14,6 @@ import io.ktor.server.request.path
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
@@ -25,7 +24,6 @@ import no.nav.hjelpemidler.brille.avtale.avtaleApi
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
-import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -48,8 +46,6 @@ import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import org.apache.kafka.clients.producer.MockProducer
 import org.slf4j.event.Level
 import java.util.TimeZone
-
-private val log = KotlinLogging.logger {}
 
 fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
 

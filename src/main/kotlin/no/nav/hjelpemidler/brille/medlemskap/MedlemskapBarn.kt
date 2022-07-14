@@ -7,20 +7,21 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
-import no.nav.hjelpemidler.brille.pdl.Bostedsadresse
-import no.nav.hjelpemidler.brille.pdl.DeltBosted
-import no.nav.hjelpemidler.brille.pdl.Folkeregistermetadata
-import no.nav.hjelpemidler.brille.pdl.ForelderBarnRelasjonRolle
-import no.nav.hjelpemidler.brille.pdl.MotpartsRolle
 import no.nav.hjelpemidler.brille.pdl.PdlClient
-import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
+import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
+import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentVergeEllerForelder
+import no.nav.hjelpemidler.brille.pdl.generated.enums.ForelderBarnRelasjonRolle
+import no.nav.hjelpemidler.brille.pdl.generated.enums.FullmaktsRolle
+import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Bostedsadresse
+import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.DeltBosted
+import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Folkeregistermetadata
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import org.slf4j.MDC
 import java.time.LocalDate
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
-private val tjenestelogg = KotlinLogging.logger("tjenestekall")
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 data class MedlemskapResultat(
     val medlemskapBevist: Boolean,
@@ -44,7 +45,7 @@ class MedlemskapBarn(
     private val pdlClient: PdlClient,
     private val redisClient: RedisClient,
 ) {
-    fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsDato: LocalDate): MedlemskapResultat = runBlocking {
+    fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsdato: LocalDate): MedlemskapResultat = runBlocking {
         log.info("Sjekker medlemskap for barn")
 
         val baseCorrelationId = MDC.get(MDC_CORRELATION_ID)
@@ -54,7 +55,7 @@ class MedlemskapBarn(
                 saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
-                        "bestillingsDato" to bestillingsDato,
+                        "bestillingsdato" to bestillingsdato,
                         "correlation-id" to baseCorrelationId
                     )
                 )
@@ -62,10 +63,10 @@ class MedlemskapBarn(
         )
 
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
-        val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsDato)
+        val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsdato)
         if (medlemskapBarnCache != null) {
             log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
-            tjenestelogg.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
+            sikkerLog.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
             return@runBlocking medlemskapBarnCache
         }
 
@@ -74,7 +75,7 @@ class MedlemskapBarn(
 
         // Slå opp pdl informasjon om barnet
         val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
-        val pdlBarn = pdlResponse.pdlPersonResponse
+        val pdlBarn = pdlResponse.data
 
         saksgrunnlag.add(
             Saksgrunnlag(
@@ -82,21 +83,21 @@ class MedlemskapBarn(
                 saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
-                        "pdl" to pdlResponse.saksgrunnlag,
+                        "pdl" to pdlResponse.rawData,
                     )
                 ),
             )
         )
 
         // Sjekk minimumskravet vårt for å anta medlemskap for barnet i folketrygden.
-        if (!sjekkFolkeregistrertAdresseINorge(bestillingsDato, pdlBarn)) {
+        if (!sjekkFolkeregistrertAdresseINorge(bestillingsdato, pdlBarn)) {
             // Ingen av de folkeregistrerte bostedsadressene satt på barnet i PDL er en normal norsk adresse (kan
             // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
             // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
             // stopper vi opp behandling tidlig her!
             log.info("Barnet har ikke folkeregistrert adresse i Norge og vi antar derfor at hen ikke er medlem i folketrygden")
             val medlemskapResultat = MedlemskapResultat(false, false, saksgrunnlag)
-            redisClient.setMedlemskapBarn(fnrBarn, bestillingsDato, medlemskapResultat)
+            redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
             return@runBlocking medlemskapResultat
         }
 
@@ -107,7 +108,7 @@ class MedlemskapBarn(
         // Vi sjekker alle relasjoner vi har én etter én i denne prioriterte rekkefølgen inntil vi finner noen som
         // LovMe-tjenesten kan si at er medlem. I så tilfelle sier vi at vi har bevist medlemskapet til barnet siden
         // "foresatt" er medlem.
-        val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsDato, pdlBarn)
+        val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsdato, pdlBarn)
 
         for ((rolle, fnrVergeEllerForelder) in prioritertListe) {
             val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
@@ -119,7 +120,7 @@ class MedlemskapBarn(
             ) {
                 // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
                 val pdlResponseVerge = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
-                val pdlVergeEllerForelder = pdlResponseVerge.pdlPersonResponse
+                val pdlVergeEllerForelder = pdlResponseVerge.data
 
                 saksgrunnlag.add(
                     Saksgrunnlag(
@@ -128,7 +129,7 @@ class MedlemskapBarn(
                             mapOf(
                                 "rolle" to rolle,
                                 "fnr" to fnrVergeEllerForelder,
-                                "pdl" to pdlResponseVerge.saksgrunnlag,
+                                "pdl" to pdlResponseVerge.rawData,
                             )
                         ),
                     )
@@ -136,7 +137,7 @@ class MedlemskapBarn(
 
                 // Hvis relasjon bor på samme adresse kan vi bruke de til å sannsynliggjøre medlemskapet til barnet,
                 // hvis de ikke bor på samme adresse så er de ikke interessant for dette formålet.
-                if (harSammeAdresse(bestillingsDato, pdlBarn, pdlVergeEllerForelder)) {
+                if (harSammeAdresse(bestillingsdato, pdlBarn, pdlVergeEllerForelder)) {
                     val medlemskap =
                         medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
 
@@ -164,7 +165,7 @@ class MedlemskapBarn(
                                 uavklartMedlemskap = false,
                                 saksgrunnlag = saksgrunnlag
                             )
-                            redisClient.setMedlemskapBarn(fnrBarn, bestillingsDato, medlemskapResultat)
+                            redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
                             return@runBlocking medlemskapResultat
                         }
                         else -> { /* Sjekk de andre */
@@ -183,16 +184,19 @@ class MedlemskapBarn(
                 uavklartMedlemskap = true,
                 saksgrunnlag = saksgrunnlag
             )
-        redisClient.setMedlemskapBarn(fnrBarn, bestillingsDato, medlemskapResultat)
+        redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
         log.info("Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge")
         medlemskapResultat
     }
 }
 
-private fun sjekkFolkeregistrertAdresseINorge(bestillingsDato: LocalDate, pdlBarn: PdlPersonResponse): Boolean {
+private fun sjekkFolkeregistrertAdresseINorge(
+    bestillingsDato: LocalDate,
+    pdlBarn: MedlemskapHentBarn.Result?,
+): Boolean {
     // Avklar folkeregistrert adresse i Norge, ellers stopp behandling.
-    val bostedsadresser = pdlBarn.data?.hentPerson?.bostedsadresse ?: listOf()
-    val deltBostedBarn = pdlBarn.data?.hentPerson?.deltBosted ?: listOf()
+    val bostedsadresser = pdlBarn?.hentPerson?.bostedsadresse ?: listOf()
+    val deltBostedBarn = pdlBarn?.hentPerson?.deltBosted ?: listOf()
     return slåSammenAktiveBosteder(
         bestillingsDato,
         bostedsadresser,
@@ -202,26 +206,26 @@ private fun sjekkFolkeregistrertAdresseINorge(bestillingsDato: LocalDate, pdlBar
 
 private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
     bestillingsDato: LocalDate,
-    pdlBarn: PdlPersonResponse,
+    pdlBarn: MedlemskapHentBarn.Result?,
 ): List<Pair<String, String>> {
     // Lag en liste i prioritert rekkefølge for hvem vi skal slå opp i LovMe/medlemskap-oppslag tjenesten. Her
     // prioriterer vi først fullmektige/verger (under antagelse om at foreldre kanskje har mistet forelderansvaret hvis
     // barnet har fått en annen fullmektig/verge). Etter det kommer foreldre relasjoner prioritert etter rolle.
     // Foreldreansvar først, så andre foreldre roller: man bor trolig med forelder som har et aktivt foreldreansvar.
 
-    val fullmakt = pdlBarn.data?.hentPerson?.fullmakt ?: listOf()
-    val vergemaalEllerFremtidsfullmakt = pdlBarn.data?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
-    val foreldreAnsvar = pdlBarn.data?.hentPerson?.foreldreansvar ?: listOf()
-    val foreldreBarnRelasjon = pdlBarn.data?.hentPerson?.forelderBarnRelasjon ?: listOf()
+    val fullmakt = pdlBarn?.hentPerson?.fullmakt ?: listOf()
+    val vergemaalEllerFremtidsfullmakt = pdlBarn?.hentPerson?.vergemaalEllerFremtidsfullmakt ?: listOf()
+    val foreldreAnsvar = pdlBarn?.hentPerson?.foreldreansvar ?: listOf()
+    val foreldreBarnRelasjon = pdlBarn?.hentPerson?.forelderBarnRelasjon ?: listOf()
 
     val fullmektigeVergerOgForeldre: List<Pair<String, String>> = listOf(
 
         fullmakt.filter {
             // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot bestillingsdato
             (it.gyldigFraOgMed.isEqual(bestillingsDato) || it.gyldigFraOgMed.isBefore(bestillingsDato)) &&
-                (it.gyldigTilOgMed.isEqual(bestillingsDato) || it.gyldigTilOgMed.isAfter(bestillingsDato)) &&
-                // Fullmektig ovenfor barnet
-                it.motpartsRolle == MotpartsRolle.FULLMEKTIG
+                    (it.gyldigTilOgMed.isEqual(bestillingsDato) || it.gyldigTilOgMed.isAfter(bestillingsDato)) &&
+                    // Fullmektig ovenfor barnet
+                    it.motpartsRolle == FullmaktsRolle.FULLMEKTIG
         }.map {
             Pair("FULLMEKTIG-${it.motpartsRolle}", it.motpartsPersonident)
         },
@@ -281,7 +285,11 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
     }
 }
 
-private fun harSammeAdresse(bestillingsDato: LocalDate, barn: PdlPersonResponse, annen: PdlPersonResponse): Boolean {
+private fun harSammeAdresse(
+    bestillingsDato: LocalDate,
+    barn: MedlemskapHentBarn.Result?,
+    annen: MedlemskapHentVergeEllerForelder.Result?,
+): Boolean {
     // Vi sammenligner adresser for å se om barn og foresatte (foreldre, verger, fullmektige) bor sammen. For slike
     // formål anbefaler PDL at man sammenligner matrikkelId og bruksenhetsnummeret. Begge disse datapunktene skal ha
     // relativt god kvalitet. Da vi har toleranse for småfeil så godtar vi at minimum bare matrikkelId er lik hvis det
@@ -292,11 +300,11 @@ private fun harSammeAdresse(bestillingsDato: LocalDate, barn: PdlPersonResponse,
     // folkeregistrerte adresser (gitt at kontrakten er aktiv).
 
     // Barnets adresser
-    val bostedsadresserBarn = barn.data?.hentPerson?.bostedsadresse ?: listOf()
-    val deltBostedBarn = barn.data?.hentPerson?.deltBosted ?: listOf()
+    val bostedsadresserBarn = barn?.hentPerson?.bostedsadresse ?: listOf()
+    val deltBostedBarn = barn?.hentPerson?.deltBosted ?: listOf()
 
     // Sammenlignes med "annen"
-    val bostedsadresserAnnen = (annen.data?.hentPerson?.bostedsadresse ?: listOf()).filter {
+    val bostedsadresserAnnen = (annen?.hentPerson?.bostedsadresse ?: listOf()).filter {
         sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsDato, it)
     }
 
@@ -402,15 +410,31 @@ private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(
 
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsDato: LocalDate, adresse: Bostedsadresse): Boolean {
     return (
-        adresse.gyldigFraOgMed == null ||
-            adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsDato) ||
-            adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsDato)
-        ) &&
-        (
-            adresse.gyldigTilOgMed == null ||
-                adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsDato) ||
-                adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsDato)
-            )
+            adresse.gyldigFraOgMed == null ||
+                    adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsDato) ||
+                    adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsDato)
+            ) &&
+            (
+                    adresse.gyldigTilOgMed == null ||
+                            adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsDato) ||
+                            adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsDato)
+                    )
+}
+
+private fun sjekkBostedsadresseDatoerMotBestillingsdato(
+    bestillingsDato: LocalDate,
+    adresse: no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentvergeellerforelder.Bostedsadresse,
+): Boolean {
+    return (
+            adresse.gyldigFraOgMed == null ||
+                    adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsDato) ||
+                    adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsDato)
+            ) &&
+            (
+                    adresse.gyldigTilOgMed == null ||
+                            adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsDato) ||
+                            adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsDato)
+                    )
 }
 
 private data class MedlemskapResponse(

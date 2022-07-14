@@ -7,7 +7,6 @@ import io.ktor.server.auth.AuthenticationChecked
 import io.ktor.server.auth.AuthenticationRouteSelector
 import io.ktor.server.routing.Route
 import kotlinx.coroutines.runBlocking
-import no.nav.hjelpemidler.brille.exceptions.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 
@@ -71,6 +70,9 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
         }
     }
 }
+
+class SjekkOptikerPluginException(val status: HttpStatusCode, message: String = "", cause: Throwable? = null) :
+    RuntimeException(message, cause)
 
 class SjekkOptikerPluginConfiguration {
     var syfohelsenettproxyClient: SyfohelsenettproxyClient? = null

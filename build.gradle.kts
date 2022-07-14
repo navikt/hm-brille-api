@@ -1,3 +1,4 @@
+import com.expediagroup.graphql.plugin.gradle.config.GraphQLScalar
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.hjelpemidler"
@@ -8,6 +9,7 @@ plugins {
     kotlin("jvm") version "1.7.10"
     id("com.diffplug.spotless") version "6.7.2"
     id("com.github.johnrengelman.shadow") version "7.1.2"
+    id("com.expediagroup.graphql") version "6.0.0-alpha.6"
 }
 
 application {
@@ -21,6 +23,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("reflect"))
     implementation("com.natpryce:konfig:1.6.10.0")
     implementation("io.micrometer:micrometer-registry-prometheus:1.9.1")
 
@@ -57,6 +60,14 @@ dependencies {
     implementation(ktorClient("jackson"))
     implementation(ktorClient("mock"))
 
+    // GraphQL
+    val graphQLVersion = "6.0.0-alpha.6"
+    implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphQLVersion") {
+        exclude(group = "com.expediagroup", module = "graphql-kotlin-client-serialization")
+        exclude(group = "io.ktor", module = "ktor-client-serialization")
+    }
+    implementation("com.expediagroup:graphql-kotlin-client-jackson:$graphQLVersion")
+
     // Jackson
     val jacksonVersion = "2.13.3"
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
@@ -83,6 +94,7 @@ dependencies {
 
 spotless {
     kotlin {
+        targetExclude("build/generated/**/*")
         ktlint()
     }
     kotlinGradle {
@@ -106,4 +118,21 @@ tasks.withType<Wrapper> {
 tasks.named("compileKotlin") {
     dependsOn("spotlessApply")
     dependsOn("spotlessCheck")
+}
+
+graphql {
+    client {
+        schemaFile = file("${project.projectDir}/src/main/resources/pdl/schema.graphql")
+        queryFiles = listOf(
+            file("${project.projectDir}/src/main/resources/pdl/hentPerson.graphql"),
+            file("${project.projectDir}/src/main/resources/pdl/medlemskapHentBarn.graphql"),
+            file("${project.projectDir}/src/main/resources/pdl/medlemskapHentVergeEllerForelder.graphql"),
+        )
+        customScalars = listOf(
+            GraphQLScalar("Long", "kotlin.Long", "no.nav.hjelpemidler.brille.pdl.LongConverter"),
+            GraphQLScalar("Date", "java.time.LocalDate", "no.nav.hjelpemidler.brille.pdl.DateConverter"),
+            GraphQLScalar("DateTime", "java.time.LocalDateTime", "no.nav.hjelpemidler.brille.pdl.DateTimeConverter"),
+        )
+        packageName = "no.nav.hjelpemidler.brille.pdl.generated"
+    }
 }

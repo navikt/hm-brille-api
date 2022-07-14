@@ -7,6 +7,7 @@ import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import java.time.Duration
+import java.util.Locale
 
 object Configuration {
     private val defaultProperties = ConfigurationMap(
@@ -97,6 +98,8 @@ object Configuration {
     val local: Boolean = profile == Profile.LOCAL
     val dev: Boolean = profile == Profile.DEV
     val prod: Boolean = profile == Profile.PROD
+
+    val locale = Locale("nb")
 
     val azureAdProperties = AzureAdProperties()
     val dbProperties = DatabaseProperties()

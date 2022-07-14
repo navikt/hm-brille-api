@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.exceptions
+package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
 import io.ktor.http.HttpStatusCode
@@ -12,36 +12,13 @@ import mu.KotlinLogging
 
 private val log = KotlinLogging.logger {}
 
-class PersonNotFoundInPdl(message: String) : RuntimeException(message)
-
-class PersonNotAccessibleInPdl(message: String = "") : RuntimeException(message)
-
-class PdlRequestFailedException(message: String = "") : RuntimeException("Request to PDL Failed $message")
-
-class SjekkOptikerPluginException(val status: HttpStatusCode, message: String = "", cause: Throwable? = null) :
-    RuntimeException(message, cause)
-
 fun Application.configureStatusPages() {
     install(StatusPages) {
-        // PDL exceptions
-        exception<PersonNotFoundInPdl> { call, _ ->
-            call.respond(HttpStatusCode.NotFound)
-        }
-        exception<PersonNotAccessibleInPdl> { call, _ ->
-            call.respond(HttpStatusCode.Forbidden)
-        }
-        exception<PdlRequestFailedException> { call, _ ->
-            call.respond(HttpStatusCode.InternalServerError)
-        }
-
-        // SjekkOptikerPlugin exceptions
         exception<SjekkOptikerPluginException> { call, e ->
             // TODO: Fjern når vi ikke trenger den lengre.
             log.warn(e) { "Exception fra middleware med status: ${e.status.description}" }
             call.respond(e.status)
         }
-
-        // Others
         exception<MissingKotlinParameterException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest)
         }
@@ -49,10 +26,9 @@ fun Application.configureStatusPages() {
             when (cause) {
                 is BadRequestException -> call.respond(HttpStatusCode.BadRequest)
                 else -> {
-                    log.error(
-                        "Unhandled exception. Pls fix slik at den fanges og håndteres med riktig statuskode.",
-                        cause
-                    )
+                    log.error(cause) {
+                        "Noe gikk galt!"
+                    }
                     call.respondText(
                         "Noe gikk galt! Feilen har blitt logget og vil bli undersøkt.",
                         status = HttpStatusCode.InternalServerError
