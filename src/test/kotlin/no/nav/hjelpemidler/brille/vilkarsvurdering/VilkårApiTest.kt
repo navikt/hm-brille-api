@@ -1,7 +1,9 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -19,6 +21,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlOppslag
 import no.nav.hjelpemidler.brille.pdl.PdlPersonResponse
 import no.nav.hjelpemidler.brille.sats.BrilleseddelDto
 import no.nav.hjelpemidler.brille.sats.Diopter
+import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.sats.tilDiopter
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
@@ -178,7 +181,20 @@ internal class VilkårApiTest {
             }
 
             response.status shouldBe HttpStatusCode.OK
-            response.body<VilkårsvurderingDto>().resultat shouldBe forventetResultat
+            val vilkårsvurdering = response.body<VilkårsvurderingDto>()
+            vilkårsvurdering.resultat shouldBe forventetResultat
+
+            when (vilkårsvurdering.resultat) {
+                Resultat.NEI -> {
+                    vilkårsvurdering.sats shouldBe SatsType.INGEN
+                }
+                else -> {
+                    vilkårsvurdering.sats shouldNotBe SatsType.INGEN
+                    vilkårsvurdering.beløp shouldNotBe "0"
+                }
+            }
+
+            vilkårsvurdering.satsBeløp.shouldNotBeNull()
         }
     }
 

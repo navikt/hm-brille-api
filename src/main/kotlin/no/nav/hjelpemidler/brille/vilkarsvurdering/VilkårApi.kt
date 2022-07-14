@@ -9,6 +9,9 @@ import io.ktor.server.routing.post
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
+import no.nav.hjelpemidler.brille.sats.SatsKalkulator
+import no.nav.hjelpemidler.brille.sats.SatsType
 
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
     post("/vilkarsgrunnlag") {
@@ -24,7 +27,21 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
             oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om innbygger og bestilling oppfyller vilkår for støtte"
         )
         val vilkarsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)
+        val sats = when (vilkarsvurdering.utfall) {
+            Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel.tilBrilleseddel()).kalkuler()
+            else -> SatsType.INGEN
+        }
 
-        call.respond(VilkårsvurderingDto(vilkarsvurdering.utfall))
+        val beløp = minOf(vilkårsgrunnlag.brillepris, sats.beløp)
+
+        call.respond(
+            VilkårsvurderingDto(
+                resultat = vilkarsvurdering.utfall,
+                sats = sats,
+                satsBeskrivelse = sats.beskrivelse,
+                satsBeløp = sats.beløp.toString(),
+                beløp = beløp.toString()
+            )
+        )
     }
 }
