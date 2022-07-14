@@ -26,6 +26,7 @@ import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.exceptions.configureStatusPages
+import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
@@ -34,7 +35,6 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
-import no.nav.hjelpemidler.brille.pdl.pdlApi
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
@@ -76,9 +76,9 @@ fun Application.configure() {
     install(CallLogging) {
         level = Level.TRACE
         filter { call ->
-            !call.request.path().startsWith("/hm/internal")
+            !call.request.path().startsWith("/internal")
         }
-        // Set correlation-id i logginnslag. Også tilgjengelig direkte med: MDC.get(MDC_CORRELATION_ID)
+        // Set correlation-id i logg-innslag. Også tilgjengelig direkte med: MDC.get(MDC_CORRELATION_ID)
         callIdMdc(MDC_CORRELATION_ID)
     }
     install(IgnoreTrailingSlash)
@@ -132,10 +132,10 @@ fun Application.setupRoutes() {
 
             authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
-                    pdlApi(pdlService, auditService)
+                    innbyggerApi(pdlService, auditService)
+                    virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
                     vilkårApi(vilkårsvurderingService, auditService)
                     søknadApi(vedtakService, auditService)
-                    virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
                 }
                 avtaleApi(avtaleService)
             }

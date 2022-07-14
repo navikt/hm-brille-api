@@ -11,7 +11,7 @@ import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 
 fun Route.søknadApi(vedtakService: VedtakService, auditService: AuditService) {
-    post("/soknad") {
+    post("/soknader") {
         if (Configuration.prod) { // TODO: fjern før prodsetting
             call.respond(HttpStatusCode.Unauthorized)
             return@post
@@ -23,7 +23,7 @@ fun Route.søknadApi(vedtakService: VedtakService, auditService: AuditService) {
         auditService.lagreOppslag(
             fnrInnlogget = fnrInnsender,
             fnrOppslag = søknadDto.vilkårsgrunnlag.fnrBruker,
-            oppslagBeskrivelse = "[POST] /soknad - Innsending av søknad"
+            oppslagBeskrivelse = "[POST] /soknader - Innsending av søknad"
         )
 
         val vedtak = vedtakService.lagVedtak(søknadDto, fnrInnsender)
