@@ -23,7 +23,7 @@ internal class SatsApiTest {
         venstreSylinder: String,
         sats: String,
     ) = routing.test {
-        val response = client.post("/beregn-sats") {
+        val response = client.post("/brillesedler") {
             setBody(
                 Brilleseddel(
                     høyreSfære = høyreSfære.tilDiopter(),
