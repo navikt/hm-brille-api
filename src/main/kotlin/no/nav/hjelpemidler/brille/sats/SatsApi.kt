@@ -7,7 +7,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 
 fun Route.satsApi() {
-    post("/beregn-sats") {
+    post("/brillesedler") {
         val brilleseddel = call.receive<BrilleseddelDto>()
         val satsKalkulator = SatsKalkulator(brilleseddel.tilBrilleseddel())
         val satsType = satsKalkulator.kalkuler()

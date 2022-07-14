@@ -13,7 +13,7 @@ import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.pdl.PdlService
 
 fun Route.innbyggerApi(pdlService: PdlService, auditService: AuditService) {
-    route("/innbygger") {
+    route("/innbyggere") {
         post("/sok") {
             data class Request(val fnr: String)
             data class Response(
