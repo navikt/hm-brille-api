@@ -2,7 +2,8 @@
   "appnavn": "hm-brille-api",
   "inbound-applications": [
     "hm-brille-frontend",
-    "hm-brilleavtale-frontend"
+    "hm-brilleavtale-frontend",
+    "hm-brillerapport"
   ],
   "port": 9090,
   "db_tier": "db-f1-micro",
