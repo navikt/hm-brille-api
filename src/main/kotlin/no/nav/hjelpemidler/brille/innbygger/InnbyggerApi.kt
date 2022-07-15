@@ -8,7 +8,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
-import no.nav.hjelpemidler.brille.pdl.PdlClient
+import no.nav.hjelpemidler.brille.pdl.PdlClientException
 import no.nav.hjelpemidler.brille.pdl.PdlService
 
 fun Route.innbyggerApi(pdlService: PdlService, auditService: AuditService) {
@@ -39,7 +39,7 @@ fun Route.innbyggerApi(pdlService: PdlService, auditService: AuditService) {
                         alder = it.alder
                     )
                 } ?: Response(fnr = "", navn = "")
-            } catch (e: PdlClient.PdlClientException) {
+            } catch (e: PdlClientException) {
                 // fixme
                 Response(fnr = "", navn = "")
             }

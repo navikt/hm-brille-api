@@ -62,6 +62,4 @@ class PdlClient(
 
     suspend fun medlemskapHentVergeEllerForelder(fnr: String): PdlOppslag<MedlemskapHentVergeEllerForelder.Result?> =
         execute(MedlemskapHentVergeEllerForelder(MedlemskapHentVergeEllerForelder.Variables(fnr)))
-
-    class PdlClientException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 }
