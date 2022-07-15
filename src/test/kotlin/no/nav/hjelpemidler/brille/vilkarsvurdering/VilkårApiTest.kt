@@ -165,15 +165,15 @@ internal class VilkårApiTest {
         } returns dagensDato
 
         every {
-            vedtakStore.hentVedtakForBruker(vilkårsgrunnlag.fnrBruker)
+            vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn)
         } returns vedtakForBruker
 
         coEvery {
-            pdlClient.hentPerson(vilkårsgrunnlag.fnrBruker)
+            pdlClient.hentPerson(vilkårsgrunnlag.fnrBarn)
         } returns lagPdlOppslag(fødselsdato)
 
         every {
-            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBruker, vilkårsgrunnlag.bestillingsdato)
+            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBarn, vilkårsgrunnlag.bestillingsdato)
         } returns medlemskapResultat
 
         routing.test {
@@ -211,9 +211,9 @@ internal class VilkårApiTest {
     private fun lagEksisterendeVedtak(bestillingsdato: LocalDate) =
         EksisterendeVedtak(
             id = 1,
-            fnrBruker = "12345678910",
+            fnrBarn = "12345678910",
             bestillingsdato = bestillingsdato,
-            status = "",
+            behandlingsresultat = "",
             opprettet = bestillingsdato.atStartOfDay()
         )
 
@@ -234,7 +234,7 @@ internal class VilkårApiTest {
 
     private val defaultVilkårsgrunnlag = VilkårsgrunnlagDto(
         orgnr = "",
-        fnrBruker = "07480966982",
+        fnrBarn = "07480966982",
         brilleseddel = BrilleseddelDto(
             høyreSfære = "1".tilDiopter(),
             høyreSylinder = "0".tilDiopter(),

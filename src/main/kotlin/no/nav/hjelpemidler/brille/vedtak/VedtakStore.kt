@@ -1,31 +1,32 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import no.nav.hjelpemidler.brille.pgObjectOf
-import no.nav.hjelpemidler.brille.query
-import no.nav.hjelpemidler.brille.queryList
+import no.nav.hjelpemidler.brille.store.Store
+import no.nav.hjelpemidler.brille.store.query
+import no.nav.hjelpemidler.brille.store.queryList
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
-interface VedtakStore {
+interface VedtakStore : Store {
     fun hentTidligereBrukteOrgnrForOptiker(fnrOptiker: String): List<String>
-    fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak>
+    fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
-    override fun hentVedtakForBruker(fnrBruker: String): List<EksisterendeVedtak> {
+    override fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak> {
         @Language("PostgreSQL")
         val sql = """
-            SELECT id, fnr_bruker, bestillingsdato, status, opprettet
-            FROM vedtak_v2
-            WHERE fnr_bruker = :fnr_bruker 
+            SELECT id, fnr_barn, bestillingsdato, behandlingsresultat, opprettet
+            FROM vedtak_v1
+            WHERE fnr_barn = :fnr_barn 
         """.trimIndent()
-        return ds.queryList(sql, mapOf("fnr_bruker" to fnrBruker)) { row ->
+        return ds.queryList(sql, mapOf("fnr_barn" to fnrBarn)) { row ->
             EksisterendeVedtak(
-                id = row.int("id"),
-                fnrBruker = row.string("fnr_bruker"),
+                id = row.long("id"),
+                fnrBarn = row.string("fnr_barn"),
                 bestillingsdato = row.localDate("bestillingsdato"),
-                status = row.string("status"),
+                behandlingsresultat = row.string("behandlingsresultat"),
                 opprettet = row.localDateTime("opprettet"),
             )
         }
@@ -35,7 +36,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         @Language("PostgreSQL")
         val sql = """
             SELECT orgnr
-            FROM vedtak
+            FROM vedtak_v1
             WHERE fnr_innsender = :fnr_innsender
             ORDER BY opprettet DESC
         """.trimIndent()
@@ -47,42 +48,57 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
     override fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T> {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO vedtak_v2 (
-                fnr_bruker,
+            INSERT INTO vedtak_v1 (
+                fnr_barn,
                 fnr_innsender,
                 orgnr,
                 bestillingsdato,
                 brillepris,
                 bestillingsreferanse,
                 vilkarsvurdering,
-                status
+                behandlingsresultat,
+                sats,
+                sats_belop,
+                sats_beskrivelse,
+                belop,
+                opprettet
             )
             VALUES (
-                :fnr_bruker,
+                :fnr_barn,
                 :fnr_innsender,
                 :orgnr,
                 :bestillingsdato,
                 :brillepris,
                 :bestillingsreferanse,
                 :vilkarsvurdering,
-                :status
+                :behandlingsresultat,
+                :sats,
+                :sats_belop,
+                :sats_beskrivelse,
+                :belop,
+                :opprettet
             )
             RETURNING id
         """.trimIndent()
         val id = ds.query(
             sql,
             mapOf(
-                "fnr_bruker" to vedtak.fnrBruker,
+                "fnr_barn" to vedtak.fnrBarn,
                 "fnr_innsender" to vedtak.fnrInnsender,
                 "orgnr" to vedtak.orgnr,
                 "bestillingsdato" to vedtak.bestillingsdato,
                 "brillepris" to vedtak.brillepris,
                 "bestillingsreferanse" to vedtak.bestillingsreferanse,
                 "vilkarsvurdering" to pgObjectOf(vedtak.vilkårsvurdering),
-                "status" to vedtak.status
+                "behandlingsresultat" to vedtak.behandlingsresultat,
+                "sats" to vedtak.sats,
+                "sats_belop" to vedtak.satsBeløp,
+                "sats_beskrivelse" to vedtak.satsBeskrivelse,
+                "belop" to vedtak.beløp,
+                "opprettet" to vedtak.opprettet,
             )
         ) { row ->
-            row.int("id")
+            row.long("id")
         }
         requireNotNull(id) { "Lagring av vedtak feilet, id var null" }
         return vedtak.copy(id = id)

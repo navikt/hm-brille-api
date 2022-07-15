@@ -2,16 +2,17 @@ package no.nav.hjelpemidler.brille.virksomhet
 
 import kotliquery.Row
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.query
-import no.nav.hjelpemidler.brille.queryList
-import no.nav.hjelpemidler.brille.update
+import no.nav.hjelpemidler.brille.store.Store
+import no.nav.hjelpemidler.brille.store.query
+import no.nav.hjelpemidler.brille.store.queryList
+import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import javax.sql.DataSource
 
 private val log = KotlinLogging.logger {}
 
-interface VirksomhetStore {
+interface VirksomhetStore : Store {
     fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet?
     fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet)
@@ -21,22 +22,22 @@ interface VirksomhetStore {
 data class Virksomhet(
     val orgnr: String,
     val kontonr: String,
+    val epost: String? = null,
     val fnrInnsender: String,
     val navnInnsender: String,
-    val harNavAvtale: Boolean,
-    val avtaleVersjon: String? = null,
+    val aktiv: Boolean,
+    val avtaleversjon: String? = null,
     val opprettet: LocalDateTime = LocalDateTime.now(),
+    val oppdatert: LocalDateTime = opprettet,
 )
-
-class VirksomhetStoreException(message: String) : RuntimeException(message)
 
 internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetStore {
 
     override fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet? {
         @Language("PostgreSQL")
         val sql = """
-            SELECT *
-            FROM virksomhet
+            SELECT orgnr, kontonr, epost, fnr_innsender, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
+            FROM virksomhet_v1
             WHERE orgnr = :orgnr
         """.trimIndent()
         return ds.query(sql, mapOf("orgnr" to orgnr), ::mapper)
@@ -45,8 +46,8 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
     override fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet> {
         @Language("PostgreSQL")
         val sql = """
-            SELECT *
-            FROM virksomhet
+            SELECT orgnr, kontonr, epost, fnr_innsender, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
+            FROM virksomhet_v1
             WHERE fnr_innsender = :fnrInnsender
         """.trimIndent()
         return ds.queryList(sql, mapOf("fnrInnsender" to fnrInnsender), ::mapper)
@@ -55,59 +56,60 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
     override fun lagreVirksomhet(virksomhet: Virksomhet) {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO virksomhet (orgnr,
-                                    kontonr,
-                                    fnr_innsender,
-                                    navn_innsender,
-                                    har_nav_avtale,
-                                    avtale_versjon,
-                                    opprettet)
-            VALUES (:orgnr, :kontonr, :fnr_innsender, :navn_innsender, :har_nav_avtale, :avtale_versjon, :opprettet)
+            INSERT INTO virksomhet_v1 (orgnr,
+                                       kontonr,
+                                       epost,
+                                       fnr_innsender,
+                                       navn_innsender,
+                                       aktiv,
+                                       avtaleversjon,
+                                       opprettet,
+                                       oppdatert)
+            VALUES (:orgnr, :kontonr, :epost, :fnr_innsender, :navn_innsender, :aktiv, :avtaleversjon, :opprettet, :oppdatert)
             ON CONFLICT DO NOTHING
         """.trimIndent()
-        val result = ds.update(
+        ds.update(
             sql,
             mapOf(
                 "orgnr" to virksomhet.orgnr,
                 "kontonr" to virksomhet.kontonr,
+                "epost" to virksomhet.epost,
                 "fnr_innsender" to virksomhet.fnrInnsender,
                 "navn_innsender" to virksomhet.navnInnsender,
-                "har_nav_avtale" to virksomhet.harNavAvtale,
-                "avtale_versjon" to virksomhet.avtaleVersjon,
-                "opprettet" to virksomhet.opprettet
+                "aktiv" to virksomhet.aktiv,
+                "avtaleversjon" to virksomhet.avtaleversjon,
+                "opprettet" to virksomhet.opprettet,
+                "oppdatert" to virksomhet.oppdatert,
             )
-        )
-        if (result == 0) {
-            throw VirksomhetStoreException("VirksomhetStore.lagreVirksomhet: feilet i å opprette virksomhet (result==0)")
-        }
+        ).validate()
     }
 
     override fun oppdaterKontonummer(orgnr: String, kontonr: String) {
         @Language("PostgreSQL")
         val sql = """
-            UPDATE virksomhet
-            SET kontonr = :kontonr
+            UPDATE virksomhet_v1
+            SET kontonr = :kontonr, oppdatert = :oppdatert
             WHERE orgnr = :orgnr
         """.trimIndent()
-        val result = ds.update(
+        ds.update(
             sql,
             mapOf(
                 "kontonr" to kontonr,
                 "orgnr" to orgnr,
+                "oppdatert" to LocalDateTime.now()
             )
-        )
-        if (result == 0) {
-            throw VirksomhetStoreException("VirksomhetStore.oppdaterKontonummer: feilet i å oppdatere kontonummer (result==0)")
-        }
+        ).validate()
     }
 
     private fun mapper(row: Row): Virksomhet = Virksomhet(
         orgnr = row.string("orgnr"),
         kontonr = row.string("kontonr"),
+        epost = row.stringOrNull("epost"),
         fnrInnsender = row.string("fnr_innsender"),
         navnInnsender = row.string("navn_innsender"),
-        harNavAvtale = row.boolean("har_nav_avtale"),
-        avtaleVersjon = row.stringOrNull("avtale_versjon"),
+        aktiv = row.boolean("aktiv"),
+        avtaleversjon = row.stringOrNull("avtaleversjon"),
         opprettet = row.localDateTime("opprettet"),
+        oppdatert = row.localDateTime("oppdatert"),
     )
 }

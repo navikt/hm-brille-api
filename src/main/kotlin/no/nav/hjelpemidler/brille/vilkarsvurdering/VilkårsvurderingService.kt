@@ -17,10 +17,10 @@ class VilkårsvurderingService(
     private val dagensDatoFactory: () -> LocalDate = { LocalDate.now() },
 ) {
     suspend fun vurderVilkårBrille(vilkårsgrunnlagDto: VilkårsgrunnlagDto): Vilkårsvurdering<Vilkårsgrunnlag> {
-        val vedtakForBruker = vedtakStore.hentVedtakForBruker(vilkårsgrunnlagDto.fnrBruker)
-        val pdlOppslagBruker = pdlClient.hentPerson(vilkårsgrunnlagDto.fnrBruker)
+        val vedtakForBruker = vedtakStore.hentVedtakForBarn(vilkårsgrunnlagDto.fnrBarn)
+        val pdlOppslagBruker = pdlClient.hentPerson(vilkårsgrunnlagDto.fnrBarn)
         val medlemskapResultat =
-            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBruker, vilkårsgrunnlagDto.bestillingsdato)
+            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBarn, vilkårsgrunnlagDto.bestillingsdato)
         val vilkårsgrunnlag = Vilkårsgrunnlag(
             vedtakForInnbygger = vedtakForBruker,
             pdlOppslagInnbygger = pdlOppslagBruker,

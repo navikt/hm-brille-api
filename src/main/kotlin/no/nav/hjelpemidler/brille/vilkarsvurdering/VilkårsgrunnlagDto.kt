@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 data class VilkårsgrunnlagDto(
     val orgnr: String,
-    val fnrBruker: String,
+    val fnrBarn: String,
     val brilleseddel: BrilleseddelDto,
     val bestillingsdato: LocalDate,
     val brillepris: BigDecimal,

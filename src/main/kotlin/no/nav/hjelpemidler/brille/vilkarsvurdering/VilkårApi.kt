@@ -23,7 +23,7 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
         val vilkårsgrunnlag = call.receive<VilkårsgrunnlagDto>()
         auditService.lagreOppslag(
             fnrInnlogget = call.extractFnr(),
-            fnrOppslag = vilkårsgrunnlag.fnrBruker,
+            fnrOppslag = vilkårsgrunnlag.fnrBarn,
             oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om innbygger og bestilling oppfyller vilkår for støtte"
         )
         val vilkarsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)

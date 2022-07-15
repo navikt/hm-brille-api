@@ -25,6 +25,9 @@ import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
+import no.nav.hjelpemidler.brille.innsender.InnsenderService
+import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
+import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
@@ -95,6 +98,8 @@ fun Application.setupRoutes() {
     val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
     val vedtakStore = VedtakStorePostgres(dataSource)
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
+    val innsenderStore = InnsenderStorePostgres(dataSource)
+    val innsenderService = InnsenderService(innsenderStore)
     val auditStore = AuditStorePostgres(dataSource)
     val auditService = AuditService(auditStore)
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
@@ -130,6 +135,7 @@ fun Application.setupRoutes() {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
+                    innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService)
                     søknadApi(vedtakService, auditService)
                 }

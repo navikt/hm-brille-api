@@ -3,7 +3,6 @@ package no.nav.hjelpemidler.brille
 import com.zaxxer.hikari.HikariDataSource
 import mu.KotlinLogging
 import org.flywaydb.core.Flyway
-import org.flywaydb.core.api.output.MigrateResult
 import java.net.Socket
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -18,7 +17,7 @@ class DatabaseConfiguration(
 ) {
     fun dataSource(): DataSource {
         if (!waitForDB(10.minutes)) {
-            throw Exception("database never became available within the deadline")
+            throw RuntimeException("Databasen ble ikke tilgjengelig innenfor tidsfristen")
         }
 
         val dataSource = HikariDataSource().apply {
@@ -33,7 +32,10 @@ class DatabaseConfiguration(
             maxLifetime = 30001
         }
 
-        migrate(dataSource)
+        val flyway = Flyway.configure().dataSource(dataSource).load()
+
+        flyway.clean()
+        flyway.migrate()
 
         return dataSource
     }
@@ -45,14 +47,11 @@ class DatabaseConfiguration(
                 Socket(dbProperties.databaseHost, dbProperties.databasePort.toInt())
                 return true
             } catch (e: Exception) {
-                log.info("Database not available yet, waiting...")
+                log.info("Databasen er ikke tilgjengelig ennå, venter...")
                 Thread.sleep(2.seconds.inWholeMilliseconds)
             }
             if (LocalDateTime.now().isAfter(deadline)) break
         }
         return false
     }
-
-    private fun migrate(dataSource: HikariDataSource, initSql: String = ""): MigrateResult =
-        Flyway.configure().dataSource(dataSource).initSql(initSql).load().migrate()
 }

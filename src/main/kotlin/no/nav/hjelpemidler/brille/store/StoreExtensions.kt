@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille
+package no.nav.hjelpemidler.brille.store
 
 import kotliquery.Row
 import kotliquery.Session
@@ -38,6 +38,17 @@ private fun DataSource.runAction(action: ExecuteQueryAction): Boolean = usingSes
 typealias QueryParameters = Map<String, Any?>
 typealias ResultMapper<T> = (Row) -> T?
 
+data class UpdateResult(
+    val rowCount: Int? = null,
+    val generatedId: Long? = null,
+) {
+    fun validate() {
+        if (rowCount == 0) {
+            throw StoreException("rowsUpdated var 0")
+        }
+    }
+}
+
 fun <T> DataSource.query(
     @Language("PostgreSQL") sql: String,
     queryParameters: QueryParameters = emptyMap(),
@@ -53,14 +64,14 @@ fun <T> DataSource.queryList(
 fun DataSource.update(
     @Language("PostgreSQL") sql: String,
     queryParameters: QueryParameters = emptyMap(),
-) = runAction(queryOf(sql, queryParameters).asUpdate)
+): UpdateResult = UpdateResult(rowCount = runAction(queryOf(sql, queryParameters).asUpdate))
 
 fun DataSource.updateAndReturnGeneratedKey(
     @Language("PostgreSQL") sql: String,
     queryParameters: QueryParameters = emptyMap(),
-) = runAction(queryOf(sql, queryParameters).asUpdateAndReturnGeneratedKey)
+): UpdateResult = UpdateResult(generatedId = runAction(queryOf(sql, queryParameters).asUpdateAndReturnGeneratedKey))
 
 fun DataSource.execute(
     @Language("PostgreSQL") sql: String,
     queryParameters: QueryParameters = emptyMap(),
-) = runAction(queryOf(sql, queryParameters).asExecute)
+): Boolean = runAction(queryOf(sql, queryParameters).asExecute)

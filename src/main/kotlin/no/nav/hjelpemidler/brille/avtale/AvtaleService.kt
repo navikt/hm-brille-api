@@ -21,9 +21,9 @@ class AvtaleService(
             Avtale(
                 orgnr = it.orgnr,
                 navn = it.navn,
-                harNavAvtale = virksomheter[it.orgnr]?.harNavAvtale ?: false,
+                harNavAvtale = virksomheter[it.orgnr]?.aktiv ?: false,
                 kontonr = virksomheter[it.orgnr]?.kontonr,
-                avtaleVersjon = virksomheter[it.orgnr]?.avtaleVersjon,
+                avtaleVersjon = virksomheter[it.orgnr]?.avtaleversjon,
                 opprettet = virksomheter[it.orgnr]?.opprettet,
             )
         }
@@ -36,8 +36,8 @@ class AvtaleService(
             kontonr = opprettAvtale.kontonr,
             fnrInnsender = fnr,
             navnInnsender = "", // fixme
-            harNavAvtale = true,
-            avtaleVersjon = null // fixme
+            aktiv = true,
+            avtaleversjon = null // fixme
         )
         virksomhetStore.lagreVirksomhet(
             virksomhet
@@ -46,9 +46,9 @@ class AvtaleService(
         return Avtale(
             orgnr = virksomhet.orgnr,
             navn = opprettAvtale.navn,
-            harNavAvtale = virksomhet.harNavAvtale,
+            harNavAvtale = virksomhet.aktiv,
             kontonr = virksomhet.kontonr,
-            avtaleVersjon = virksomhet.avtaleVersjon,
+            avtaleVersjon = virksomhet.avtaleversjon,
             opprettet = virksomhet.opprettet,
         )
     }
@@ -61,9 +61,9 @@ class AvtaleService(
         return Avtale(
             orgnr = virksomhet.orgnr,
             navn = redigerAvtale.navn,
-            harNavAvtale = virksomhet.harNavAvtale,
+            harNavAvtale = virksomhet.aktiv,
             kontonr = virksomhet.kontonr,
-            avtaleVersjon = virksomhet.avtaleVersjon,
+            avtaleVersjon = virksomhet.avtaleversjon,
             opprettet = virksomhet.opprettet,
         )
     }

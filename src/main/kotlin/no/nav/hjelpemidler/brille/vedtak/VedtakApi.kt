@@ -22,7 +22,7 @@ fun Route.søknadApi(vedtakService: VedtakService, auditService: AuditService) {
 
         auditService.lagreOppslag(
             fnrInnlogget = fnrInnsender,
-            fnrOppslag = søknadDto.vilkårsgrunnlag.fnrBruker,
+            fnrOppslag = søknadDto.vilkårsgrunnlag.fnrBarn,
             oppslagBeskrivelse = "[POST] /soknader - Innsending av søknad"
         )
 

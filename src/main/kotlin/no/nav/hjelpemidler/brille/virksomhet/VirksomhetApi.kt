@@ -81,7 +81,7 @@ fun Route.virksomhetApi(
                 orgnr = enhet.orgnr,
                 orgNavn = enhet.navn,
                 kontonr = virksomhet.kontonr,
-                harNavAvtale = virksomhet.harNavAvtale,
+                harNavAvtale = virksomhet.aktiv,
                 forretningsadresse = enhet.forretningsadresse,
                 erOptikerVirksomhet = setOf(
                     enhet.naeringskode1,
