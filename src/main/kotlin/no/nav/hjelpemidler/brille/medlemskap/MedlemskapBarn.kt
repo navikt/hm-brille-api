@@ -223,9 +223,9 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
         fullmakt.filter {
             // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot bestillingsdato
             (it.gyldigFraOgMed.isEqual(bestillingsDato) || it.gyldigFraOgMed.isBefore(bestillingsDato)) &&
-                    (it.gyldigTilOgMed.isEqual(bestillingsDato) || it.gyldigTilOgMed.isAfter(bestillingsDato)) &&
-                    // Fullmektig ovenfor barnet
-                    it.motpartsRolle == FullmaktsRolle.FULLMEKTIG
+                (it.gyldigTilOgMed.isEqual(bestillingsDato) || it.gyldigTilOgMed.isAfter(bestillingsDato)) &&
+                // Fullmektig ovenfor barnet
+                it.motpartsRolle == FullmaktsRolle.FULLMEKTIG
         }.map {
             Pair("FULLMEKTIG-${it.motpartsRolle}", it.motpartsPersonident)
         },
@@ -410,15 +410,15 @@ private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(
 
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsDato: LocalDate, adresse: Bostedsadresse): Boolean {
     return (
-            adresse.gyldigFraOgMed == null ||
-                    adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsDato) ||
-                    adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsDato)
-            ) &&
-            (
-                    adresse.gyldigTilOgMed == null ||
-                            adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsDato) ||
-                            adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsDato)
-                    )
+        adresse.gyldigFraOgMed == null ||
+            adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsDato) ||
+            adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsDato)
+        ) &&
+        (
+            adresse.gyldigTilOgMed == null ||
+                adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsDato) ||
+                adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsDato)
+            )
 }
 
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(
@@ -426,15 +426,15 @@ private fun sjekkBostedsadresseDatoerMotBestillingsdato(
     adresse: no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentvergeellerforelder.Bostedsadresse,
 ): Boolean {
     return (
-            adresse.gyldigFraOgMed == null ||
-                    adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsDato) ||
-                    adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsDato)
-            ) &&
-            (
-                    adresse.gyldigTilOgMed == null ||
-                            adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsDato) ||
-                            adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsDato)
-                    )
+        adresse.gyldigFraOgMed == null ||
+            adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsDato) ||
+            adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsDato)
+        ) &&
+        (
+            adresse.gyldigTilOgMed == null ||
+                adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsDato) ||
+                adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsDato)
+            )
 }
 
 private data class MedlemskapResponse(

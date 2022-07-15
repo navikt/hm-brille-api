@@ -3,14 +3,17 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.serialization.jackson.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.plugins.callid.*
-import io.ktor.server.plugins.callloging.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
-import io.ktor.server.routing.*
+import io.ktor.serialization.jackson.jackson
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.auth.authenticate
+import io.ktor.server.plugins.callid.callIdMdc
+import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.request.path
+import io.ktor.server.routing.IgnoreTrailingSlash
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
@@ -36,7 +39,6 @@ import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
-import no.nav.hjelpemidler.brille.utbetaling.utbetalingApi
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.søknadApi
@@ -46,7 +48,7 @@ import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import org.apache.kafka.clients.producer.MockProducer
 import org.slf4j.event.Level
-import java.util.*
+import java.util.TimeZone
 
 fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
 
