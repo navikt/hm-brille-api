@@ -39,6 +39,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import no.nav.hjelpemidler.brille.utbetaling.utbetalingApi
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.søknadApi
