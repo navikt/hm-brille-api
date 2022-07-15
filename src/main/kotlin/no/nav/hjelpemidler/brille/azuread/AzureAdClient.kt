@@ -85,7 +85,10 @@ data class Token(
     private val expiresOn: Instant = Instant.now().plusSeconds(expiresIn - TOKEN_LEEWAY_SECONDS)
 
     @JsonIgnore
-    fun isExpired(): Boolean = expiresOn.isBefore(Instant.now())
+    fun isExpired(): Boolean {
+        log.info { "expires on: $expiresOn, now: ${Instant.now()}, expiresOnIsBefore: ${expiresOn.isBefore(Instant.now())}" }
+        return expiresOn.isBefore(Instant.now())
+    }
 
     @JsonIgnore
     fun toBearerTokens(): BearerTokens = BearerTokens(accessToken, "")
