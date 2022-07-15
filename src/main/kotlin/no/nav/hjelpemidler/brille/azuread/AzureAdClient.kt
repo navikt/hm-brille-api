@@ -3,15 +3,14 @@ package no.nav.hjelpemidler.brille.azuread
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.plugins.auth.providers.BearerTokens
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.forms.submitForm
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.Parameters
-import io.ktor.serialization.jackson.jackson
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.engine.*
+import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.serialization.jackson.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mu.KotlinLogging
@@ -19,6 +18,10 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import java.time.Instant
+import kotlin.collections.MutableMap
+import kotlin.collections.joinToString
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
 private val log = KotlinLogging.logger {}
 
@@ -61,6 +64,11 @@ class AzureAdClient(
     }
 
     suspend fun getToken(scope: String): Token = mutex.withLock {
+
+        log.info( "tokenCache: ${tokenCache.entries.joinToString { "${it.key}: ${it.value}" }}")
+        log.info(" token ${tokenCache[scope]}")
+        log.info(" token is expired? ${tokenCache[scope]?.isExpired() ?: "null"}")
+
         tokenCache[scope]
             ?.takeUnless(Token::isExpired)
             ?: grant(scope)
