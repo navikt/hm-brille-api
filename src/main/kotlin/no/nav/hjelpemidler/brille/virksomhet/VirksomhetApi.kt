@@ -28,7 +28,7 @@ fun Route.virksomhetApi(
             val fnrOptiker = call.extractFnr()
 
             val tidligereBrukteOrgnrForOptiker: List<String> =
-                vedtakStore.hentTidligereBrukteOrgnrForOptiker(fnrOptiker)
+                vedtakStore.hentTidligereBrukteOrgnrForInnsender(fnrOptiker)
 
             try {
                 val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptiker.map {

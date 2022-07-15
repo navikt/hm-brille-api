@@ -1,8 +1,7 @@
-package no.nav.hjelpemidler.brille.utils
+package no.nav.hjelpemidler.brille.test
 
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
-import org.flywaydb.core.api.output.MigrateResult
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import javax.sql.DataSource
@@ -28,17 +27,11 @@ private val dataSource: DataSource by lazy {
         }
 }
 
-internal fun migrate(dataSource: DataSource, initSql: String = ""): MigrateResult =
-    Flyway.configure().dataSource(dataSource).initSql(initSql).load().migrate()
+private val flyway: Flyway by lazy { Flyway.configure().dataSource(dataSource).load() }
 
-internal fun clean(dataSource: DataSource) = Flyway.configure().dataSource(dataSource).load().clean()
-
-internal fun withCleanDB(test: () -> Unit) = dataSource.also { clean(it) }
-    .run { test() }
-
-internal fun migratedDB() = dataSource.also {
-    clean(it)
-    migrate(it)
+internal fun migrate(): DataSource = dataSource.also {
+    flyway.clean()
+    flyway.migrate()
 }
 
-internal fun withMigratedDB(test: () -> Unit) = migratedDB().run { test() }
+internal fun withMigratedDB(test: (ds: DataSource) -> Unit) = migrate().run { test(this) }

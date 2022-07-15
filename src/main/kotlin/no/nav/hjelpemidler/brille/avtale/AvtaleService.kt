@@ -31,16 +31,15 @@ class AvtaleService(
 
     fun opprettAvtale(fnr: String, opprettAvtale: OpprettAvtale): Avtale {
         log.info { "Oppretter avtale for orgnr: ${opprettAvtale.orgnr}" }
-        val virksomhet = Virksomhet(
-            orgnr = opprettAvtale.orgnr,
-            kontonr = opprettAvtale.kontonr,
-            fnrInnsender = fnr,
-            navnInnsender = "", // fixme
-            aktiv = true,
-            avtaleversjon = null // fixme
-        )
-        virksomhetStore.lagreVirksomhet(
-            virksomhet
+        val virksomhet = virksomhetStore.lagreVirksomhet(
+            Virksomhet(
+                orgnr = opprettAvtale.orgnr,
+                kontonr = opprettAvtale.kontonr,
+                fnrInnsender = fnr,
+                navnInnsender = "", // fixme
+                aktiv = true,
+                avtaleversjon = null // fixme
+            )
         )
         kafkaService.avtaleOpprettet(opprettAvtale.orgnr, opprettAvtale.navn, virksomhet.opprettet)
         return Avtale(

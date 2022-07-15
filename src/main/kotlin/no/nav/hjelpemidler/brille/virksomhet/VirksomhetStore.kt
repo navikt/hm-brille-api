@@ -15,7 +15,7 @@ private val log = KotlinLogging.logger {}
 interface VirksomhetStore : Store {
     fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet?
     fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet>
-    fun lagreVirksomhet(virksomhet: Virksomhet)
+    fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet
     fun oppdaterKontonummer(orgnr: String, kontonr: String)
 }
 
@@ -53,7 +53,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         return ds.queryList(sql, mapOf("fnrInnsender" to fnrInnsender), ::mapper)
     }
 
-    override fun lagreVirksomhet(virksomhet: Virksomhet) {
+    override fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO virksomhet_v1 (orgnr,
@@ -82,6 +82,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
                 "oppdatert" to virksomhet.oppdatert,
             )
         ).validate()
+        return virksomhet
     }
 
     override fun oppdaterKontonummer(orgnr: String, kontonr: String) {

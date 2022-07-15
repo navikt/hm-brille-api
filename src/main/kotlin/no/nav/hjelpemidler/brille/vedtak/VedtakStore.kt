@@ -8,7 +8,7 @@ import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
 interface VedtakStore : Store {
-    fun hentTidligereBrukteOrgnrForOptiker(fnrOptiker: String): List<String>
+    fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
 }
@@ -32,7 +32,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }
     }
 
-    override fun hentTidligereBrukteOrgnrForOptiker(fnrOptiker: String): List<String> {
+    override fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String> {
         @Language("PostgreSQL")
         val sql = """
             SELECT orgnr
@@ -40,7 +40,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             WHERE fnr_innsender = :fnr_innsender
             ORDER BY opprettet DESC
         """.trimIndent()
-        return ds.queryList(sql, mapOf("fnr_innsender" to fnrOptiker)) { row ->
+        return ds.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
             row.string("orgnr")
         }.toSet().toList()
     }
@@ -90,8 +90,8 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 "brillepris" to vedtak.brillepris,
                 "bestillingsreferanse" to vedtak.bestillingsreferanse,
                 "vilkarsvurdering" to pgObjectOf(vedtak.vilkårsvurdering),
-                "behandlingsresultat" to vedtak.behandlingsresultat,
-                "sats" to vedtak.sats,
+                "behandlingsresultat" to vedtak.behandlingsresultat.toString(),
+                "sats" to vedtak.sats.toString(),
                 "sats_belop" to vedtak.satsBeløp,
                 "sats_beskrivelse" to vedtak.satsBeskrivelse,
                 "belop" to vedtak.beløp,

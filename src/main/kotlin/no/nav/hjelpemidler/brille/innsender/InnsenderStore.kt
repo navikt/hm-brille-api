@@ -7,12 +7,12 @@ import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
 interface InnsenderStore : Store {
-    fun lagreInnsender(innsender: Innsender)
+    fun lagreInnsender(innsender: Innsender): Innsender
     fun hentInnsender(fnrInnsender: String): Innsender?
 }
 
 class InnsenderStorePostgres(private val ds: DataSource) : InnsenderStore {
-    override fun lagreInnsender(innsender: Innsender) {
+    override fun lagreInnsender(innsender: Innsender): Innsender {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO innsender_v1 (fnr_innsender, godtatt)
@@ -25,6 +25,7 @@ class InnsenderStorePostgres(private val ds: DataSource) : InnsenderStore {
                 "godtatt" to innsender.godtatt
             )
         ).validate()
+        return innsender
     }
 
     override fun hentInnsender(fnrInnsender: String): Innsender? {
