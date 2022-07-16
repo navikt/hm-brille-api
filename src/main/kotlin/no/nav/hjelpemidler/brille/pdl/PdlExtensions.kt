@@ -1,10 +1,8 @@
 package no.nav.hjelpemidler.brille.pdl
 
 import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Foedsel
 import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Navn
-import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Person
 import java.time.LocalDate
 import java.time.Month
 import java.time.Period
@@ -35,19 +33,16 @@ object HentPersonExtensions {
         return Period.between(fodselsdato, LocalDate.now()).years
     }
 
-    fun HentPerson.Result.toPersonDto(fnr: String): PersonDto {
-        val person = requireNotNull(hentPerson) {
-            "hentPerson var null"
-        }
-        val navn = person.navn.firstOrDefault(Navn("", "", ""))
+    fun Person.toPersonDto(fnr: String): PersonDto {
+        val navn = navn.firstOrDefault(Navn("", "", ""))
         return PersonDto(
             fnr = fnr,
             fornavn = listOfNotNull(navn.fornavn, navn.etternavn)
                 .joinToString(" ")
                 .capitalizeWord(),
             etternavn = navn.etternavn.capitalizeWord(),
-            alder = person.alder(),
-            fodselsdato = person.fodselsdato(),
+            alder = alder(),
+            fodselsdato = fodselsdato(),
         )
     }
 }

@@ -9,6 +9,8 @@ import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.pdl.PdlClientException
+import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
+import no.nav.hjelpemidler.brille.pdl.PdlNotFoundException
 import no.nav.hjelpemidler.brille.pdl.PdlService
 
 fun Route.innbyggerApi(pdlService: PdlService, auditService: AuditService) {
@@ -22,29 +24,33 @@ fun Route.innbyggerApi(pdlService: PdlService, auditService: AuditService) {
             )
 
             val fnrInnlogget = call.extractFnr()
-            val fnrBruker = call.receive<Request>().fnr
-            if (fnrBruker.count() != 11) error("Fnr er ikke gyldig (må være 11 siffre)")
+            val fnrOppslag = call.receive<Request>().fnr
+            if (fnrOppslag.count() != 11) error("Fnr er ikke gyldig (må være 11 siffer)")
 
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnlogget,
-                fnrOppslag = fnrBruker,
+                fnrOppslag = fnrOppslag,
                 "[POST] /innbyggere/sok - personoppslag mot PDL"
             )
 
-            val message = try {
-                pdlService.hentPerson(fnrBruker)?.let {
+            val emptyResponse = Response(fnr = "", navn = "")
+            val response = try {
+                pdlService.hentPerson(fnrOppslag)?.let {
                     Response(
-                        fnr = fnrBruker,
+                        fnr = fnrOppslag,
                         navn = "${it.fornavn} ${it.etternavn}",
                         alder = it.alder
                     )
-                } ?: Response(fnr = "", navn = "")
+                } ?: emptyResponse
             } catch (e: PdlClientException) {
-                // fixme
-                Response(fnr = "", navn = "")
+                when (e) {
+                    is PdlNotFoundException -> emptyResponse
+                    is PdlHarAdressebeskyttelseException -> emptyResponse
+                    else -> throw e
+                }
             }
 
-            call.respond(message)
+            call.respond(response)
         }
     }
 }

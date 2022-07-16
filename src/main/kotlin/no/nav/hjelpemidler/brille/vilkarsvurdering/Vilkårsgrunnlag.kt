@@ -3,15 +3,15 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.fodselsdato
 import no.nav.hjelpemidler.brille.pdl.PdlOppslag
-import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
+import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.Diopter
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import java.time.LocalDate
 
 data class Vilkårsgrunnlag(
-    val vedtakForInnbygger: List<EksisterendeVedtak>,
-    val pdlOppslagInnbygger: PdlOppslag<HentPerson.Result?>,
+    val vedtakForBarn: List<EksisterendeVedtak>,
+    val pdlOppslagBarn: PdlOppslag<Person?>,
     val medlemskapResultat: MedlemskapResultat,
     val brilleseddel: Brilleseddel,
     val bestillingsdato: LocalDate,
@@ -21,5 +21,5 @@ data class Vilkårsgrunnlag(
     val minsteSfære: Diopter = Diopter.ONE,
     val minsteSylinder: Diopter = Diopter.ONE,
 ) {
-    val fodselsdatoBruker: LocalDate? get() = pdlOppslagInnbygger.data?.hentPerson?.fodselsdato()
+    val fodselsdatoBruker: LocalDate? get() = pdlOppslagBarn.data?.fodselsdato()
 }

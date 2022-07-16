@@ -12,8 +12,6 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.extractFnr
-import no.nav.hjelpemidler.brille.model.Organisasjon
-import no.nav.hjelpemidler.brille.model.TidligereBrukteOrganisasjonerForOptiker
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 
 private val log = KotlinLogging.logger {}

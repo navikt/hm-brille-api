@@ -12,5 +12,8 @@ query ($ident: ID!) {
         bruksenhetsnummer
       }
     }
+    adressebeskyttelse(historikk: false) {
+      gradering
+    }
   }
 }

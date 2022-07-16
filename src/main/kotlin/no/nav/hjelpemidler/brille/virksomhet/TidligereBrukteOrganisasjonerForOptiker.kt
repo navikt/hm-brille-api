@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.model
+package no.nav.hjelpemidler.brille.virksomhet
 
 data class TidligereBrukteOrganisasjonerForOptiker(
     val sistBrukteOrganisasjon: Organisasjon?,

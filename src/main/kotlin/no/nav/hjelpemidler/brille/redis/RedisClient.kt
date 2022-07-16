@@ -27,14 +27,14 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
         jedis.setex(erOptikerKey(fnr), redisProps.hprExpirySeconds, erOptiker.toString())
     }
 
-    fun medlemskapBarn(fnr: String, bestillingsDato: LocalDate): MedlemskapResultat? =
-        jedis.get(medlemskapBarnKey(fnr, bestillingsDato))?.let {
+    fun medlemskapBarn(fnr: String, bestillingsdato: LocalDate): MedlemskapResultat? =
+        jedis.get(medlemskapBarnKey(fnr, bestillingsdato))?.let {
             jsonMapper.readValue(it, MedlemskapResultat::class.java)
         }
 
-    fun setMedlemskapBarn(fnr: String, bestillingsDato: LocalDate, medlemskapResultat: MedlemskapResultat) {
+    fun setMedlemskapBarn(fnr: String, bestillingsdato: LocalDate, medlemskapResultat: MedlemskapResultat) {
         jedis.setex(
-            medlemskapBarnKey(fnr, bestillingsDato),
+            medlemskapBarnKey(fnr, bestillingsdato),
             redisProps.medlemskapBarnExpirySeconds,
             jsonMapper.writeValueAsString(medlemskapResultat)
         )
@@ -54,7 +54,7 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
 }
 
 private fun erOptikerKey(fnr: String) = "fnr:$fnr:hpr:er.optiker"
-private fun medlemskapBarnKey(fnr: String, bestillingsDato: LocalDate) =
-    "fnr:$fnr:bestillingsDato:$bestillingsDato:medlemskapbarn:resultat"
+private fun medlemskapBarnKey(fnr: String, bestillingsdato: LocalDate) =
+    "fnr:$fnr:bestillingsdato:$bestillingsdato:medlemskapbarn:resultat"
 
 private fun orgenhetKey(orgnr: String) = "orgnr:$orgnr:orgenhet"

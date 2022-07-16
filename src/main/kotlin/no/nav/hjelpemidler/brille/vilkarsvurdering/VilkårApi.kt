@@ -24,7 +24,7 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
         auditService.lagreOppslag(
             fnrInnlogget = call.extractFnr(),
             fnrOppslag = vilkårsgrunnlag.fnrBarn,
-            oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om innbygger og bestilling oppfyller vilkår for støtte"
+            oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om barn og bestilling oppfyller vilkår for støtte"
         )
         val vilkarsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)
         val sats = when (vilkarsvurdering.utfall) {

@@ -19,6 +19,7 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlOppslag
+import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.sats.BrilleseddelDto
 import no.nav.hjelpemidler.brille.sats.Diopter
@@ -199,13 +200,13 @@ internal class VilkårApiTest {
         }
     }
 
-    private fun lagPdlOppslag(fødselsdato: String): PdlOppslag<HentPerson.Result?> {
+    private fun lagPdlOppslag(fødselsdato: String): PdlOppslag<Person?> {
         val pdlPersonResponse = javaClass.getResourceAsStream("/mock/pdl.json").use {
-            val pdlMockTekst = requireNotNull(it).bufferedReader().readText().replace("2014-08-15", fødselsdato)
-            jsonMapper.readValue<JacksonGraphQLResponse<HentPerson.Result?>>(pdlMockTekst)
+            val json = requireNotNull(it).bufferedReader().readText().replace("2014-08-15", fødselsdato)
+            jsonMapper.readValue<JacksonGraphQLResponse<HentPerson.Result?>>(json)
         }
 
-        return PdlOppslag(pdlPersonResponse.data, jsonMapper.nullNode())
+        return PdlOppslag(pdlPersonResponse.data?.hentPerson, jsonMapper.nullNode())
     }
 
     private fun lagEksisterendeVedtak(bestillingsdato: LocalDate) =

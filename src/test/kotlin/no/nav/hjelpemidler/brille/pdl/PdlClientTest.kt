@@ -1,0 +1,60 @@
+package no.nav.hjelpemidler.brille.pdl
+
+import io.kotest.common.runBlocking
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.mockk.coEvery
+import io.mockk.mockk
+import no.nav.hjelpemidler.brille.azuread.Token
+import org.junit.jupiter.api.assertThrows
+import kotlin.test.Test
+import kotlin.time.Duration.Companion.hours
+
+internal class PdlClientTest {
+    @Test
+    internal fun `happy case`() = test("/mock/pdl.json") { client ->
+        val oppslag = runBlocking { client.hentPerson("07121410995") }
+        println(oppslag)
+    }
+
+    @Test
+    internal fun `not found`() = test("/mock/pdl_not_found.json") { client ->
+        assertThrows<PdlNotFoundException> {
+            runBlocking { client.hentPerson("07121410995") }
+        }
+    }
+
+    @Test
+    internal fun `bad request`() = test("/mock/pdl_bad_request.json") { client ->
+        assertThrows<PdlBadRequestException> {
+            runBlocking { client.hentPerson("07121410995") }
+        }
+    }
+
+    @Test
+    internal fun `person har adressebeskyttelse`() = test("/mock/pdl_har_adressebeskyttelse.json") { client ->
+        assertThrows<PdlHarAdressebeskyttelseException> {
+            runBlocking { client.hentPerson("07121410995") }
+        }
+    }
+
+    private fun test(name: String, block: (PdlClient) -> Unit) {
+        block(
+            PdlClient(
+                "http://localhost:1234",
+                "test",
+                mockk {
+                    coEvery {
+                        getToken("test")
+                    } returns Token("", 1.hours.inWholeMilliseconds, "")
+                },
+                javaClass.getResourceAsStream(name).use {
+                    val response = requireNotNull(it).bufferedReader().readText()
+                    MockEngine {
+                        respond(response)
+                    }
+                }
+            )
+        )
+    }
+}
