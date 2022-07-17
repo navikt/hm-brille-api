@@ -21,7 +21,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlOppslag
 import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
-import no.nav.hjelpemidler.brille.sats.BrilleseddelDto
+import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.Diopter
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.sats.tilDiopter
@@ -225,7 +225,7 @@ internal class VilkårApiTest {
         venstreSylinder: Diopter = "0".tilDiopter(),
     ) =
         defaultVilkårsgrunnlag.copy(
-            brilleseddel = BrilleseddelDto(
+            brilleseddel = Brilleseddel(
                 høyreSfære = høyreSfære,
                 høyreSylinder = høyreSylinder,
                 venstreSfære = venstreSfære,
@@ -236,7 +236,7 @@ internal class VilkårApiTest {
     private val defaultVilkårsgrunnlag = VilkårsgrunnlagDto(
         orgnr = "",
         fnrBarn = "07480966982",
-        brilleseddel = BrilleseddelDto(
+        brilleseddel = Brilleseddel(
             høyreSfære = "1".tilDiopter(),
             høyreSylinder = "0".tilDiopter(),
             venstreSfære = "0".tilDiopter(),

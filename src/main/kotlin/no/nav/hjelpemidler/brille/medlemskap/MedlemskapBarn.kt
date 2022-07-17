@@ -71,7 +71,7 @@ class MedlemskapBarn(
         }
 
         // TODO: Sjekk med barnetrygd: hvis noen har mottatt barnetrygd for barnet så vet vi at det er medlem av
-        //  folketrygden og trenger trolig ikke sjekke noe annet.
+        // folketrygden og trenger trolig ikke sjekke noe annet.
 
         // Slå opp pdl informasjon om barnet
         val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
@@ -400,12 +400,12 @@ private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(
             folkeregistermetadata?.opphoerstidspunkt == null ||
                     folkeregistermetadata.opphoerstidspunkt.toLocalDate().isEqual(bestillingsdato) ||
                     folkeregistermetadata.opphoerstidspunkt.toLocalDate().isAfter(bestillingsdato)
-        ) &&
-        (
-                folkeregistermetadata?.gyldighetstidspunkt == null ||
-                        folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isEqual(bestillingsdato) ||
-                        folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isBefore(bestillingsdato)
-            )
+            ) &&
+            (
+                    folkeregistermetadata?.gyldighetstidspunkt == null ||
+                            folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isEqual(bestillingsdato) ||
+                            folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isBefore(bestillingsdato)
+                    )
 }
 
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsdato: LocalDate, adresse: Bostedsadresse): Boolean {
@@ -429,12 +429,12 @@ private fun sjekkBostedsadresseDatoerMotBestillingsdato(
             adresse.gyldigFraOgMed == null ||
                     adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsdato) ||
                     adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsdato)
-        ) &&
-        (
-                adresse.gyldigTilOgMed == null ||
-                        adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsdato) ||
-                        adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsdato)
-            )
+            ) &&
+            (
+                    adresse.gyldigTilOgMed == null ||
+                            adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsdato) ||
+                            adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsdato)
+                    )
 }
 
 private data class MedlemskapResponse(

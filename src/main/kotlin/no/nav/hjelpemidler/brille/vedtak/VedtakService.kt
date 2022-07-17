@@ -31,7 +31,7 @@ class VedtakService(
             }
         }
 
-        val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel.tilBrilleseddel()).kalkuler()
+        val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
         val satsBeløp = sats.beløp
         val brillepris = vilkårsgrunnlag.brillepris
 
@@ -65,7 +65,7 @@ class VedtakService(
                 orgAdresse = søknadDto.orgAdresse,
                 navnAvsender = "", // TODO: hvilket navn skal dette egentlig være? Navnet til innbygger (barn) eller optiker?
                 sakId = vedtak.id.toString(),
-                brilleseddel = vilkårsgrunnlag.brilleseddel.tilBrilleseddel(),
+                brilleseddel = vilkårsgrunnlag.brilleseddel,
                 bestillingsdato = vilkårsgrunnlag.bestillingsdato,
                 bestillingsreferanse = søknadDto.bestillingsreferanse
             )

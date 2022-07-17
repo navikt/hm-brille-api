@@ -25,7 +25,7 @@ class VilkårsvurderingService(
             vedtakForBarn = vedtakForBarn,
             pdlOppslagBarn = pdlOppslagBarn,
             medlemskapResultat = medlemskapResultat,
-            brilleseddel = vilkårsgrunnlagDto.brilleseddel.tilBrilleseddel(),
+            brilleseddel = vilkårsgrunnlagDto.brilleseddel,
             bestillingsdato = vilkårsgrunnlagDto.bestillingsdato,
             dagensDato = dagensDatoFactory(),
         )

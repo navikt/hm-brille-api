@@ -28,7 +28,7 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
         )
         val vilkarsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)
         val sats = when (vilkarsvurdering.utfall) {
-            Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel.tilBrilleseddel()).kalkuler()
+            Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
             else -> SatsType.INGEN
         }
 

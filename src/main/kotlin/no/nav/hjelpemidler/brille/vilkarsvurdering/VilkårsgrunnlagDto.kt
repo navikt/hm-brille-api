@@ -1,13 +1,13 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
-import no.nav.hjelpemidler.brille.sats.BrilleseddelDto
+import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import java.math.BigDecimal
 import java.time.LocalDate
 
 data class VilkårsgrunnlagDto(
     val orgnr: String,
     val fnrBarn: String,
-    val brilleseddel: BrilleseddelDto,
+    val brilleseddel: Brilleseddel,
     val bestillingsdato: LocalDate,
     val brillepris: BigDecimal,
 )
