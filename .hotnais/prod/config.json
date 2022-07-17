@@ -2,7 +2,8 @@
   "appnavn": "hm-brille-api",
   "inbound-applications": [
     "hm-brille-frontend",
-    "hm-brilleavtale-frontend"
+    "hm-brilleavtale-frontend",
+    "hm-brillerapport"
   ],
   "port": 9090,
   "db_tier": "db-custom-2-7680",
@@ -20,5 +21,8 @@
   "min-replicas": 2,
   "max-replicas": 4,
   "syfohelsenettproxy_cluster": "prod-fss",
-  "medlemskap_cluster": "prod-gcp"
+  "medlemskap_cluster": "prod-gcp",
+  "env": {
+    "REDIS_HOST": "brille-redis.teamdigihot.svc.cluster.local"
+  }
 }
