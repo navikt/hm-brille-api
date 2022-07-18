@@ -28,13 +28,15 @@ class TestRouting(configuration: Routing.() -> Unit) {
             authentication {
                 provider("test") {
                     authenticate { context ->
-                        context.principal(UserPrincipal("15084300133"))
+                        context.principal(principal)
                     }
                 }
             }
             routing(configuration)
         }
     }
+
+    internal val principal = UserPrincipal("15084300133")
 
     internal val client = application.createClient {
         install(ContentNegotiation) {

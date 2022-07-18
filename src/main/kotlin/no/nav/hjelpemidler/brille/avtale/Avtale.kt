@@ -5,8 +5,9 @@ import java.time.LocalDateTime
 data class Avtale(
     val orgnr: String,
     val navn: String,
-    val harNavAvtale: Boolean,
+    val aktiv: Boolean,
     val kontonr: String? = null,
-    val avtaleVersjon: String? = null,
+    val avtaleversjon: String? = null,
     val opprettet: LocalDateTime? = null,
+    val oppdatert: LocalDateTime? = null,
 )

@@ -70,7 +70,7 @@ fun Route.virksomhetApi(
                 val orgnr: String,
                 val orgNavn: String,
                 val kontonr: String,
-                val harNavAvtale: Boolean,
+                val aktiv: Boolean,
                 val forretningsadresse: Postadresse?,
                 val erOptikerVirksomhet: Boolean,
             )
@@ -79,7 +79,7 @@ fun Route.virksomhetApi(
                 orgnr = enhet.orgnr,
                 orgNavn = enhet.navn,
                 kontonr = virksomhet.kontonr,
-                harNavAvtale = virksomhet.aktiv,
+                aktiv = virksomhet.aktiv,
                 forretningsadresse = enhet.forretningsadresse,
                 erOptikerVirksomhet = setOf(
                     enhet.naeringskode1,
