@@ -108,7 +108,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
     override fun hentKravlinjerForOrgNummer(orgNr: String): List<Kravlinje> {
         @Language("PostgreSQL")
         val sql = """
-            SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop
+            SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop, bestillingsreferanse
             FROM vedtak_v1
             WHERE orgnr = :orgNr 
         """.trimIndent()
@@ -118,7 +118,8 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 bestillingsdato = row.localDate("bestillingsdato"),
                 behandlingsresultat = row.string("behandlingsresultat"),
                 opprettet = row.localDateTime("opprettet"),
-                beløp = row.bigDecimal("belop")
+                beløp = row.bigDecimal("belop"),
+                bestillingsreferanse = row.string("bestillingsreferanse")
             )
         }
     }

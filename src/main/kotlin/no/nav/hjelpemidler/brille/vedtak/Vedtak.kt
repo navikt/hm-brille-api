@@ -36,7 +36,8 @@ data class Kravlinje(
     val bestillingsdato: LocalDate,
     val behandlingsresultat: String,
     val opprettet: LocalDateTime,
-    val beløp: BigDecimal
+    val beløp: BigDecimal,
+    val bestillingsreferanse: String
 )
 
 enum class Behandlingsresultat {
