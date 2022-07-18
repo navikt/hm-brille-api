@@ -37,7 +37,7 @@ object HentPersonExtensions {
         val navn = navn.firstOrDefault(Navn("", "", ""))
         return PersonDto(
             fnr = fnr,
-            fornavn = listOfNotNull(navn.fornavn, navn.etternavn)
+            fornavn = listOfNotNull(navn.fornavn)
                 .joinToString(" ")
                 .capitalizeWord(),
             etternavn = navn.etternavn.capitalizeWord(),
