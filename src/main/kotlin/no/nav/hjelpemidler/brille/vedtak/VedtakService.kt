@@ -67,7 +67,10 @@ class VedtakService(
                 sakId = vedtak.id.toString(),
                 brilleseddel = vilkårsgrunnlag.brilleseddel,
                 bestillingsdato = vilkårsgrunnlag.bestillingsdato,
-                bestillingsreferanse = søknadDto.bestillingsreferanse
+                bestillingsreferanse = søknadDto.bestillingsreferanse,
+                satsBeskrivelse = vedtak.satsBeskrivelse,
+                satsBeløp = vedtak.satsBeløp,
+                beløp = vedtak.beløp
             )
         )
 
