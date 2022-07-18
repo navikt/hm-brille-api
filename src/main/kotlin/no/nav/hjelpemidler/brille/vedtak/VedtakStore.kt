@@ -11,6 +11,7 @@ interface VedtakStore : Store {
     fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
+    fun hentKravlinjerForOrgNummer(orgNr: String): List<Kravlinje>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
@@ -102,5 +103,23 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }
         requireNotNull(id) { "Lagring av vedtak feilet, id var null" }
         return vedtak.copy(id = id)
+    }
+
+    override fun hentKravlinjerForOrgNummer(orgNr: String): List<Kravlinje> {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop
+            FROM vedtak_v1
+            WHERE orgnr = :orgNr 
+        """.trimIndent()
+        return ds.queryList(sql, mapOf("orgNr" to orgNr)) { row ->
+            Kravlinje(
+                id = row.long("id"),
+                bestillingsdato = row.localDate("bestillingsdato"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                opprettet = row.localDateTime("opprettet"),
+                beløp = row.bigDecimal("belop")
+            )
+        }
     }
 }

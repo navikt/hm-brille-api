@@ -31,6 +31,14 @@ data class EksisterendeVedtak(
     val opprettet: LocalDateTime,
 )
 
+data class Kravlinje(
+    val id: Long,
+    val bestillingsdato: LocalDate,
+    val behandlingsresultat: String,
+    val opprettet: LocalDateTime,
+    val beløp: BigDecimal
+)
+
 enum class Behandlingsresultat {
     INNVILGET
 }

@@ -14,13 +14,11 @@ import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 
-
 private val log = KotlinLogging.logger { }
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
     post("/vilkarsgrunnlag") {
 
         try {
-
 
             if (Configuration.prod) { // TODO: fjern før prodsetting
                 call.respond(HttpStatusCode.Unauthorized)
@@ -54,5 +52,4 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
             log.error("Feil i vilkårsvurdering", e)
         }
     }
-
 }

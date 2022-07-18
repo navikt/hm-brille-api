@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.utbetaling
+package no.nav.hjelpemidler.brille.rapportering
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
@@ -11,13 +11,12 @@ import mu.KotlinLogging
 
 private val log = KotlinLogging.logger { }
 
-fun Route.utbetalingApi() {
-    route("/utbetalinger") {
+fun Route.rapportApi(rapportService: RapportService) {
+    route("/kravlinjer") {
         get("/{orgnr}") {
             val orgnr = call.orgnr()
-            // todo: hent faktiske utbetalinger fra db
-            val utbetalinger = emptyList<String>()
-            call.respond(HttpStatusCode.OK, utbetalinger)
+            val kravlinjer = rapportService.hentKravlinjer(orgnr)
+            call.respond(HttpStatusCode.OK, kravlinjer)
         }
     }
 }

@@ -36,10 +36,11 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
+import no.nav.hjelpemidler.brille.rapportering.RapportService
+import no.nav.hjelpemidler.brille.rapportering.rapportApi
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
-import no.nav.hjelpemidler.brille.utbetaling.utbetalingApi
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.søknadApi
@@ -123,6 +124,7 @@ fun Application.setupRoutes() {
     val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
     val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(virksomhetStore, altinnService, kafkaService)
+    val rapportService = RapportService(vedtakStore)
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
@@ -141,7 +143,7 @@ fun Application.setupRoutes() {
                     søknadApi(vedtakService, auditService)
                 }
                 avtaleApi(avtaleService)
-                utbetalingApi()
+                rapportApi(rapportService)
             }
         }
     }

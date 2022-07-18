@@ -223,9 +223,9 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
         fullmakt.filter {
             // Fullmakter har alltid fom. og tom. datoer for gyldighet, sjekk mot bestillingsdato
             (it.gyldigFraOgMed.isEqual(bestillingsdato) || it.gyldigFraOgMed.isBefore(bestillingsdato)) &&
-                    (it.gyldigTilOgMed.isEqual(bestillingsdato) || it.gyldigTilOgMed.isAfter(bestillingsdato)) &&
-                    // Fullmektig ovenfor barnet
-                    it.motpartsRolle == FullmaktsRolle.FULLMEKTIG
+                (it.gyldigTilOgMed.isEqual(bestillingsdato) || it.gyldigTilOgMed.isAfter(bestillingsdato)) &&
+                // Fullmektig ovenfor barnet
+                it.motpartsRolle == FullmaktsRolle.FULLMEKTIG
         }.map {
             Pair("FULLMEKTIG-${it.motpartsRolle}", it.motpartsPersonident)
         },
@@ -234,7 +234,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
             // Sjekk om vi har et fnr for vergen ellers kan vi ikke slå personen opp i medlemskap-oppslag
             it.vergeEllerFullmektig.motpartsPersonident != null &&
                 // Bare se på vergerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                    sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsdato, it.folkeregistermetadata)
+                sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsdato, it.folkeregistermetadata)
         }.map {
             Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
         },
@@ -247,7 +247,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
             // Feltet er "Alltid tomt ved oppslag på ansvarlig." ref.: https://pdldocs-navno.msappproxy.net/ekstern/index.html#_foreldreansvar
             it.ansvarlig != null &&
                 // Bare se på foreldreansvar som ikke har opphørt (feltet er null eller i fremtiden)
-                    sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsdato, it.folkeregistermetadata)
+                sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsdato, it.folkeregistermetadata)
         }.map {
             Pair("FORELDER_ANSVAR-${it.ansvar ?: "ukjent"}", it.ansvarlig!!)
         }.sortedBy {
@@ -261,7 +261,7 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
                 // Bare se på foreldrerelasjoner
                 it.minRolleForPerson == ForelderBarnRelasjonRolle.BARN &&
                 // Bare se på foreldrerelasjoner som ikke har opphørt (feltet er null eller i fremtiden)
-                    sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsdato, it.folkeregistermetadata)
+                sjekkFolkeregistermetadataDatoerMotBestillingsdato(bestillingsdato, it.folkeregistermetadata)
         }.map {
             Pair("FORELDER_BARN_RELASJON-${it.relatertPersonsRolle.name}", it.relatertPersonsIdent!!)
         }.sortedBy {
@@ -316,11 +316,11 @@ private fun harSammeAdresse(
                 val madr1 = adresseBarn.matrikkeladresse
                 if (madr1.matrikkelId != null) {
                     if (bostedsadresserAnnen
-                            .mapNotNull { it.matrikkeladresse }
-                            .any { madr2 ->
-                                madr1.matrikkelId == madr2.matrikkelId &&
-                                        madr1.bruksenhetsnummer == madr2.bruksenhetsnummer
-                            }
+                        .mapNotNull { it.matrikkeladresse }
+                        .any { madr2 ->
+                            madr1.matrikkelId == madr2.matrikkelId &&
+                                madr1.bruksenhetsnummer == madr2.bruksenhetsnummer
+                        }
                     ) {
                         // Fant overlappende matrikkelId mellom barn og annen part
                         log.info("harSammeAdresse: fant overlappende matrikkelId/bruksenhetsnummer (matrikkeladresse) mellom barn og annen part")
@@ -372,11 +372,11 @@ private fun slåSammenAktiveBosteder(
         },
         delteBosted.filter {
             (it.startdatoForKontrakt.isEqual(bestillingsdato) || it.startdatoForKontrakt.isBefore(bestillingsdato)) &&
-                    (
-                            it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(bestillingsdato) || it.sluttdatoForKontrakt.isAfter(
-                                bestillingsdato
-                            )
-                            )
+                (
+                    it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(bestillingsdato) || it.sluttdatoForKontrakt.isAfter(
+                        bestillingsdato
+                    )
+                    )
         }.map {
             Bostedsadresse(
                 gyldigFraOgMed = it.startdatoForKontrakt.atStartOfDay(),
@@ -397,28 +397,28 @@ private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(
     folkeregistermetadata: Folkeregistermetadata?,
 ): Boolean {
     return (
-            folkeregistermetadata?.opphoerstidspunkt == null ||
-                    folkeregistermetadata.opphoerstidspunkt.toLocalDate().isEqual(bestillingsdato) ||
-                    folkeregistermetadata.opphoerstidspunkt.toLocalDate().isAfter(bestillingsdato)
-            ) &&
-            (
-                    folkeregistermetadata?.gyldighetstidspunkt == null ||
-                            folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isEqual(bestillingsdato) ||
-                            folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isBefore(bestillingsdato)
-                    )
+        folkeregistermetadata?.opphoerstidspunkt == null ||
+            folkeregistermetadata.opphoerstidspunkt.toLocalDate().isEqual(bestillingsdato) ||
+            folkeregistermetadata.opphoerstidspunkt.toLocalDate().isAfter(bestillingsdato)
+        ) &&
+        (
+            folkeregistermetadata?.gyldighetstidspunkt == null ||
+                folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isEqual(bestillingsdato) ||
+                folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isBefore(bestillingsdato)
+            )
 }
 
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsdato: LocalDate, adresse: Bostedsadresse): Boolean {
     return (
-            adresse.gyldigFraOgMed == null ||
-                    adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsdato) ||
-                    adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsdato)
-            ) &&
-            (
-                    adresse.gyldigTilOgMed == null ||
-                            adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsdato) ||
-                            adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsdato)
-                    )
+        adresse.gyldigFraOgMed == null ||
+            adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsdato) ||
+            adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsdato)
+        ) &&
+        (
+            adresse.gyldigTilOgMed == null ||
+                adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsdato) ||
+                adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsdato)
+            )
 }
 
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(
@@ -426,15 +426,15 @@ private fun sjekkBostedsadresseDatoerMotBestillingsdato(
     adresse: no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentvergeellerforelder.Bostedsadresse,
 ): Boolean {
     return (
-            adresse.gyldigFraOgMed == null ||
-                    adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsdato) ||
-                    adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsdato)
-            ) &&
-            (
-                    adresse.gyldigTilOgMed == null ||
-                            adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsdato) ||
-                            adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsdato)
-                    )
+        adresse.gyldigFraOgMed == null ||
+            adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsdato) ||
+            adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsdato)
+        ) &&
+        (
+            adresse.gyldigTilOgMed == null ||
+                adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsdato) ||
+                adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsdato)
+            )
 }
 
 private data class MedlemskapResponse(
