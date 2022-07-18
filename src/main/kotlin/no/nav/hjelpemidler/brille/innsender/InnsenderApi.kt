@@ -14,15 +14,17 @@ private val log = KotlinLogging.logger {}
 
 fun Route.innsenderApi(innsenderService: InnsenderService) {
     route("/innsendere") {
+        // hent innsendere
         get {
             val fnrInnsender = call.extractFnr()
             val innsender = innsenderService.hentInnsender(fnrInnsender)
             call.respond(HttpStatusCode.OK, InnsenderDto(innsender.godtatt))
         }
+        // opprett innsender
         post {
             val fnrInnsender = call.extractFnr()
             val innsender = innsenderService.godtaAvtale(fnrInnsender)
-            call.respond(HttpStatusCode.OK, InnsenderDto(innsender.godtatt))
+            call.respond(HttpStatusCode.Created, InnsenderDto(innsender.godtatt))
         }
     }
 }

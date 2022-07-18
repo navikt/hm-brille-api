@@ -9,6 +9,7 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.avtale.AvtaleManglerTilgangException
 
 private val log = KotlinLogging.logger {}
 
@@ -18,6 +19,10 @@ fun Application.configureStatusPages() {
             // TODO: Fjern når vi ikke trenger den lengre.
             log.warn(e) { "Exception fra middleware med status: ${e.status.description}" }
             call.respond(e.status)
+        }
+        exception<AvtaleManglerTilgangException> { call, e ->
+            log.warn { e.message ?: "" }
+            call.respond(HttpStatusCode.Forbidden, e.message ?: "")
         }
         exception<MissingKotlinParameterException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest)

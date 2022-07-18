@@ -13,46 +13,55 @@ class AvtaleService(
     private val altinnService: AltinnService,
     private val kafkaService: KafkaService,
 ) {
-    suspend fun hentVirksomheter(fnr: String): List<Avtale> {
-        val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnr).associateBy {
+    suspend fun hentVirksomheter(fnrInnsender: String): List<Avtale> {
+        val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnrInnsender).associateBy {
             it.orgnr
         }
-        return altinnService.hentAvgivereHovedadministrator(fnr).map {
+        return altinnService.hentAvgivereHovedadministrator(fnrInnsender).map {
             Avtale(
                 orgnr = it.orgnr,
                 navn = it.navn,
-                harNavAvtale = virksomheter[it.orgnr]?.aktiv ?: false,
+                aktiv = virksomheter[it.orgnr]?.aktiv ?: false,
                 kontonr = virksomheter[it.orgnr]?.kontonr,
-                avtaleVersjon = virksomheter[it.orgnr]?.avtaleversjon,
+                avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
                 opprettet = virksomheter[it.orgnr]?.opprettet,
+                oppdatert = virksomheter[it.orgnr]?.oppdatert
             )
         }
     }
 
-    fun opprettAvtale(fnr: String, opprettAvtale: OpprettAvtale): Avtale {
-        log.info { "Oppretter avtale for orgnr: ${opprettAvtale.orgnr}" }
+    suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): Avtale {
+        val orgnr = opprettAvtale.orgnr
+        if (!altinnService.erHovedadministratorFor(fnrInnsender, orgnr)) {
+            throw AvtaleManglerTilgangException(orgnr)
+        }
+        log.info { "Oppretter avtale for orgnr: $orgnr" }
         val virksomhet = virksomhetStore.lagreVirksomhet(
             Virksomhet(
-                orgnr = opprettAvtale.orgnr,
+                orgnr = orgnr,
                 kontonr = opprettAvtale.kontonr,
-                fnrInnsender = fnr,
+                fnrInnsender = fnrInnsender,
                 navnInnsender = "", // fixme
                 aktiv = true,
                 avtaleversjon = null // fixme
             )
         )
-        kafkaService.avtaleOpprettet(opprettAvtale.orgnr, opprettAvtale.navn, virksomhet.opprettet)
+        kafkaService.avtaleOpprettet(orgnr, opprettAvtale.navn, virksomhet.opprettet)
         return Avtale(
             orgnr = virksomhet.orgnr,
             navn = opprettAvtale.navn,
-            harNavAvtale = virksomhet.aktiv,
+            aktiv = virksomhet.aktiv,
             kontonr = virksomhet.kontonr,
-            avtaleVersjon = virksomhet.avtaleversjon,
+            avtaleversjon = virksomhet.avtaleversjon,
             opprettet = virksomhet.opprettet,
+            oppdatert = virksomhet.oppdatert
         )
     }
 
-    fun redigerAvtale(orgnr: String, redigerAvtale: RedigerAvtale): Avtale {
+    suspend fun redigerAvtale(fnrInnsender: String, orgnr: String, redigerAvtale: RedigerAvtale): Avtale {
+        if (!altinnService.erHovedadministratorFor(fnrInnsender, orgnr)) {
+            throw AvtaleManglerTilgangException(orgnr)
+        }
         val virksomhet = requireNotNull(virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
             "Fant ikke virksomhet med orgnr: $orgnr"
         }.copy(kontonr = redigerAvtale.kontonr)
@@ -60,10 +69,11 @@ class AvtaleService(
         return Avtale(
             orgnr = virksomhet.orgnr,
             navn = redigerAvtale.navn,
-            harNavAvtale = virksomhet.aktiv,
+            aktiv = virksomhet.aktiv,
             kontonr = virksomhet.kontonr,
-            avtaleVersjon = virksomhet.avtaleversjon,
+            avtaleversjon = virksomhet.avtaleversjon,
             opprettet = virksomhet.opprettet,
+            oppdatert = virksomhet.oppdatert
         )
     }
 }

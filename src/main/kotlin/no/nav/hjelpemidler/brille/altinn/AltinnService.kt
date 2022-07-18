@@ -6,11 +6,14 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 
 class AltinnService(private val altinnClient: AltinnClient) {
+    suspend fun erHovedadministratorFor(fnr: String, orgnr: String): Boolean =
+        altinnClient.erHovedadministratorFor(fnr, orgnr)
+
     suspend fun hentAvgivereHovedadministrator(fnr: String): List<Avgiver> = withContext(Dispatchers.IO) {
         val avgivere = altinnClient.hentAvgivere(fnr)
             .map {
                 async {
-                    it.copy(hovedadministrator = altinnClient.erHovedadministratorFor(fnr, it.orgnr))
+                    it.copy(hovedadministrator = erHovedadministratorFor(fnr, it.orgnr))
                 }
             }
             .awaitAll()

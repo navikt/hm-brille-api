@@ -18,10 +18,12 @@ private val log = KotlinLogging.logger { }
 fun Route.avtaleApi(avtaleService: AvtaleService) {
     route("/avtale") {
         route("/virksomheter") {
+            // hent alle avtaler
             get {
                 val virksomheter = avtaleService.hentVirksomheter(call.extractFnr())
                 call.respond(HttpStatusCode.OK, virksomheter)
             }
+            // hent avtale for virksomhet
             get("/{orgnr}") {
                 val orgnr = call.orgnr()
                 val virksomhet = avtaleService.hentVirksomheter(call.extractFnr()).associateBy {
@@ -33,15 +35,17 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
                 }
                 call.respond(HttpStatusCode.OK, virksomhet)
             }
+            // opprett avtale
             post {
                 val opprettAvtale = call.receive<OpprettAvtale>()
                 val avtale = avtaleService.opprettAvtale(call.extractFnr(), opprettAvtale)
                 call.respond(HttpStatusCode.Created, avtale)
             }
+            // oppdater avtale
             put("/{orgnr}") {
                 val orgnr = call.orgnr()
                 val redigerAvtale = call.receive<RedigerAvtale>()
-                val avtale = avtaleService.redigerAvtale(orgnr, redigerAvtale)
+                val avtale = avtaleService.redigerAvtale(call.extractFnr(), orgnr, redigerAvtale)
                 call.respond(HttpStatusCode.OK, avtale)
             }
         }
