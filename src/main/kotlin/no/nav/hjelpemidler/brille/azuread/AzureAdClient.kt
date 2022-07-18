@@ -39,6 +39,7 @@ class AzureAdClient(
     private val tokenCache: MutableMap<String, Token> = mutableMapOf()
 
     private suspend fun grant(scope: String): Token {
+        log.info("Henter nytt token fra azure")
         val response = client
             .submitForm(
                 url = props.openidConfigTokenEndpoint,
