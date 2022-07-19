@@ -1,9 +1,12 @@
 package no.nav.hjelpemidler.brille.rapportering
 
+import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondOutputStream
 import io.ktor.server.routing.Route
@@ -12,6 +15,7 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import java.io.OutputStream
+import java.util.Date
 
 private val log = KotlinLogging.logger { }
 
@@ -26,6 +30,14 @@ fun Route.rapportApi(rapportService: RapportService) {
         get("/csv/{orgnr}") {
             val orgnr = call.orgnr()
             val kravlinjer = rapportService.hentKravlinjer(orgnr)
+            call.response.header(
+                HttpHeaders.ContentDisposition,
+                ContentDisposition.Attachment.withParameter(
+                    ContentDisposition.Parameters.FileName,
+                    "${Date().time}.csv"
+                )
+                    .toString()
+            )
             call.respondOutputStream(
                 status = HttpStatusCode.OK,
                 contentType = ContentType.Text.CSV,
