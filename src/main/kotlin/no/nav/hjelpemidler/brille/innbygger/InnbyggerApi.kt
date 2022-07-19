@@ -8,6 +8,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PdlClientException
 import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
 import no.nav.hjelpemidler.brille.pdl.PdlNotFoundException
@@ -38,8 +40,8 @@ fun Route.innbyggerApi(pdlService: PdlService, auditService: AuditService) {
                 pdlService.hentPerson(fnrOppslag)?.let {
                     Response(
                         fnr = fnrOppslag,
-                        navn = "${it.fornavn} ${it.etternavn}",
-                        alder = it.alder
+                        navn = it.navn(),
+                        alder = it.alder()
                     )
                 } ?: emptyResponse
             } catch (e: PdlClientException) {

@@ -33,16 +33,11 @@ object HentPersonExtensions {
         return Period.between(fodselsdato, LocalDate.now()).years
     }
 
-    fun Person.toPersonDto(fnr: String): PersonDto {
+    fun Person.navn(): String {
         val navn = navn.firstOrDefault(Navn("", "", ""))
-        return PersonDto(
-            fnr = fnr,
-            fornavn = listOfNotNull(navn.fornavn)
-                .joinToString(" ")
-                .capitalizeWord(),
-            etternavn = navn.etternavn.capitalizeWord(),
-            alder = alder(),
-            fodselsdato = fodselsdato(),
-        )
+        return listOfNotNull(navn.fornavn, navn.mellomnavn, navn.etternavn)
+            .filterNot { it.isNullOrBlank() }
+            .joinToString(" ")
+            .capitalizeWord()
     }
 }

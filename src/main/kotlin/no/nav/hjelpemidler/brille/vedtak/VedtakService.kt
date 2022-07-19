@@ -17,8 +17,8 @@ class VedtakService(
     private val vilkårsvurderingService: VilkårsvurderingService,
     private val kafkaService: KafkaService,
 ) {
-    suspend fun lagVedtak(søknadDto: SøknadDto, fnrInnsender: String): Vedtak<Vilkårsgrunnlag> {
-        val vilkårsgrunnlag = søknadDto.vilkårsgrunnlag
+    suspend fun lagVedtak(fnrInnsender: String, krav: KravDto): Vedtak<Vilkårsgrunnlag> {
+        val vilkårsgrunnlag = krav.vilkårsgrunnlag
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)
 
         // TODO: Fjern prodsjekk
@@ -42,7 +42,7 @@ class VedtakService(
                 orgnr = vilkårsgrunnlag.orgnr,
                 bestillingsdato = vilkårsgrunnlag.bestillingsdato,
                 brillepris = brillepris,
-                bestillingsreferanse = søknadDto.bestillingsreferanse,
+                bestillingsreferanse = krav.bestillingsreferanse,
                 vilkårsvurdering = vilkårsvurdering,
                 behandlingsresultat = Behandlingsresultat.INNVILGET,
                 sats = sats,
@@ -59,15 +59,15 @@ class VedtakService(
                 eventId = UUID.randomUUID(),
                 eventName = "hm-barnebrillevedtak-opprettet",
                 fnr = vedtak.fnrBarn,
-                brukersNavn = søknadDto.brukersNavn,
+                brukersNavn = krav.brukersNavn,
                 orgnr = vedtak.orgnr,
-                orgNavn = søknadDto.orgNavn,
-                orgAdresse = søknadDto.orgAdresse,
+                orgNavn = krav.orgNavn,
+                orgAdresse = krav.orgAdresse,
                 navnAvsender = "", // TODO: hvilket navn skal dette egentlig være? Navnet til innbygger (barn) eller optiker?
                 sakId = vedtak.id.toString(),
                 brilleseddel = vilkårsgrunnlag.brilleseddel,
                 bestillingsdato = vilkårsgrunnlag.bestillingsdato,
-                bestillingsreferanse = søknadDto.bestillingsreferanse,
+                bestillingsreferanse = krav.bestillingsreferanse,
                 satsBeskrivelse = vedtak.satsBeskrivelse,
                 satsBeløp = vedtak.satsBeløp,
                 beløp = vedtak.beløp

@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.pdl
 
 import io.kotest.common.runBlocking
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.mockk.coEvery
@@ -14,7 +15,7 @@ internal class PdlClientTest {
     @Test
     internal fun `happy case`() = test("/mock/pdl.json") { client ->
         val oppslag = runBlocking { client.hentPerson("07121410995") }
-        println(oppslag)
+        oppslag.shouldNotBeNull()
     }
 
     @Test

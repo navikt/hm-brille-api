@@ -14,23 +14,23 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-fun Route.søknadApi(vedtakService: VedtakService, auditService: AuditService) {
-    post("/soknader") {
+fun Route.kravApi(vedtakService: VedtakService, auditService: AuditService) {
+    post("/krav") {
         if (Configuration.prod) { // TODO: fjern før prodsetting
             call.respond(HttpStatusCode.Unauthorized)
             return@post
         }
 
-        val søknadDto = call.receive<SøknadDto>()
+        val kravDto = call.receive<KravDto>()
         val fnrInnsender = call.extractFnr()
 
         auditService.lagreOppslag(
             fnrInnlogget = fnrInnsender,
-            fnrOppslag = søknadDto.vilkårsgrunnlag.fnrBarn,
-            oppslagBeskrivelse = "[POST] /soknader - Innsending av søknad"
+            fnrOppslag = kravDto.vilkårsgrunnlag.fnrBarn,
+            oppslagBeskrivelse = "[POST] /krav - Innsending av krav"
         )
 
-        val vedtak = vedtakService.lagVedtak(søknadDto, fnrInnsender)
+        val vedtak = vedtakService.lagVedtak(fnrInnsender, kravDto)
 
         call.respond(
             HttpStatusCode.OK,

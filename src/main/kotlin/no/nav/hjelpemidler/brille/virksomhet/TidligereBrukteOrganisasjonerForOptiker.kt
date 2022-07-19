@@ -8,6 +8,5 @@ data class TidligereBrukteOrganisasjonerForOptiker(
 data class Organisasjon(
     val orgnr: String,
     val navn: String,
-    val forretningsadresse: String?,
-    val beliggenhetsadresse: String?,
+    val adresse: String?,
 )
