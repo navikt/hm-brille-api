@@ -1,9 +1,11 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import no.nav.hjelpemidler.brille.pgObjectOf
+import no.nav.hjelpemidler.brille.store.Page
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
+import no.nav.hjelpemidler.brille.store.queryPagedList
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
@@ -12,6 +14,8 @@ interface VedtakStore : Store {
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
     fun hentKravlinjerForOrgNummer(orgNr: String): List<Kravlinje>
+
+    fun hentPagedKravlinjerForOrgNummer(orgNr: String): Page<Kravlinje>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
@@ -113,6 +117,25 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             WHERE orgnr = :orgNr 
         """.trimIndent()
         return ds.queryList(sql, mapOf("orgNr" to orgNr)) { row ->
+            Kravlinje(
+                id = row.long("id"),
+                bestillingsdato = row.localDate("bestillingsdato"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                opprettet = row.localDateTime("opprettet"),
+                beløp = row.bigDecimal("belop"),
+                bestillingsreferanse = row.string("bestillingsreferanse")
+            )
+        }
+    }
+
+    override fun hentPagedKravlinjerForOrgNummer(orgNr: String): Page<Kravlinje> {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop, bestillingsreferanse
+            FROM vedtak_v1
+            WHERE orgnr = :orgNr 
+        """.trimIndent()
+        return ds.queryPagedList(sql, mapOf("orgNr" to orgNr)) { row ->
             Kravlinje(
                 id = row.long("id"),
                 bestillingsdato = row.localDate("bestillingsdato"),

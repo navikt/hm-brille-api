@@ -143,7 +143,7 @@ fun Application.setupRoutes() {
                     kravApi(vedtakService, auditService)
                 }
                 avtaleApi(avtaleService)
-                rapportApi(rapportService)
+                rapportApi(rapportService, altinnService)
             }
         }
     }

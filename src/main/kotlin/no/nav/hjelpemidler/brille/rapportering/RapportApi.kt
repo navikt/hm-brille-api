@@ -13,22 +13,39 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.altinn.AltinnService
+import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import java.io.OutputStream
 import java.util.Date
 
 private val log = KotlinLogging.logger { }
 
-fun Route.rapportApi(rapportService: RapportService) {
+fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnService) {
     route("/kravlinjer") {
         get("/{orgnr}") {
             val orgnr = call.orgnr()
+            if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
+                call.respond(HttpStatusCode.Unauthorized)
+            }
             val kravlinjer = rapportService.hentKravlinjer(orgnr)
             call.respond(HttpStatusCode.OK, kravlinjer)
         }
 
+        get("/paged/{orgnr}") {
+            val orgnr = call.orgnr()
+            if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
+                call.respond(HttpStatusCode.Unauthorized)
+            }
+            val pagedKravlinjer = rapportService.hentPagedKravlinjer(orgnr)
+            call.respond(HttpStatusCode.OK, pagedKravlinjer)
+        }
+
         get("/csv/{orgnr}") {
             val orgnr = call.orgnr()
+            if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
+                call.respond(HttpStatusCode.Unauthorized)
+            }
             val kravlinjer = rapportService.hentKravlinjer(orgnr)
             call.response.header(
                 HttpHeaders.ContentDisposition,
