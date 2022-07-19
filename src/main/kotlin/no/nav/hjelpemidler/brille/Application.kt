@@ -43,7 +43,7 @@ import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
-import no.nav.hjelpemidler.brille.vedtak.søknadApi
+import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
@@ -140,7 +140,7 @@ fun Application.setupRoutes() {
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService)
-                    søknadApi(vedtakService, auditService)
+                    kravApi(vedtakService, auditService)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService)
