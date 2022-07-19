@@ -16,7 +16,7 @@ interface VirksomhetStore : Store {
     fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet?
     fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet
-    fun oppdaterKontonummer(orgnr: String, kontonr: String)
+    fun oppdaterKontonummerOgEpost(orgnr: String, kontonr: String, epost: String)
 }
 
 data class Virksomhet(
@@ -85,17 +85,18 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         return virksomhet
     }
 
-    override fun oppdaterKontonummer(orgnr: String, kontonr: String) {
+    override fun oppdaterKontonummerOgEpost(orgnr: String, kontonr: String, epost: String) {
         @Language("PostgreSQL")
         val sql = """
             UPDATE virksomhet_v1
-            SET kontonr = :kontonr, oppdatert = :oppdatert
+            SET kontonr = :kontonr, epost = :epost, oppdatert = :oppdatert
             WHERE orgnr = :orgnr
         """.trimIndent()
         ds.update(
             sql,
             mapOf(
                 "kontonr" to kontonr,
+                "epost" to epost,
                 "orgnr" to orgnr,
                 "oppdatert" to LocalDateTime.now()
             )

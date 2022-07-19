@@ -31,6 +31,7 @@ class AvtaleService(
                     navn = it.navn,
                     aktiv = virksomheter[it.orgnr]?.aktiv ?: false,
                     kontonr = virksomheter[it.orgnr]?.kontonr,
+                    epost = virksomheter[it.orgnr]?.epost,
                     avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
                     opprettet = virksomheter[it.orgnr]?.opprettet,
                     oppdatert = virksomheter[it.orgnr]?.oppdatert
@@ -48,6 +49,7 @@ class AvtaleService(
             Virksomhet(
                 orgnr = orgnr,
                 kontonr = opprettAvtale.kontonr,
+                epost = opprettAvtale.epost,
                 fnrInnsender = fnrInnsender,
                 navnInnsender = "", // fixme
                 aktiv = true,
@@ -60,6 +62,7 @@ class AvtaleService(
             navn = opprettAvtale.navn,
             aktiv = virksomhet.aktiv,
             kontonr = virksomhet.kontonr,
+            epost = virksomhet.epost,
             avtaleversjon = virksomhet.avtaleversjon,
             opprettet = virksomhet.opprettet,
             oppdatert = virksomhet.oppdatert
@@ -72,13 +75,14 @@ class AvtaleService(
         }
         val virksomhet = requireNotNull(virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
             "Fant ikke virksomhet med orgnr: $orgnr"
-        }.copy(kontonr = redigerAvtale.kontonr)
-        virksomhetStore.oppdaterKontonummer(orgnr, redigerAvtale.kontonr)
+        }.copy(kontonr = redigerAvtale.kontonr, epost = redigerAvtale.epost)
+        virksomhetStore.oppdaterKontonummerOgEpost(orgnr, redigerAvtale.kontonr, redigerAvtale.epost)
         return Avtale(
             orgnr = virksomhet.orgnr,
             navn = redigerAvtale.navn,
             aktiv = virksomhet.aktiv,
             kontonr = virksomhet.kontonr,
+            epost = virksomhet.epost,
             avtaleversjon = virksomhet.avtaleversjon,
             opprettet = virksomhet.opprettet,
             oppdatert = virksomhet.oppdatert
