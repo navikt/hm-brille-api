@@ -123,7 +123,7 @@ fun Application.setupRoutes() {
 
     val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
     val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService)
-    val avtaleService = AvtaleService(virksomhetStore, altinnService, kafkaService)
+    val avtaleService = AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService)
     val rapportService = RapportService(vedtakStore)
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))

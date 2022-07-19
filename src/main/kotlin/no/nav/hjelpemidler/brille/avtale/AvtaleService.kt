@@ -2,6 +2,8 @@ package no.nav.hjelpemidler.brille.avtale
 
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.AltinnService
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
+import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
@@ -11,23 +13,29 @@ private val log = KotlinLogging.logger { }
 class AvtaleService(
     private val virksomhetStore: VirksomhetStore,
     private val altinnService: AltinnService,
+    private val enhetsregisteretService: EnhetsregisteretService,
     private val kafkaService: KafkaService,
 ) {
     suspend fun hentVirksomheter(fnrInnsender: String): List<Avtale> {
         val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnrInnsender).associateBy {
             it.orgnr
         }
-        return altinnService.hentAvgivereHovedadministrator(fnrInnsender).map {
-            Avtale(
-                orgnr = it.orgnr,
-                navn = it.navn,
-                aktiv = virksomheter[it.orgnr]?.aktiv ?: false,
-                kontonr = virksomheter[it.orgnr]?.kontonr,
-                avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
-                opprettet = virksomheter[it.orgnr]?.opprettet,
-                oppdatert = virksomheter[it.orgnr]?.oppdatert
-            )
-        }
+        return altinnService.hentAvgivereHovedadministrator(fnrInnsender)
+            .filter {
+                val enhet = enhetsregisteretService.hentOrganisasjonsenhet(it.orgnr)
+                enhet?.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER) ?: false
+            }
+            .map {
+                Avtale(
+                    orgnr = it.orgnr,
+                    navn = it.navn,
+                    aktiv = virksomheter[it.orgnr]?.aktiv ?: false,
+                    kontonr = virksomheter[it.orgnr]?.kontonr,
+                    avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
+                    opprettet = virksomheter[it.orgnr]?.opprettet,
+                    oppdatert = virksomheter[it.orgnr]?.oppdatert
+                )
+            }
     }
 
     suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): Avtale {

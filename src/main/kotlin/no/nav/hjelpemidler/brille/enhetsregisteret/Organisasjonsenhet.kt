@@ -12,7 +12,15 @@ data class Organisasjonsenhet(
     val naeringskode1: Næringskode,
     val naeringskode2: Næringskode?,
     val naeringskode3: Næringskode?,
-)
+) {
+    fun harNæringskode(kode: String) = setOfNotNull(
+        naeringskode1,
+        naeringskode2,
+        naeringskode3
+    ).any {
+        it.kode == kode
+    }
+}
 
 data class Postadresse(
     val postnummer: String,
@@ -23,4 +31,8 @@ data class Postadresse(
 data class Næringskode(
     val beskrivelse: String,
     val kode: String,
-)
+) {
+    companion object {
+        const val BUTIKKHANDEL_MED_OPTISKE_ARTIKLER = "47.782"
+    }
+}

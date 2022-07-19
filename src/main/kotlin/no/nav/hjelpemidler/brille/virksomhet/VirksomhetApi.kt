@@ -9,6 +9,7 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
+import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.extractFnr
@@ -43,7 +44,9 @@ fun Route.virksomhetApi(
                             "${enhet.forretningsadresse.adresse.first()}, ${enhet.forretningsadresse.postnummer} ${enhet.forretningsadresse.poststed}"
                         } else if (enhet.beliggenhetsadresse != null) {
                             "${enhet.beliggenhetsadresse.adresse.first()}, ${enhet.beliggenhetsadresse.postnummer} ${enhet.beliggenhetsadresse.poststed}"
-                        } else { "" }
+                        } else {
+                            ""
+                        }
                     )
                 }
                 val response = TidligereBrukteOrganisasjonerForOptiker(
@@ -84,11 +87,7 @@ fun Route.virksomhetApi(
                 kontonr = virksomhet.kontonr,
                 aktiv = virksomhet.aktiv,
                 forretningsadresse = enhet.forretningsadresse,
-                erOptikerVirksomhet = setOf(
-                    enhet.naeringskode1,
-                    enhet.naeringskode2,
-                    enhet.naeringskode3
-                ).any { it?.kode == "47.782" },
+                erOptikerVirksomhet = enhet.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER),
             )
 
             call.respond(response)

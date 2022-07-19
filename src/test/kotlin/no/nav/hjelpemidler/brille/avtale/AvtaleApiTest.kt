@@ -12,6 +12,9 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
+import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
+import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
@@ -22,11 +25,12 @@ import kotlin.test.Test
 internal class AvtaleApiTest {
     private val virksomhetStore = mockk<VirksomhetStore>()
     private val altinnService = mockk<AltinnService>()
+    private val enhetsregisteretService = mockk<EnhetsregisteretService>()
     private val kafkaService = mockk<KafkaService>()
 
     private val routing = TestRouting {
         authenticate("test") {
-            avtaleApi(AvtaleService(virksomhetStore, altinnService, kafkaService))
+            avtaleApi(AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService))
         }
     }
 
@@ -66,6 +70,18 @@ internal class AvtaleApiTest {
         coEvery {
             altinnService.hentAvgivereHovedadministrator(fnrInnsender)
         } returns listOf(avgiver)
+        coEvery {
+            enhetsregisteretService.hentOrganisasjonsenhet(avgiver.orgnr)
+        } returns Organisasjonsenhet(
+            orgnr = avgiver.orgnr,
+            overordnetEnhet = null,
+            navn = avgiver.navn,
+            forretningsadresse = null,
+            beliggenhetsadresse = null,
+            naeringskode1 = Næringskode("", Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER),
+            naeringskode2 = null,
+            naeringskode3 = null
+        )
         every {
             virksomhetStore.lagreVirksomhet(any())
         } returnsArgument 0
