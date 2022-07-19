@@ -20,12 +20,10 @@ internal class AzureAdClientTest {
 
     @Test
     internal fun `kaster feil`() {
-        val throwable = assertThrows(Exception::class.java) {
+        assertThrows(Exception::class.java) {
             runBlocking(Dispatchers.IO) {
                 client.getToken("default")
             }
         }
-        println(throwable.message)
-        println(throwable.cause?.message)
     }
 }
