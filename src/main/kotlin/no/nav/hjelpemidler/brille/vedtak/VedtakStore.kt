@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import no.nav.hjelpemidler.brille.pgObjectOf
+import no.nav.hjelpemidler.brille.store.COLUMN_LABEL_TOTAL
 import no.nav.hjelpemidler.brille.store.Page
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.query
@@ -131,7 +132,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
     override fun hentPagedKravlinjerForOrgNummer(orgNr: String): Page<Kravlinje> {
         @Language("PostgreSQL")
         val sql = """
-            SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop, bestillingsreferanse
+            SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop, bestillingsreferanse, count(*) over() AS $COLUMN_LABEL_TOTAL
             FROM vedtak_v1
             WHERE orgnr = :orgNr 
         """.trimIndent()
