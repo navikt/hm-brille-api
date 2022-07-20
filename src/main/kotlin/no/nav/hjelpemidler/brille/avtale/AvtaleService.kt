@@ -18,10 +18,7 @@ class AvtaleService(
     private val kafkaService: KafkaService,
 ) {
     suspend fun hentVirksomheter(fnrInnsender: String): List<Avtale> {
-        val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnrInnsender).associateBy {
-            it.orgnr
-        }
-        val avgivereButikkhandelMedOptiskeArtikler = altinnService.hentAvgivereHovedadministrator(fnrInnsender)
+        val avgivereFiltrert = altinnService.hentAvgivereHovedadministrator(fnrInnsender)
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
                 val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
@@ -36,9 +33,12 @@ class AvtaleService(
                 }
             }
         sikkerLog.info {
-            "fnrInnsender: $fnrInnsender kan opprette avtale for: ${avgivereButikkhandelMedOptiskeArtikler.map { it.orgnr }}"
+            "fnrInnsender: $fnrInnsender kan opprette avtale for: ${avgivereFiltrert.map { it.orgnr }}"
         }
-        return avgivereButikkhandelMedOptiskeArtikler
+        val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnrInnsender).associateBy {
+            it.orgnr
+        }
+        return avgivereFiltrert
             .map {
                 Avtale(
                     orgnr = it.orgnr,
