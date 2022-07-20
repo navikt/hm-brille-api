@@ -53,7 +53,7 @@ fun Route.virksomhetApi(
             }
         }
 
-        get("/virksomheter/{orgnr}") {
+        get("/{orgnr}") {
             val orgnr =
                 call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 

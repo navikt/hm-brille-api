@@ -20,7 +20,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 
 const val LANGUAGE_NORSK_BOKMÅL = "1044"
-const val ROLE_DEFINITION_ID_HOVEDADMINISTRATOR = "24869"
+const val ROLE_DEFINITION_CODE_HOVEDADMINISTRATOR = "HADM"
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -67,7 +67,7 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
                 parameters.append("subject", fnr)
                 parameters.append("reportee", orgnr)
                 parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
-                parameters.append("\$filter", "RoleDefinitionId eq $ROLE_DEFINITION_ID_HOVEDADMINISTRATOR")
+                parameters.append("\$filter", "RoleDefinitionCode eq $ROLE_DEFINITION_CODE_HOVEDADMINISTRATOR")
             }
         }
         sikkerLog.info { "Hentet roller med url: ${response.request.url}" }

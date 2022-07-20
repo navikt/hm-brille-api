@@ -13,11 +13,13 @@ data class Organisasjonsenhet(
     val naeringskode2: Næringskode?,
     val naeringskode3: Næringskode?,
 ) {
-    fun harNæringskode(kode: String) = setOfNotNull(
+    fun næringskoder(): Set<Næringskode> = setOfNotNull(
         naeringskode1,
         naeringskode2,
         naeringskode3
-    ).any {
+    )
+
+    fun harNæringskode(kode: String): Boolean = næringskoder().any {
         it.kode == kode
     }
 }

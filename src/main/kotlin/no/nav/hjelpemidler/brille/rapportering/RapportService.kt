@@ -12,8 +12,16 @@ class RapportService(
         return kravlinjer
     }
 
-    fun hentPagedKravlinjer(orgNr: String): Page<Kravlinje> {
-        val kravlinjer = vedtakStore.hentPagedKravlinjerForOrgNummer(orgNr)
+    fun hentPagedKravlinjer(
+        orgNr: String,
+        limit: Int = 20,
+        offset: Int = 0,
+    ): Page<Kravlinje> {
+        val kravlinjer = vedtakStore.hentPagedKravlinjerForOrgNummer(
+            orgNr = orgNr,
+            limit = limit,
+            offset = offset
+        )
         return kravlinjer
     }
 }

@@ -73,8 +73,10 @@ fun <T> DataSource.queryList(
 fun <T> DataSource.queryPagedList(
     @Language("PostgreSQL") sql: String,
     queryParameters: QueryParameters = emptyMap(),
+    limit: Int,
+    offset: Int,
     mapper: ResultMapper<T>,
-): Page<T> = runAction(queryOf(sql, queryParameters).map(mapper).asPage(10, 0))
+): Page<T> = runAction(queryOf(sql, queryParameters).map(mapper).asPage(limit, offset))
 
 fun DataSource.update(
     @Language("PostgreSQL") sql: String,

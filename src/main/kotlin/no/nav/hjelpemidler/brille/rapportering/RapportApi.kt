@@ -37,8 +37,22 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
                 call.respond(HttpStatusCode.Unauthorized)
             }
-            val pagedKravlinjer = rapportService.hentPagedKravlinjer(orgnr)
-            call.respond(HttpStatusCode.OK, pagedKravlinjer)
+            val limit = call.request.queryParameters["limit"]?.toInt() ?: 20
+            val page = call.request.queryParameters["page"]?.toInt() ?: 1
+            val kravlinjer = rapportService.hentPagedKravlinjer(
+                orgNr = orgnr,
+                limit = limit,
+                offset = (page - 1) * limit,
+            )
+
+            val pagedKravlinjeListe = PagedKravlinjeliste(
+                kravlinjer = kravlinjer,
+                totalCount = kravlinjer.total,
+                currentPage = page,
+                pageSize = limit
+            )
+
+            call.respond(HttpStatusCode.OK, pagedKravlinjeListe)
         }
 
         get("/csv/{orgnr}") {
@@ -76,3 +90,5 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
 private fun ApplicationCall.orgnr(): String = requireNotNull(parameters["orgnr"]) {
     "Mangler orgnr i URL"
 }
+
+data class PagedKravlinjeliste(val kravlinjer: List<Kravlinje>, val totalCount: Int, val currentPage: Int, val pageSize: Int)

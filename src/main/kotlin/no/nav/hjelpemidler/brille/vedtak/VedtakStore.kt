@@ -16,7 +16,11 @@ interface VedtakStore : Store {
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
     fun hentKravlinjerForOrgNummer(orgNr: String): List<Kravlinje>
 
-    fun hentPagedKravlinjerForOrgNummer(orgNr: String): Page<Kravlinje>
+    fun hentPagedKravlinjerForOrgNummer(
+        orgNr: String,
+        limit: Int = 20,
+        offset: Int = 0,
+    ): Page<Kravlinje>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
@@ -129,14 +133,27 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }
     }
 
-    override fun hentPagedKravlinjerForOrgNummer(orgNr: String): Page<Kravlinje> {
+    override fun hentPagedKravlinjerForOrgNummer(
+        orgNr: String,
+        limit: Int,
+        offset: Int,
+    ): Page<Kravlinje> {
         @Language("PostgreSQL")
         val sql = """
             SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop, bestillingsreferanse, count(*) over() AS $COLUMN_LABEL_TOTAL
             FROM vedtak_v1
             WHERE orgnr = :orgNr 
         """.trimIndent()
-        return ds.queryPagedList(sql, mapOf("orgNr" to orgNr)) { row ->
+        return ds.queryPagedList(
+            sql,
+            mapOf(
+                "orgNr" to orgNr,
+                "limit" to limit,
+                "offset" to offset
+            ),
+            limit,
+            offset
+        ) { row ->
             Kravlinje(
                 id = row.long("id"),
                 bestillingsdato = row.localDate("bestillingsdato"),
