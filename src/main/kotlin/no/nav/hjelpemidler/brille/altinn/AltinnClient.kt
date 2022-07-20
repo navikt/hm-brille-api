@@ -20,7 +20,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 
 const val LANGUAGE_NORSK_BOKMÅL = "1044"
-const val ROLE_DEFINITION_ID_HOVEDADMINISTRATOR = "24869"
+const val ROLE_DEFINITION_ID_HOVEDADMINISTRATOR = "28997"
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")

@@ -9,6 +9,7 @@ import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
 
 private val log = KotlinLogging.logger { }
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class AvtaleService(
     private val virksomhetStore: VirksomhetStore,
@@ -20,11 +21,15 @@ class AvtaleService(
         val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnrInnsender).associateBy {
             it.orgnr
         }
-        return altinnService.hentAvgivereHovedadministrator(fnrInnsender)
+        val avgivereButikkhandelMedOptiskeArtikler = altinnService.hentAvgivereHovedadministrator(fnrInnsender)
             .filter {
                 val enhet = enhetsregisteretService.hentOrganisasjonsenhet(it.orgnr)
                 enhet?.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER) ?: false
             }
+        sikkerLog.info {
+            "fnrInnsender: $fnrInnsender kan opprette avtale for: ${avgivereButikkhandelMedOptiskeArtikler.map { it.orgnr }}"
+        }
+        return avgivereButikkhandelMedOptiskeArtikler
             .map {
                 Avtale(
                     orgnr = it.orgnr,
