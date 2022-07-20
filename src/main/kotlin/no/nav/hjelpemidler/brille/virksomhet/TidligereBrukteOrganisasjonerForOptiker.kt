@@ -11,5 +11,3 @@ data class Organisasjon(
     val navn: String,
     val adresse: String?,
 )
-
-fun tomtVirksomhetResultat() = Organisasjon(orgnr = "", aktiv = false, navn = "", adresse = null)

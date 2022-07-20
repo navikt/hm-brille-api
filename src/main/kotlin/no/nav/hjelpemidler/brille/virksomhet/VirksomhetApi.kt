@@ -57,10 +57,7 @@ fun Route.virksomhetApi(
             val orgnr =
                 call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 
-            val virksomhet = virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)
-                ?: return@get call.respond(
-                    tomtVirksomhetResultat()
-                )
+            val harAktivNavAvtale = virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)?.aktiv ?: false
 
             val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
@@ -68,7 +65,7 @@ fun Route.virksomhetApi(
             val response = Organisasjon(
                 orgnr = enhet.orgnr,
                 navn = enhet.navn,
-                aktiv = virksomhet.aktiv,
+                aktiv = harAktivNavAvtale,
                 adresse = adresseFor(enhet),
             )
 
