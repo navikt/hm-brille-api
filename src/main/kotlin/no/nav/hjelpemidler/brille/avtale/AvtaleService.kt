@@ -22,9 +22,17 @@ class AvtaleService(
             it.orgnr
         }
         val avgivereButikkhandelMedOptiskeArtikler = altinnService.hentAvgivereHovedadministrator(fnrInnsender)
-            .filter {
-                val enhet = enhetsregisteretService.hentOrganisasjonsenhet(it.orgnr)
-                enhet?.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER) ?: false
+            .filter { avgiver ->
+                val orgnr = avgiver.orgnr
+                val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                if (enhet == null) {
+                    false
+                } else {
+                    log.info {
+                        "orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
+                    }
+                    enhet.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER)
+                }
             }
         sikkerLog.info {
             "fnrInnsender: $fnrInnsender kan opprette avtale for: ${avgivereButikkhandelMedOptiskeArtikler.map { it.orgnr }}"
