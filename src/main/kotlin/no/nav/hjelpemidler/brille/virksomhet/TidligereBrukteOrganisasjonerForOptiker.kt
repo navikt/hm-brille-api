@@ -7,6 +7,9 @@ data class TidligereBrukteOrganisasjonerForOptiker(
 
 data class Organisasjon(
     val orgnr: String,
+    val aktiv: Boolean,
     val navn: String,
     val adresse: String?,
 )
+
+fun tomtVirksomhetResultat() = Organisasjon(orgnr = "", aktiv = false, navn = "", adresse = null)

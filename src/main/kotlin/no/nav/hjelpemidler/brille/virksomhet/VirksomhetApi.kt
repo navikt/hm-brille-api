@@ -9,9 +9,7 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
-import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
-import no.nav.hjelpemidler.brille.enhetsregisteret.Postadresse
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 
@@ -40,13 +38,9 @@ fun Route.virksomhetApi(
                     Organisasjon(
                         orgnr = enhet.orgnr,
                         navn = enhet.navn,
-                        adresse = if (enhet.forretningsadresse != null) {
-                            "${enhet.forretningsadresse.adresse.first()}, ${enhet.forretningsadresse.postnummer} ${enhet.forretningsadresse.poststed}"
-                        } else if (enhet.beliggenhetsadresse != null) {
-                            "${enhet.beliggenhetsadresse.adresse.first()}, ${enhet.beliggenhetsadresse.postnummer} ${enhet.beliggenhetsadresse.poststed}"
-                        } else {
-                            ""
-                        }
+                        adresse = adresseFor(enhet),
+                        aktiv = true
+
                     )
                 }
                 val response = TidligereBrukteOrganisasjonerForOptiker(
@@ -65,32 +59,30 @@ fun Route.virksomhetApi(
 
             val virksomhet = virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)
                 ?: return@get call.respond(
-                    status = HttpStatusCode.NotFound,
-                    "Ingen virksomhet funnet for orgnr. $orgnr"
+                    tomtVirksomhetResultat()
                 )
 
             val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
 
-            data class Response(
-                val orgnr: String,
-                val orgNavn: String,
-                val kontonr: String,
-                val aktiv: Boolean,
-                val forretningsadresse: Postadresse?,
-                val erOptikerVirksomhet: Boolean,
-            )
-
-            val response = Response(
+            val response = Organisasjon(
                 orgnr = enhet.orgnr,
-                orgNavn = enhet.navn,
-                kontonr = virksomhet.kontonr,
+                navn = enhet.navn,
                 aktiv = virksomhet.aktiv,
-                forretningsadresse = enhet.forretningsadresse,
-                erOptikerVirksomhet = enhet.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER),
+                adresse = adresseFor(enhet),
             )
 
             call.respond(response)
         }
     }
+}
+
+private fun adresseFor(
+    enhet: Organisasjonsenhet
+) = if (enhet.forretningsadresse != null) {
+    "${enhet.forretningsadresse.adresse.first()}, ${enhet.forretningsadresse.postnummer} ${enhet.forretningsadresse.poststed}"
+} else if (enhet.beliggenhetsadresse != null) {
+    "${enhet.beliggenhetsadresse.adresse.first()}, ${enhet.beliggenhetsadresse.postnummer} ${enhet.beliggenhetsadresse.poststed}"
+} else {
+    ""
 }
