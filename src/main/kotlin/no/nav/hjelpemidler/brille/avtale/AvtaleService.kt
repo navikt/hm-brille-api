@@ -31,7 +31,8 @@ class AvtaleService(
                     log.info {
                         "orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
                     }
-                    enhet.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER)
+                    enhet.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER) ||
+                            enhet.harNæringskode(Næringskode.ANDRE_HELSETJENESTER)
                 }
             }
         sikkerLog.info {
