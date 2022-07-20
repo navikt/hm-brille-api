@@ -36,5 +36,6 @@ data class Næringskode(
 ) {
     companion object {
         const val BUTIKKHANDEL_MED_OPTISKE_ARTIKLER = "47.782"
+        const val ANDRE_HELSETJENESTER = "86.909"
     }
 }
