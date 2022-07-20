@@ -80,8 +80,8 @@ object Configuration {
             "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.intern.nav.no/",
             "medlemskap.oppslag.scope" to "api://prod-gcp.medlemskap.medlemskap-oppslag/.default",
             "enhetsregisteret_base_url" to "https://data.brreg.no/enhetsregisteret/api",
-            "altinn.altinnUrl" to "TODO",
-            "altinn.proxyConsumerId" to "TODO",
+            "altinn.altinnUrl" to "https://api-gw.oera.no/ekstern/altinn/api/serviceowner",
+            "altinn.proxyConsumerId" to "hjelpemidlerdigitalsoknad-api-prod",
         )
     )
 

@@ -6,6 +6,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import mu.KotlinLogging
@@ -32,7 +34,7 @@ fun Application.configureStatusPages() {
                 is BadRequestException -> call.respond(HttpStatusCode.BadRequest)
                 else -> {
                     log.error(cause) {
-                        "Noe gikk galt!"
+                        "Noe gikk galt! method: ${call.request.httpMethod}, url: ${call.request.uri}"
                     }
                     call.respondText(
                         "Noe gikk galt! Feilen har blitt logget og vil bli undersøkt.",
