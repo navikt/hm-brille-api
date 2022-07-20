@@ -37,7 +37,13 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
                 call.respond(HttpStatusCode.Unauthorized)
             }
-            val pagedKravlinjer = rapportService.hentPagedKravlinjer(orgnr)
+            val limit = call.request.queryParameters["limit"]?.toInt() ?: 20
+            val page = call.request.queryParameters["page"]?.toInt() ?: 1
+            val pagedKravlinjer = rapportService.hentPagedKravlinjer(
+                orgNr = orgnr,
+                limit = limit,
+                offset = (page - 1) * limit,
+            )
             call.respond(HttpStatusCode.OK, pagedKravlinjer)
         }
 
