@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -63,8 +64,11 @@ class SyfohelsenettproxyClient(
             log.error { "Fikk uventet status fra HPR: ${response.status} " }
             return null
             //throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
+        } catch (clientReqException: ClientRequestException){
+            log.error { "Fikk clientRequestException"}
+            throw clientReqException
         } catch (e: Exception) {
-
+            log.error{ "Fikk uventet feil fra HPR"}
             throw SyfohelsenettproxyClientException("Feil under henting av behandler data", e)
         }
     }
