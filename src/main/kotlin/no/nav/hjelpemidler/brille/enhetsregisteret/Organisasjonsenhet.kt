@@ -9,7 +9,7 @@ data class Organisasjonsenhet(
     val navn: String,
     val forretningsadresse: Postadresse?, // orgenhet bruker forretningsadresse
     val beliggenhetsadresse: Postadresse?, // underenhet bruker beliggenhetsadresse
-    val naeringskode1: Næringskode,
+    val naeringskode1: Næringskode?,
     val naeringskode2: Næringskode?,
     val naeringskode3: Næringskode?,
 ) {
