@@ -64,11 +64,11 @@ class SyfohelsenettproxyClient(
             log.error { "Fikk uventet status fra HPR: ${response.status} " }
             return null
             //throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
-        } catch (clientReqException: ClientRequestException){
-            log.error { "Fikk clientRequestException"}
+        } catch (clientReqException: ClientRequestException) {
+            log.error("Fikk clientRequestException fra HPR: ${clientReqException.message}", clientReqException)
             throw clientReqException
         } catch (e: Exception) {
-            log.error{ "Fikk uventet feil fra HPR"}
+            log.error { "Fikk uventet feil fra HPR" }
             throw SyfohelsenettproxyClientException("Feil under henting av behandler data", e)
         }
     }
