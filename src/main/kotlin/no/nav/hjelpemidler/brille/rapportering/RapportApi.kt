@@ -43,10 +43,14 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             }
 
             val tilDato = call.request.queryParameters["tilDato"]?.let {
-                LocalDate.parse(
-                    it,
-                    DateTimeFormatter.ofPattern("dd.MM.uuuu")
-                )
+                if (it.isBlank()) {
+                    null
+                } else {
+                    LocalDate.parse(
+                        it,
+                        DateTimeFormatter.ofPattern("dd.MM.uuuu")
+                    )
+                }
             }
 
             val kravlinjer = rapportService.hentPagedKravlinjer(
