@@ -25,6 +25,8 @@
 
     <logger name="no.nav.hjelpemidler.brille.medlemskap" level="DEBUG" />
 
+    <logger name="no.nav.hjelpemidler.brille.syfohelsenettproxy" level="DEBUG" />
+
     <root level="INFO">
         <appender-ref ref="STDOUT_JSON" />
     </root>
