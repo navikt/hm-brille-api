@@ -50,9 +50,9 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
             }
 
         // OP = Optiker (ref.: https://volven.no/produkt.asp?open_f=true&id=476764&catID=3&subID=8&subCat=61&oid=9060)
-        val erOptiker = behandler.godkjenninger.any {
+        val erOptiker = behandler?.godkjenninger?.any {
             it.helsepersonellkategori?.aktiv == true && it.helsepersonellkategori.verdi == "OP"
-        }
+        } ?: false
 
         redisClient.setErOptiker(fnrOptiker, erOptiker)
 
