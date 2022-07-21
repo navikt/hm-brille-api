@@ -1,13 +1,15 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import no.nav.hjelpemidler.brille.pgObjectOf
-import no.nav.hjelpemidler.brille.store.COLUMN_LABEL_TOTAL
+import no.nav.hjelpemidler.brille.rapportering.KravFilter
+import no.nav.hjelpemidler.brille.rapportering.queries.kravlinjeQuery
 import no.nav.hjelpemidler.brille.store.Page
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.queryPagedList
 import org.intellij.lang.annotations.Language
+import java.time.LocalDate
 import javax.sql.DataSource
 
 interface VedtakStore : Store {
@@ -18,6 +20,9 @@ interface VedtakStore : Store {
 
     fun hentPagedKravlinjerForOrgNummer(
         orgNr: String,
+        kravFilter: KravFilter?,
+        fraDato: LocalDate?,
+        tilDato: LocalDate?,
         limit: Int = 20,
         offset: Int = 0,
     ): Page<Kravlinje>
@@ -135,21 +140,22 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
 
     override fun hentPagedKravlinjerForOrgNummer(
         orgNr: String,
+        kravFilter: KravFilter?,
+        fraDato: LocalDate?,
+        tilDato: LocalDate?,
         limit: Int,
         offset: Int,
     ): Page<Kravlinje> {
         @Language("PostgreSQL")
-        val sql = """
-            SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop, bestillingsreferanse, count(*) over() AS $COLUMN_LABEL_TOTAL
-            FROM vedtak_v1
-            WHERE orgnr = :orgNr 
-        """.trimIndent()
+        val sql = kravlinjeQuery(kravFilter)
         return ds.queryPagedList(
             sql,
             mapOf(
                 "orgNr" to orgNr,
                 "limit" to limit,
-                "offset" to offset
+                "offset" to offset,
+                "fraDato" to fraDato,
+                "tilDato" to tilDato
             ),
             limit,
             offset

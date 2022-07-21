@@ -17,21 +17,14 @@ import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import java.io.OutputStream
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 private val log = KotlinLogging.logger { }
 
 fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnService) {
     route("/kravlinjer") {
-        get("/{orgnr}") {
-            val orgnr = call.orgnr()
-            if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
-                call.respond(HttpStatusCode.Unauthorized)
-            }
-            val kravlinjer = rapportService.hentKravlinjer(orgnr)
-            call.respond(HttpStatusCode.OK, kravlinjer)
-        }
-
         get("/paged/{orgnr}") {
             val orgnr = call.orgnr()
             if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
@@ -39,8 +32,28 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             }
             val limit = call.request.queryParameters["limit"]?.toInt() ?: 20
             val page = call.request.queryParameters["page"]?.toInt() ?: 1
+
+            val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
+
+            val fraDato = call.request.queryParameters["fraDato"]?.let {
+                LocalDate.parse(
+                    it,
+                    DateTimeFormatter.ofPattern("dd.MM.uuuu")
+                )
+            }
+
+            val tilDato = call.request.queryParameters["tilDato"]?.let {
+                LocalDate.parse(
+                    it,
+                    DateTimeFormatter.ofPattern("dd.MM.uuuu")
+                )
+            }
+
             val kravlinjer = rapportService.hentPagedKravlinjer(
                 orgNr = orgnr,
+                kravFilter = kravFilter,
+                fraDato = fraDato,
+                tilDato = tilDato,
                 limit = limit,
                 offset = (page - 1) * limit,
             )
@@ -91,4 +104,16 @@ private fun ApplicationCall.orgnr(): String = requireNotNull(parameters["orgnr"]
     "Mangler orgnr i URL"
 }
 
-data class PagedKravlinjeliste(val kravlinjer: List<Kravlinje>, val totalCount: Int, val currentPage: Int, val pageSize: Int)
+data class PagedKravlinjeliste(
+    val kravlinjer: List<Kravlinje>,
+    val totalCount: Int,
+    val currentPage: Int,
+    val pageSize: Int
+)
+
+enum class KravFilter {
+    ALLE,
+    SISTE3MND,
+    HITTILAR,
+    EGENDEFINERT
+}
