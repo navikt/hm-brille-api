@@ -50,6 +50,7 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
                 parameters.append("ForceEIAuthentication", "true")
                 parameters.append("subject", fnr)
                 parameters.append("\$filter", "Type ne 'Person' and Status eq 'Active'")
+                parameters.append("\$top", "200")
             }
         }
         sikkerLog.info { "Hentet avgivere med url: ${response.request.url}" }
