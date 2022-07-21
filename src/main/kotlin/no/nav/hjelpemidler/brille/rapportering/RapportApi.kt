@@ -49,7 +49,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                     LocalDate.parse(
                         it,
                         DateTimeFormatter.ofPattern("dd.MM.uuuu")
-                    )
+                    ).plusDays(1)
                 }
             }
 

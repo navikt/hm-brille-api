@@ -147,7 +147,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         offset: Int,
     ): Page<Kravlinje> {
         @Language("PostgreSQL")
-        val sql = kravlinjeQuery(kravFilter)
+        val sql = kravlinjeQuery(kravFilter, tilDato)
         return ds.queryPagedList(
             sql,
             mapOf(
