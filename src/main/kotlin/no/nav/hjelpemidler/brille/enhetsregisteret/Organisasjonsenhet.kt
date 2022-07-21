@@ -37,6 +37,7 @@ data class Næringskode(
     companion object {
         const val BUTIKKHANDEL_MED_OPTISKE_ARTIKLER = "47.782"
         const val BUTIKKHANDEL_MED_GULL_OG_SØLVVARER = "47.772"
+        const val BUTIKKHANDEL_MED_UR_OG_KLOKKER = "47.771"
         const val ANDRE_HELSETJENESTER = "86.909"
     }
 }
