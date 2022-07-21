@@ -60,8 +60,8 @@ class SyfohelsenettproxyClient(
                     return null
                 }
             }
-            return null
             log.error { "Fikk uventet status fra HPR: ${response.status} " }
+            return null
             //throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
         } catch (e: Exception) {
 
