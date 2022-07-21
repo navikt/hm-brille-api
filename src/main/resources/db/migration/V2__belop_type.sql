@@ -1,0 +1,7 @@
+ALTER TABLE vedtak_v1
+    ALTER COLUMN sats_belop TYPE INTEGER USING sats_belop::INTEGER;
+
+ALTER TABLE vedtak_v1
+    ALTER COLUMN belop TYPE NUMERIC(8, 2) USING belop::NUMERIC;
+
+DROP DOMAIN belop;

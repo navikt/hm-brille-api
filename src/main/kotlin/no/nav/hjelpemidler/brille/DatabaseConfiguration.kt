@@ -33,6 +33,7 @@ class DatabaseConfiguration(
         }
 
         val flyway = Flyway.configure().dataSource(dataSource).load()
+        flyway.clean()
         flyway.migrate()
 
         return dataSource

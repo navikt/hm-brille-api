@@ -17,7 +17,7 @@ data class Vedtak<T>(
     val vilkårsvurdering: Vilkårsvurdering<T>,
     val behandlingsresultat: Behandlingsresultat,
     val sats: SatsType,
-    val satsBeløp: BigDecimal,
+    val satsBeløp: Int,
     val satsBeskrivelse: String,
     val beløp: BigDecimal,
     val opprettet: LocalDateTime = LocalDateTime.now(),
@@ -37,7 +37,7 @@ data class Kravlinje(
     val behandlingsresultat: String,
     val opprettet: LocalDateTime,
     val beløp: BigDecimal,
-    val bestillingsreferanse: String
+    val bestillingsreferanse: String,
 )
 
 enum class Behandlingsresultat {

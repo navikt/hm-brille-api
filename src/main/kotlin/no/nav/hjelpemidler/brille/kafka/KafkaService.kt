@@ -78,7 +78,7 @@ class KafkaService(
         val bestillingsdato: LocalDate,
         val bestillingsreferanse: String,
         val satsBeskrivelse: String,
-        val satsBeløp: BigDecimal,
-        val beløp: BigDecimal
+        val satsBeløp: Int,
+        val beløp: BigDecimal,
     )
 }

@@ -33,14 +33,14 @@ internal class VedtakStorePostgresTest {
                 fnrInnsender = "11080642360",
                 orgnr = virksomhet.orgnr,
                 bestillingsdato = LocalDate.now(),
-                brillepris = sats.beløp,
+                brillepris = sats.beløp.toBigDecimal(),
                 bestillingsreferanse = "test",
                 vilkårsvurdering = Vilkårsvurdering("test", Evalueringer().ja("test")),
                 behandlingsresultat = Behandlingsresultat.INNVILGET,
                 sats = sats,
                 satsBeløp = sats.beløp,
                 satsBeskrivelse = sats.beskrivelse,
-                beløp = sats.beløp,
+                beløp = sats.beløp.toBigDecimal(),
             )
         )
         val vedtakForBarn = store.hentVedtakForBarn(lagretVedtak.fnrBarn).firstOrNull()

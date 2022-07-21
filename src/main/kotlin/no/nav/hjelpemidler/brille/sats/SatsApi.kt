@@ -11,6 +11,6 @@ fun Route.satsApi() {
         val brilleseddel = call.receive<Brilleseddel>()
         val satsKalkulator = SatsKalkulator(brilleseddel)
         val satsType = satsKalkulator.kalkuler()
-        call.respond(BeregnetSatsDto(satsType, satsType.beskrivelse, satsType.beløp.toString()))
+        call.respond(BeregnetSatsDto(satsType, satsType.beskrivelse, satsType.beløp))
     }
 }
