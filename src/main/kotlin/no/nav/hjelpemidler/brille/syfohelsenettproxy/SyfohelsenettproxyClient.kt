@@ -53,7 +53,10 @@ class SyfohelsenettproxyClient(
             return response.body()
         }
         throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
-    }.getOrElse { throw SyfohelsenettproxyClientException("Feil under henting av behandler data", it) }
+    }.getOrElse {
+
+        log.error("Feil ved kall til HPR: ${it.message}", it)
+        throw SyfohelsenettproxyClientException("Feil under henting av behandler data", it) }
 
     suspend fun hentBehandlerMedHprNummer(hprnr: String): Behandler = runCatching {
         val url = "$baseUrl/api/v2/behandlerMedHprNummer"
