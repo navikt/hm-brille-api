@@ -52,8 +52,10 @@ class SyfohelsenettproxyClient(
         if (response.status == HttpStatusCode.OK) {
             return response.body()
         } else if(response.status == HttpStatusCode.NotFound){
+            log.warn("Fikk 404 fra HPR - behandler ikke funnet")
             return null
         }
+        log.error("Fikk uventet status fra HPR: ${response.status} ")
         throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
     }.getOrElse {
         log.error("Feil ved kall til HPR: ${it.message}", it)
