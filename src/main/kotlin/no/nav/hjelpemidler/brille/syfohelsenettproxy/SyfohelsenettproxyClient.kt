@@ -49,12 +49,16 @@ class SyfohelsenettproxyClient(
         val response = client.get(url) {
             headers["behandlerFnr"] = fnr
         }
-        if (response.status == HttpStatusCode.OK) {
-            return response.body()
-        } else if(response.status == HttpStatusCode.NotFound){
-            log.warn("Fikk 404 fra HPR - behandler ikke funnet")
-        } else if (response.status == HttpStatusCode.NotFound) {
-            return null
+
+        log.error("Har fått response fra HPR med status: ${response.status}")
+        when (response.status) {
+            HttpStatusCode.OK -> {
+                return response.body()
+            }
+            HttpStatusCode.NotFound -> {
+                log.warn("Fikk 404 fra HPR - behandler ikke funnet")
+                return null
+            }
         }
         log.error("Fikk uventet status fra HPR: ${response.status} ")
         throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
