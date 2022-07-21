@@ -53,6 +53,8 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 }
             }
 
+            tilDato?.plusDays(1L)
+
             val kravlinjer = rapportService.hentPagedKravlinjer(
                 orgNr = orgnr,
                 kravFilter = kravFilter,
