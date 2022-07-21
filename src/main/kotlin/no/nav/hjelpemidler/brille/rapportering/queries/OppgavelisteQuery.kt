@@ -5,8 +5,8 @@ import no.nav.hjelpemidler.brille.store.COLUMN_LABEL_TOTAL
 import java.time.LocalDate
 
 fun kravlinjeQuery(
-    kravFilter: KravFilter? = null,
-    tilDato: LocalDate? = null
+    kravFilter: KravFilter?,
+    tilDato: LocalDate?
 ): String {
     var sql = """
                 SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop, bestillingsreferanse, count(*) over() AS $COLUMN_LABEL_TOTAL
