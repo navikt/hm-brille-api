@@ -43,28 +43,28 @@ class SyfohelsenettproxyClient(
         }
     }
 
-    suspend fun hentBehandler(fnr: String): Behandler? = runCatching {
-        val url = "$baseUrl/api/v2/behandler"
-        log.info { "Henter behandler data med url: $url" }
-        val response = client.get(url) {
-            headers["behandlerFnr"] = fnr
-        }
-
-        log.error("Har fått response fra HPR med status: ${response.status}")
-        when (response.status) {
-            HttpStatusCode.OK -> {
-                return response.body()
+    suspend fun hentBehandler(fnr: String): Behandler? {
+        try {
+            val url = "$baseUrl/api/v2/behandler"
+            log.info { "Henter behandler data med url: $url" }
+            val response = client.get(url) {
+                headers["behandlerFnr"] = fnr
             }
-            HttpStatusCode.NotFound -> {
-                log.warn("Fikk 404 fra HPR - behandler ikke funnet")
-                return null
+            log.error("Har fått response fra HPR med status: ${response.status}")
+            when (response.status) {
+                HttpStatusCode.OK -> {
+                    return response.body()
+                }
+                HttpStatusCode.NotFound -> {
+                    log.warn("Fikk 404 fra HPR - behandler ikke funnet")
+                    return null
+                }
             }
+            log.error("Fikk uventet status fra HPR: ${response.status} ")
+            throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
+        } catch (e: Exception){
+            throw SyfohelsenettproxyClientException("Feil under henting av behandler data", e)
         }
-        log.error("Fikk uventet status fra HPR: ${response.status} ")
-        throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
-    }.getOrElse {
-        log.error("Feil ved kall til HPR: ${it.message}", it)
-        throw SyfohelsenettproxyClientException("Feil under henting av behandler data", it)
     }
 
     suspend fun hentBehandlerMedHprNummer(hprnr: String): Behandler = runCatching {
