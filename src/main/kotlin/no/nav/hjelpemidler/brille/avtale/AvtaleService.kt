@@ -97,6 +97,11 @@ class AvtaleService(
         }.copy(kontonr = redigerAvtale.kontonr, epost = redigerAvtale.epost, fnrOppdatertAv = fnrOppdatertAv)
         log.info { "Redigerer avtale for orgnr: $orgnr" }
         sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr redigerer avtale: $redigerAvtale" }
+        if (virksomhet.fnrInnsender != virksomhet.fnrOppdatertAv) {
+            sikkerLog.warn {
+                "Avtalen ble redigert av en annen en innsender, fnrInnsender: ${virksomhet.fnrInnsender}, fnrOppdatertAv: ${virksomhet.fnrOppdatertAv}"
+            }
+        }
         virksomhetStore.oppdaterKontonummerOgEpost(fnrOppdatertAv, orgnr, redigerAvtale.kontonr, redigerAvtale.epost)
         return Avtale(
             orgnr = virksomhet.orgnr,
