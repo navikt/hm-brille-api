@@ -16,7 +16,7 @@ interface VirksomhetStore : Store {
     fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet?
     fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet
-    fun oppdaterKontonummerOgEpost(orgnr: String, kontonr: String, epost: String)
+    fun oppdaterKontonummerOgEpost(fnrOppdatertAv: String, orgnr: String, kontonr: String, epost: String)
 }
 
 data class Virksomhet(
@@ -24,6 +24,7 @@ data class Virksomhet(
     val kontonr: String,
     val epost: String? = null,
     val fnrInnsender: String,
+    val fnrOppdatertAv: String? = null,
     val navnInnsender: String,
     val aktiv: Boolean,
     val avtaleversjon: String? = null,
@@ -36,7 +37,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
     override fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet? {
         @Language("PostgreSQL")
         val sql = """
-            SELECT orgnr, kontonr, epost, fnr_innsender, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
+            SELECT orgnr, kontonr, epost, fnr_innsender, fnr_oppdatert_av, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
             FROM virksomhet_v1
             WHERE orgnr = :orgnr
         """.trimIndent()
@@ -46,7 +47,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
     override fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet> {
         @Language("PostgreSQL")
         val sql = """
-            SELECT orgnr, kontonr, epost, fnr_innsender, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
+            SELECT orgnr, kontonr, epost, fnr_innsender, fnr_oppdatert_av, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
             FROM virksomhet_v1
             WHERE fnr_innsender = :fnrInnsender
         """.trimIndent()
@@ -85,11 +86,11 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         return virksomhet
     }
 
-    override fun oppdaterKontonummerOgEpost(orgnr: String, kontonr: String, epost: String) {
+    override fun oppdaterKontonummerOgEpost(fnrOppdatertAv: String, orgnr: String, kontonr: String, epost: String) {
         @Language("PostgreSQL")
         val sql = """
             UPDATE virksomhet_v1
-            SET kontonr = :kontonr, epost = :epost, oppdatert = :oppdatert
+            SET kontonr = :kontonr, epost = :epost, fnr_oppdatert_av = :fnr_oppdatert_av, oppdatert = :oppdatert
             WHERE orgnr = :orgnr
         """.trimIndent()
         ds.update(
@@ -97,6 +98,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             mapOf(
                 "kontonr" to kontonr,
                 "epost" to epost,
+                "fnr_oppdatert_av" to fnrOppdatertAv,
                 "orgnr" to orgnr,
                 "oppdatert" to LocalDateTime.now()
             )
@@ -108,6 +110,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         kontonr = row.string("kontonr"),
         epost = row.stringOrNull("epost"),
         fnrInnsender = row.string("fnr_innsender"),
+        fnrOppdatertAv = row.stringOrNull("fnr_oppdatert_av"),
         navnInnsender = row.string("navn_innsender"),
         aktiv = row.boolean("aktiv"),
         avtaleversjon = row.stringOrNull("avtaleversjon"),

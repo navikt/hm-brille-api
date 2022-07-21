@@ -40,8 +40,6 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
 
         val behandler =
             runCatching { runBlocking { syfohelsenettproxyClient.hentBehandler(fnrOptiker) } }.getOrElse {
-
-
                 throw SjekkOptikerPluginException(
                     HttpStatusCode.InternalServerError,
                     "Kunne ikke hente data fra syfohelsenettproxyClient: $it",

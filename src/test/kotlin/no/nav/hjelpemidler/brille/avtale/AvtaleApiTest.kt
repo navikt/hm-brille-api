@@ -88,7 +88,12 @@ internal class AvtaleApiTest {
             virksomhetStore.lagreVirksomhet(any())
         } returnsArgument 0
         every {
-            virksomhetStore.oppdaterKontonummerOgEpost(avgiver.orgnr, redigerAvtale.kontonr, redigerAvtale.epost)
+            virksomhetStore.oppdaterKontonummerOgEpost(
+                fnrInnsender,
+                avgiver.orgnr,
+                redigerAvtale.kontonr,
+                redigerAvtale.epost
+            )
         } returns Unit
         every {
             kafkaService.avtaleOpprettet(opprettAvtale.orgnr, opprettAvtale.navn, any())
