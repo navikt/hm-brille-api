@@ -28,8 +28,11 @@ class AvtaleService(
                     log.info {
                         "orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
                     }
-                    enhet.harNæringskode(Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER) ||
-                        enhet.harNæringskode(Næringskode.ANDRE_HELSETJENESTER)
+                    setOf(
+                        Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER,
+                        Næringskode.BUTIKKHANDEL_MED_GULL_OG_SØLVVARER,
+                        Næringskode.ANDRE_HELSETJENESTER,
+                    ).any { enhet.harNæringskode(it) }
                 }
             }
         sikkerLog.info {
