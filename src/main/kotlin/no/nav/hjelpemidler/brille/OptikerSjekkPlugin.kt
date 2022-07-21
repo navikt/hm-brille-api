@@ -74,6 +74,9 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
 class SjekkOptikerPluginException(val status: HttpStatusCode, message: String = "", cause: Throwable? = null) :
     RuntimeException(message, cause)
 
+class PersonFinnesIkkeIHPRException(val status: HttpStatusCode, message: String = "", cause: Throwable? = null) :
+    RuntimeException(message, cause)
+
 class SjekkOptikerPluginConfiguration {
     var syfohelsenettproxyClient: SyfohelsenettproxyClient? = null
     var redisClient: RedisClient? = null

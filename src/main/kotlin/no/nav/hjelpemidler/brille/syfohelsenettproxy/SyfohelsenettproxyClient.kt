@@ -14,6 +14,7 @@ import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.PersonFinnesIkkeIHPRException
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.engineFactory
@@ -56,20 +57,18 @@ class SyfohelsenettproxyClient(
                 HttpStatusCode.OK -> {
                     return response.body()
                 }
-                HttpStatusCode.NotFound -> {
-                    log.warn { "Fikk 404 fra HPR - behandler ikke funnet" }
-                    return null
-                }
             }
             log.error { "Fikk uventet status fra HPR: ${response.status} " }
-            return null
-            //throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
+            throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
         } catch (clientReqException: ClientRequestException) {
             log.error("Fikk clientRequestException fra HPR: ${clientReqException.message}", clientReqException)
-            throw clientReqException
+            if(clientReqException.message.contains("Fant ikke behandler")){
+                throw PersonFinnesIkkeIHPRException(HttpStatusCode.Unauthorized, "Fant ikke behandler i HPR", clientReqException)
+            }else {
+                throw SyfohelsenettproxyClientException("Feil under henting av behandler data", clientReqException)
+            }
         } catch (e: Exception) {
-            log.error { "Fikk uventet feil fra HPR" }
-            throw SyfohelsenettproxyClientException("Feil under henting av behandler data", e)
+            throw SyfohelsenettproxyClientException("Ukjent feil under henting av behandler data", e)
         }
     }
 

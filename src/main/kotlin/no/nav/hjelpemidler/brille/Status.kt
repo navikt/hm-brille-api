@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -29,9 +30,13 @@ fun Application.configureStatusPages() {
         exception<MissingKotlinParameterException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest)
         }
+        exception<PersonFinnesIkkeIHPRException> { call, _ ->
+            call.respond(HttpStatusCode.Unauthorized)
+        }
         exception<Exception> { call, cause ->
             when (cause) {
                 is BadRequestException -> call.respond(HttpStatusCode.BadRequest)
+                is ClientRequestException -> call.respond(HttpStatusCode.Unauthorized)
                 else -> {
                     log.error(cause) {
                         "Noe gikk galt! method: ${call.request.httpMethod}, url: ${call.request.uri}"
