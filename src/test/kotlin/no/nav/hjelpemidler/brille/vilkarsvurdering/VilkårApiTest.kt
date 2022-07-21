@@ -22,13 +22,12 @@ import no.nav.hjelpemidler.brille.pdl.PdlOppslag
 import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
-import no.nav.hjelpemidler.brille.sats.Diopter
 import no.nav.hjelpemidler.brille.sats.SatsType
-import no.nav.hjelpemidler.brille.sats.tilDiopter
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.LocalDate
 
 internal class VilkårApiTest {
@@ -108,7 +107,7 @@ internal class VilkårApiTest {
     @Test
     internal fun `brillestyrke høyreSylinder over minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            høyreSylinder = "2".tilDiopter()
+            høyreSylinder = 2.00
         ),
         forventetResultat = Resultat.JA
     )
@@ -116,7 +115,7 @@ internal class VilkårApiTest {
     @Test
     internal fun `brillestyrke venstreSfære over minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            venstreSfære = "3".tilDiopter()
+            venstreSfære = 3.00
         ),
         forventetResultat = Resultat.JA
     )
@@ -124,7 +123,7 @@ internal class VilkårApiTest {
     @Test
     internal fun `brillestyrke venstreSylinder over minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            venstreSylinder = "1".tilDiopter()
+            venstreSylinder = 1.00
         ),
         forventetResultat = Resultat.JA
     )
@@ -192,7 +191,7 @@ internal class VilkårApiTest {
                 }
                 else -> {
                     vilkårsvurdering.sats shouldNotBe SatsType.INGEN
-                    vilkårsvurdering.beløp shouldNotBe "0"
+                    vilkårsvurdering.beløp shouldNotBe BigDecimal.ZERO
                 }
             }
 
@@ -219,10 +218,10 @@ internal class VilkårApiTest {
         )
 
     private fun defaulVilkårMedBrilleseddel(
-        høyreSfære: Diopter = "0".tilDiopter(),
-        høyreSylinder: Diopter = "0".tilDiopter(),
-        venstreSfære: Diopter = "0".tilDiopter(),
-        venstreSylinder: Diopter = "0".tilDiopter(),
+        høyreSfære: Double = 0.00,
+        høyreSylinder: Double = 0.00,
+        venstreSfære: Double = 0.00,
+        venstreSylinder: Double = 0.00,
     ) =
         defaultVilkårsgrunnlag.copy(
             brilleseddel = Brilleseddel(
@@ -237,10 +236,10 @@ internal class VilkårApiTest {
         orgnr = "",
         fnrBarn = "07480966982",
         brilleseddel = Brilleseddel(
-            høyreSfære = "1".tilDiopter(),
-            høyreSylinder = "0".tilDiopter(),
-            venstreSfære = "0".tilDiopter(),
-            venstreSylinder = "0".tilDiopter()
+            høyreSfære = 1.00,
+            høyreSylinder = 0.00,
+            venstreSfære = 0.00,
+            venstreSylinder = 0.00,
         ),
         bestillingsdato = DATO_ORDNINGEN_STARTET,
         brillepris = "1500".toBigDecimal()

@@ -17,9 +17,7 @@ import no.nav.hjelpemidler.brille.sats.SatsType
 private val log = KotlinLogging.logger { }
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
     post("/vilkarsgrunnlag") {
-
         try {
-
             if (Configuration.prod) { // TODO: fjern før prodsetting
                 call.respond(HttpStatusCode.Unauthorized)
                 return@post
@@ -37,15 +35,15 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
                 else -> SatsType.INGEN
             }
 
-            val beløp = minOf(vilkårsgrunnlag.brillepris, sats.beløp)
+            val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlag.brillepris)
 
             call.respond(
                 VilkårsvurderingDto(
                     resultat = vilkarsvurdering.utfall,
                     sats = sats,
                     satsBeskrivelse = sats.beskrivelse,
-                    satsBeløp = sats.beløp.toString(),
-                    beløp = beløp.toString()
+                    satsBeløp = sats.beløp,
+                    beløp = beløp
                 )
             )
         } catch (e: Exception) {

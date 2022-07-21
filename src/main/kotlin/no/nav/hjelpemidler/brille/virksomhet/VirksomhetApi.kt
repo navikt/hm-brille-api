@@ -58,10 +58,8 @@ fun Route.virksomhetApi(
                 call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 
             val virksomhet = virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)
-            log.info { "Søker etter $orgnr fant $virksomhet"  }
+            log.info { "Søker etter $orgnr fant $virksomhet" }
             val harAktivNavAvtale = virksomhet?.aktiv ?: false
-
-
 
             val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
@@ -79,7 +77,7 @@ fun Route.virksomhetApi(
 }
 
 private fun adresseFor(
-    enhet: Organisasjonsenhet
+    enhet: Organisasjonsenhet,
 ) = if (enhet.forretningsadresse != null) {
     "${enhet.forretningsadresse.adresse.first()}, ${enhet.forretningsadresse.postnummer} ${enhet.forretningsadresse.poststed}"
 } else if (enhet.beliggenhetsadresse != null) {

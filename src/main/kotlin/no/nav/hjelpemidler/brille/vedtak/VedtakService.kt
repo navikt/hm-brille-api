@@ -48,7 +48,7 @@ class VedtakService(
                 sats = sats,
                 satsBeløp = satsBeløp,
                 satsBeskrivelse = sats.beskrivelse,
-                beløp = minOf(satsBeløp, brillepris),
+                beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
             )
         )
 

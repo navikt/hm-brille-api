@@ -17,19 +17,19 @@ internal class SatsApiTest {
     @ParameterizedTest
     @CsvFileSource(resources = ["/SatsKalkulatorTest.csv"], useHeadersInDisplayName = true)
     fun `kalkulator skal utlede riktige satser`(
-        høyreSfære: String,
-        høyreSylinder: String,
-        venstreSfære: String,
-        venstreSylinder: String,
+        høyreSfære: Double,
+        høyreSylinder: Double,
+        venstreSfære: Double,
+        venstreSylinder: Double,
         sats: String,
     ) = routing.test {
         val response = client.post("/brillesedler") {
             setBody(
                 Brilleseddel(
-                    høyreSfære = høyreSfære.tilDiopter(),
-                    høyreSylinder = høyreSylinder.tilDiopter(),
-                    venstreSfære = venstreSfære.tilDiopter(),
-                    venstreSylinder = venstreSylinder.tilDiopter(),
+                    høyreSfære = høyreSfære,
+                    høyreSylinder = høyreSylinder,
+                    venstreSfære = venstreSfære,
+                    venstreSylinder = venstreSylinder,
                 )
             )
         }

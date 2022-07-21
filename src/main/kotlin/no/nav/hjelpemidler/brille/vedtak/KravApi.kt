@@ -59,7 +59,7 @@ data class VedtakDto(
     val bestillingsreferanse: String,
     val behandlingsresultat: Behandlingsresultat,
     val sats: SatsType,
-    val satsBeløp: BigDecimal,
+    val satsBeløp: Int,
     val satsBeskrivelse: String,
     val beløp: BigDecimal,
     val opprettet: LocalDateTime,

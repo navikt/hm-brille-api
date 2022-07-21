@@ -63,6 +63,7 @@ class AvtaleService(
             throw AvtaleManglerTilgangException(orgnr)
         }
         log.info { "Oppretter avtale for orgnr: $orgnr" }
+        sikkerLog.info { "fnrInnsender: $fnrInnsender oppretter avtale: $opprettAvtale" }
         val virksomhet = virksomhetStore.lagreVirksomhet(
             Virksomhet(
                 orgnr = orgnr,
@@ -87,14 +88,21 @@ class AvtaleService(
         )
     }
 
-    suspend fun redigerAvtale(fnrInnsender: String, orgnr: String, redigerAvtale: RedigerAvtale): Avtale {
-        if (!altinnService.erHovedadministratorFor(fnrInnsender, orgnr)) {
+    suspend fun redigerAvtale(fnrOppdatertAv: String, orgnr: String, redigerAvtale: RedigerAvtale): Avtale {
+        if (!altinnService.erHovedadministratorFor(fnrOppdatertAv, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
         val virksomhet = requireNotNull(virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
             "Fant ikke virksomhet med orgnr: $orgnr"
-        }.copy(kontonr = redigerAvtale.kontonr, epost = redigerAvtale.epost)
-        virksomhetStore.oppdaterKontonummerOgEpost(orgnr, redigerAvtale.kontonr, redigerAvtale.epost)
+        }.copy(kontonr = redigerAvtale.kontonr, epost = redigerAvtale.epost, fnrOppdatertAv = fnrOppdatertAv)
+        log.info { "Redigerer avtale for orgnr: $orgnr" }
+        sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr redigerer avtale: $redigerAvtale" }
+        if (virksomhet.fnrInnsender != virksomhet.fnrOppdatertAv) {
+            sikkerLog.warn {
+                "Avtalen ble redigert av en annen en innsender, fnrInnsender: ${virksomhet.fnrInnsender}, fnrOppdatertAv: ${virksomhet.fnrOppdatertAv}"
+            }
+        }
+        virksomhetStore.oppdaterKontonummerOgEpost(fnrOppdatertAv, orgnr, redigerAvtale.kontonr, redigerAvtale.epost)
         return Avtale(
             orgnr = virksomhet.orgnr,
             navn = redigerAvtale.navn,
