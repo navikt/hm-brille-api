@@ -69,7 +69,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
 
         if (!sjekkErOptiker(fnrOptiker)) {
             throw SjekkOptikerPluginException(
-                HttpStatusCode.Unauthorized,
+                HttpStatusCode.Forbidden,
                 "innlogget bruker er ikke registrert som optiker i HPR"
             )
         }
