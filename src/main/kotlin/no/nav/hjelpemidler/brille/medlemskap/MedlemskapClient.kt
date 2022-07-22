@@ -14,12 +14,15 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.request
 import io.ktor.http.ContentType.Application.Json
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.StatusCodeException
 import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import java.time.LocalDate
 import java.util.UUID
@@ -32,7 +35,7 @@ class MedlemskapClient(
     engine: HttpClientEngine = CIO.create(),
 ) {
     private val client = HttpClient(engine) {
-        expectSuccess = true
+        expectSuccess = false
         install(ContentNegotiation) {
             jackson {
                 registerModule(JavaTimeModule())
@@ -64,7 +67,14 @@ class MedlemskapClient(
                 )
             )
         }
-        response.body()
+        if (response.status == HttpStatusCode.OK) {
+            response.body<JsonNode>()
+        }
+        val message =
+            runCatching { response.body<String>() }.getOrElse {
+                "${response.request.method} ${response.request.url} ga status: ${response.status}"
+            }
+        throw StatusCodeException(HttpStatusCode.InternalServerError, "Feil i kall til medlemskap: $message")
     }
 }
 
