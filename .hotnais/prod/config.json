@@ -3,7 +3,8 @@
   "inbound-applications": [
     "hm-brille-frontend",
     "hm-brilleavtale-frontend",
-    "hm-brillerapport"
+    "hm-brillerapport",
+    "hm-brillekalkulator"
   ],
   "port": 9090,
   "db_tier": "db-custom-2-7680",
