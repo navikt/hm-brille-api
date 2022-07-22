@@ -47,7 +47,8 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
                 )
             )
         } catch (e: Exception) {
-            log.error("Feil i vilkårsvurdering", e)
+            log.error(e) { "Feil i vilkårsvurdering" }
+            call.respond(HttpStatusCode.InternalServerError, "Feil i vilkårsvurdering")
         }
     }
 }
