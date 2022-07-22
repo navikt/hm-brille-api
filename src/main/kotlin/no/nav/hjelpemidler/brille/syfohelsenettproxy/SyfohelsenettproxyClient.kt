@@ -19,6 +19,7 @@ import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.engineFactory
 
 private val log = KotlinLogging.logger { }
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class SyfohelsenettproxyClient(
     private val baseUrl: String,
@@ -54,7 +55,9 @@ class SyfohelsenettproxyClient(
             log.info { "Har fått response fra HPR med status: ${response.status}" }
             when (response.status) {
                 HttpStatusCode.OK -> {
-                    return response.body()
+                    val behandler = response.body<Behandler>()
+                    sikkerLog.info { "Fikk svar fra HPR: ${behandler}" }
+                    return behandler
                 }
             }
             throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
