@@ -1,8 +1,8 @@
 package no.nav.hjelpemidler.brille.sats
 
 object Diopter {
-    const val MIN: Double = -99.00
-    const val MAX: Double = +99.00
+    const val MIN: Double = 0.0
+    const val MAX: Double = 99.99
 }
 
 fun ClosedRange<Double>.visning(): String = toString()

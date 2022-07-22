@@ -13,7 +13,6 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 
 private val log = KotlinLogging.logger { }
 
-
 fun Route.authenticateOptiker(
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     redisClient: RedisClient,

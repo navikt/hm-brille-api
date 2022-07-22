@@ -56,7 +56,7 @@ class SyfohelsenettproxyClient(
             when (response.status) {
                 HttpStatusCode.OK -> {
                     val behandler = response.body<Behandler>()
-                    sikkerLog.info { "Fikk svar fra HPR: ${behandler}" }
+                    sikkerLog.info { "Fikk svar fra HPR: $behandler" }
                     return behandler
                 }
             }
