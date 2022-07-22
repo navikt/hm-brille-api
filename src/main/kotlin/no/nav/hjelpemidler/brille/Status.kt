@@ -24,7 +24,7 @@ fun Application.configureStatusPages() {
             call.respond(e.status)
         }
         exception<AvtaleManglerTilgangException> { call, e ->
-            log.warn { e.message ?: "" }
+            log.warn { e.message }
             call.respond(HttpStatusCode.Forbidden, e.message ?: "")
         }
         exception<MissingKotlinParameterException> { call, _ ->
@@ -32,6 +32,10 @@ fun Application.configureStatusPages() {
         }
         exception<PersonFinnesIkkeIHPRException> { call, _ ->
             call.respond(HttpStatusCode.Unauthorized)
+        }
+        exception<StatusCodeException> { call, e ->
+            log.warn { e.message }
+            call.respond(e.status)
         }
         exception<Exception> { call, cause ->
             when (cause) {
@@ -50,3 +54,6 @@ fun Application.configureStatusPages() {
         }
     }
 }
+
+class StatusCodeException(val status: HttpStatusCode, message: String, cause: Throwable? = null) :
+    RuntimeException(message, cause)
