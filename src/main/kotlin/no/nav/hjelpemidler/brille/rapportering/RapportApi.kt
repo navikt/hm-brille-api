@@ -27,9 +27,9 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
     route("/kravlinjer") {
         get("/paged/{orgnr}") {
             val orgnr = call.orgnr()
-//            if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
-//                call.respond(HttpStatusCode.Unauthorized)
-//            }
+            if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
+                call.respond(HttpStatusCode.Unauthorized)
+            }
             val limit = call.request.queryParameters["limit"]?.toInt() ?: 20
             val page = call.request.queryParameters["page"]?.toInt() ?: 1
 
