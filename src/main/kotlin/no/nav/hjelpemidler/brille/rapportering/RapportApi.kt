@@ -32,8 +32,8 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
             val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
 
-            val fraDato = call.request.queryParameters["fraDato"]?.fraDatoToLocalDate()
-            val tilDato = call.request.queryParameters["tilDato"]?.tilDatoToLocalDate()
+            val fraDato = call.request.queryParameters["fraDato"]?.toLocalDate()
+            val tilDato = call.request.queryParameters["tilDato"]?.toLocalDate()?.plusDays(1)
 
             val kravlinjer = rapportService.hentPagedKravlinjer(
                 orgNr = orgnr,
@@ -62,8 +62,8 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
             val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
 
-            val fraDato = call.request.queryParameters["fraDato"]?.fraDatoToLocalDate()
-            val tilDato = call.request.queryParameters["tilDato"]?.tilDatoToLocalDate()
+            val fraDato = call.request.queryParameters["fraDato"]?.toLocalDate()
+            val tilDato = call.request.queryParameters["tilDato"]?.toLocalDate()?.plusDays(1)
 
             val kravlinjer = rapportService.hentKravlinjer(
                 orgNr = orgnr,
@@ -99,7 +99,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
     }
 }
 
-fun String.fraDatoToLocalDate() =
+fun String.toLocalDate() =
     if (this.isBlank()) {
         null
     } else {
@@ -107,16 +107,6 @@ fun String.fraDatoToLocalDate() =
             this,
             DateTimeFormatter.ofPattern("dd.MM.uuuu")
         )
-    }
-
-fun String.tilDatoToLocalDate() =
-    if (this.isBlank()) {
-        null
-    } else {
-        LocalDate.parse(
-            this,
-            DateTimeFormatter.ofPattern("dd.MM.uuuu")
-        ).plusDays(1)
     }
 
 private fun ApplicationCall.orgnr(): String = requireNotNull(parameters["orgnr"]) {
