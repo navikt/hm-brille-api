@@ -12,7 +12,6 @@ import io.ktor.server.response.respondOutputStream
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
@@ -20,8 +19,6 @@ import java.io.OutputStream
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Date
-
-private val log = KotlinLogging.logger { }
 
 fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnService) {
     route("/kravlinjer") {
@@ -35,23 +32,8 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
             val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
 
-            val fraDato = call.request.queryParameters["fraDato"]?.let {
-                LocalDate.parse(
-                    it,
-                    DateTimeFormatter.ofPattern("dd.MM.uuuu")
-                )
-            }
-
-            val tilDato = call.request.queryParameters["tilDato"]?.let {
-                if (it.isBlank()) {
-                    null
-                } else {
-                    LocalDate.parse(
-                        it,
-                        DateTimeFormatter.ofPattern("dd.MM.uuuu")
-                    ).plusDays(1)
-                }
-            }
+            val fraDato = call.request.queryParameters["fraDato"]?.fraDatoToLocalDate()
+            val tilDato = call.request.queryParameters["tilDato"]?.tilDatoToLocalDate()
 
             val kravlinjer = rapportService.hentPagedKravlinjer(
                 orgNr = orgnr,
@@ -77,7 +59,19 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             if (!altinnService.erHovedadministratorFor(call.extractFnr(), orgnr)) {
                 call.respond(HttpStatusCode.Unauthorized)
             }
-            val kravlinjer = rapportService.hentKravlinjer(orgnr)
+
+            val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
+
+            val fraDato = call.request.queryParameters["fraDato"]?.fraDatoToLocalDate()
+            val tilDato = call.request.queryParameters["tilDato"]?.tilDatoToLocalDate()
+
+            val kravlinjer = rapportService.hentKravlinjer(
+                orgNr = orgnr,
+                kravFilter = kravFilter,
+                fraDato = fraDato,
+                tilDato = tilDato
+            )
+
             call.response.header(
                 HttpHeaders.ContentDisposition,
                 ContentDisposition.Attachment.withParameter(
@@ -86,6 +80,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 )
                     .toString()
             )
+
             call.respondOutputStream(
                 status = HttpStatusCode.OK,
                 contentType = ContentType.Text.CSV,
@@ -103,6 +98,26 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
         write("\n".toByteArray())
     }
 }
+
+fun String.fraDatoToLocalDate() =
+    if (this.isBlank()) {
+        null
+    } else {
+        LocalDate.parse(
+            this,
+            DateTimeFormatter.ofPattern("dd.MM.uuuu")
+        )
+    }
+
+fun String.tilDatoToLocalDate() =
+    if (this.isBlank()) {
+        null
+    } else {
+        LocalDate.parse(
+            this,
+            DateTimeFormatter.ofPattern("dd.MM.uuuu")
+        ).plusDays(1)
+    }
 
 private fun ApplicationCall.orgnr(): String = requireNotNull(parameters["orgnr"]) {
     "Mangler orgnr i URL"

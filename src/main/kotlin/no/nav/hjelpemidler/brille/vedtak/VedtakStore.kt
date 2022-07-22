@@ -16,7 +16,12 @@ interface VedtakStore : Store {
     fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
-    fun hentKravlinjerForOrgNummer(orgNr: String): List<Kravlinje>
+    fun hentKravlinjerForOrgNummer(
+        orgNr: String,
+        kravFilter: KravFilter?,
+        fraDato: LocalDate?,
+        tilDato: LocalDate?
+    ): List<Kravlinje>
 
     fun hentPagedKravlinjerForOrgNummer(
         orgNr: String,
@@ -119,14 +124,22 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         return vedtak.copy(id = id)
     }
 
-    override fun hentKravlinjerForOrgNummer(orgNr: String): List<Kravlinje> {
+    override fun hentKravlinjerForOrgNummer(
+        orgNr: String,
+        kravFilter: KravFilter?,
+        fraDato: LocalDate?,
+        tilDato: LocalDate?
+    ): List<Kravlinje> {
         @Language("PostgreSQL")
-        val sql = """
-            SELECT id, bestillingsdato, behandlingsresultat, opprettet, belop, bestillingsreferanse
-            FROM vedtak_v1
-            WHERE orgnr = :orgNr 
-        """.trimIndent()
-        return ds.queryList(sql, mapOf("orgNr" to orgNr)) { row ->
+        val sql = kravlinjeQuery(kravFilter, tilDato)
+        return ds.queryList(
+            sql,
+            mapOf(
+                "orgNr" to orgNr,
+                "fraDato" to fraDato,
+                "tilDato" to tilDato
+            )
+        ) { row ->
             Kravlinje(
                 id = row.long("id"),
                 bestillingsdato = row.localDate("bestillingsdato"),

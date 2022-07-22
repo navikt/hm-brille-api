@@ -8,8 +8,18 @@ import java.time.LocalDate
 class RapportService(
     private val vedtakStore: VedtakStore,
 ) {
-    fun hentKravlinjer(orgNr: String): List<Kravlinje> {
-        val kravlinjer = vedtakStore.hentKravlinjerForOrgNummer(orgNr)
+    fun hentKravlinjer(
+        orgNr: String,
+        kravFilter: KravFilter? = null,
+        fraDato: LocalDate? = null,
+        tilDato: LocalDate? = null
+    ): List<Kravlinje> {
+        val kravlinjer = vedtakStore.hentKravlinjerForOrgNummer(
+            orgNr = orgNr,
+            kravFilter = kravFilter,
+            fraDato = fraDato,
+            tilDato = tilDato
+        )
         return kravlinjer
     }
 
