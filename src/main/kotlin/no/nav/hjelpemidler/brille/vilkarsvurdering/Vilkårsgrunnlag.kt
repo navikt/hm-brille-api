@@ -9,7 +9,7 @@ import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import java.time.LocalDate
 
 data class Vilkårsgrunnlag(
-    val vedtakForBarn: List<EksisterendeVedtak>,
+    val vedtakBarn: List<EksisterendeVedtak>,
     val pdlOppslagBarn: PdlOppslag<Person?>,
     val medlemskapResultat: MedlemskapResultat,
     val brilleseddel: Brilleseddel,
@@ -20,5 +20,6 @@ data class Vilkårsgrunnlag(
     val minsteSfære: Double = 1.0,
     val minsteSylinder: Double = 1.0,
 ) {
-    val fodselsdatoBruker: LocalDate? get() = pdlOppslagBarn.data?.fodselsdato()
+    val barnetsFødselsdato: LocalDate? get() = pdlOppslagBarn.data?.fodselsdato()
+    val barnetsAlderPåBestillingsdato: Int? get() = barnetsFødselsdato?.until(bestillingsdato)?.years
 }

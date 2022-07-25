@@ -8,7 +8,6 @@ import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingException
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
-import java.util.UUID
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
@@ -19,10 +18,9 @@ class VedtakService(
 ) {
     suspend fun lagVedtak(fnrInnsender: String, krav: KravDto): Vedtak<Vilkårsgrunnlag> {
         val vilkårsgrunnlag = krav.vilkårsgrunnlag
-        val vilkårsvurdering = vilkårsvurderingService.vurderVilkårBrille(vilkårsgrunnlag)
+        val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(vilkårsgrunnlag)
 
-        // TODO: Fjern prodsjekk
-        if (Configuration.profile != Configuration.Profile.PROD && vilkårsvurdering.utfall != Resultat.JA) {
+        if (vilkårsvurdering.utfall != Resultat.JA) {
             sikkerLog.info {
                 "Vilkårsvurderingen ga uventet resultat:\n${vilkårsvurdering.toJson()}"
             }
@@ -35,7 +33,7 @@ class VedtakService(
         val satsBeløp = sats.beløp
         val brillepris = vilkårsgrunnlag.brillepris
 
-        val vedtak = vedtakStore.lagreVedtak(
+        return vedtakStore.lagreVedtak(
             Vedtak(
                 fnrBarn = vilkårsgrunnlag.fnrBarn,
                 fnrInnsender = fnrInnsender,
@@ -50,30 +48,8 @@ class VedtakService(
                 satsBeskrivelse = sats.beskrivelse,
                 beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
             )
-        )
-
-        // Journalfør søknad/vedtak som dokument i joark på barnet
-        kafkaService.produceEvent(
-            vedtak.fnrBarn,
-            KafkaService.BarnebrilleVedtakData(
-                eventId = UUID.randomUUID(),
-                eventName = "hm-barnebrillevedtak-opprettet",
-                fnr = vedtak.fnrBarn,
-                brukersNavn = krav.brukersNavn,
-                orgnr = vedtak.orgnr,
-                orgNavn = krav.orgNavn,
-                orgAdresse = krav.orgAdresse,
-                navnAvsender = "", // TODO: hvilket navn skal dette egentlig være? Navnet til innbygger (barn) eller optiker?
-                sakId = vedtak.id.toString(),
-                brilleseddel = vilkårsgrunnlag.brilleseddel,
-                bestillingsdato = vilkårsgrunnlag.bestillingsdato,
-                bestillingsreferanse = krav.bestillingsreferanse,
-                satsBeskrivelse = vedtak.satsBeskrivelse,
-                satsBeløp = vedtak.satsBeløp,
-                beløp = vedtak.beløp
-            )
-        )
-
-        return vedtak
+        ).also {
+            kafkaService.vedtakFattet(krav = krav, vedtak = it)
+        }
     }
 }

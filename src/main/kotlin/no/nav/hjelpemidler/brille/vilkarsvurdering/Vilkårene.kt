@@ -14,7 +14,7 @@ object Vilkårene {
         beskrivelse = "Har barnet allerede vedtak om brille i kalenderåret?",
         identifikator = "HarIkkeVedtakIKalenderåret v1"
     ) { grunnlag ->
-        val harIkkeVedtakIKalenderåret = grunnlag.vedtakForBarn.none { vedtak ->
+        val harIkkeVedtakIKalenderåret = grunnlag.vedtakBarn.none { vedtak ->
             vedtak.bestillingsdato.year == grunnlag.bestillingsdato.year
         }
         when (harIkkeVedtakIKalenderåret) {
@@ -27,10 +27,10 @@ object Vilkårene {
         beskrivelse = "Var barnet under 18 år på bestillingsdato?",
         identifikator = "Under18ÅrPåBestillingsdato v1"
     ) { grunnlag ->
-        val fodselsdato = grunnlag.fodselsdatoBruker
+        val barnetsAlder = grunnlag.barnetsAlderPåBestillingsdato
         when {
-            fodselsdato == null -> nei("Barnets fødselsdato er ukjent")
-            fodselsdato.until(grunnlag.bestillingsdato).years < 18 -> ja("Barnet var under 18 år på bestillingsdato")
+            barnetsAlder == null -> nei("Barnets fødselsdato er ukjent")
+            barnetsAlder < 18 -> ja("Barnet var under 18 år på bestillingsdato")
             else -> nei("Barnet var 18 år eller eldre på bestillingsdato")
         }
     }
@@ -87,13 +87,13 @@ object Vilkårene {
     }
 
     val Brille = (
-        HarIkkeVedtakIKalenderåret og
-            Under18ÅrPåBestillingsdato og
-            MedlemAvFolketrygden og
-            Brillestyrke og
-            Bestillingsdato og
-            BestillingsdatoTilbakeITid
-        ).med("Brille_v1", "Personen oppfyller vilkår for søknad om barnebriller")
+            HarIkkeVedtakIKalenderåret og
+                    Under18ÅrPåBestillingsdato og
+                    MedlemAvFolketrygden og
+                    Brillestyrke og
+                    Bestillingsdato og
+                    BestillingsdatoTilbakeITid
+            ).med("Brille_v1", "Personen oppfyller vilkår for krav om barnebriller")
 
     private fun LocalDate.formatert(): String =
         this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))

@@ -45,7 +45,7 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
             put("/{orgnr}") {
                 val orgnr = call.orgnr()
                 val redigerAvtale = call.receive<RedigerAvtale>()
-                val avtale = avtaleService.redigerAvtale(call.extractFnr(), orgnr, redigerAvtale)
+                val avtale = avtaleService.oppdaterAvtale(call.extractFnr(), orgnr, redigerAvtale)
                 call.respond(HttpStatusCode.OK, avtale)
             }
         }

@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.avtale
 
+import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import java.time.LocalDateTime
 
 data class Avtale(
@@ -11,4 +12,15 @@ data class Avtale(
     val avtaleversjon: String? = null,
     val opprettet: LocalDateTime? = null,
     val oppdatert: LocalDateTime? = null,
-)
+) {
+    constructor(virksomhet: Virksomhet, navn: String) : this(
+        orgnr = virksomhet.orgnr,
+        navn = navn,
+        aktiv = virksomhet.aktiv,
+        kontonr = virksomhet.kontonr,
+        epost = virksomhet.epost,
+        avtaleversjon = virksomhet.avtaleversjon,
+        opprettet = virksomhet.opprettet,
+        oppdatert = virksomhet.oppdatert,
+    )
+}

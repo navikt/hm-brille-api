@@ -36,7 +36,7 @@ object HentPersonExtensions {
     fun Person.navn(): String {
         val navn = navn.firstOrDefault(Navn("", "", ""))
         return listOfNotNull(navn.fornavn, navn.mellomnavn, navn.etternavn)
-            .filterNot { it.isNullOrBlank() }
+            .filterNot { it.isBlank() }
             .joinToString(" ")
             .capitalizeWord()
     }

@@ -16,13 +16,13 @@ class VilkårsvurderingService(
     private val medlemskapBarn: MedlemskapBarn,
     private val dagensDatoFactory: () -> LocalDate = { LocalDate.now() },
 ) {
-    suspend fun vurderVilkårBrille(vilkårsgrunnlagDto: VilkårsgrunnlagDto): Vilkårsvurdering<Vilkårsgrunnlag> {
-        val vedtakForBarn = vedtakStore.hentVedtakForBarn(vilkårsgrunnlagDto.fnrBarn)
+    suspend fun vurderVilkår(vilkårsgrunnlagDto: VilkårsgrunnlagDto): Vilkårsvurdering<Vilkårsgrunnlag> {
+        val vedtakBarn = vedtakStore.hentVedtakForBarn(vilkårsgrunnlagDto.fnrBarn)
         val pdlOppslagBarn = pdlClient.hentPerson(vilkårsgrunnlagDto.fnrBarn)
         val medlemskapResultat =
             medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBarn, vilkårsgrunnlagDto.bestillingsdato)
         val vilkårsgrunnlag = Vilkårsgrunnlag(
-            vedtakForBarn = vedtakForBarn,
+            vedtakBarn = vedtakBarn,
             pdlOppslagBarn = pdlOppslagBarn,
             medlemskapResultat = medlemskapResultat,
             brilleseddel = vilkårsgrunnlagDto.brilleseddel,

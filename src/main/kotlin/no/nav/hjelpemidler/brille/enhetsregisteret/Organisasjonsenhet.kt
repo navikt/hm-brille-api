@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class Organisasjonsenhet(
     @JsonProperty("organisasjonsnummer")
     val orgnr: String,
-    val overordnetEnhet: String?,
+    val overordnetEnhet: String? = null,
     val navn: String,
-    val forretningsadresse: Postadresse?, // orgenhet bruker forretningsadresse
-    val beliggenhetsadresse: Postadresse?, // underenhet bruker beliggenhetsadresse
-    val naeringskode1: Næringskode?,
-    val naeringskode2: Næringskode?,
-    val naeringskode3: Næringskode?,
+    val forretningsadresse: Postadresse? = null, // orgenhet bruker forretningsadresse
+    val beliggenhetsadresse: Postadresse? = null, // underenhet bruker beliggenhetsadresse
+    val naeringskode1: Næringskode? = null,
+    val naeringskode2: Næringskode? = null,
+    val naeringskode3: Næringskode? = null,
 ) {
     fun næringskoder(): Set<Næringskode> = setOfNotNull(
         naeringskode1,

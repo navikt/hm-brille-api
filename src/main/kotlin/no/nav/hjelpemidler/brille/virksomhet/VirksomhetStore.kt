@@ -16,7 +16,7 @@ interface VirksomhetStore : Store {
     fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet?
     fun hentVirksomheterForInnsender(fnrInnsender: String): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet
-    fun oppdaterKontonummerOgEpost(fnrOppdatertAv: String, orgnr: String, kontonr: String, epost: String)
+    fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet
 }
 
 data class Virksomhet(
@@ -25,7 +25,7 @@ data class Virksomhet(
     val epost: String? = null,
     val fnrInnsender: String,
     val fnrOppdatertAv: String? = null,
-    val navnInnsender: String,
+    val navnInnsender: String, // fixme -> denne brukes ikke, skal vi slette den?
     val aktiv: Boolean,
     val avtaleversjon: String? = null,
     val opprettet: LocalDateTime = LocalDateTime.now(),
@@ -86,7 +86,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         return virksomhet
     }
 
-    override fun oppdaterKontonummerOgEpost(fnrOppdatertAv: String, orgnr: String, kontonr: String, epost: String) {
+    override fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet {
         @Language("PostgreSQL")
         val sql = """
             UPDATE virksomhet_v1
@@ -96,13 +96,14 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
         ds.update(
             sql,
             mapOf(
-                "kontonr" to kontonr,
-                "epost" to epost,
-                "fnr_oppdatert_av" to fnrOppdatertAv,
-                "orgnr" to orgnr,
-                "oppdatert" to LocalDateTime.now()
+                "kontonr" to virksomhet.kontonr,
+                "epost" to virksomhet.epost,
+                "fnr_oppdatert_av" to virksomhet.fnrOppdatertAv,
+                "orgnr" to virksomhet.orgnr,
+                "oppdatert" to virksomhet.oppdatert
             )
         ).validate()
+        return virksomhet
     }
 
     private fun mapper(row: Row): Virksomhet = Virksomhet(

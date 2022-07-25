@@ -51,12 +51,10 @@ internal class AvtaleApiTest {
     )
     private val opprettAvtale = OpprettAvtale(
         orgnr = avgiver.orgnr,
-        navn = avgiver.navn,
         kontonr = virksomhet.kontonr,
         epost = "test@test"
     )
     private val redigerAvtale = RedigerAvtale(
-        navn = avgiver.navn,
         kontonr = virksomhet.kontonr,
         epost = opprettAvtale.epost
     )
@@ -88,15 +86,10 @@ internal class AvtaleApiTest {
             virksomhetStore.lagreVirksomhet(any())
         } returnsArgument 0
         every {
-            virksomhetStore.oppdaterKontonummerOgEpost(
-                fnrInnsender,
-                avgiver.orgnr,
-                redigerAvtale.kontonr,
-                redigerAvtale.epost
-            )
-        } returns Unit
+            virksomhetStore.oppdaterVirksomhet(any())
+        } returnsArgument 0
         every {
-            kafkaService.avtaleOpprettet(opprettAvtale.orgnr, opprettAvtale.navn, any())
+            kafkaService.avtaleOpprettet(any())
         } returns Unit
     }
 
