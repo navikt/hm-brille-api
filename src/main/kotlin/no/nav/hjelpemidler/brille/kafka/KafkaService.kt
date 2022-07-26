@@ -1,7 +1,9 @@
 package no.nav.hjelpemidler.brille.kafka
 
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
@@ -51,19 +53,21 @@ class KafkaService(
     }
 
     fun vedtakFattet(krav: KravDto, vedtak: Vedtak<Vilkårsgrunnlag>) {
+        val fnrBarn = vedtak.fnrBarn
+        val brilleseddel = krav.vilkårsgrunnlag.brilleseddel
         // journalfør krav/vedtak som dokument i joark på barnet
         produceEvent(
-            vedtak.fnrBarn,
+            fnrBarn,
             VedtakOpprettet(
                 opprettetDato = vedtak.opprettet,
-                fnr = vedtak.fnrBarn,
+                fnr = fnrBarn,
                 brukersNavn = krav.brukersNavn,
                 orgnr = vedtak.orgnr,
                 orgNavn = krav.orgNavn,
                 orgAdresse = krav.orgAdresse,
                 navnAvsender = "", // todo -> hvilket navn skal dette egentlig være? navnet til innbygger (barn) eller optiker?
                 sakId = vedtak.id.toString(),
-                brilleseddel = krav.vilkårsgrunnlag.brilleseddel,
+                brilleseddel = brilleseddel,
                 bestillingsdato = vedtak.bestillingsdato,
                 bestillingsreferanse = vedtak.bestillingsreferanse,
                 satsBeløp = vedtak.satsBeløp,
@@ -72,13 +76,16 @@ class KafkaService(
             )
         )
         sendTilBigQuery(
-            vedtak.fnrBarn,
+            fnrBarn,
             VedtakStatistikk(
                 opprettet = vedtak.opprettet,
                 orgnr = vedtak.orgnr,
                 orgNavn = krav.orgNavn,
                 barnetsAlder = vedtak.vilkårsvurdering.grunnlag.barnetsAlderPåBestillingsdato,
-                brilleseddel = krav.vilkårsgrunnlag.brilleseddel,
+                høyreSfære = brilleseddel.høyreSfære,
+                høyreSylinder = brilleseddel.høyreSylinder,
+                venstreSfære = brilleseddel.venstreSfære,
+                venstreSylinder = brilleseddel.venstreSylinder,
                 bestillingsdato = vedtak.bestillingsdato,
                 brillepris = vedtak.brillepris,
                 behandlingsresultat = vedtak.behandlingsresultat,
@@ -134,11 +141,27 @@ class KafkaService(
         val beløp: BigDecimal,
     )
 
-    private annotation class BigQueryHendelse(
+    /**
+     * Lager navn på nøkler i JSON som er kompatible med direkte insert i BigQuery
+     * e.g. blir høyreSfære -> hoyre_sfere
+     */
+    internal class BigQueryStrategy : SnakeCaseStrategy() {
+        override fun translate(input: String?): String? {
+            val translated = super.translate(input) ?: return input
+            return translated
+                .replace('æ', 'e')
+                .replace('ø', 'o')
+                .replace('å', 'a')
+        }
+    }
+
+    @JsonNaming(BigQueryStrategy::class)
+    internal annotation class BigQueryHendelse(
         val eventName: String = "hm-bigquery-sink-hendelse",
         val schemaId: String,
     )
 
+    @JsonNaming(BigQueryStrategy::class)
     @BigQueryHendelse(schemaId = "avtale_v1")
     data class AvtaleStatistikk(
         val orgnr: String,
@@ -146,13 +169,17 @@ class KafkaService(
         val opprettet: LocalDateTime,
     )
 
+    @JsonNaming(BigQueryStrategy::class)
     @BigQueryHendelse(schemaId = "vedtak_v1")
     internal data class VedtakStatistikk(
         val opprettet: LocalDateTime,
         val orgnr: String,
         val orgNavn: String,
         val barnetsAlder: Int?,
-        val brilleseddel: Brilleseddel,
+        val høyreSfære: Double,
+        val høyreSylinder: Double,
+        val venstreSfære: Double,
+        val venstreSylinder: Double,
         val bestillingsdato: LocalDate,
         val brillepris: BigDecimal,
         val behandlingsresultat: Behandlingsresultat,
