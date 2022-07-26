@@ -2,11 +2,10 @@ package no.nav.hjelpemidler.brille.rapportering
 
 import no.nav.hjelpemidler.brille.store.Page
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
-import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import java.time.LocalDate
 
 class RapportService(
-    private val vedtakStore: VedtakStore,
+    private val rapportStore: RapportStore,
 ) {
     fun hentKravlinjer(
         orgNr: String,
@@ -14,7 +13,7 @@ class RapportService(
         fraDato: LocalDate? = null,
         tilDato: LocalDate? = null
     ): List<Kravlinje> {
-        val kravlinjer = vedtakStore.hentKravlinjerForOrgNummer(
+        val kravlinjer = rapportStore.hentKravlinjerForOrgNummer(
             orgNr = orgNr,
             kravFilter = kravFilter,
             fraDato = fraDato,
@@ -31,7 +30,7 @@ class RapportService(
         limit: Int = 20,
         offset: Int = 0,
     ): Page<Kravlinje> {
-        val kravlinjer = vedtakStore.hentPagedKravlinjerForOrgNummer(
+        val kravlinjer = rapportStore.hentPagedKravlinjerForOrgNummer(
             orgNr = orgNr,
             kravFilter = kravFilter,
             fraDato = fraDato,

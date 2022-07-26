@@ -37,6 +37,7 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.rapportering.RapportService
+import no.nav.hjelpemidler.brille.rapportering.RapportStorePostgres
 import no.nav.hjelpemidler.brille.rapportering.rapportApi
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
@@ -99,6 +100,7 @@ fun Application.setupRoutes() {
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
     val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
     val vedtakStore = VedtakStorePostgres(dataSource)
+    val rapportStore = RapportStorePostgres(dataSource)
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
     val innsenderStore = InnsenderStorePostgres(dataSource)
     val innsenderService = InnsenderService(innsenderStore)
@@ -124,7 +126,7 @@ fun Application.setupRoutes() {
     val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
     val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService)
-    val rapportService = RapportService(vedtakStore)
+    val rapportService = RapportService(rapportStore)
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
