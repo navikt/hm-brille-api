@@ -21,7 +21,7 @@ import no.nav.hjelpemidler.brille.engineFactory
 private val log = KotlinLogging.logger {}
 
 class AzureAdClient(
-    private val props: Configuration.AzureAdProperties = Configuration.azureAdProperties,
+    private val props: Configuration.AzureAdProperties,
     engine: HttpClientEngine = engineFactory { StubEngine.azureAd() },
 ) {
     private val client = HttpClient(engine) {
@@ -75,7 +75,7 @@ data class TokenError(
 )
 
 fun Auth.azureAd(scope: String) {
-    val client = AzureAdClient()
+    val client = AzureAdClient(Configuration.azureAdProperties)
     bearer {
         loadTokens {
             log.info { "loadTokens med scope: $scope" }
