@@ -9,8 +9,8 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.request.header
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
-import no.nav.hjelpemidler.brille.azuread.OpenIDClient
 import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.brille.jsonMapper
@@ -23,16 +23,16 @@ import java.util.UUID
 private val log = KotlinLogging.logger { }
 
 class PdlClient(
-    baseUrl: String,
-    private val scope: String,
-    private val azureAdClient: OpenIDClient,
+    props: Configuration.PdlProperties,
     engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
 ) {
+    private val baseUrl = props.baseUrl
+    private val scope = props.scope
     private val client = GraphQLKtorClient(
         url = URL(baseUrl),
         httpClient = HttpClient(engine) {
             install(Auth) {
-                azureAd(azureAdClient, scope)
+                azureAd(scope)
             }
         },
         serializer = GraphQLClientJacksonSerializer(),

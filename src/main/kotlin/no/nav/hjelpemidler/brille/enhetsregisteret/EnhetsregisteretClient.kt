@@ -12,10 +12,12 @@ import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.Configuration
 
 private val log = KotlinLogging.logger { }
 
-class EnhetsregisteretClient(private val baseUrl: String) {
+class EnhetsregisteretClient(props: Configuration.EnhetsregisteretProperties) {
+    private val baseUrl = props.baseUrl
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
             jackson {

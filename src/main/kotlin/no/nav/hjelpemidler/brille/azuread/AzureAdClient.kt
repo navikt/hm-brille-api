@@ -20,14 +20,10 @@ import no.nav.hjelpemidler.brille.engineFactory
 
 private val log = KotlinLogging.logger {}
 
-interface OpenIDClient {
-    suspend fun getToken(scope: String): BearerTokens
-}
-
 class AzureAdClient(
     private val props: Configuration.AzureAdProperties = Configuration.azureAdProperties,
     engine: HttpClientEngine = engineFactory { StubEngine.azureAd() },
-) : OpenIDClient {
+) {
     private val client = HttpClient(engine) {
         expectSuccess = false
         install(ContentNegotiation) {
@@ -61,7 +57,7 @@ class AzureAdClient(
         throw AzureAdClientException(messageAndError.first, messageAndError.second)
     }
 
-    override suspend fun getToken(scope: String): BearerTokens = BearerTokens(grant(scope).accessToken, "")
+    suspend fun getToken(scope: String): BearerTokens = BearerTokens(grant(scope).accessToken, "")
 }
 
 class AzureAdClientException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
@@ -78,7 +74,8 @@ data class TokenError(
     val errorDescription: String? = null,
 )
 
-fun Auth.azureAd(client: OpenIDClient, scope: String) {
+fun Auth.azureAd(scope: String) {
+    val client = AzureAdClient()
     bearer {
         loadTokens {
             log.info { "loadTokens med scope: $scope" }

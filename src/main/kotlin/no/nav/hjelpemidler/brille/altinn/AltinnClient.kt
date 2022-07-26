@@ -25,7 +25,7 @@ const val ROLE_DEFINITION_CODE_HOVEDADMINISTRATOR = "HADM"
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
-class AltinnClient(properties: Configuration.AltinnProperties) {
+class AltinnClient(props: Configuration.AltinnProperties) {
     private val client: HttpClient = HttpClient(CIO) {
         install(ContentNegotiation) {
             jackson {
@@ -36,13 +36,13 @@ class AltinnClient(properties: Configuration.AltinnProperties) {
             headers {
                 accept(ContentType.Application.Json)
                 contentType(ContentType.Application.Json)
-                header("X-Consumer-ID", properties.proxyConsumerId)
-                header("X-NAV-APIKEY", properties.apiGWKey)
-                header("APIKEY", properties.apiKey)
+                header("X-Consumer-ID", props.proxyConsumerId)
+                header("X-NAV-APIKEY", props.apiGWKey)
+                header("APIKEY", props.apiKey)
             }
         }
     }
-    private val baseUrl = properties.baseUrl
+    private val baseUrl = props.baseUrl
 
     suspend fun hentAvgivere(fnr: String): List<Avgiver> {
         val response = client.get("$baseUrl/reportees") {

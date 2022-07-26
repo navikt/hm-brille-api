@@ -22,7 +22,6 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StatusCodeException
-import no.nav.hjelpemidler.brille.azuread.OpenIDClient
 import no.nav.hjelpemidler.brille.azuread.azureAd
 import java.time.LocalDate
 import java.util.UUID
@@ -30,10 +29,11 @@ import java.util.UUID
 private val log = KotlinLogging.logger {}
 
 class MedlemskapClient(
-    private val props: Configuration.MedlemskapOppslagProperties = Configuration.medlemskapOppslagProperties,
-    private val azureAdClient: OpenIDClient,
+    props: Configuration.MedlemskapOppslagProperties,
     engine: HttpClientEngine = CIO.create(),
 ) {
+    private val baseUrl = props.baseUrl
+    private val scope = props.scope
     private val client = HttpClient(engine) {
         expectSuccess = false
         install(ContentNegotiation) {
@@ -44,13 +44,13 @@ class MedlemskapClient(
             }
         }
         install(Auth) {
-            azureAd(azureAdClient, props.scope)
+            azureAd(scope)
         }
     }
 
     fun slåOppMedlemskap(fnr: String, correlationId: String = UUID.randomUUID().toString()): JsonNode = runBlocking {
         val now = LocalDate.now()
-        val response = client.post(props.baseUrl) {
+        val response = client.post(baseUrl) {
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
             contentType(Json)
@@ -67,6 +67,7 @@ class MedlemskapClient(
             response.body()
         } else {
             val message = runCatching { response.body<String>() }.getOrElse {
+                log.warn(it) { "Klarte ikke å hente response body som string" }
                 "${response.request.method.value} ${response.request.url} ga status: ${response.status}"
             }
             throw StatusCodeException(HttpStatusCode.InternalServerError, "Feil i kall til medlemskap: $message")

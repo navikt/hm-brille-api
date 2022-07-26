@@ -125,7 +125,7 @@ data class PagedKravlinjeliste(
     val kravlinjer: List<Kravlinje>,
     val totalCount: Int,
     val currentPage: Int,
-    val pageSize: Int
+    val pageSize: Int,
 )
 
 enum class KravFilter {

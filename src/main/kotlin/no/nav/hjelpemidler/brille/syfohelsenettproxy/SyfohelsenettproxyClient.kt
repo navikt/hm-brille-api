@@ -13,8 +13,8 @@ import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
-import no.nav.hjelpemidler.brille.azuread.OpenIDClient
 import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
 
@@ -22,11 +22,11 @@ private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class SyfohelsenettproxyClient(
-    private val baseUrl: String,
-    private val scope: String,
-    private val azureAdClient: OpenIDClient,
+    props: Configuration.SyfohelsenettproxyProperties,
     engine: HttpClientEngine = engineFactory { StubEngine.syfohelsenettproxy() },
 ) {
+    private val baseUrl = props.baseUrl
+    private val scope = props.scope
     private val client = HttpClient(engine) {
         expectSuccess = true
         install(ContentNegotiation) {
@@ -37,7 +37,7 @@ class SyfohelsenettproxyClient(
             }
         }
         install(Auth) {
-            azureAd(azureAdClient, scope)
+            azureAd(scope)
         }
     }
 
@@ -67,16 +67,4 @@ class SyfohelsenettproxyClient(
             throw SyfohelsenettproxyClientException("Ukjent feil under henting av behandler data", e)
         }
     }
-
-    suspend fun hentBehandlerMedHprNummer(hprnr: String): Behandler = runCatching {
-        val url = "$baseUrl/api/v2/behandlerMedHprNummer"
-        log.info { "Henter behandler data med url: $url" }
-        val response = client.get(url) {
-            headers["hprNummer"] = hprnr
-        }
-        if (response.status == HttpStatusCode.OK) {
-            return response.body()
-        }
-        throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
-    }.getOrElse { throw SyfohelsenettproxyClientException("Feil under henting av behandler data", it) }
 }

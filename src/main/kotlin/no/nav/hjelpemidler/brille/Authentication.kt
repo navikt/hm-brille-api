@@ -22,9 +22,9 @@ const val TOKEN_X_AUTH = "tokenX"
 private val log = KotlinLogging.logger {}
 
 fun Application.installAuthentication(httpClient: HttpClient) {
-    var tokenXConfig: AuthenticationConfig
+    var tokenXConfig: AuthenticationConfiguration
     runBlocking(Dispatchers.IO) {
-        tokenXConfig = AuthenticationConfig(
+        tokenXConfig = AuthenticationConfiguration(
             metadata = httpClient.get(Configuration.tokenXProperties.wellKnownUrl).body(),
             clientId = Configuration.tokenXProperties.clientId,
         )
@@ -59,7 +59,7 @@ fun Application.installAuthentication(httpClient: HttpClient) {
     }
 }
 
-private data class AuthenticationConfig(
+private data class AuthenticationConfiguration(
     val metadata: Metadata,
     val clientId: String,
 ) {

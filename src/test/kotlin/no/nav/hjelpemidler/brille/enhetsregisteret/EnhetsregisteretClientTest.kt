@@ -7,7 +7,7 @@ import no.nav.hjelpemidler.brille.Configuration
 import kotlin.test.Test
 
 internal class EnhetsregisteretClientTest {
-    private val client = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
+    private val client = EnhetsregisteretClient(Configuration.enhetsregisteretProperties)
 
     @Test
     internal fun `henter organisasjonsenhet`() = runBlocking(Dispatchers.IO) {

@@ -151,8 +151,8 @@ object Configuration {
     )
 
     data class PdlProperties(
-        val graphqlUri: String = this["pdl.graphql-uri"],
-        val apiScope: String = this["pdl.apiScope"],
+        val baseUrl: String = this["pdl.graphql-uri"],
+        val scope: String = this["pdl.apiScope"],
     )
 
     data class TokenXProperties(

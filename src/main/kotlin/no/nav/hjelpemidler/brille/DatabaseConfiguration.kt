@@ -12,19 +12,17 @@ import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
 
-class DatabaseConfiguration(
-    private val dbProperties: Configuration.DatabaseProperties = Configuration.dbProperties,
-) {
+class DatabaseConfiguration(private val props: Configuration.DatabaseProperties) {
     fun dataSource(): DataSource {
         if (!waitForDB(10.minutes)) {
             throw RuntimeException("Databasen ble ikke tilgjengelig innenfor tidsfristen")
         }
 
         val dataSource = HikariDataSource().apply {
-            username = dbProperties.databaseUser
-            password = dbProperties.databasePassword
+            username = props.databaseUser
+            password = props.databasePassword
             jdbcUrl =
-                "jdbc:postgresql://${dbProperties.databaseHost}:${dbProperties.databasePort}/${dbProperties.databaseNavn}"
+                "jdbc:postgresql://${props.databaseHost}:${props.databasePort}/${props.databaseNavn}"
             maximumPoolSize = 10
             minimumIdle = 1
             idleTimeout = 10001
@@ -42,7 +40,7 @@ class DatabaseConfiguration(
         val deadline = LocalDateTime.now().plusSeconds(timeout.inWholeSeconds)
         while (true) {
             try {
-                Socket(dbProperties.databaseHost, dbProperties.databasePort.toInt())
+                Socket(props.databaseHost, props.databasePort.toInt())
                 return true
             } catch (e: Exception) {
                 log.info("Databasen er ikke tilgjengelig ennå, venter...")

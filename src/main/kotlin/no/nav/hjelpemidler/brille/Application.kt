@@ -21,7 +21,6 @@ import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
-import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
@@ -89,31 +88,15 @@ fun Application.configure() {
 
 // Wire up services and routes
 fun Application.setupRoutes() {
-    val azureAdClient = AzureAdClient()
-    val pdlClient = PdlClient(
-        Configuration.pdlProperties.graphqlUri,
-        Configuration.pdlProperties.apiScope,
-        azureAdClient,
-    )
-    val pdlService = PdlService(pdlClient)
-
-    val redisClient = RedisClient()
+    // Database
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
-    val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
-    val vedtakStore = VedtakStorePostgres(dataSource)
-    val rapportStore = RapportStorePostgres(dataSource)
-    val virksomhetStore = VirksomhetStorePostgres(dataSource)
-    val innsenderStore = InnsenderStorePostgres(dataSource)
-    val innsenderService = InnsenderService(innsenderStore)
     val auditStore = AuditStorePostgres(dataSource)
-    val auditService = AuditService(auditStore)
-    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties.baseUrl)
-    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
-    val syfohelsenettproxyClient = SyfohelsenettproxyClient(
-        Configuration.syfohelsenettproxyProperties.baseUrl,
-        Configuration.syfohelsenettproxyProperties.scope,
-        azureAdClient
-    )
+    val innsenderStore = InnsenderStorePostgres(dataSource)
+    val rapportStore = RapportStorePostgres(dataSource)
+    val vedtakStore = VedtakStorePostgres(dataSource)
+    val virksomhetStore = VirksomhetStorePostgres(dataSource)
+
+    // Kafka
     val kafkaService = KafkaService {
         when (Configuration.profile) {
             Configuration.Profile.LOCAL -> MockProducer(true, StringSerializer(), StringSerializer())
@@ -121,13 +104,24 @@ fun Application.setupRoutes() {
         }
     }
 
-    val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties, azureAdClient)
-    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
+    // Klienter
+    val redisClient = RedisClient()
+    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties)
+    val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
+    val pdlClient = PdlClient(Configuration.pdlProperties)
+    val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
 
+    // Tjenester
+    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
+    val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
+    val pdlService = PdlService(pdlClient)
+    val auditService = AuditService(auditStore)
+    val innsenderService = InnsenderService(innsenderStore)
+    val rapportService = RapportService(rapportStore)
+    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
     val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
     val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService)
-    val rapportService = RapportService(rapportStore)
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 

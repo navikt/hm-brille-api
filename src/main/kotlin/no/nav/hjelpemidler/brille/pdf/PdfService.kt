@@ -14,13 +14,13 @@ import no.nav.hjelpemidler.brille.Configuration
 private val log = KotlinLogging.logger {}
 
 class PdfService(
-    private val httpClient: HttpClient,
-    private val pdfProperties: Configuration.PdfProperties = Configuration.pdfProperties,
+    private val props: Configuration.PdfProperties,
+    private val client: HttpClient,
 ) {
     suspend fun genererPdf(behovsmelding: Any): ByteArray {
         return try {
             withContext(Dispatchers.IO) {
-                httpClient.post("${pdfProperties.pdfgenUri}/api/v1/genpdf/hmb/hmb") {
+                client.post("${props.pdfgenUri}/api/v1/genpdf/hmb/hmb") {
                     contentType(Json)
                     setBody(behovsmelding)
                 }.body()

@@ -4,9 +4,7 @@ import io.kotest.common.runBlocking
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
-import io.ktor.client.plugins.auth.providers.BearerTokens
-import io.mockk.coEvery
-import io.mockk.mockk
+import no.nav.hjelpemidler.brille.Configuration
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 
@@ -41,13 +39,7 @@ internal class PdlClientTest {
     private fun test(name: String, block: (PdlClient) -> Unit) {
         block(
             PdlClient(
-                "http://localhost:1234",
-                "test",
-                mockk {
-                    coEvery {
-                        getToken("test")
-                    } returns BearerTokens("", "")
-                },
+                Configuration.PdlProperties("http://localhost:1234", ""),
                 javaClass.getResourceAsStream(name).use {
                     val response = requireNotNull(it).bufferedReader().readText()
                     MockEngine {
