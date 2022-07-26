@@ -50,6 +50,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import org.apache.kafka.clients.producer.MockProducer
+import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.event.Level
 import java.util.TimeZone
 
@@ -115,7 +116,7 @@ fun Application.setupRoutes() {
     )
     val kafkaService = KafkaService {
         when (Configuration.profile) {
-            Configuration.Profile.LOCAL -> MockProducer()
+            Configuration.Profile.LOCAL -> MockProducer(true, StringSerializer(), StringSerializer())
             else -> AivenKafkaConfiguration().aivenKafkaProducer()
         }
     }
