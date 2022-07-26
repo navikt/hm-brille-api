@@ -12,16 +12,16 @@ fun kravlinjeQuery(
                 SELECT v.id, v.bestillingsdato, v.behandlingsresultat, v.opprettet, v.belop, v.bestillingsreferanse, u.utbetalingsdato, count(v.*) over() AS $COLUMN_LABEL_TOTAL
             FROM vedtak_v1 v 
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
-            WHERE orgnr = :orgNr 
+            WHERE v.orgnr = :orgNr 
                        """
     if (tilDato != null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
-        sql = sql.plus(" AND opprettet >= :fraDato AND opprettet <= :tilDato ")
+        sql = sql.plus(" AND v.opprettet >= :fraDato AND v.opprettet <= :tilDato ")
     } else if (tilDato == null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
-        sql = sql.plus(" AND opprettet >= :fraDato ")
+        sql = sql.plus(" AND v.opprettet >= :fraDato ")
     } else if (kravFilter?.equals(KravFilter.HITTILAR) == true) {
-        sql = sql.plus(" AND date_part('year', opprettet) = date_part('year', CURRENT_DATE)")
+        sql = sql.plus(" AND date_part('year', v.opprettet) = date_part('year', CURRENT_DATE)")
     } else if (kravFilter?.equals(KravFilter.SISTE3MND) == true) {
-        sql = sql.plus(" AND opprettet >  CURRENT_DATE - INTERVAL '3 months'")
+        sql = sql.plus(" AND v.opprettet >  CURRENT_DATE - INTERVAL '3 months'")
     }
 
     //language=PostgreSQL
