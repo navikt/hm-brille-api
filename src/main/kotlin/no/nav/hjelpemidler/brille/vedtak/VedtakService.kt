@@ -33,7 +33,7 @@ class VedtakService(
         val satsBeløp = sats.beløp
         val brillepris = vilkårsgrunnlag.brillepris
 
-        return vedtakStore.lagreVedtak(
+        val vedtak = vedtakStore.lagreVedtak(
             Vedtak(
                 fnrBarn = vilkårsgrunnlag.fnrBarn,
                 fnrInnsender = fnrInnsender,
@@ -48,8 +48,10 @@ class VedtakService(
                 satsBeskrivelse = sats.beskrivelse,
                 beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
             )
-        ).also {
-            kafkaService.vedtakFattet(krav = krav, vedtak = it)
-        }
+        )
+
+        kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)
+
+        return vedtak
     }
 }

@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
+import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
@@ -18,6 +19,11 @@ class AvtaleService(
     private val enhetsregisteretService: EnhetsregisteretService,
     private val kafkaService: KafkaService,
 ) {
+    suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet =
+        requireNotNull(enhetsregisteretService.hentOrganisasjonsenhet(orgnr)) {
+            "Fant ikke organisasjonsenhet med orgnr: $orgnr"
+        }
+
     suspend fun hentVirksomheter(fnrInnsender: String): List<Avtale> {
         val avgivereFiltrert = altinnService.hentAvgivereHovedadministrator(fnrInnsender)
             .filter { avgiver ->
@@ -38,12 +44,15 @@ class AvtaleService(
                     ).any { enhet.harNæringskode(it) }
                 }
             }
+
         sikkerLog.info {
             "fnrInnsender: $fnrInnsender kan opprette avtale for: ${avgivereFiltrert.map { it.orgnr }}"
         }
+
         val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnrInnsender).associateBy {
             it.orgnr
         }
+
         return avgivereFiltrert
             .map {
                 Avtale(
@@ -61,11 +70,14 @@ class AvtaleService(
 
     suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): Avtale {
         val orgnr = opprettAvtale.orgnr
+
         if (!altinnService.erHovedadministratorFor(fnrInnsender, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
+
         log.info { "Oppretter avtale for orgnr: $orgnr" }
         sikkerLog.info { "fnrInnsender: $fnrInnsender, opprettAvtale: $opprettAvtale" }
+
         val virksomhet = virksomhetStore.lagreVirksomhet(
             Virksomhet(
                 orgnr = orgnr,
@@ -77,40 +89,42 @@ class AvtaleService(
                 avtaleversjon = null // fixme
             )
         )
-        val organisasjonsenhet = requireNotNull(enhetsregisteretService.hentOrganisasjonsenhet(orgnr)) {
-            "Fant ikke organisasjonsenhet med orgnr: $orgnr"
-        }
-        return Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn).also {
-            kafkaService.avtaleOpprettet(it)
-        }
+
+        val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
+        val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+
+        kafkaService.avtaleOpprettet(avtale)
+
+        return avtale
     }
 
-    suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, redigerAvtale: RedigerAvtale): Avtale {
+    suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): Avtale {
         if (!altinnService.erHovedadministratorFor(fnrOppdatertAv, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
-        val virksomhet = requireNotNull(virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
-            "Fant ikke virksomhet med orgnr: $orgnr"
-        }.let {
-            log.info { "Redigerer avtale for orgnr: $orgnr" }
-            sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, redigerAvtale: $redigerAvtale" }
-            virksomhetStore.oppdaterVirksomhet(
-                it.copy(
-                    kontonr = redigerAvtale.kontonr,
-                    epost = redigerAvtale.epost,
-                    fnrOppdatertAv = fnrOppdatertAv,
-                    oppdatert = LocalDateTime.now(),
-                )
+
+        log.info { "Oppdaterer avtale for orgnr: $orgnr" }
+        sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
+
+        val virksomhet = virksomhetStore.oppdaterVirksomhet(
+            requireNotNull(virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
+                "Fant ikke virksomhet med orgnr: $orgnr"
+            }.copy(
+                kontonr = oppdaterAvtale.kontonr,
+                epost = oppdaterAvtale.epost,
+                fnrOppdatertAv = fnrOppdatertAv,
+                oppdatert = LocalDateTime.now(),
             )
-        }
+        )
+
         if (virksomhet.fnrInnsender != virksomhet.fnrOppdatertAv) {
             sikkerLog.warn {
                 "Avtalen ble oppdatert av en annen en innsender, fnrInnsender: ${virksomhet.fnrInnsender}, fnrOppdatertAv: ${virksomhet.fnrOppdatertAv}"
             }
         }
-        val organisasjonsenhet = requireNotNull(enhetsregisteretService.hentOrganisasjonsenhet(orgnr)) {
-            "Fant ikke organisasjonsenhet med orgnr: $orgnr"
-        }
+
+        val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
+
         return Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
     }
 }
