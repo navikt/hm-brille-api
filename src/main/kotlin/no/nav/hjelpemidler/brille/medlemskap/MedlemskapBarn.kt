@@ -9,6 +9,7 @@ import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.Barn
 import no.nav.hjelpemidler.brille.pdl.PdlClient
+import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
 import no.nav.hjelpemidler.brille.pdl.VergeEllerForelder
 import no.nav.hjelpemidler.brille.pdl.generated.enums.ForelderBarnRelasjonRolle
 import no.nav.hjelpemidler.brille.pdl.generated.enums.FullmaktsRolle
@@ -119,7 +120,17 @@ class MedlemskapBarn(
                 )
             ) {
                 // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
-                val pdlResponseVerge = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
+                val pdlResponseVerge = runCatching {
+                    pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
+                }.getOrElse { e ->
+                    // Hvis en relatert voksen har adressebeskyttelse (noe barnet ikke har her), så ignorerer vi denne
+                    // relasjonen og sjekker videre på andre.
+                    if (e is PdlHarAdressebeskyttelseException) return@withLoggingContext
+
+                    // Andre type exceptions kaster vi videre.
+                    throw e
+                }
+
                 val pdlVergeEllerForelder = pdlResponseVerge.data
 
                 saksgrunnlag.add(
