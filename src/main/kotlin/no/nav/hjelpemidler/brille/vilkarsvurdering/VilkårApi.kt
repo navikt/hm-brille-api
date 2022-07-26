@@ -7,7 +7,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
@@ -18,11 +17,6 @@ private val log = KotlinLogging.logger { }
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
     post("/vilkarsgrunnlag") {
         try {
-            if (Configuration.prod) { // TODO: fjern før prodsetting
-                call.respond(HttpStatusCode.Unauthorized)
-                return@post
-            }
-
             val vilkårsgrunnlag = call.receive<VilkårsgrunnlagDto>()
             auditService.lagreOppslag(
                 fnrInnlogget = call.extractFnr(),
