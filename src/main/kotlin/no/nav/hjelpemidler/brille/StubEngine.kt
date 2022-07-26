@@ -17,7 +17,6 @@ import no.nav.hjelpemidler.brille.azuread.Token
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Godkjenning
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Kode
-import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger { }
 
@@ -69,7 +68,7 @@ object StubEngine {
 
     fun azureAd(): HttpClientEngine = mockEngine {
         post("/default/token") {
-            respond(Token("", 1.hours.inWholeSeconds, "token"))
+            respond(Token(""))
         }
     }
 
