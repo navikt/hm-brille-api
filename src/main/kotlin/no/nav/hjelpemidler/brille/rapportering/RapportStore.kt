@@ -47,14 +47,7 @@ internal class RapportStorePostgres(private val ds: DataSource) : RapportStore {
                 "tilDato" to tilDato
             )
         ) { row ->
-            Kravlinje(
-                id = row.long("id"),
-                bestillingsdato = row.localDate("bestillingsdato"),
-                behandlingsresultat = row.string("behandlingsresultat"),
-                opprettet = row.localDateTime("opprettet"),
-                beløp = row.bigDecimal("belop"),
-                bestillingsreferanse = row.string("bestillingsreferanse")
-            )
+            Kravlinje.fromRow(row)
         }
     }
 
@@ -80,14 +73,7 @@ internal class RapportStorePostgres(private val ds: DataSource) : RapportStore {
             limit,
             offset
         ) { row ->
-            Kravlinje(
-                id = row.long("id"),
-                bestillingsdato = row.localDate("bestillingsdato"),
-                behandlingsresultat = row.string("behandlingsresultat"),
-                opprettet = row.localDateTime("opprettet"),
-                beløp = row.bigDecimal("belop"),
-                bestillingsreferanse = row.string("bestillingsreferanse")
-            )
+            Kravlinje.fromRow(row)
         }
     }
 }

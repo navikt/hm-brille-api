@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
+import kotliquery.Row
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import java.math.BigDecimal
@@ -38,7 +39,21 @@ data class Kravlinje(
     val opprettet: LocalDateTime,
     val beløp: BigDecimal,
     val bestillingsreferanse: String,
-)
+    val utbetalingsdato: LocalDate?
+) {
+
+    companion object {
+        fun fromRow(row: Row) = Kravlinje(
+            id = row.long("id"),
+            bestillingsdato = row.localDate("bestillingsdato"),
+            behandlingsresultat = row.string("behandlingsresultat"),
+            opprettet = row.localDateTime("opprettet"),
+            beløp = row.bigDecimal("belop"),
+            bestillingsreferanse = row.string("bestillingsreferanse"),
+            utbetalingsdato = row.localDateOrNull("utbetalingsdato")
+        )
+    }
+}
 
 enum class Behandlingsresultat {
     INNVILGET
