@@ -8,14 +8,14 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.StubEngine
-import no.nav.hjelpemidler.brille.azuread.AzureAdClient
+import no.nav.hjelpemidler.brille.azuread.OpenIDClient
+import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
 
 private val log = KotlinLogging.logger { }
@@ -24,7 +24,7 @@ private val sikkerLog = KotlinLogging.logger("tjenestekall")
 class SyfohelsenettproxyClient(
     private val baseUrl: String,
     private val scope: String,
-    private val azureAdClient: AzureAdClient,
+    private val azureAdClient: OpenIDClient,
     engine: HttpClientEngine = engineFactory { StubEngine.syfohelsenettproxy() },
 ) {
     private val client = HttpClient(engine) {
@@ -37,11 +37,7 @@ class SyfohelsenettproxyClient(
             }
         }
         install(Auth) {
-            bearer {
-                loadTokens { azureAdClient.getToken(scope).toBearerTokens() }
-                refreshTokens { azureAdClient.getToken(scope).toBearerTokens() }
-                sendWithoutRequest { true }
-            }
+            azureAd(azureAdClient, scope)
         }
     }
 

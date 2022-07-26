@@ -9,7 +9,6 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -23,7 +22,8 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StatusCodeException
-import no.nav.hjelpemidler.brille.azuread.AzureAdClient
+import no.nav.hjelpemidler.brille.azuread.OpenIDClient
+import no.nav.hjelpemidler.brille.azuread.azureAd
 import java.time.LocalDate
 import java.util.UUID
 
@@ -31,7 +31,7 @@ private val log = KotlinLogging.logger {}
 
 class MedlemskapClient(
     private val props: Configuration.MedlemskapOppslagProperties = Configuration.medlemskapOppslagProperties,
-    private val azureAdClient: AzureAdClient,
+    private val azureAdClient: OpenIDClient,
     engine: HttpClientEngine = CIO.create(),
 ) {
     private val client = HttpClient(engine) {
@@ -44,11 +44,7 @@ class MedlemskapClient(
             }
         }
         install(Auth) {
-            bearer {
-                loadTokens { azureAdClient.getToken(props.scope).toBearerTokens() }
-                refreshTokens { azureAdClient.getToken(props.scope).toBearerTokens() }
-                sendWithoutRequest { true }
-            }
+            azureAd(azureAdClient, props.scope)
         }
     }
 

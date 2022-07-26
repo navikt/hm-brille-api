@@ -4,12 +4,11 @@ import io.kotest.common.runBlocking
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.mockk.coEvery
 import io.mockk.mockk
-import no.nav.hjelpemidler.brille.azuread.Token
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
-import kotlin.time.Duration.Companion.hours
 
 internal class PdlClientTest {
     @Test
@@ -47,7 +46,7 @@ internal class PdlClientTest {
                 mockk {
                     coEvery {
                         getToken("test")
-                    } returns Token("", 1.hours.inWholeMilliseconds, "")
+                    } returns BearerTokens("", "")
                 },
                 javaClass.getResourceAsStream(name).use {
                     val response = requireNotNull(it).bufferedReader().readText()

@@ -7,11 +7,11 @@ import com.expediagroup.graphql.client.types.GraphQLClientRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.request.header
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.StubEngine
-import no.nav.hjelpemidler.brille.azuread.AzureAdClient
+import no.nav.hjelpemidler.brille.azuread.OpenIDClient
+import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
@@ -25,18 +25,14 @@ private val log = KotlinLogging.logger { }
 class PdlClient(
     baseUrl: String,
     private val scope: String,
-    private val azureAdClient: AzureAdClient,
+    private val azureAdClient: OpenIDClient,
     engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
 ) {
     private val client = GraphQLKtorClient(
         url = URL(baseUrl),
         httpClient = HttpClient(engine) {
             install(Auth) {
-                bearer {
-                    loadTokens { azureAdClient.getToken(scope).toBearerTokens() }
-                    refreshTokens { azureAdClient.getToken(scope).toBearerTokens() }
-                    sendWithoutRequest { true }
-                }
+                azureAd(azureAdClient, scope)
             }
         },
         serializer = GraphQLClientJacksonSerializer(),

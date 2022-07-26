@@ -1,32 +1,33 @@
 package no.nav.hjelpemidler.brille.azuread
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
+import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.submitForm
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.serialization.jackson.jackson
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
-import java.time.Instant
-import kotlin.collections.set
 
 private val log = KotlinLogging.logger {}
+
+interface OpenIDClient {
+    suspend fun getToken(scope: String): BearerTokens
+}
 
 class AzureAdClient(
     private val props: Configuration.AzureAdProperties = Configuration.azureAdProperties,
     engine: HttpClientEngine = engineFactory { StubEngine.azureAd() },
-) {
+) : OpenIDClient {
     private val client = HttpClient(engine) {
         expectSuccess = false
         install(ContentNegotiation) {
@@ -35,11 +36,9 @@ class AzureAdClient(
             }
         }
     }
-    private val mutex = Mutex()
-    private val tokenCache: MutableMap<String, Token> = mutableMapOf()
 
     private suspend fun grant(scope: String): Token {
-        log.info("Henter nytt token fra azure")
+        log.info { "Henter token fra Azure AD, scope: $scope" }
         val response = client
             .submitForm(
                 url = props.openidConfigTokenEndpoint,
@@ -62,48 +61,15 @@ class AzureAdClient(
         throw AzureAdClientException(messageAndError.first, messageAndError.second)
     }
 
-    suspend fun getToken(scope: String): Token = mutex.withLock {
-
-        log.info("tokenCache: ${tokenCache.entries.joinToString { "${it.key}: ${it.value}" }}")
-        log.info(" token ${tokenCache[scope]}")
-        log.info(" token is expired? ${tokenCache[scope]?.isExpired() ?: "null"}")
-
-        tokenCache[scope]
-            ?.takeUnless(Token::isExpired)
-            ?: grant(scope)
-                .also { token ->
-                    log.debug { "Token oppdatert, scope: $scope" }
-                    tokenCache[scope] = token
-                }
-    }
+    override suspend fun getToken(scope: String): BearerTokens = BearerTokens(grant(scope).accessToken, "")
 }
 
 class AzureAdClientException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
 data class Token(
-    @JsonProperty("token_type")
-    val tokenType: String,
-    @JsonProperty("expires_in")
-    val expiresIn: Long,
     @JsonProperty("access_token")
     val accessToken: String,
-) {
-    @JsonIgnore
-    private val expiresOn: Instant = Instant.now().plusSeconds(expiresIn - TOKEN_LEEWAY_SECONDS)
-
-    @JsonIgnore
-    fun isExpired(): Boolean {
-        log.info { "expires on: $expiresOn, now: ${Instant.now()}, expiresOnIsBefore: ${expiresOn.isBefore(Instant.now())}" }
-        return expiresOn.isBefore(Instant.now())
-    }
-
-    @JsonIgnore
-    fun toBearerTokens(): BearerTokens = BearerTokens(accessToken, "")
-
-    companion object {
-        private const val TOKEN_LEEWAY_SECONDS = 60
-    }
-}
+)
 
 data class TokenError(
     @JsonProperty("error")
@@ -111,3 +77,17 @@ data class TokenError(
     @JsonProperty("error_description")
     val errorDescription: String? = null,
 )
+
+fun Auth.azureAd(client: OpenIDClient, scope: String) {
+    bearer {
+        loadTokens {
+            log.info { "loadTokens med scope: $scope" }
+            client.getToken(scope)
+        }
+        refreshTokens {
+            log.info { "refreshTokens med scope: $scope" }
+            client.getToken(scope)
+        }
+        sendWithoutRequest { true }
+    }
+}
