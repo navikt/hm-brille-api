@@ -46,7 +46,7 @@ class MedlemskapClient(
         install(Auth) {
             bearer {
                 loadTokens { azureAdClient.getToken(props.scope).toBearerTokens() }
-                refreshTokens { null }
+                refreshTokens { azureAdClient.getToken(props.scope).toBearerTokens() }
                 sendWithoutRequest { true }
             }
         }

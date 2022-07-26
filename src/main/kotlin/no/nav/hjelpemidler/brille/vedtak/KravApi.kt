@@ -6,7 +6,6 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.sats.SatsType
@@ -16,11 +15,6 @@ import java.time.LocalDateTime
 
 fun Route.kravApi(vedtakService: VedtakService, auditService: AuditService) {
     post("/krav") {
-        if (Configuration.prod) { // TODO: fjern før prodsetting
-            call.respond(HttpStatusCode.Unauthorized)
-            return@post
-        }
-
         val kravDto = call.receive<KravDto>()
         val fnrInnsender = call.extractFnr()
 

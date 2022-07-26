@@ -39,7 +39,7 @@ class SyfohelsenettproxyClient(
         install(Auth) {
             bearer {
                 loadTokens { azureAdClient.getToken(scope).toBearerTokens() }
-                refreshTokens { null }
+                refreshTokens { azureAdClient.getToken(scope).toBearerTokens() }
                 sendWithoutRequest { true }
             }
         }
