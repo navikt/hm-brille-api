@@ -267,8 +267,6 @@ private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
             Pair("VERGE-${it.type ?: "ukjent-type"}", it.vergeEllerFullmektig.motpartsPersonident!!)
         },
 
-        // TODO: Trenger vi begge disse under?
-
         foreldreAnsvar.filter {
             // Må ha et fnr vi kan slå opp på. Dette bekrefter også at relasjonen gjelder en forelder, ikke at oppslått
             // barn som har foreldreansvar for noen:

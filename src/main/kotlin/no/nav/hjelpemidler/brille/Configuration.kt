@@ -179,9 +179,9 @@ object Configuration {
         val host: String = this["REDIS_HOST"],
         val port: Int = 6379,
         val password: String = this["REDIS_PASSWORD"],
-        val hprExpirySeconds: Long = Duration.ofDays(1).seconds, // TODO: Hva er en OK lengde på cache?
-        val medlemskapBarnExpirySeconds: Long = Duration.ofDays(1).seconds, // TODO: Hva er en OK lengde på cache?
-        val orgenhetExpirySeconds: Long = Duration.ofHours(2).seconds, // TODO: Hva er en OK lengde på cache?
+        val hprExpirySeconds: Long = Duration.ofDays(1).seconds,
+        val medlemskapBarnExpirySeconds: Long = Duration.ofDays(1).seconds,
+        val orgenhetExpirySeconds: Long = Duration.ofHours(2).seconds,
     )
 
     data class AltinnProperties(

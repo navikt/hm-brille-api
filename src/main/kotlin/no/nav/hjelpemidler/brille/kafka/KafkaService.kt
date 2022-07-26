@@ -48,6 +48,10 @@ class KafkaService(
         )
     }
 
+    fun avtaleOppdatert() {
+        // todo -> send til tss-sink
+    }
+
     fun vilkårVurdert() {
         // todo -> send til bq-sink
     }
@@ -65,7 +69,7 @@ class KafkaService(
                 orgnr = vedtak.orgnr,
                 orgNavn = krav.orgNavn,
                 orgAdresse = krav.orgAdresse,
-                navnAvsender = "", // todo -> hvilket navn skal dette egentlig være? navnet til innbygger (barn) eller optiker?
+                navnAvsender = "", // todo -> slett
                 sakId = vedtak.id.toString(),
                 brilleseddel = brilleseddel,
                 bestillingsdato = vedtak.bestillingsdato,

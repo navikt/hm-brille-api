@@ -25,7 +25,7 @@ data class Virksomhet(
     val epost: String? = null,
     val fnrInnsender: String,
     val fnrOppdatertAv: String? = null,
-    val navnInnsender: String, // fixme -> denne brukes ikke, skal vi slette den?
+    val navnInnsender: String, // todo -> slett
     val aktiv: Boolean,
     val avtaleversjon: String? = null,
     val opprettet: LocalDateTime = LocalDateTime.now(),

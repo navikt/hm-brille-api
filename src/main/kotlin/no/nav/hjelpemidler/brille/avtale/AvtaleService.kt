@@ -84,9 +84,9 @@ class AvtaleService(
                 kontonr = opprettAvtale.kontonr,
                 epost = opprettAvtale.epost,
                 fnrInnsender = fnrInnsender,
-                navnInnsender = "", // fixme
+                navnInnsender = "", // todo -> slett
                 aktiv = true,
-                avtaleversjon = null // fixme
+                avtaleversjon = null
             )
         )
 
