@@ -112,76 +112,77 @@ class MedlemskapBarn(
         val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsdato, pdlBarn)
 
         for ((rolle, fnrVergeEllerForelder) in prioritertListe) {
-            val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
-            withLoggingContext(
-                mapOf(
-                    "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
-                    "rolle" to rolle,
-                )
-            ) {
-                // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
-                val pdlResponseVerge = runCatching {
-                    pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
-                }.getOrElse { e ->
-                    // Hvis en relatert voksen har adressebeskyttelse (noe barnet ikke har her), så ignorerer vi denne
-                    // relasjonen og sjekker videre på andre.
-                    if (e is PdlHarAdressebeskyttelseException) return@withLoggingContext
-
-                    // Andre type exceptions kaster vi videre.
-                    throw e
-                }
-
-                val pdlVergeEllerForelder = pdlResponseVerge.data
-
-                saksgrunnlag.add(
-                    Saksgrunnlag(
-                        kilde = SaksgrunnlagKilde.PDL,
-                        saksgrunnlag = jsonMapper.valueToTree(
-                            mapOf(
-                                "rolle" to rolle,
-                                "fnr" to fnrVergeEllerForelder,
-                                "pdl" to pdlResponseVerge.rawData,
-                            )
-                        ),
+            kotlin.runCatching {
+                val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
+                withLoggingContext(
+                    mapOf(
+                        "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
+                        "rolle" to rolle,
                     )
-                )
-
-                // Hvis relasjon bor på samme adresse kan vi bruke de til å sannsynliggjøre medlemskapet til barnet,
-                // hvis de ikke bor på samme adresse så er de ikke interessant for dette formålet.
-                if (harSammeAdresse(bestillingsdato, pdlBarn, pdlVergeEllerForelder)) {
-                    val medlemskap =
-                        medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
+                ) {
+                    // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
+                    val pdlResponseVerge = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
+                    val pdlVergeEllerForelder = pdlResponseVerge.data
 
                     saksgrunnlag.add(
                         Saksgrunnlag(
-                            kilde = SaksgrunnlagKilde.LOV_ME,
+                            kilde = SaksgrunnlagKilde.PDL,
                             saksgrunnlag = jsonMapper.valueToTree(
                                 mapOf(
                                     "rolle" to rolle,
                                     "fnr" to fnrVergeEllerForelder,
-                                    "lov_me" to medlemskap,
-                                    "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
+                                    "pdl" to pdlResponseVerge.rawData,
                                 )
                             ),
                         )
                     )
 
-                    // Hvis svaret fra LovMe er "JA" så sier vi at medlemskapet til barnet er bevist, hvis svaret er
-                    // "UAVKLART" eller "NEI" så sjekker vi videre på andre relasjoner.
-                    when (jsonMapper.treeToValue<MedlemskapResponse>(medlemskap).resultat.svar) {
-                        MedlemskapResponseResultatSvar.JA -> {
-                            log.info("Barnets medlemskap verifisert igjennom verges-/forelders medlemskap og bolig på samme adresse")
-                            val medlemskapResultat = MedlemskapResultat(
-                                medlemskapBevist = true,
-                                uavklartMedlemskap = false,
-                                saksgrunnlag = saksgrunnlag
+                    // Hvis relasjon bor på samme adresse kan vi bruke de til å sannsynliggjøre medlemskapet til barnet,
+                    // hvis de ikke bor på samme adresse så er de ikke interessant for dette formålet.
+                    if (harSammeAdresse(bestillingsdato, pdlBarn, pdlVergeEllerForelder)) {
+                        val medlemskap =
+                            medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
+
+                        saksgrunnlag.add(
+                            Saksgrunnlag(
+                                kilde = SaksgrunnlagKilde.LOV_ME,
+                                saksgrunnlag = jsonMapper.valueToTree(
+                                    mapOf(
+                                        "rolle" to rolle,
+                                        "fnr" to fnrVergeEllerForelder,
+                                        "lov_me" to medlemskap,
+                                        "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
+                                    )
+                                ),
                             )
-                            redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
-                            return@runBlocking medlemskapResultat
-                        }
-                        else -> { /* Sjekk de andre */
+                        )
+
+                        // Hvis svaret fra LovMe er "JA" så sier vi at medlemskapet til barnet er bevist, hvis svaret er
+                        // "UAVKLART" eller "NEI" så sjekker vi videre på andre relasjoner.
+                        when (jsonMapper.treeToValue<MedlemskapResponse>(medlemskap).resultat.svar) {
+                            MedlemskapResponseResultatSvar.JA -> {
+                                log.info("Barnets medlemskap verifisert igjennom verges-/forelders medlemskap og bolig på samme adresse")
+                                val medlemskapResultat = MedlemskapResultat(
+                                    medlemskapBevist = true,
+                                    uavklartMedlemskap = false,
+                                    saksgrunnlag = saksgrunnlag
+                                )
+                                redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
+                                return@runBlocking medlemskapResultat
+                            }
+                            else -> { /* Sjekk de andre */
+                            }
                         }
                     }
+                }
+            }.getOrElse { e ->
+                // Hvis en relatert voksen har adressebeskyttelse (noe barnet ikke har her), så ignorerer vi denne
+                // relasjonen og sjekker videre på andre.
+                if (e is PdlHarAdressebeskyttelseException) {
+                    log.info("Skipper relasjon pga. adressebeskyttelse")
+                } else {
+                    // Andre type exceptions kaster vi videre.
+                    log.error(e) { "Skipper relasjon da PDL kastet en exception" }
                 }
             }
         }
