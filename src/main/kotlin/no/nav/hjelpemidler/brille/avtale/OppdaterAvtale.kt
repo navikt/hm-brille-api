@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille.avtale
 
-data class RedigerAvtale(
+data class OppdaterAvtale(
     val kontonr: String,
     val epost: String,
 )

@@ -115,11 +115,6 @@ class KafkaService(
         )
     }
 
-    internal annotation class BigQueryHendelse(
-        val eventName: String = "hm-bigquery-sink-hendelse",
-        val schemaId: String,
-    )
-
     internal data class VedtakOpprettet(
         val eventId: UUID = UUID.randomUUID(),
         val eventName: String = "hm-barnebrillevedtak-opprettet",
@@ -137,6 +132,11 @@ class KafkaService(
         val satsBeløp: Int,
         val satsBeskrivelse: String,
         val beløp: BigDecimal,
+    )
+
+    private annotation class BigQueryHendelse(
+        val eventName: String = "hm-bigquery-sink-hendelse",
+        val schemaId: String,
     )
 
     @BigQueryHendelse(schemaId = "avtale_v1")

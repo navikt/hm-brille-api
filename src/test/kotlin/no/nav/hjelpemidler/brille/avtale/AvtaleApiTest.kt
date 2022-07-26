@@ -54,7 +54,7 @@ internal class AvtaleApiTest {
         kontonr = virksomhet.kontonr,
         epost = "test@test"
     )
-    private val redigerAvtale = RedigerAvtale(
+    private val oppdaterAvtale = OppdaterAvtale(
         kontonr = virksomhet.kontonr,
         epost = opprettAvtale.epost
     )
@@ -127,7 +127,7 @@ internal class AvtaleApiTest {
     internal fun `redigerer avtale`() = routing.test {
         erHovedadministratorFor(avgiver.orgnr)
         val response = client.put("/avtale/virksomheter/${avgiver.orgnr}") {
-            setBody(redigerAvtale)
+            setBody(oppdaterAvtale)
         }
         response.status shouldBe HttpStatusCode.OK
     }
@@ -136,7 +136,7 @@ internal class AvtaleApiTest {
     internal fun `redigerer avtale uten tilgang`() = routing.test {
         erIkkeHovedadministratorFor(avgiver.orgnr)
         val response = client.put("/avtale/virksomheter/${avgiver.orgnr}") {
-            setBody(redigerAvtale)
+            setBody(oppdaterAvtale)
         }
         response.status shouldBe HttpStatusCode.Forbidden
     }
