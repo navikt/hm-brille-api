@@ -14,7 +14,8 @@
   "db_retained_backups": 7,
   "db_name": "brilleapidb",
   "external-hosts": [
-    "data.brreg.no"
+    "data.brreg.no",
+    "pdl-api.dev-fss-pub.nais.io"
   ],
   "outbound-applications": [
     "hm-mocks"
