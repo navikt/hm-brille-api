@@ -72,7 +72,7 @@ class MedlemskapClient(
         }
         val message =
             runCatching { response.body<String>() }.getOrElse {
-                "${response.request.method} ${response.request.url} ga status: ${response.status}"
+                "${response.request.method.value} ${response.request.url} ga status: ${response.status}"
             }
         throw StatusCodeException(HttpStatusCode.InternalServerError, "Feil i kall til medlemskap: $message")
     }
