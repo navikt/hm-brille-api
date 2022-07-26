@@ -112,14 +112,14 @@ class MedlemskapBarn(
         val prioritertListe = prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(bestillingsdato, pdlBarn)
 
         for ((rolle, fnrVergeEllerForelder) in prioritertListe) {
-            kotlin.runCatching {
-                val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
-                withLoggingContext(
-                    mapOf(
-                        "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
-                        "rolle" to rolle,
-                    )
-                ) {
+            val correlationIdMedlemskap = "$baseCorrelationId+${UUID.randomUUID()}"
+            withLoggingContext(
+                mapOf(
+                    "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
+                    "rolle" to rolle,
+                )
+            ) {
+                kotlin.runCatching {
                     // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
                     val pdlResponseVerge = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
                     val pdlVergeEllerForelder = pdlResponseVerge.data
@@ -174,15 +174,31 @@ class MedlemskapBarn(
                             }
                         }
                     }
-                }
-            }.getOrElse { e ->
-                // Hvis en relatert voksen har adressebeskyttelse (noe barnet ikke har her), så ignorerer vi denne
-                // relasjonen og sjekker videre på andre.
-                if (e is PdlHarAdressebeskyttelseException) {
-                    log.info("Skipper relasjon pga. adressebeskyttelse")
-                } else {
-                    // Andre type exceptions kaster vi videre.
-                    log.error(e) { "Skipper relasjon da PDL kastet en exception" }
+                }.getOrElse { e ->
+                    saksgrunnlag.add(
+                        Saksgrunnlag(
+                            kilde = SaksgrunnlagKilde.MEDLEMSKAP_BARN,
+                            saksgrunnlag = jsonMapper.valueToTree(
+                                mapOf(
+                                    "note" to "failed to check relation membership",
+                                    "exception" to e,
+                                    "stack-trace" to e.stackTraceToString(),
+                                    "rolle" to rolle,
+                                    "fnr" to fnrVergeEllerForelder,
+                                    "correlation-id-subcall-medlemskap" to correlationIdMedlemskap,
+                                )
+                            )
+                        )
+                    )
+
+                    // Hvis en relatert voksen har adressebeskyttelse (noe barnet ikke har her), så ignorerer vi denne
+                    // relasjonen og sjekker videre på andre.
+                    if (e is PdlHarAdressebeskyttelseException) {
+                        log.info("Skipper relasjon pga. adressebeskyttelse")
+                    } else {
+                        // Andre type exceptions kaster vi videre.
+                        log.error(e) { "Skipper relasjon da PDL kastet en exception" }
+                    }
                 }
             }
         }
