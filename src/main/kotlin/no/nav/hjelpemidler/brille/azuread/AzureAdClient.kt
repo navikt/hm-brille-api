@@ -67,15 +67,13 @@ class AzureAdClient(
     suspend fun getToken(scope: String): BearerTokens = BearerTokens(grant(scope).accessToken, "")
 
     suspend fun getTokenCached(scope: String): Token = mutex.withLock {
-        log.info("tokenCache: ${tokenCache.entries.joinToString { "${it.key}: ${it.value}" }}")
-        log.info(" token ${tokenCache[scope]}")
-        log.info(" token is expired? ${tokenCache[scope]?.isExpired() ?: "null"}")
+        log.info("DEBUG: Has token that is expired? ${tokenCache[scope]?.isExpired() ?: "null"}")
 
         tokenCache[scope]
             ?.takeUnless(Token::isExpired)
             ?: grant(scope)
                 .also { token ->
-                    log.debug { "Token oppdatert, scope: $scope" }
+                    log.info { "DEBUG: Token oppdatert, scope: $scope" }
                     tokenCache[scope] = token
                 }
     }
