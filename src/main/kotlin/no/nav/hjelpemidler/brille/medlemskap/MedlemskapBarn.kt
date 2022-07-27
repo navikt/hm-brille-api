@@ -181,7 +181,7 @@ class MedlemskapBarn(
                             saksgrunnlag = jsonMapper.valueToTree(
                                 mapOf(
                                     "note" to "failed to check relation membership",
-                                    "exception" to e,
+                                    "exception" to "$e",
                                     "stack-trace" to e.stackTraceToString(),
                                     "rolle" to rolle,
                                     "fnr" to fnrVergeEllerForelder,
