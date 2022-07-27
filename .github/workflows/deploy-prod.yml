@@ -23,6 +23,7 @@ jobs:
           CLUSTER: prod-gcp
           RESOURCE: .hotnais/nais-deploy.yaml
           VARS: .hotnais/prod/config.json
+          VAR: commit=${{ github.sha }}
       - name: post-production
         uses: navikt/digihot-deploy/actions/post-production@v2
         env:
