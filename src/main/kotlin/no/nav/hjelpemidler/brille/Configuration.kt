@@ -100,7 +100,7 @@ object Configuration {
     val dev: Boolean = profile == Profile.DEV
     val prod: Boolean = profile == Profile.PROD
 
-    val git_sha: String = getOrNull("GIT_COMMIT") ?: "unknown"
+    val gitCommit: String = getOrNull("GIT_COMMIT") ?: "unknown"
 
     val locale = Locale("nb")
 
