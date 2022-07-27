@@ -59,7 +59,7 @@ private val log = KotlinLogging.logger {}
 fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
 
 fun Application.module() {
-    log.info("hm-brille-api starting up (git_sha=${Configuration.git_sha})")
+    log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
     configure()
     setupRoutes()
 }
