@@ -20,4 +20,10 @@ class PdlBadRequestException : PdlClientException("code: $KODE") {
     }
 }
 
+class PdlUnauthorizedException : PdlClientException("code: $KODE") {
+    companion object {
+        const val KODE = "unauthenticated"
+    }
+}
+
 class PdlHarAdressebeskyttelseException : PdlClientException("Person har adressebeskyttelse")

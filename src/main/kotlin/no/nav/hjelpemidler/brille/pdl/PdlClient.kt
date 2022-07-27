@@ -11,6 +11,7 @@ import io.ktor.client.request.header
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
+import no.nav.hjelpemidler.brille.StubEngine.azureAd
 import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.brille.jsonMapper
@@ -28,15 +29,18 @@ class PdlClient(
 ) {
     private val baseUrl = props.baseUrl
     private val scope = props.scope
-    private val client = GraphQLKtorClient(
-        url = URL(baseUrl),
-        httpClient = HttpClient(engine) {
-            install(Auth) {
-                azureAd(scope)
-            }
-        },
-        serializer = GraphQLClientJacksonSerializer(),
-    )
+    private val clientGen = { ->
+        GraphQLKtorClient(
+            url = URL(baseUrl),
+            httpClient = HttpClient(engine) {
+                install(Auth) {
+                    azureAd(scope)
+                }
+            },
+            serializer = GraphQLClientJacksonSerializer(),
+        )
+    }
+    private var client = clientGen()
 
     private fun List<GraphQLClientError>.inneholderKode(kode: String) = this
         .map { it.extensions ?: emptyMap() }
@@ -47,26 +51,38 @@ class PdlClient(
         request: GraphQLClientRequest<T>,
         block: (T) -> PersonMedAdressebeskyttelse<R>,
     ): PdlOppslag<R?> {
-        val response = client.execute(request) {
-            header("Tema", "HJE")
-            header("X-Correlation-ID", UUID.randomUUID().toString())
-        }
-        return when {
-            response.errors != null -> {
-                val errors = response.errors!!
-                when {
-                    errors.inneholderKode(PdlNotFoundException.KODE) -> throw PdlNotFoundException()
-                    errors.inneholderKode(PdlBadRequestException.KODE) -> throw PdlBadRequestException()
-                    else -> throw PdlClientException(errors)
+        while (true) {
+            kotlin.runCatching {
+                val response = client.execute(request) {
+                    header("Tema", "HJE")
+                    header("X-Correlation-ID", UUID.randomUUID().toString())
+                }
+                return when {
+                    response.errors != null -> {
+                        val errors = response.errors!!
+                        when {
+                            errors.inneholderKode(PdlNotFoundException.KODE) -> throw PdlNotFoundException()
+                            errors.inneholderKode(PdlBadRequestException.KODE) -> throw PdlBadRequestException()
+                            errors.inneholderKode(PdlUnauthorizedException.KODE) -> throw PdlUnauthorizedException()
+                            else -> throw PdlClientException(errors)
+                        }
+                    }
+                    response.data != null -> {
+                        val data = response.data!!
+                        val personMedAdressebeskyttelse = block(data)
+                        if (personMedAdressebeskyttelse.harAdressebeskyttelse()) throw PdlHarAdressebeskyttelseException()
+                        PdlOppslag(personMedAdressebeskyttelse.person, jsonMapper.valueToTree(response.data))
+                    }
+                    else -> throw PdlClientException("Svar fra PDL mangler både data og errors")
+                }
+            }.getOrElse {
+                if (it is PdlUnauthorizedException) {
+                    // Retry med ny token
+                    client = clientGen()
+                } else {
+                    throw it
                 }
             }
-            response.data != null -> {
-                val data = response.data!!
-                val personMedAdressebeskyttelse = block(data)
-                if (personMedAdressebeskyttelse.harAdressebeskyttelse()) throw PdlHarAdressebeskyttelseException()
-                PdlOppslag(personMedAdressebeskyttelse.person, jsonMapper.valueToTree(response.data))
-            }
-            else -> throw PdlClientException("Svar fra PDL mangler både data og errors")
         }
     }
 
