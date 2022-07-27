@@ -68,7 +68,7 @@ object StubEngine {
 
     fun azureAd(): HttpClientEngine = mockEngine {
         post("/default/token") {
-            respond(Token(""))
+            respond(Token(120, ""))
         }
     }
 
@@ -109,6 +109,9 @@ object StubEngine {
                     jsonMapper.readTree(requireNotNull(it))
                 }
             )
+        }
+        post("/default/token") {
+            respond(Token(120, ""))
         }
     }
 }
