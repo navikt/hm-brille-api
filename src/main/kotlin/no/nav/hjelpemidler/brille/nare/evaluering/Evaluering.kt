@@ -1,7 +1,5 @@
 package no.nav.hjelpemidler.brille.nare.evaluering
 
-import no.nav.hjelpemidler.brille.Configuration
-
 data class Evaluering(
     val resultat: Resultat,
     val begrunnelse: String,
@@ -9,7 +7,6 @@ data class Evaluering(
     val identifikator: String = "",
     val operator: Operator = Operator.INGEN,
     var barn: List<Evaluering> = emptyList(),
-    val programvareVersjon: String = Configuration.gitCommit,
 ) {
     infix fun og(annen: Evaluering) = Evaluering(
         resultat = resultat og annen.resultat,
