@@ -11,7 +11,6 @@ import io.ktor.client.request.header
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
-import no.nav.hjelpemidler.brille.StubEngine.azureAd
 import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.brille.jsonMapper
@@ -63,7 +62,7 @@ class PdlClient(
                         when {
                             errors.inneholderKode(PdlNotFoundException.KODE) -> throw PdlNotFoundException()
                             errors.inneholderKode(PdlBadRequestException.KODE) -> throw PdlBadRequestException()
-                            errors.inneholderKode(PdlUnauthorizedException.KODE) -> throw PdlUnauthorizedException()
+                            errors.inneholderKode(PdlUnauthenticatedException.KODE) -> throw PdlUnauthenticatedException()
                             else -> throw PdlClientException(errors)
                         }
                     }
@@ -76,7 +75,7 @@ class PdlClient(
                     else -> throw PdlClientException("Svar fra PDL mangler både data og errors")
                 }
             }.getOrElse {
-                if (it is PdlUnauthorizedException) {
+                if (it is PdlUnauthenticatedException) {
                     // Retry med ny token
                     client = clientGen()
                 } else {
