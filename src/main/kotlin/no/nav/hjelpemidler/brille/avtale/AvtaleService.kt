@@ -41,6 +41,7 @@ class AvtaleService(
                         Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
                         Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
                         Næringskode.ANDRE_HELSETJENESTER,
+                        Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER
                     ).any { enhet.harNæringskode(it) }
                 }
             }

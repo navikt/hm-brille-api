@@ -40,5 +40,6 @@ data class Næringskode(
         const val BUTIKKHANDEL_MED_UR_OG_KLOKKER = "47.771"
         const val BUTIKKHANDEL_MED_HELSEKOST = "47.291"
         const val ANDRE_HELSETJENESTER = "86.909"
+        const val ENGROSHANDEL_MED_OPTISKE_ARTIKLER = "46.435"
     }
 }
