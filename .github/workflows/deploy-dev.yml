@@ -51,6 +51,7 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: .hotnais/nais-deploy.yaml
           VARS: .hotnais/dev/config.json
+          VAR: commit=${{ github.sha }}
       - name: post-deploy
         if: github.ref == 'refs/heads/main'
         uses: navikt/digihot-deploy/actions/post-deploy@v2

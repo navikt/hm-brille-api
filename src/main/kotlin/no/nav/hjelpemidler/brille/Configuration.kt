@@ -104,6 +104,8 @@ object Configuration {
     val dev: Boolean = profile == Profile.DEV
     val prod: Boolean = profile == Profile.PROD
 
+    val gitCommit: String = getOrNull("GIT_COMMIT") ?: "unknown"
+
     val locale = Locale("nb")
 
     val azureAdProperties = AzureAdProperties()

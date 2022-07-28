@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.azuread
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
 import io.ktor.client.HttpClient
@@ -13,10 +14,13 @@ import io.ktor.client.request.forms.submitForm
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.Parameters
 import io.ktor.serialization.jackson.jackson
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
+import java.time.Instant
 
 private val log = KotlinLogging.logger {}
 
@@ -24,6 +28,9 @@ class AzureAdClient(
     private val props: Configuration.AzureAdProperties,
     engine: HttpClientEngine = engineFactory { StubEngine.azureAd() },
 ) {
+    private val mutex = Mutex()
+    private val tokenCache: MutableMap<String, Token> = mutableMapOf()
+
     private val client = HttpClient(engine) {
         expectSuccess = false
         install(ContentNegotiation) {
@@ -58,14 +65,44 @@ class AzureAdClient(
     }
 
     suspend fun getToken(scope: String): BearerTokens = BearerTokens(grant(scope).accessToken, "")
+
+    suspend fun getTokenCached(scope: String): Token = mutex.withLock {
+        log.info("DEBUG: Has token that is expired? ${tokenCache[scope]?.isExpired() ?: "null"}")
+
+        tokenCache[scope]
+            ?.takeUnless(Token::isExpired)
+            ?: grant(scope)
+                .also { token ->
+                    log.info { "DEBUG: Token oppdatert, scope: $scope" }
+                    tokenCache[scope] = token
+                }
+    }
 }
 
 class AzureAdClientException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
 data class Token(
+    @JsonProperty("expires_in")
+    val expiresIn: Long,
     @JsonProperty("access_token")
     val accessToken: String,
-)
+) {
+    @JsonIgnore
+    private val expiresOn: Instant = Instant.now().plusSeconds(expiresIn - TOKEN_LEEWAY_SECONDS)
+
+    @JsonIgnore
+    fun isExpired(): Boolean {
+        log.info { "expires on: $expiresOn, now: ${Instant.now()}, expiresOnIsBefore: ${expiresOn.isBefore(Instant.now())}" }
+        return expiresOn.isBefore(Instant.now())
+    }
+
+    @JsonIgnore
+    fun toBearerTokens(): BearerTokens = BearerTokens(accessToken, "")
+
+    companion object {
+        private const val TOKEN_LEEWAY_SECONDS = 60
+    }
+}
 
 data class TokenError(
     @JsonProperty("error")

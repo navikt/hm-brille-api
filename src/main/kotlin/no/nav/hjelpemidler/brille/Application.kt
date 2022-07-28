@@ -14,6 +14,7 @@ import io.ktor.server.request.path
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
@@ -55,9 +56,12 @@ import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.event.Level
 import java.util.TimeZone
 
+private val log = KotlinLogging.logger {}
+
 fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
 
 fun Application.module() {
+    log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
     configure()
     setupRoutes()
 }
