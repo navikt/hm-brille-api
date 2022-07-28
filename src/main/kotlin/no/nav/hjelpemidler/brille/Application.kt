@@ -23,6 +23,8 @@ import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
+import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
+import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
@@ -110,7 +112,6 @@ fun Application.setupRoutes() {
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
     val pdlClient = PdlClient(Configuration.pdlProperties)
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
-
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
     val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
@@ -122,6 +123,7 @@ fun Application.setupRoutes() {
     val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
     val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService)
+    val featureToggleService = FeatureToggleService()
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
@@ -130,6 +132,7 @@ fun Application.setupRoutes() {
 
         route("/api") {
             satsApi()
+            featureToggleApi(featureToggleService)
 
             authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {

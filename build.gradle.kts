@@ -36,6 +36,9 @@ dependencies {
     // Kafka
     implementation("org.apache.kafka:kafka-clients:3.1.0")
 
+    // Unleash
+    implementation("io.getunleash:unleash-client-java:6.0.1")
+
     // Ktor Shared
     val ktorVersion = "2.0.3"
     fun ktor(name: String) = "io.ktor:ktor-$name:$ktorVersion"

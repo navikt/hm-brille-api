@@ -28,6 +28,7 @@ object Configuration {
     private val localProperties = ConfigurationMap(
         mapOf(
             "application.profile" to "LOCAL",
+            "application.cluster" to "LOCAL",
             "DB_DATABASE" to "hm-brille-api-db-local",
             "DB_USERNAME" to "cloudsqliamuser",
             "DB_PASSWORD" to "dockerpass",
@@ -56,6 +57,7 @@ object Configuration {
     private val devProperties = ConfigurationMap(
         mapOf(
             "application.profile" to "DEV",
+            "application.cluster" to "DEV-GCP",
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
@@ -72,6 +74,7 @@ object Configuration {
     private val prodProperties = ConfigurationMap(
         mapOf(
             "application.profile" to "PROD",
+            "application.cluster" to "PROD-GCP",
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.prod-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://prod-fss.pdl.pdl-api/.default",
@@ -96,6 +99,7 @@ object Configuration {
         systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
 
     val profile: Profile = this["application.profile"].let { Profile.valueOf(it) }
+    val cluster: Cluster = this["application.cluster"].let { Cluster.valueOf(it) }
     val local: Boolean = profile == Profile.LOCAL
     val dev: Boolean = profile == Profile.DEV
     val prod: Boolean = profile == Profile.PROD
@@ -193,5 +197,9 @@ object Configuration {
 
     enum class Profile {
         LOCAL, DEV, PROD
+    }
+
+    enum class Cluster {
+        `PROD-GCP`, `DEV-GCP`, `LOCAL`
     }
 }
