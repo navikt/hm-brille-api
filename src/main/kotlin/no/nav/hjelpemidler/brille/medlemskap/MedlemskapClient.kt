@@ -48,8 +48,7 @@ class MedlemskapClient(
         }
     }
 
-    fun slåOppMedlemskap(fnr: String, correlationId: String = UUID.randomUUID().toString()): JsonNode = runBlocking {
-        val now = LocalDate.now()
+    fun slåOppMedlemskap(fnr: String, bestillingsDato: LocalDate, correlationId: String = UUID.randomUUID().toString()): JsonNode = runBlocking {
         val response = client.post(baseUrl) {
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
@@ -57,8 +56,8 @@ class MedlemskapClient(
             setBody(
                 Request(
                     fnr = fnr,
-                    førsteDagForYtelse = now,
-                    periode = RequestPeriode(now, now),
+                    førsteDagForYtelse = bestillingsDato,
+                    periode = RequestPeriode(bestillingsDato, bestillingsDato),
                     brukerinput = RequestBrukerinfo(false),
                 )
             )

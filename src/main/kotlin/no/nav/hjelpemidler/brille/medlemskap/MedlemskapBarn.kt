@@ -141,7 +141,7 @@ class MedlemskapBarn(
                     // hvis de ikke bor på samme adresse så er de ikke interessant for dette formålet.
                     if (harSammeAdresse(bestillingsdato, pdlBarn, pdlVergeEllerForelder)) {
                         val medlemskap =
-                            medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, correlationIdMedlemskap)
+                            medlemskapClient.slåOppMedlemskap(fnrVergeEllerForelder, bestillingsdato, correlationIdMedlemskap)
 
                         saksgrunnlag.add(
                             Saksgrunnlag(
