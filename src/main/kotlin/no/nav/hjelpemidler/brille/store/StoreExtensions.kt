@@ -72,9 +72,9 @@ fun <T> DataSource.queryList(
 
 fun <T> DataSource.queryList(
     @Language("PostgreSQL") sql: String,
-    queryParameters: Array<String> = emptyArray(),
+    queryParameters: List<String> = emptyList(),
     mapper: ResultMapper<T>,
-): List<T> = runAction(queryOf(sql, queryParameters).map(mapper).asList)
+): List<T> = runAction(queryOf(sql, params = queryParameters.toTypedArray()).map(mapper).asList)
 
 fun <T> DataSource.queryPagedList(
     @Language("PostgreSQL") sql: String,

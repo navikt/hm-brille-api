@@ -52,7 +52,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             WHERE orgnr in (?)
         """.trimIndent()
         sql = sql.replace("(?)", "(" + (0 until orgnr.count()).joinToString { "?" } + ")")
-        return ds.queryList(sql, orgnr.toTypedArray(), ::mapper)
+        return ds.queryList(sql, orgnr, ::mapper)
     }
 
     override fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet {
