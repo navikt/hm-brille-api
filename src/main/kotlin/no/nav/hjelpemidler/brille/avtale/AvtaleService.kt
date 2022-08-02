@@ -50,9 +50,10 @@ class AvtaleService(
             "fnrInnsender: $fnrInnsender kan opprette avtale for: ${avgivereFiltrert.map { it.orgnr }}"
         }
 
-        val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnrInnsender).associateBy {
-            it.orgnr
-        }
+        val virksomheter =
+            virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert.map { it.orgnr }).associateBy {
+                it.orgnr
+            }
 
         return avgivereFiltrert
             .map {
