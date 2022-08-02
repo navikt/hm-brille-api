@@ -72,7 +72,7 @@ fun <T> DataSource.queryList(
 
 fun <T> DataSource.queryList(
     @Language("PostgreSQL") sql: String,
-    queryParameters: List<String> = emptyList(),
+    queryParameters: Array<String> = emptyArray(),
     mapper: ResultMapper<T>,
 ): List<T> = runAction(queryOf(sql, queryParameters).map(mapper).asList)
 
