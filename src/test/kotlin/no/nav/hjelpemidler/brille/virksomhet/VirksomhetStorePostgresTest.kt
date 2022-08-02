@@ -19,8 +19,14 @@ internal class VirksomhetStorePostgresTest {
             )
         )
         val hentetVirksomhetForOrganisasjon = store.hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
-        val hentetVirksomhetForInnsender = store.hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
-            .firstOrNull()
-        hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
+        try{
+            val hentetVirksomhetForInnsender = store.hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
+                .firstOrNull()
+            hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
+
+        }catch (e: Exception){
+            System.out.println(e.stackTrace)
+        }
+
     }
 }
