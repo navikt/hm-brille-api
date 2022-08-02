@@ -25,7 +25,8 @@ internal class VirksomhetStorePostgresTest {
             hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
 
         }catch (e: Exception){
-            System.out.println(e.stackTrace)
+            System.out.println(e.message)
+            throw e
         }
 
     }
