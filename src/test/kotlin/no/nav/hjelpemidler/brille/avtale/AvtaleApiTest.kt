@@ -62,7 +62,7 @@ internal class AvtaleApiTest {
     @BeforeTest
     internal fun setUp() {
         every {
-            virksomhetStore.hentVirksomheterForInnsender(fnrInnsender)
+            virksomhetStore.hentVirksomheterForOrganisasjoner(listOf(virksomhet.orgnr))
         } returns listOf(virksomhet)
         every {
             virksomhetStore.hentVirksomhetForOrganisasjon(virksomhet.orgnr)
