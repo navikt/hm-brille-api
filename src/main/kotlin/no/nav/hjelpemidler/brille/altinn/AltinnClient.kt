@@ -20,7 +20,6 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 
 const val LANGUAGE_NORSK_BOKMÅL = "1044"
-const val ROLE_DEFINITION_CODE_HOVEDADMINISTRATOR = "HADM"
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -68,7 +67,28 @@ class AltinnClient(props: Configuration.AltinnProperties) {
                 parameters.append("subject", fnr)
                 parameters.append("reportee", orgnr)
                 parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
-                parameters.append("\$filter", "RoleDefinitionCode eq '$ROLE_DEFINITION_CODE_HOVEDADMINISTRATOR'")
+                parameters.append("\$filter", "RoleDefinitionCode eq '${AltinnRolle.HOVEDADMINISTRATOR.kode}'")
+            }
+        }
+        sikkerLog.info { "Hentet roller med url: ${response.request.url}" }
+        if (response.status == HttpStatusCode.OK) {
+            return response.body<List<JsonNode>?>()?.isNotEmpty() ?: false
+        }
+        log.warn { "Kunne ikke hente roller, status: ${response.status}" }
+        return false
+    }
+
+    suspend fun harRolleFor(fnr: String, orgnr: String, roller: AltinnRoller): Boolean {
+        val response = client.get("$baseUrl/authorization/roles") {
+            url {
+                parameters.append("ForceEIAuthentication", "true")
+                parameters.append("subject", fnr)
+                parameters.append("reportee", orgnr)
+                parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
+                parameters.append(
+                    "\$filter",
+                    "RoleDefinitionCode ${buildRolleQuery(roller)}"
+                )
             }
         }
         sikkerLog.info { "Hentet roller med url: ${response.request.url}" }

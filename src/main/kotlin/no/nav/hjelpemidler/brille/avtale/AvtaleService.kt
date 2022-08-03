@@ -1,6 +1,8 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.altinn.AltinnRolle
+import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
@@ -25,7 +27,10 @@ class AvtaleService(
         }
 
     suspend fun hentVirksomheter(fnrInnsender: String): List<Avtale> {
-        val avgivereFiltrert = altinnService.hentAvgivereHovedadministrator(fnrInnsender)
+        val avgivereFiltrert = altinnService.hentAvgivereMedRolle(
+            fnrInnsender,
+            AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR, AltinnRolle.REGNSKAPSMEDARBEIDER)
+        )
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
                 val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)

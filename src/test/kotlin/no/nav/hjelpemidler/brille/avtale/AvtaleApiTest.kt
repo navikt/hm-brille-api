@@ -39,7 +39,7 @@ internal class AvtaleApiTest {
         navn = "Brillesjø AS",
         orgnr = "456313701",
         parentOrgnr = null,
-        hovedadministrator = true
+        harRolle = true
     )
     private val virksomhet = Virksomhet(
         orgnr = avgiver.orgnr,
@@ -69,6 +69,9 @@ internal class AvtaleApiTest {
         } returns virksomhet
         coEvery {
             altinnService.hentAvgivereHovedadministrator(fnrInnsender)
+        } returns listOf(avgiver)
+        coEvery {
+            altinnService.hentAvgivereMedRolle(fnrInnsender, any())
         } returns listOf(avgiver)
         coEvery {
             enhetsregisteretService.hentOrganisasjonsenhet(avgiver.orgnr)
