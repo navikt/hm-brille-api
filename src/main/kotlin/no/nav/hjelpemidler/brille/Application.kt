@@ -143,7 +143,7 @@ fun Application.setupRoutes() {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
                     innsenderApi(innsenderService)
-                    vilkårApi(vilkårsvurderingService, auditService)
+                    vilkårApi(vilkårsvurderingService, auditService, kafkaService)
                     kravApi(vedtakService, auditService)
                 }
                 avtaleApi(avtaleService)

@@ -9,11 +9,14 @@ import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.avtale.Avtale
+import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
+import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
+import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import java.math.BigDecimal
@@ -54,6 +57,30 @@ class KafkaService(
 
     fun vilkårVurdert() {
         // todo -> send til bq-sink
+    }
+
+    suspend fun vilkårIkkeOppfylt(vilkårsgrunnlag: VilkårsgrunnlagDto, vilkårsvurdering: Vilkårsvurdering<Vilkårsgrunnlag>) {
+        fun Vilkårsvurdering<Vilkårsgrunnlag>.harResultatJaForVilkår(identifikator: String) =
+            this.evaluering.barn.find { it.identifikator == identifikator }!!.resultat == Resultat.JA
+
+        try {
+            sendTilBigQuery(
+                null,
+                AvslagStatistikk(
+                    orgnr = vilkårsgrunnlag.orgnr,
+                    navn = vilkårsgrunnlag.orgNavn,
+                    harIkkeVedtakIKalenderåretOppfylt = vilkårsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret v1"),
+                    under18ÅrPåBestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Under18ÅrPåBestillingsdato v1"),
+                    medlemAvFolketrygdenOppfylt = vilkårsvurdering.harResultatJaForVilkår("MedlemAvFolketrygden v1"),
+                    brillestyrkeOppfylt = vilkårsvurdering.harResultatJaForVilkår("Brillestyrke v1"),
+                    bestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Bestillingsdato v1"),
+                    bestillingsdatoTilbakeITidOppfylt = vilkårsvurdering.harResultatJaForVilkår("BestillingsdatoTilbakeITid v1"),
+                    opprettet = LocalDateTime.now()
+                )
+            )
+        } catch (e: Exception) {
+            log.error(e) { "Feil under sending av statistikk til BigQuery" }
+        }
     }
 
     fun vedtakFattet(krav: KravDto, vedtak: Vedtak<Vilkårsgrunnlag>) {
@@ -101,7 +128,7 @@ class KafkaService(
         )
     }
 
-    private fun <T> produceEvent(key: String, event: T) {
+    private fun <T> produceEvent(key: String?, event: T) {
         try {
             val record = ProducerRecord(topic, key, mapper.writeValueAsString(event))
             kafkaProducer.send(record).get(10, TimeUnit.SECONDS)
@@ -111,7 +138,7 @@ class KafkaService(
         }
     }
 
-    private fun <T : Any> sendTilBigQuery(key: String, payload: T) {
+    private fun <T : Any> sendTilBigQuery(key: String?, payload: T) {
         val bigQueryHendelse = requireNotNull(payload::class.findAnnotation<BigQueryHendelse>()) {
             "${payload::class} mangler BigQueryHendelse-annotasjon"
         }
@@ -191,6 +218,20 @@ class KafkaService(
         val satsBeløp: Int,
         val satsBeskrivelse: String,
         val beløp: BigDecimal,
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "avslag_v1")
+    internal data class AvslagStatistikk(
+        val orgnr: String,
+        val navn: String,
+        val harIkkeVedtakIKalenderåretOppfylt: Boolean,
+        val under18ÅrPåBestillingsdatoOppfylt: Boolean,
+        val medlemAvFolketrygdenOppfylt: Boolean,
+        val brillestyrkeOppfylt: Boolean,
+        val bestillingsdatoOppfylt: Boolean,
+        val bestillingsdatoTilbakeITidOppfylt: Boolean,
+        val opprettet: LocalDateTime
     )
 
     class KafkaException(message: String, cause: Throwable?) : RuntimeException(message, cause)

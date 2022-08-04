@@ -45,7 +45,7 @@ internal class VilkårApiTest {
 
     private val routing = TestRouting {
         authenticate("test") {
-            vilkårApi(vilkårsvurderingService, mockk(relaxed = true))
+            vilkårApi(vilkårsvurderingService, mockk(relaxed = true), mockk(relaxed = true))
         }
     }
 
@@ -234,6 +234,7 @@ internal class VilkårApiTest {
 
     private val defaultVilkårsgrunnlag = VilkårsgrunnlagDto(
         orgnr = "",
+        orgNavn = "",
         fnrBarn = "07480966982",
         brilleseddel = Brilleseddel(
             høyreSfære = 1.00,
