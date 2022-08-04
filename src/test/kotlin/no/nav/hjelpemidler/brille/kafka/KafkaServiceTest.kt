@@ -9,6 +9,7 @@ import no.nav.hjelpemidler.brille.vedtak.KravDto
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
+import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.apache.kafka.clients.producer.MockProducer
 import org.apache.kafka.common.serialization.StringSerializer
@@ -28,7 +29,6 @@ internal class KafkaServiceTest {
         val krav = KravDto(
             VilkårsgrunnlagDto(
                 orgnr = "067234162",
-                orgNavn = "",
                 fnrBarn = "07083440346",
                 brilleseddel = Brilleseddel(
                     høyreSfære = 1.0,
@@ -37,7 +37,8 @@ internal class KafkaServiceTest {
                     venstreSylinder = 1.0
                 ),
                 bestillingsdato = LocalDate.now(),
-                brillepris = BigDecimal.ZERO
+                brillepris = BigDecimal.ZERO,
+                extras = VilkårsgrunnlagExtrasDto("", "")
             ),
             "test",
             "test",

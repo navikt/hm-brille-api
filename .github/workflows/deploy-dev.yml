@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - metabase-vilkårsvurdering
+      - metabase-avslag-refnr
 
 jobs:
   build-and-deploy:

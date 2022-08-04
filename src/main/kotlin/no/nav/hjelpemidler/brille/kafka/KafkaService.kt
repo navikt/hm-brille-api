@@ -68,7 +68,8 @@ class KafkaService(
                 null,
                 AvslagStatistikk(
                     orgnr = vilkårsgrunnlag.orgnr,
-                    navn = vilkårsgrunnlag.orgNavn,
+                    navn = vilkårsgrunnlag.extras.orgNavn,
+                    bestillingsreferanse = vilkårsgrunnlag.extras.bestillingsreferanse,
                     harIkkeVedtakIKalenderåretOppfylt = vilkårsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret v1"),
                     under18ÅrPåBestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Under18ÅrPåBestillingsdato v1"),
                     medlemAvFolketrygdenOppfylt = vilkårsvurdering.harResultatJaForVilkår("MedlemAvFolketrygden v1"),
@@ -225,6 +226,7 @@ class KafkaService(
     internal data class AvslagStatistikk(
         val orgnr: String,
         val navn: String,
+        val bestillingsreferanse: String,
         val harIkkeVedtakIKalenderåretOppfylt: Boolean,
         val under18ÅrPåBestillingsdatoOppfylt: Boolean,
         val medlemAvFolketrygdenOppfylt: Boolean,

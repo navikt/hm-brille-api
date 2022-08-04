@@ -234,7 +234,6 @@ internal class VilkårApiTest {
 
     private val defaultVilkårsgrunnlag = VilkårsgrunnlagDto(
         orgnr = "",
-        orgNavn = "",
         fnrBarn = "07480966982",
         brilleseddel = Brilleseddel(
             høyreSfære = 1.00,
@@ -243,6 +242,7 @@ internal class VilkårApiTest {
             venstreSylinder = 0.00,
         ),
         bestillingsdato = DATO_ORDNINGEN_STARTET,
-        brillepris = "1500".toBigDecimal()
+        brillepris = "1500".toBigDecimal(),
+        extras = VilkårsgrunnlagExtrasDto("", "")
     )
 }
