@@ -13,6 +13,9 @@ import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
+
+
 private val log = KotlinLogging.logger { }
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
     post("/vilkarsgrunnlag") {
@@ -27,6 +30,12 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
             val sats = when (vilkarsvurdering.utfall) {
                 Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
                 else -> SatsType.INGEN
+            }
+
+            if (vilkarsvurdering.utfall != Resultat.JA) {
+                sikkerLog.info {
+                    "Vilkårsvurderingen ga negativt resultat:\n${vilkarsvurdering.toJson()}"
+                }
             }
 
             val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlag.brillepris)
