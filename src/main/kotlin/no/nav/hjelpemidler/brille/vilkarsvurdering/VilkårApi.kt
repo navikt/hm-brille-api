@@ -15,7 +15,6 @@ import no.nav.hjelpemidler.brille.sats.SatsType
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
-
 private val log = KotlinLogging.logger { }
 fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
     post("/vilkarsgrunnlag") {
