@@ -28,6 +28,7 @@ internal class KafkaServiceTest {
         val krav = KravDto(
             VilkårsgrunnlagDto(
                 orgnr = "067234162",
+                orgNavn = "",
                 fnrBarn = "07083440346",
                 brilleseddel = Brilleseddel(
                     høyreSfære = 1.0,

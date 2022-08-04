@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - 20-journalføre-til-joark
+      - metabase-vilkårsvurdering
 
 jobs:
   build-and-deploy:
