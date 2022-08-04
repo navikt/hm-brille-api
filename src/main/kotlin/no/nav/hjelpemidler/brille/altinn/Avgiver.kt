@@ -31,12 +31,12 @@ internal fun buildRolleQuery(altinnRoller: AltinnRoller): String {
     var query = ""
 
     when (altinnRoller.size) {
-        1 -> query = query.plus(" eq ${altinnRoller.first().kode}")
+        1 -> query = query.plus(" eq '${altinnRoller.first().kode}'")
         else -> {
-            query = query.plus(" eq ${altinnRoller.first().kode}")
+            query = query.plus(" eq '${altinnRoller.first().kode}'")
             val iter = altinnRoller.subList(1, altinnRoller.size).iterator()
             while (iter.hasNext()) {
-                query = query.plus(" or RoleDefinitionCode eq ${iter.next().kode}")
+                query = query.plus(" or RoleDefinitionCode eq '${iter.next().kode}'")
             }
         }
     }

@@ -1,6 +1,8 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.altinn.AltinnRolle
+import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
@@ -24,9 +26,12 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentVirksomheter(fnrInnsender: String): List<Avtale> {
-        val avgivereFiltrert = altinnService.hentAvgivereHovedadministrator(
-            fnrInnsender
+    suspend fun hentVirksomheter(
+        fnrInnsender: String,
+        roller: AltinnRoller = AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR)
+    ): List<Avtale> {
+        val avgivereFiltrert = altinnService.hentAvgivereMedRolle(
+            fnrInnsender, roller
         )
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
