@@ -45,6 +45,9 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
     }
 
     override fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet> {
+        if (orgnr.isEmpty()) {
+            return emptyList()
+        }
         @Language("PostgreSQL")
         var sql = """
             SELECT orgnr, kontonr, epost, fnr_innsender, fnr_oppdatert_av, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
