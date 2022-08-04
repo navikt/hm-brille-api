@@ -12,8 +12,6 @@ import io.ktor.server.response.respondOutputStream
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
-import no.nav.hjelpemidler.brille.altinn.AltinnRolle
-import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
@@ -26,10 +24,9 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
     route("/kravlinjer") {
         get("/paged/{orgnr}") {
             val orgnr = call.orgnr()
-            if (!altinnService.harRolleFor(
+            if (!altinnService.erHovedadministratorFor(
                     call.extractFnr(),
                     orgnr,
-                    AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR, AltinnRolle.REGNSKAPSMEDARBEIDER)
                 )
             ) {
                 call.respond(HttpStatusCode.Unauthorized)
@@ -63,10 +60,9 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
         get("/csv/{orgnr}") {
             val orgnr = call.orgnr()
-            if (!altinnService.harRolleFor(
+            if (!altinnService.erHovedadministratorFor(
                     call.extractFnr(),
-                    orgnr,
-                    AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR, AltinnRolle.REGNSKAPSMEDARBEIDER)
+                    orgnr
                 )
             ) {
                 call.respond(HttpStatusCode.Unauthorized)
