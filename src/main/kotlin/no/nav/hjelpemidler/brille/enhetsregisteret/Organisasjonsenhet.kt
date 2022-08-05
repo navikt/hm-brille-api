@@ -41,5 +41,6 @@ data class Næringskode(
         const val BUTIKKHANDEL_MED_HELSEKOST = "47.291"
         const val ANDRE_HELSETJENESTER = "86.909"
         const val ENGROSHANDEL_MED_OPTISKE_ARTIKLER = "46.435"
+        const val SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE = "86.221"
     }
 }
