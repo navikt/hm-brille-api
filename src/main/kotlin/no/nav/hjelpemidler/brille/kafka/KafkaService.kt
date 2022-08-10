@@ -19,6 +19,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.KafkaException
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,7 +41,11 @@ class KafkaService(
         .build()
 
     fun avtaleOpprettet(avtale: Avtale) {
-        // todo -> send til tss-sink
+        // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
+        // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
+        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
+
+        // Metrics
         sendTilBigQuery(
             avtale.orgnr,
             AvtaleStatistikk(
@@ -51,8 +56,9 @@ class KafkaService(
         )
     }
 
-    fun avtaleOppdatert() {
-        // todo -> send til tss-sink
+    fun avtaleOppdatert(avtale: Avtale) {
+        // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
+        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
     }
 
     fun vilkårVurdert() {
@@ -150,6 +156,19 @@ class KafkaService(
                 "eventName" to bigQueryHendelse.eventName,
                 "schemaId" to bigQueryHendelse.schemaId,
                 "payload" to payload
+            )
+        )
+    }
+
+    private fun oppdaterTSS(orgnr: String, kontonr: String) {
+        if (!Configuration.dev) return
+        produceEvent(
+            null,
+            mapOf(
+                "eventId" to UUID.randomUUID(),
+                "eventName" to "hm-utbetaling-tss-optiker",
+                "orgnr" to orgnr,
+                "kontonr" to kontonr,
             )
         )
     }

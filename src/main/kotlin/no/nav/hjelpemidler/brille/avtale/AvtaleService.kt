@@ -134,7 +134,10 @@ class AvtaleService(
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
+        val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
-        return Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+        kafkaService.avtaleOppdatert(avtale)
+
+        return avtale
     }
 }

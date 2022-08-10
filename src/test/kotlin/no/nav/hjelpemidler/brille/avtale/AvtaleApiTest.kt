@@ -94,6 +94,9 @@ internal class AvtaleApiTest {
         every {
             kafkaService.avtaleOpprettet(any())
         } returns Unit
+        every {
+            kafkaService.avtaleOppdatert(any())
+        } returns Unit
     }
 
     @Test
