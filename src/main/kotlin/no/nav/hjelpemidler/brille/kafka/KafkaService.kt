@@ -58,7 +58,7 @@ class KafkaService(
 
     fun avtaleOppdatert(avtale: Avtale) {
         // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
-        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
+        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
     }
 
     fun vilkårVurdert() {
