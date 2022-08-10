@@ -102,6 +102,41 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
     }
 }
 
+fun Route.rapportApiAdmin(rapportService: RapportService, altinnService: AltinnService) {
+    route("/efdf378e-523c-44a3-aeb6-de9d5bf538f6") {
+        get("/csv/{orgnr}") {
+            val orgnr = call.orgnr()
+
+            val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
+
+            val fraDato = call.request.queryParameters["fraDato"]?.toLocalDate()
+            val tilDato = call.request.queryParameters["tilDato"]?.toLocalDate()?.plusDays(1)
+
+            val kravlinjer = rapportService.hentKravlinjer(
+                orgNr = orgnr,
+                kravFilter = kravFilter,
+                fraDato = fraDato,
+                tilDato = tilDato
+            )
+
+            call.response.header(
+                HttpHeaders.ContentDisposition,
+                ContentDisposition.Attachment.withParameter(
+                    ContentDisposition.Parameters.FileName,
+                    "${Date().time}.csv"
+                )
+                    .toString()
+            )
+
+            call.respondOutputStream(
+                status = HttpStatusCode.OK,
+                contentType = ContentType.Text.CSV,
+                producer = producer(kravlinjer)
+            )
+        }
+    }
+}
+
 fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
     write("NAV referanse; Deres referanse; Kravbeløp; Opprettet dato; Utbetalt, Utbetalingsdato".toByteArray())
     write("\n".toByteArray())
