@@ -152,7 +152,7 @@ fun Application.setupRoutes() {
             }
 
             // Admin apis
-            rapportApiAdmin(rapportService, altinnService)
+            // rapportApiAdmin(rapportService, altinnService)
         }
     }
 }
