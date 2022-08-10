@@ -11,6 +11,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.altinn.AltinnRolle
+import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.extractFnr
 
 private val log = KotlinLogging.logger { }
@@ -35,6 +37,31 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
                 }
                 call.respond(HttpStatusCode.OK, virksomhet)
             }
+
+            // Egne get-endepunkt for hovedadministrator + regnskapsmedarbeider for brillerapport
+            get("/regna") {
+                val virksomheter = avtaleService.hentVirksomheter(
+                    call.extractFnr(),
+                    AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR, AltinnRolle.REGNSKAPSMEDARBEIDER)
+                )
+                call.respond(HttpStatusCode.OK, virksomheter)
+            }
+            // hent avtale for virksomhet
+            get("/regna/{orgnr}") {
+                val orgnr = call.orgnr()
+                val virksomhet = avtaleService.hentVirksomheter(
+                    call.extractFnr(),
+                    AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR, AltinnRolle.REGNSKAPSMEDARBEIDER)
+                ).associateBy {
+                    it.orgnr
+                }[orgnr]
+                if (virksomhet == null) {
+                    call.response.status(HttpStatusCode.NotFound)
+                    return@get
+                }
+                call.respond(HttpStatusCode.OK, virksomhet)
+            }
+
             // opprett avtale
             post {
                 val opprettAvtale = call.receive<OpprettAvtale>()

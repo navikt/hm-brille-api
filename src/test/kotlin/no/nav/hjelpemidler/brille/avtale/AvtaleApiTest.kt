@@ -39,7 +39,7 @@ internal class AvtaleApiTest {
         navn = "Brillesjø AS",
         orgnr = "456313701",
         parentOrgnr = null,
-        hovedadministrator = true
+        harRolle = true
     )
     private val virksomhet = Virksomhet(
         orgnr = avgiver.orgnr,
@@ -62,13 +62,16 @@ internal class AvtaleApiTest {
     @BeforeTest
     internal fun setUp() {
         every {
-            virksomhetStore.hentVirksomheterForInnsender(fnrInnsender)
+            virksomhetStore.hentVirksomheterForOrganisasjoner(listOf(virksomhet.orgnr))
         } returns listOf(virksomhet)
         every {
             virksomhetStore.hentVirksomhetForOrganisasjon(virksomhet.orgnr)
         } returns virksomhet
         coEvery {
             altinnService.hentAvgivereHovedadministrator(fnrInnsender)
+        } returns listOf(avgiver)
+        coEvery {
+            altinnService.hentAvgivereMedRolle(fnrInnsender, any())
         } returns listOf(avgiver)
         coEvery {
             enhetsregisteretService.hentOrganisasjonsenhet(avgiver.orgnr)
@@ -90,6 +93,9 @@ internal class AvtaleApiTest {
         } returnsArgument 0
         every {
             kafkaService.avtaleOpprettet(any())
+        } returns Unit
+        every {
+            kafkaService.avtaleOppdatert(any())
         } returns Unit
     }
 

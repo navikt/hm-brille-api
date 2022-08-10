@@ -17,6 +17,7 @@ import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Bostedsadress
 import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.DeltBosted
 import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Folkeregistermetadata
 import no.nav.hjelpemidler.brille.redis.RedisClient
+import no.nav.hjelpemidler.brille.writePrettyString
 import org.slf4j.MDC
 import java.time.LocalDate
 import java.util.UUID
@@ -224,11 +225,28 @@ private fun sjekkFolkeregistrertAdresseINorge(
     // Avklar folkeregistrert adresse i Norge, ellers stopp behandling.
     val bostedsadresser = pdlBarn?.bostedsadresse ?: listOf()
     val deltBostedBarn = pdlBarn?.deltBosted ?: listOf()
-    return slåSammenAktiveBosteder(
+    val aktiveBosteder = slåSammenAktiveBosteder(
         bestillingsdato,
         bostedsadresser,
         deltBostedBarn,
-    ).any { it.vegadresse != null || it.matrikkeladresse != null || it.ukjentBosted != null }
+    )
+
+    val finnesFolkeregistrertAdresse =
+        aktiveBosteder.any { it.vegadresse != null || it.matrikkeladresse != null || it.ukjentBosted != null }
+
+    try {
+        if (!finnesFolkeregistrertAdresse) {
+            sikkerLog.info {
+                "Fant ingen folkeregistrert adresse for barn født: ${pdlBarn?.foedsel?.first()}, " +
+                    " ${jsonMapper.writePrettyString(bostedsadresser)} " +
+                    " ${jsonMapper.writePrettyString(deltBostedBarn)} "
+            }
+        }
+    } catch (e: Exception) {
+        log.warn { "Klarte ikke å loggge info om barn uten folkeregistrert adresse" }
+    }
+
+    return finnesFolkeregistrertAdresse
 }
 
 private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(

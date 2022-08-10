@@ -41,6 +41,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.rapportering.RapportService
 import no.nav.hjelpemidler.brille.rapportering.RapportStorePostgres
 import no.nav.hjelpemidler.brille.rapportering.rapportApi
+import no.nav.hjelpemidler.brille.rapportering.rapportApiAdmin
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
@@ -143,12 +144,15 @@ fun Application.setupRoutes() {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
                     innsenderApi(innsenderService)
-                    vilkårApi(vilkårsvurderingService, auditService)
+                    vilkårApi(vilkårsvurderingService, auditService, kafkaService)
                     kravApi(vedtakService, auditService)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)
             }
+
+            // Admin apis
+            // rapportApiAdmin(rapportService, altinnService)
         }
     }
 }

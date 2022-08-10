@@ -9,12 +9,19 @@ import io.ktor.server.routing.post
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
+
 private val log = KotlinLogging.logger { }
-fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditService: AuditService) {
+fun Route.vilkårApi(
+    vilkårsvurderingService: VilkårsvurderingService,
+    auditService: AuditService,
+    kafkaService: KafkaService
+) {
     post("/vilkarsgrunnlag") {
         try {
             val vilkårsgrunnlag = call.receive<VilkårsgrunnlagDto>()
@@ -27,6 +34,13 @@ fun Route.vilkårApi(vilkårsvurderingService: VilkårsvurderingService, auditSe
             val sats = when (vilkarsvurdering.utfall) {
                 Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
                 else -> SatsType.INGEN
+            }
+
+            if (vilkarsvurdering.utfall != Resultat.JA) {
+                sikkerLog.info {
+                    "Vilkårsvurderingen ga negativt resultat:\n${vilkarsvurdering.toJson()}"
+                }
+                kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkarsvurdering)
             }
 
             val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlag.brillepris)

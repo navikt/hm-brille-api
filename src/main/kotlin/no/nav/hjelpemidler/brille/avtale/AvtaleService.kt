@@ -1,6 +1,8 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.altinn.AltinnRolle
+import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
@@ -24,8 +26,13 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentVirksomheter(fnrInnsender: String): List<Avtale> {
-        val avgivereFiltrert = altinnService.hentAvgivereHovedadministrator(fnrInnsender)
+    suspend fun hentVirksomheter(
+        fnrInnsender: String,
+        roller: AltinnRoller = AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR)
+    ): List<Avtale> {
+        val avgivereFiltrert = altinnService.hentAvgivereMedRolle(
+            fnrInnsender, roller
+        )
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
                 val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
@@ -41,7 +48,8 @@ class AvtaleService(
                         Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
                         Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
                         Næringskode.ANDRE_HELSETJENESTER,
-                        Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER
+                        Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
+                        Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE
                     ).any { enhet.harNæringskode(it) }
                 }
             }
@@ -50,9 +58,10 @@ class AvtaleService(
             "fnrInnsender: $fnrInnsender kan opprette avtale for: ${avgivereFiltrert.map { it.orgnr }}"
         }
 
-        val virksomheter = virksomhetStore.hentVirksomheterForInnsender(fnrInnsender).associateBy {
-            it.orgnr
-        }
+        val virksomheter =
+            virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert.map { it.orgnr }).associateBy {
+                it.orgnr
+            }
 
         return avgivereFiltrert
             .map {
@@ -125,7 +134,10 @@ class AvtaleService(
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
+        val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
-        return Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+        kafkaService.avtaleOppdatert(avtale)
+
+        return avtale
     }
 }

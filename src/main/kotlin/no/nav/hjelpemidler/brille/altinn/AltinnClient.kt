@@ -78,4 +78,25 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         log.warn { "Kunne ikke hente roller, status: ${response.status}" }
         return false
     }
+
+    suspend fun harRolleFor(fnr: String, orgnr: String, roller: AltinnRoller): Boolean {
+        val response = client.get("$baseUrl/authorization/roles") {
+            url {
+                parameters.append("ForceEIAuthentication", "true")
+                parameters.append("subject", fnr)
+                parameters.append("reportee", orgnr)
+                parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
+                parameters.append(
+                    "\$filter",
+                    "RoleDefinitionCode ${buildRolleQuery(roller)}"
+                )
+            }
+        }
+        sikkerLog.info { "Hentet roller med url: ${response.request.url}" }
+        if (response.status == HttpStatusCode.OK) {
+            return response.body<List<JsonNode>?>()?.isNotEmpty() ?: false
+        }
+        log.warn { "Kunne ikke hente roller, status: ${response.status}" }
+        return false
+    }
 }
