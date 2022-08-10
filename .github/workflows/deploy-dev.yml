@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - metabase-avslag-refnr
+      - bestillingsdato-mot-lovme
 
 jobs:
   build-and-deploy:
