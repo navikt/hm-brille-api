@@ -1,14 +1,18 @@
 package no.nav.hjelpemidler.brille.pdl
 
+import com.expediagroup.graphql.client.jackson.types.JacksonGraphQLResponse
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.common.runBlocking
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 
-internal class PdlClientTest {
+class PdlClientTest {
     @Test
     internal fun `happy case`() = test("/mock/pdl.json") { client ->
         val oppslag = runBlocking { client.hentPerson("07121410995") }
@@ -49,4 +53,13 @@ internal class PdlClientTest {
             )
         )
     }
+}
+
+fun lagMockPdlOppslag(fødselsdato: String): PdlOppslag<Person?> {
+    val pdlPersonResponse = PdlClientTest::class.java.getResourceAsStream("/mock/pdl.json").use {
+        val json = requireNotNull(it).bufferedReader().readText().replace("2014-08-15", fødselsdato)
+        jsonMapper.readValue<JacksonGraphQLResponse<HentPerson.Result?>>(json)
+    }
+
+    return PdlOppslag(pdlPersonResponse.data?.hentPerson, jsonMapper.nullNode())
 }
