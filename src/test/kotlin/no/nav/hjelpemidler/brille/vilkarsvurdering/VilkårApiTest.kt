@@ -21,6 +21,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlOppslag
 import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
+import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.test.TestRouting
@@ -170,7 +171,7 @@ internal class VilkårApiTest {
 
         coEvery {
             pdlClient.hentPerson(vilkårsgrunnlag.fnrBarn)
-        } returns lagPdlOppslag(fødselsdato)
+        } returns lagMockPdlOppslag(fødselsdato)
 
         every {
             medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBarn, vilkårsgrunnlag.bestillingsdato)
