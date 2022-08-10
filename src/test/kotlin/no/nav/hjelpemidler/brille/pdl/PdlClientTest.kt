@@ -12,7 +12,7 @@ import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 
-class PdlClientTest {
+internal class PdlClientTest {
     @Test
     internal fun `happy case`() = test("/mock/pdl.json") { client ->
         val oppslag = runBlocking { client.hentPerson("07121410995") }
