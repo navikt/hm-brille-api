@@ -41,10 +41,6 @@ class KafkaService(
         .build()
 
     fun avtaleOpprettet(avtale: Avtale) {
-        // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
-        // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
-        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
-
         // Metrics
         sendTilBigQuery(
             avtale.orgnr,
@@ -54,9 +50,37 @@ class KafkaService(
                 opprettet = requireNotNull(avtale.opprettet),
             )
         )
+
+        // If we are in dev we mock a real orgnr and kontonr before sending to TSS as it doesn't support our synthetic
+        // data in dev.
+        @Suppress("NAME_SHADOWING")
+        val avtale = if (Configuration.dev) {
+            avtale.copy(
+                orgnr = "936314783",
+                kontonr = "47504831694",
+            )
+        } else {
+            avtale
+        }
+
+        // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
+        // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
+        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
     }
 
     fun avtaleOppdatert(avtale: Avtale) {
+        // If we are in dev we mock a real orgnr and kontonr before sending to TSS as it doesn't support our synthetic
+        // data in dev.
+        @Suppress("NAME_SHADOWING")
+        val avtale = if (Configuration.dev) {
+            avtale.copy(
+                orgnr = "936314783",
+                kontonr = "47504831694",
+            )
+        } else {
+            avtale
+        }
+
         // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
     }
