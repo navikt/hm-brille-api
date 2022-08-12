@@ -49,9 +49,7 @@ class VedtakService(
                 beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
             )
         )
-
         kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)
-
         return vedtak
     }
 }
