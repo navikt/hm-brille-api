@@ -67,13 +67,10 @@ class AzureAdClient(
     suspend fun getToken(scope: String): BearerTokens = BearerTokens(grant(scope).accessToken, "")
 
     suspend fun getTokenCached(scope: String): Token = mutex.withLock {
-        log.info("DEBUG: Has token that is expired? ${tokenCache[scope]?.isExpired() ?: "null"}")
-
         tokenCache[scope]
             ?.takeUnless(Token::isExpired)
             ?: grant(scope)
                 .also { token ->
-                    log.info { "DEBUG: Token oppdatert, scope: $scope" }
                     tokenCache[scope] = token
                 }
     }
@@ -92,7 +89,6 @@ data class Token(
 
     @JsonIgnore
     fun isExpired(): Boolean {
-        log.info { "expires on: $expiresOn, now: ${Instant.now()}, expiresOnIsBefore: ${expiresOn.isBefore(Instant.now())}" }
         return expiresOn.isBefore(Instant.now())
     }
 
@@ -115,11 +111,9 @@ fun Auth.azureAd(scope: String) {
     val client = AzureAdClient(Configuration.azureAdProperties)
     bearer {
         loadTokens {
-            log.info { "loadTokens med scope: $scope" }
             client.getToken(scope)
         }
         refreshTokens {
-            log.info { "refreshTokens med scope: $scope" }
             client.getToken(scope)
         }
         sendWithoutRequest { true }
