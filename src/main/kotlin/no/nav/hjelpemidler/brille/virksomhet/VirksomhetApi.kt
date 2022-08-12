@@ -79,9 +79,9 @@ fun Route.virksomhetApi(
 private fun adresseFor(
     enhet: Organisasjonsenhet,
 ) = if (enhet.forretningsadresse != null) {
-    "${enhet.forretningsadresse.adresse.first()}, ${enhet.forretningsadresse.postnummer} ${enhet.forretningsadresse.poststed}"
+    "${enhet.forretningsadresse.adresse.firstOrNull() ?: ""}, ${enhet.forretningsadresse.postnummer} ${enhet.forretningsadresse.poststed}"
 } else if (enhet.beliggenhetsadresse != null) {
-    "${enhet.beliggenhetsadresse.adresse.first()}, ${enhet.beliggenhetsadresse.postnummer} ${enhet.beliggenhetsadresse.poststed}"
+    "${enhet.beliggenhetsadresse.adresse.firstOrNull() ?: ""}, ${enhet.beliggenhetsadresse.postnummer} ${enhet.beliggenhetsadresse.poststed}"
 } else {
     ""
 }

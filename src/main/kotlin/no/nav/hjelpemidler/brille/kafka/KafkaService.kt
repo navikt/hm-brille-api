@@ -41,10 +41,6 @@ class KafkaService(
         .build()
 
     fun avtaleOpprettet(avtale: Avtale) {
-        // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
-        // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
-        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
-
         // Metrics
         sendTilBigQuery(
             avtale.orgnr,
@@ -54,6 +50,10 @@ class KafkaService(
                 opprettet = requireNotNull(avtale.opprettet),
             )
         )
+
+        // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
+        // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
+        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
     }
 
     fun avtaleOppdatert(avtale: Avtale) {
