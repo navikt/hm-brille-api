@@ -51,7 +51,6 @@ class UtbetalingServiceTest {
         val nyUtbetaling = utbetalingService.opprettNyUtbetaling(vedtak = etInnvilgetVedtak)
         nyUtbetaling.vedtakId shouldBe etInnvilgetVedtak.id
         nyUtbetaling.status shouldBe UtbetalingStatus.NY
-        // simulate already stored in database
 
         val sendUtbetaling = utbetalingService.sendTilUtbetaling(nyUtbetaling)
         sendUtbetaling.status shouldBe UtbetalingStatus.TIL_UTBETALING
