@@ -24,6 +24,8 @@ private val dataSource: DataSource by lazy {
         .also {
             it.connection.prepareStatement("DROP ROLE IF EXISTS cloudsqliamuser").execute()
             it.connection.prepareStatement("CREATE ROLE cloudsqliamuser").execute()
+            it.connection.prepareStatement("DROP ROLE IF EXISTS naisjob").execute()
+            it.connection.prepareStatement("CREATE ROLE naisjob").execute()
         }
 }
 
