@@ -6,11 +6,51 @@ metadata:
   labels:
     team: teamdigihot
 spec:
+  restartPolicy: Never
   image: {{ image }}
   port: {{ port }}
   env:
+  {{#each env}}
+    - name: {{@key}}
+      value: "{{this}}"
+  {{/each}}
+    - name: GIT_COMMIT
+      value: {{commit}}
     - name: CRONJOB_TYPE
       value: SYNC_TSS
+  envFrom:
+    - secret: redis-password
+    - secret: hm-soknad-api-secret
+  tokenx:
+    enabled: true
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    inbound:
+      rules:
+      {{#each inbound-applications}}
+        - application: {{ this }}
+      {{/each}}
+    outbound:
+      rules:
+      {{#each outbound-applications}}
+        - application: {{ this }}
+      {{/each}}
+        - application: syfohelsenettproxy
+          namespace: teamsykmelding
+          cluster: {{ syfohelsenettproxy_cluster }}
+        - application: medlemskap-oppslag
+          namespace: medlemskap
+          cluster: {{ medlemskap_cluster }}
+        - application: brille-redis
+      external:
+      {{#each external-hosts}}
+        - host: {{ this }}
+      {{/each}}
+  prometheus:
+    enabled: true
+    path: /internal/metrics
   kafka:
     pool: {{ kafka-cluster }}
   secureLogs:

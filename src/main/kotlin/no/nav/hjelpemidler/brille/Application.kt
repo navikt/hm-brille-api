@@ -61,7 +61,10 @@ private val log = KotlinLogging.logger {}
 fun main(args: Array<String>) {
     when (System.getenv("CRONJOB_TYPE")) {
         "SYNC_TSS" -> cronjobSyncTss(args)
-        else -> io.ktor.server.cio.EngineMain.main(args)
+        else -> {
+            log.info("DEBUG: Normal run of ktor main")
+            io.ktor.server.cio.EngineMain.main(args)
+        }
     }
 }
 
