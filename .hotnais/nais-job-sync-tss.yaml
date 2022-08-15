@@ -21,8 +21,6 @@ spec:
   envFrom:
     - secret: redis-password
     - secret: hm-soknad-api-secret
-  tokenx:
-    enabled: true
   azure:
     application:
       enabled: true
@@ -48,9 +46,6 @@ spec:
       {{#each external-hosts}}
         - host: {{ this }}
       {{/each}}
-  prometheus:
-    enabled: true
-    path: /internal/metrics
   kafka:
     pool: {{ kafka-cluster }}
   gcp:

@@ -88,6 +88,13 @@ object Configuration {
         )
     )
 
+    private val cronjobProperties = ConfigurationMap(
+        mapOf(
+            "TOKEN_X_CLIENT_ID" to "abc",
+            "TOKEN_X_WELL_KNOWN_URL" to "abc",
+        )
+    )
+
     private val resourceProperties =
         when (System.getenv("NAIS_CLUSTER_NAME") ?: System.getProperty("NAIS_CLUSTER_NAME")) {
             "dev-gcp" -> devProperties
@@ -95,8 +102,10 @@ object Configuration {
             else -> localProperties
         }
 
-    private val config =
-        systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
+    private val config = when (System.getenv("CRONJOB_TYPE")) {
+        null -> systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
+        else -> systemProperties() overriding EnvironmentVariables() overriding cronjobProperties overriding resourceProperties overriding defaultProperties
+    }
 
     val profile: Profile = this["application.profile"].let { Profile.valueOf(it) }
     val cluster: Cluster = this["application.cluster"].let { Cluster.valueOf(it) }
