@@ -1,11 +1,21 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vedtak.toDto
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
-class UtbetalingService(val store: UtbetalingStore) {
+class UtbetalingService(private val store: UtbetalingStore, private val props: Configuration.UtbetalingProperties) {
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(UtbetalingService::class.java)
+    }
+
+    init {
+        LOG.info("Utbetalingservice er skrudd ${if (isEnabled()) "på" else "av"}")
+    }
 
     fun <T> opprettNyUtbetaling(vedtak: Vedtak<T>): Utbetaling {
         if (vedtak.behandlingsresultat != Behandlingsresultat.INNVILGET)
@@ -18,6 +28,10 @@ class UtbetalingService(val store: UtbetalingStore) {
                 vedtak = vedtak.toDto()
             )
         )
+    }
+
+    fun isEnabled(): Boolean {
+        return "true" == props.enabledUtbetaling
     }
 
     fun sendTilUtbetaling(utbetaling: Utbetaling): Utbetaling {
