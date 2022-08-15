@@ -1,7 +1,7 @@
 apiVersion: nais.io/v1
 kind: Naisjob
 metadata:
-  name: hm-brille-api-sync-tss
+  name: hm-brille-api-job-sync-tss
   namespace: teamdigihot
   labels:
     team: teamdigihot

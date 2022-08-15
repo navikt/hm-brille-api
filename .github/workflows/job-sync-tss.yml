@@ -1,0 +1,36 @@
+name: job-sync-tss
+on:
+  workflow_dispatch:
+    inputs:
+      imageVersion:
+        description: 'Image version (eg. 22.245.120000)'
+        required: true
+        default: 'latest'
+        type: string
+      cluster:
+        description: 'Cluster'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+jobs:
+  run-job-sync-tss:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: get release tag
+        run: |
+          APPLICATION=$(echo $GITHUB_REPOSITORY | cut -d "/" -f 2)
+          IMAGE=docker.pkg.github.com/$GITHUB_REPOSITORY/$APPLICATION:${{ inputs.imageVersion }}
+          echo "IMAGE=${IMAGE}" >> $GITHUB_ENV
+          echo $IMAGE
+      - uses: nais/deploy/actions/deploy@v1
+        name: run job sync-tss on ${{ inputs.cluster }}-gcp
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: ${{ inputs.cluster }}-gcp
+          RESOURCE: .hotnais/nais-job-sync-tss.yaml
+          VARS: .hotnais/${{ inputs.cluster }}/config.json
+          VAR: commit=${{ github.sha }}
