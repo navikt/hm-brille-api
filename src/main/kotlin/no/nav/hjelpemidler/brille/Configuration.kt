@@ -92,6 +92,12 @@ object Configuration {
         mapOf(
             "TOKEN_X_CLIENT_ID" to "abc",
             "TOKEN_X_WELL_KNOWN_URL" to "abc",
+
+            "DB_DATABASE" to "abc",
+            "DB_USERNAME" to "abc",
+            "DB_PASSWORD" to "abc",
+            "DB_HOST" to "abc",
+            "DB_PORT" to "0",
         )
     )
 
@@ -112,6 +118,7 @@ object Configuration {
     val local: Boolean = profile == Profile.LOCAL
     val dev: Boolean = profile == Profile.DEV
     val prod: Boolean = profile == Profile.PROD
+    val cronjob: Boolean = System.getenv("CRONJOB_TYPE") != null
 
     val gitCommit: String = getOrNull("GIT_COMMIT") ?: "unknown"
 
