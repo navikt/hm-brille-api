@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - bestillingsdato-mot-lovme
+      - trigger-full-tss-sync
 
 jobs:
   build-and-deploy:
