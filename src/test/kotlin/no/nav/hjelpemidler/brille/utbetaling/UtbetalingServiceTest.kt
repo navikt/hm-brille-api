@@ -57,7 +57,7 @@ class UtbetalingServiceTest {
         sendUtbetaling.status shouldBe UtbetalingStatus.TIL_UTBETALING
         sendUtbetaling.oppdatert shouldBeAfter nyUtbetaling.oppdatert
 
-        val utbetalt = utbetalingService.settTilUtBetalt(sendUtbetaling)
+        val utbetalt = utbetalingService.settTilUtbetalt(sendUtbetaling)
         utbetalt.status shouldBe UtbetalingStatus.UTBETALT
         utbetalt.vedtakId shouldBe etInnvilgetVedtak.id
         utbetalt.oppdatert shouldBeAfter sendUtbetaling.oppdatert

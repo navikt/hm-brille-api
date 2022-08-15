@@ -41,7 +41,7 @@ class UtbetalingService(private val store: UtbetalingStore, private val props: C
         return store.oppdaterStatus(utbetaling.copy(status = UtbetalingStatus.TIL_UTBETALING, oppdatert = LocalDateTime.now()))
     }
 
-    fun settTilUtBetalt(utbetaling: Utbetaling): Utbetaling {
+    fun settTilUtbetalt(utbetaling: Utbetaling): Utbetaling {
         if (utbetaling.status != UtbetalingStatus.TIL_UTBETALING) throw UtbetalingsException("Utbetalingstatus må være sendt til Utbetaling")
         return store.oppdaterStatus(utbetaling.copy(status = UtbetalingStatus.UTBETALT, oppdatert = LocalDateTime.now()))
     }
