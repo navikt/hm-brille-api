@@ -86,7 +86,8 @@ spec:
         databases:
           - name: {{ db_name }}
             envVarPrefix: DB
+            users:
+              - name: naisjob
         cascadingDelete: false
-
   secureLogs:
     enabled: true

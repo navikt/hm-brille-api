@@ -50,3 +50,9 @@ spec:
     pool: {{ kafka-cluster }}
   secureLogs:
     enabled: true
+  gcp:
+    permissions:
+      - resource:
+          apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
+          kind: Project
+        role: roles/cloudsql.client
