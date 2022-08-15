@@ -1,0 +1,17 @@
+apiVersion: nais.io/v1
+kind: Naisjob
+metadata:
+  name: hm-brille-api-sync-tss
+  namespace: teamdigihot
+  labels:
+    team: teamdigihot
+spec:
+  image: {{ image }}
+  port: {{ port }}
+  env:
+    - name: CRONJOB_TYPE
+      value: SYNC_TSS
+  kafka:
+    pool: {{ kafka-cluster }}
+  secureLogs:
+    enabled: true

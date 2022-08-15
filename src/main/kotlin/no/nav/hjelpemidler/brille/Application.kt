@@ -58,7 +58,12 @@ import java.util.TimeZone
 
 private val log = KotlinLogging.logger {}
 
-fun main(args: Array<String>): Unit = io.ktor.server.cio.EngineMain.main(args)
+fun main(args: Array<String>) {
+    when (System.getenv("CRONJOB_TYPE")) {
+        "SYNC_TSS" -> cronjobSyncTss(args)
+        else -> io.ktor.server.cio.EngineMain.main(args)
+    }
+}
 
 fun Application.module() {
     log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
@@ -154,4 +159,11 @@ fun Application.setupRoutes() {
             // rapportApiAdmin(rapportService, altinnService)
         }
     }
+}
+
+fun cronjobSyncTss(args: Array<String>) {
+    log.info("cronjob sync tss start")
+    log.info("Args: ${jsonMapper.writePrettyString(args)}")
+    log.info("Env: ${jsonMapper.writePrettyString(System.getenv())}")
+    log.info("cronjob sync tss end")
 }

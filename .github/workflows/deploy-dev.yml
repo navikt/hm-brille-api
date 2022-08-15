@@ -41,7 +41,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          docker build . --pull -t $IMAGE
+          TAG_LATEST=`echo $IMAGE | cut -d':' -f 1`":latest"
+          docker build . --pull -t $IMAGE -t $TAG_LATEST
           echo "$GITHUB_TOKEN" | docker login --username "$GITHUB_REPOSITORY" --password-stdin docker.pkg.github.com
           docker push $IMAGE
       - name: deploy to dev-gcp
