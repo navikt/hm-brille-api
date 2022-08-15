@@ -200,7 +200,7 @@ object Configuration {
     )
 
     data class UtbetalingProperties(
-        val enabledUtbetaling: String? = this["UTBETALING_ENABLED"]
+        val enabledUtbetaling: Boolean = "true" == this["UTBETALING_ENABLED"]
     )
 
     enum class Profile {

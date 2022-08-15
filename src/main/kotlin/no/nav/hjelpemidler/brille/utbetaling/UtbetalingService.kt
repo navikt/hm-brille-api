@@ -31,7 +31,7 @@ class UtbetalingService(private val store: UtbetalingStore, private val props: C
     }
 
     fun isEnabled(): Boolean {
-        return "true" == props.enabledUtbetaling
+        return props.enabledUtbetaling
     }
 
     fun sendTilUtbetaling(utbetaling: Utbetaling): Utbetaling {
