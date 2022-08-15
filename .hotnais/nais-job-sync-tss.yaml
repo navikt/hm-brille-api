@@ -48,20 +48,5 @@ spec:
       {{/each}}
   kafka:
     pool: {{ kafka-cluster }}
-  gcp:
-    sqlInstances:
-      - name: {{ db_instance_name }}
-        type: POSTGRES_13
-        tier: {{ db_tier }}
-        diskType: SSD
-        highAvailability: {{ db_high_availability }}
-        diskSize: {{ db_size }}
-        diskAutoresize: true
-        autoBackupTime: "03:00"
-        retainedBackups: {{ db_retained_backups }}
-        databases:
-          - name: {{ db_name }}
-            envVarPrefix: DB
-        cascadingDelete: false
   secureLogs:
     enabled: true
