@@ -21,6 +21,7 @@ spec:
   envFrom:
     - secret: redis-password
     - secret: hm-soknad-api-secret
+    - secret: hm-brille-api-naisjob-db
   azure:
     application:
       enabled: true

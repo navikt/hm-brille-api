@@ -95,7 +95,7 @@ object Configuration {
 
             "DB_DATABASE" to "abc",
             "DB_USERNAME" to "abc",
-            "DB_PASSWORD" to "abc",
+            "DB_PASSWORD" to System.getenv("HM_BRILLE_API_NAISJOB_DB_PASSWORD"),
             "DB_HOST" to "abc",
             "DB_PORT" to "0",
         )
