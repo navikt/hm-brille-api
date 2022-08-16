@@ -6,8 +6,10 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
+import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
+import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 
-fun Route.selfTestRoutes() {
+fun Route.internalRoutes(vedtakTilUtbetalingScheduler: VedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler: SendTilUtbetalingScheduler) {
     route("/internal") {
         get("/is-alive") {
             try {
@@ -19,6 +21,12 @@ fun Route.selfTestRoutes() {
 
         get("/is-ready") {
             call.respondText("Application is ready!", status = HttpStatusCode.OK)
+        }
+
+        get("/stop-send-til-utbetaling") {
+            vedtakTilUtbetalingScheduler.cancel()
+            sendTilUtbetalingScheduler.cancel()
+            call.respondText("Stopping send til utbetaling schedulers", status = HttpStatusCode.OK)
         }
     }
 }

@@ -30,7 +30,7 @@ import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
-import no.nav.hjelpemidler.brille.internal.selfTestRoutes
+import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -44,8 +44,8 @@ import no.nav.hjelpemidler.brille.rapportering.rapportApi
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
-import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
@@ -144,12 +144,12 @@ fun Application.setupRoutes() {
     val avtaleService = AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
-    val simpleScheduler = SimpleScheduler(leaderElection)
-    VedtakTilUtbetalingScheduler(simpleScheduler, vedtakService).start()
+    val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection)
+    val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {
-        selfTestRoutes()
+        internalRoutes(vedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler)
 
         route("/api") {
             satsApi()

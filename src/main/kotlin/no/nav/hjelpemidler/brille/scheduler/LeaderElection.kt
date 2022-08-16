@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory
 import java.net.InetAddress
 import java.time.LocalDateTime
 
-class LeaderElection(private val electorPath: String) {
+class LeaderElection(electorPath: String) {
 
     private val hostname = InetAddress.getLocalHost().hostName
     private var leader = ""
@@ -48,8 +48,8 @@ class LeaderElection(private val electorPath: String) {
 
     private suspend fun getLeader(): String {
         if (leader.isBlank() || lastCalled.isBefore(LocalDateTime.now().minusMinutes(2))) {
-            client.get(electorUri).body<Elector>().name
-            LOG.info("Running leader election getLeader is {} ", leader)
+            leader = client.get(electorUri).body<Elector>().name
+            LOG.debug("Running leader election getLeader is {} ", leader)
             lastCalled = LocalDateTime.now()
         }
         return leader
