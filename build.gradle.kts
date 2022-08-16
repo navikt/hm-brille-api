@@ -14,7 +14,8 @@ plugins {
 
 application {
     applicationName = "hm-brille-api"
-    mainClass.set("io.ktor.server.cio.EngineMain")
+    mainClass.set("no.nav.hjelpemidler.brille")
+    // mainClass.set("io.ktor.server.cio.EngineMain")
 }
 
 repositories {
