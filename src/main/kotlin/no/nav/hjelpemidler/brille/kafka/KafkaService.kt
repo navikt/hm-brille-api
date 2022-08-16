@@ -160,7 +160,7 @@ class KafkaService(
         )
     }
 
-    private fun oppdaterTSS(orgnr: String, kontonr: String) {
+    fun oppdaterTSS(orgnr: String, kontonr: String) {
         if (!Configuration.dev) return
         produceEvent(
             null,
