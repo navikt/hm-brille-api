@@ -45,14 +45,15 @@ jobs:
           docker build . --pull -t $IMAGE -t $TAG_LATEST
           echo "$GITHUB_TOKEN" | docker login --username "$GITHUB_REPOSITORY" --password-stdin docker.pkg.github.com
           docker push $IMAGE
-      - name: deploy to dev-gcp
-        uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: dev-gcp
-          RESOURCE: .hotnais/nais-deploy.yaml
-          VARS: .hotnais/dev/config.json
-          VAR: commit=${{ github.sha }}
+          docker push $TAG_LATEST
+#      - name: deploy to dev-gcp
+#        uses: nais/deploy/actions/deploy@v1
+#        env:
+#          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+#          CLUSTER: dev-gcp
+#          RESOURCE: .hotnais/nais-deploy.yaml
+#          VARS: .hotnais/dev/config.json
+#          VAR: commit=${{ github.sha }}
       - name: post-deploy
         if: github.ref == 'refs/heads/main'
         uses: navikt/digihot-deploy/actions/post-deploy@v2

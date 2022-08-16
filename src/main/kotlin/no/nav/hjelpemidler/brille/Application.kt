@@ -61,6 +61,7 @@ import java.util.TimeZone
 private val log = KotlinLogging.logger {}
 
 fun main(args: Array<String>) {
+    log.info("DEBUG: About to main it")
     when (System.getenv("CRONJOB_TYPE")) {
         "SYNC_TSS" -> cronjobSyncTss(args)
         else -> {
@@ -71,9 +72,10 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
-    configure()
-    setupRoutes()
+    log.info("DEBUG: HERE")
+    // log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
+    // configure()
+    // setupRoutes()
 }
 
 // Config stuff that we want to reuse in tests
