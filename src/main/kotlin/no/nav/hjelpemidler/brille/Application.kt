@@ -43,11 +43,14 @@ import no.nav.hjelpemidler.brille.rapportering.RapportStorePostgres
 import no.nav.hjelpemidler.brille.rapportering.rapportApi
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
+import no.nav.hjelpemidler.brille.scheduler.LeaderElection
+import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
+import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
@@ -140,7 +143,9 @@ fun Application.setupRoutes() {
     val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService, utbetalingService)
     val avtaleService = AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()
-
+    val leaderElection = LeaderElection(Configuration.electorPath)
+    val simpleScheduler = SimpleScheduler(leaderElection)
+    VedtakTilUtbetalingScheduler(simpleScheduler, vedtakService).start()
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {

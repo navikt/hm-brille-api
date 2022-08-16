@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
@@ -9,6 +10,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.Test
 
 internal class VedtakStorePostgresTest {
@@ -50,5 +52,26 @@ internal class VedtakStorePostgresTest {
         val orgnr = store.hentTidligereBrukteOrgnrForInnsender(lagretVedtak.fnrInnsender).firstOrNull()
         orgnr shouldBe virksomhet.orgnr
         orgnr shouldBe lagretVedtak.orgnr
+
+        val vedtak2 = store.lagreVedtak(
+            Vedtak(
+                fnrBarn = "12121314156",
+                fnrInnsender = "11080642360",
+                orgnr = virksomhet.orgnr,
+                bestillingsdato = LocalDate.now(),
+                brillepris = sats.beløp.toBigDecimal(),
+                bestillingsreferanse = "test 2",
+                vilkårsvurdering = Vilkårsvurdering("test 2 ", Evalueringer().ja("test 2")),
+                behandlingsresultat = Behandlingsresultat.INNVILGET,
+                sats = sats,
+                satsBeløp = sats.beløp,
+                satsBeskrivelse = sats.beskrivelse,
+                beløp = sats.beløp.toBigDecimal(),
+            )
+        )
+
+        val vedtakList =
+            store.hentVedtakIkkeRegistrertForUtbetaling<Vedtak<*>>(opprettet = LocalDateTime.now().minusDays(1))
+        vedtakList.size shouldBeGreaterThan 1
     }
 }

@@ -13,7 +13,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-
 private val log = KotlinLogging.logger { }
 
 class DatabaseConfiguration(private val props: Configuration.DatabaseProperties) {
@@ -37,8 +36,7 @@ class DatabaseConfiguration(private val props: Configuration.DatabaseProperties)
 
             val dataSource = HikariDataSource(config)
             dataSource
-
-        }else{
+        } else {
             if (!waitForDB(10.minutes)) {
                 throw RuntimeException("Databasen ble ikke tilgjengelig innenfor tidsfristen")
             }
