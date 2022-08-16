@@ -20,6 +20,7 @@ import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
+import no.nav.hjelpemidler.brille.avtale.Avtale
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
@@ -63,10 +64,7 @@ private val log = KotlinLogging.logger {}
 fun main(args: Array<String>) {
     when (System.getenv("CRONJOB_TYPE")) {
         "SYNC_TSS" -> cronjobSyncTss(args)
-        else -> {
-            log.info("DEBUG: Normal run of ktor main")
-            io.ktor.server.cio.EngineMain.main(args)
-        }
+        else -> io.ktor.server.cio.EngineMain.main(args)
     }
 }
 
@@ -170,7 +168,27 @@ fun Application.setupRoutes() {
 
 fun cronjobSyncTss(args: Array<String>) {
     log.info("cronjob sync tss start")
-    log.info("Args: ${jsonMapper.writePrettyString(args)}")
-    log.info("Env: ${jsonMapper.writePrettyString(System.getenv())}")
-    log.info("cronjob sync tss end")
+
+    val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
+    val virksomhetStore = VirksomhetStorePostgres(dataSource)
+
+    val kafkaService = KafkaService {
+        when (Configuration.profile) {
+            Configuration.Profile.LOCAL -> MockProducer(true, StringSerializer(), StringSerializer())
+            else -> AivenKafkaConfiguration().aivenKafkaProducer()
+        }
+    }
+
+    val virksomheter = virksomhetStore.hentAlleVirksomheterMedKontonr().map {
+        Pair(it.orgnr, it.kontonr)
+    }
+
+    virksomheter.forEach {
+        kafkaService.oppdaterTSS(
+            orgnr = it.first,
+            kontonr = it.second,
+        )
+    }
+
+    log.info("Virksomheter er oppdatert i TSS: $virksomheter")
 }

@@ -189,8 +189,8 @@ class KafkaService(
         )
     }
 
-    private fun oppdaterTSS(orgnr: String, kontonr: String) {
-        if (!Configuration.dev) return
+    fun oppdaterTSS(orgnr: String, kontonr: String) {
+        if (!Configuration.dev) return // TODO: Remove when going live with tss updates in prod.
         produceEvent(
             null,
             mapOf(
