@@ -44,6 +44,8 @@ import no.nav.hjelpemidler.brille.rapportering.rapportApi
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.kravApi
@@ -109,6 +111,7 @@ fun Application.setupRoutes() {
     val rapportStore = RapportStorePostgres(dataSource)
     val vedtakStore = VedtakStorePostgres(dataSource)
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
+    val utbetalingStore = UtbetalingStorePostgres(dataSource)
 
     // Kafka
     val kafkaService = KafkaService {
@@ -133,7 +136,8 @@ fun Application.setupRoutes() {
     val rapportService = RapportService(rapportStore)
     val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
     val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
-    val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService)
+    val utbetalingService = UtbetalingService(utbetalingStore, Configuration.utbetalingProperties)
+    val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService, utbetalingService)
     val avtaleService = AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()
 

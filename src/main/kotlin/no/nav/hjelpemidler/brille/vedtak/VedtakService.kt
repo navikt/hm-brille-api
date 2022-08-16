@@ -5,9 +5,11 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingException
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
+import org.slf4j.LoggerFactory
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
@@ -15,7 +17,12 @@ class VedtakService(
     private val vedtakStore: VedtakStore,
     private val vilkårsvurderingService: VilkårsvurderingService,
     private val kafkaService: KafkaService,
+    private val utbetalingService: UtbetalingService
 ) {
+    companion object {
+        private val LOG = LoggerFactory.getLogger(VedtakService::class.java)
+    }
+
     suspend fun lagVedtak(fnrInnsender: String, krav: KravDto): Vedtak<Vilkårsgrunnlag> {
         val vilkårsgrunnlag = krav.vilkårsgrunnlag
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(vilkårsgrunnlag)
@@ -28,7 +35,6 @@ class VedtakService(
                 throw VilkårsvurderingException("Vilkårsvurderingen ga uventet resultat")
             }
         }
-
         val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
         val satsBeløp = sats.beløp
         val brillepris = vilkårsgrunnlag.brillepris
@@ -50,6 +56,12 @@ class VedtakService(
             )
         )
         kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)
+        try {
+            if (utbetalingService.isEnabled()) utbetalingService.opprettNyUtbetaling(vedtak)
+        } catch (e: Exception) {
+            // TODO fjerne try catch når utbetalingservice er stabilt i prod.
+            LOG.error("Opprett utbetaling feilet", e)
+        }
         return vedtak
     }
 }

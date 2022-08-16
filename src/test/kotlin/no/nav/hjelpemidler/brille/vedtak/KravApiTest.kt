@@ -15,6 +15,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.test.TestRouting
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.DATO_ORDNINGEN_STARTET
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
@@ -30,6 +31,7 @@ internal class KravApiTest {
     private val pdlClient = mockk<PdlClient>()
     private val medlemskapBarn = mockk<MedlemskapBarn>()
     private val dagensDatoFactory = mockk<() -> LocalDate>()
+    private val utbetalingService = mockk<UtbetalingService>()
 
     private val vilkårsvurderingService = VilkårsvurderingService(
         vedtakStore,
@@ -38,7 +40,7 @@ internal class KravApiTest {
         dagensDatoFactory
     )
 
-    private val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, mockk(relaxed = true))
+    private val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, mockk(relaxed = true), utbetalingService)
 
     private val routing = TestRouting {
         authenticate("test") {
@@ -52,6 +54,7 @@ internal class KravApiTest {
             vilkårsgrunnlag, orgAdresse = "", orgNavn = "",
             bestillingsreferanse = "", brukersNavn = ""
         )
+
     )
 
     private val vilkårsgrunnlag = VilkårsgrunnlagDto(
@@ -99,11 +102,14 @@ internal class KravApiTest {
             medlemskapBarn.sjekkMedlemskapBarn(krav.vilkårsgrunnlag.fnrBarn, krav.vilkårsgrunnlag.bestillingsdato)
         } returns medlemskapResultat
 
+        every {
+            utbetalingService.isEnabled()
+        } returns false
+
         routing.test {
             val response = client.post("/krav") {
                 setBody(krav)
             }
-
             response.status shouldBe HttpStatusCode.OK
             val vedtak = response.body<VedtakDto>()
             vedtak.beløp shouldBe BigDecimal.valueOf(2650)

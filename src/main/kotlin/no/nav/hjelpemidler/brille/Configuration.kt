@@ -22,6 +22,7 @@ object Configuration {
             "altinn.proxyConsumerId" to "",
             "ALTINN_APIKEY" to "",
             "ALTINN_APIGW_APIKEY" to "",
+            "UTBETALING_ENABLED" to "false"
         )
     )
 
@@ -135,6 +136,7 @@ object Configuration {
     val medlemskapOppslagProperties = MedlemskapOppslagProperties()
     val redisProperties = RedisProperties()
     val altinnProperties = AltinnProperties()
+    val utbetalingProperties = UtbetalingProperties()
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
@@ -211,6 +213,10 @@ object Configuration {
         val proxyConsumerId: String = this["altinn.proxyConsumerId"],
         val apiKey: String = this["ALTINN_APIKEY"],
         val apiGWKey: String = this["ALTINN_APIGW_APIKEY"],
+    )
+
+    data class UtbetalingProperties(
+        val enabledUtbetaling: Boolean = "true" == this["UTBETALING_ENABLED"]
     )
 
     enum class Profile {
