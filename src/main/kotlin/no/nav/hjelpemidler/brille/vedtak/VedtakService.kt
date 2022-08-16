@@ -56,6 +56,11 @@ class VedtakService(
             )
         )
         kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)
+        if (vilkårsvurdering.grunnlag.medlemskapResultat.medlemskapBevist) {
+            kafkaService.medlemskapFolketrygdenBevist(vilkårsgrunnlag.fnrBarn, vedtak.id)
+        } else if (vilkårsvurdering.grunnlag.medlemskapResultat.uavklartMedlemskap) {
+            kafkaService.medlemskapFolketrygdenAntatt(vilkårsgrunnlag.fnrBarn, vedtak.id)
+        }
         try {
             if (utbetalingService.isEnabled()) utbetalingService.opprettNyUtbetaling(vedtak)
         } catch (e: Exception) {
