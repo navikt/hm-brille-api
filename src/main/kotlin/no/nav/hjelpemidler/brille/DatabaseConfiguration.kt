@@ -19,9 +19,9 @@ class DatabaseConfiguration(private val props: Configuration.DatabaseProperties)
     fun dataSource(): DataSource {
         val dataSource = if (Configuration.cronjob) {
             // Set up URL parameters
-            val jdbcURL = String.format("jdbc:postgresql:///%s", "brilleapidb")
+            val jdbcURL = String.format("jdbc:postgresql:///%s", props.databaseNavn)
             val connProps = Properties()
-            connProps.setProperty("user", "naisjob")
+            connProps.setProperty("user", props.databaseUser)
             connProps.setProperty("password", props.databasePassword)
             connProps.setProperty("sslmode", "disable")
             connProps.setProperty("socketFactory", "com.google.cloud.sql.postgres.SocketFactory")
@@ -33,6 +33,7 @@ class DatabaseConfiguration(private val props: Configuration.DatabaseProperties)
             config.jdbcUrl = jdbcURL
             config.dataSourceProperties = connProps
             config.connectionTimeout = 10000 // 10s
+            config.maximumPoolSize = 1
 
             val dataSource = HikariDataSource(config)
             dataSource

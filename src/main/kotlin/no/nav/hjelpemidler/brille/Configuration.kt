@@ -94,11 +94,11 @@ object Configuration {
             "TOKEN_X_CLIENT_ID" to "abc",
             "TOKEN_X_WELL_KNOWN_URL" to "abc",
 
-            "DB_DATABASE" to "abc",
-            "DB_USERNAME" to "abc",
-            "DB_PASSWORD" to System.getenv("HM_BRILLE_API_NAISJOB_DB_PASSWORD"),
-            "DB_HOST" to "abc",
-            "DB_PORT" to "0",
+            "DB_DATABASE" to System.getenv("DB_NAISJOB_DATABASE"),
+            "DB_USERNAME" to System.getenv("DB_NAISJOB_USERNAME"),
+            "DB_PASSWORD" to System.getenv("DB_NAISJOB_PASSWORD"),
+            "DB_HOST" to System.getenv("DB_NAISJOB_HOST"),
+            "DB_PORT" to System.getenv("DB_NAISJOB_PORT"),
         )
     )
 
