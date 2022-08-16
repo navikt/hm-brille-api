@@ -61,21 +61,16 @@ import java.util.TimeZone
 private val log = KotlinLogging.logger {}
 
 fun main(args: Array<String>) {
-    log.info("DEBUG: About to main it")
     when (System.getenv("CRONJOB_TYPE")) {
         "SYNC_TSS" -> cronjobSyncTss(args)
-        else -> {
-            log.info("DEBUG: Normal run of ktor main")
-            io.ktor.server.cio.EngineMain.main(args)
-        }
+        else -> io.ktor.server.cio.EngineMain.main(args)
     }
 }
 
 fun Application.module() {
-    log.info("DEBUG: HERE")
-    // log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
-    // configure()
-    // setupRoutes()
+    log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
+    configure()
+    setupRoutes()
 }
 
 // Config stuff that we want to reuse in tests
@@ -175,4 +170,12 @@ fun cronjobSyncTss(args: Array<String>) {
     log.info("Args: ${jsonMapper.writePrettyString(args)}")
     log.info("Env: ${jsonMapper.writePrettyString(System.getenv())}")
     log.info("cronjob sync tss end")
+
+    val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
+    val virksomhetStore = VirksomhetStorePostgres(dataSource)
+    val virksomheter = virksomhetStore.hentAlleVirksomheterMedKontonr().map {
+        Pair(it.orgnr, it.kontonr)
+    }
+
+    log.info("Virksomheter å oppdatere i TSS: $virksomheter")
 }
