@@ -17,6 +17,7 @@ interface VirksomhetStore : Store {
     fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet
     fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet
+    fun hentAlleVirksomheterMedKontonr(): List<Virksomhet>
 }
 
 data class Virksomhet(
@@ -108,6 +109,16 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             )
         ).validate()
         return virksomhet
+    }
+
+    override fun hentAlleVirksomheterMedKontonr(): List<Virksomhet> {
+        @Language("PostgreSQL")
+        var sql = """
+            SELECT orgnr, kontonr, epost, fnr_innsender, fnr_oppdatert_av, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
+            FROM virksomhet_v1
+            WHERE LENGTH(kontonr) > 1
+        """.trimIndent()
+        return ds.queryList(sql, mapOf(), ::mapper)
     }
 
     private fun mapper(row: Row): Virksomhet = Virksomhet(
