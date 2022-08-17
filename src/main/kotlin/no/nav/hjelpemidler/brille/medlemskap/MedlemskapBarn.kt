@@ -201,7 +201,7 @@ class MedlemskapBarn(
                         log.info("Skipper relasjon pga. adressebeskyttelse")
                     } else {
                         // Andre type exceptions kaster vi videre.
-                        log.error(e) { "Skipper relasjon da PDL kastet en exception" }
+                        log.error(e) { "Skipper relasjon da PDL/LovMe kastet en exception" }
                     }
                 }
             }
