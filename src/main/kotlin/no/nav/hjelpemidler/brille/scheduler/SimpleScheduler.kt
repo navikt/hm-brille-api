@@ -31,8 +31,8 @@ abstract class SimpleScheduler(
     }
 
     suspend fun runTask() = coroutineScope {
-        while (true) {
-            if (leaderElection.isLeader()) {
+        if (leaderElection.isLeader()) {
+            while (true) {
                 delay(delayTimeMillis)
                 launch {
                     val time = System.currentTimeMillis()
