@@ -9,7 +9,7 @@ plugins {
     kotlin("jvm") version "1.7.10"
     id("com.diffplug.spotless") version "6.7.2"
     id("com.github.johnrengelman.shadow") version "7.1.2"
-    id("com.expediagroup.graphql") version "6.0.0-alpha.6"
+    id("com.expediagroup.graphql") version "6.2.0"
 }
 
 application {
@@ -25,22 +25,22 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("reflect"))
     implementation("com.natpryce:konfig:1.6.10.0")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.9.1")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.9.3")
 
     // Database
-    implementation("org.postgresql:postgresql:42.4.0")
-    implementation("org.flywaydb:flyway-core:8.5.13")
+    implementation("org.postgresql:postgresql:42.4.1")
+    implementation("org.flywaydb:flyway-core:9.1.5")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.github.seratch:kotliquery:1.8.0")
 
     // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.1.0")
+    implementation("org.apache.kafka:kafka-clients:3.1.1")
 
     // Unleash
     implementation("io.getunleash:unleash-client-java:6.0.1")
 
     // Ktor Shared
-    val ktorVersion = "2.0.3"
+    val ktorVersion = "2.1.0"
     fun ktor(name: String) = "io.ktor:ktor-$name:$ktorVersion"
     implementation(ktor("serialization-jackson"))
 
@@ -64,7 +64,7 @@ dependencies {
     implementation(ktorClient("mock"))
 
     // GraphQL
-    val graphQLVersion = "6.0.0-alpha.6"
+    val graphQLVersion = "6.2.0"
     implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphQLVersion") {
         exclude(group = "com.expediagroup", module = "graphql-kotlin-client-serialization")
         exclude(group = "io.ktor", module = "ktor-client-serialization")
@@ -90,12 +90,12 @@ dependencies {
     // Testing
     testImplementation(kotlin("test"))
     testImplementation(ktorServer("test-host"))
-    testImplementation("io.mockk:mockk:1.12.4")
-    val kotestVersion = "5.3.2"
+    testImplementation("io.mockk:mockk:1.12.5")
+    val kotestVersion = "5.4.2"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
-    testImplementation("org.testcontainers:postgresql:1.17.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.0")
+    testImplementation("org.testcontainers:postgresql:1.17.3")
 }
 
 spotless {
