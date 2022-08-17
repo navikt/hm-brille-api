@@ -125,7 +125,7 @@ fun Application.setupRoutes() {
     val pdlClient = PdlClient(Configuration.pdlProperties)
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
     // Tjenester
-    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
+    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
     val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
     val pdlService = PdlService(pdlClient)
     val auditService = AuditService(auditStore)
