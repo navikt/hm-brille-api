@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 /**
  * A very simple implementation of a scheduler using coroutines and leaderElection
- * An action that failed with an exception and is not catched will also cancel the action.
+ * An action that failed with an exception and is not caught will also cancel the job.
  */
 abstract class SimpleScheduler(
     private val leaderElection: LeaderElection,
@@ -38,8 +38,8 @@ abstract class SimpleScheduler(
                     val time = System.currentTimeMillis()
                     action()
                     val duration = System.currentTimeMillis() - time
-                    if (duration > 60000) {
-                        LOG.warn("Time spent $mySchedulerName task took $duration ms")
+                    if (duration > delayTimeMillis) {
+                        LOG.warn("$mySchedulerName spent $duration ms which is greater than delayTime: $delayTimeMillis")
                     }
                 }
             }

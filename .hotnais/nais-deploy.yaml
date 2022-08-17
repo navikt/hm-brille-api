@@ -72,6 +72,7 @@ spec:
     path: /internal/metrics
   kafka:
     pool: {{ kafka-cluster }}
+  leaderElection: true
   gcp:
     sqlInstances:
       - name: {{ db_instance_name }}
