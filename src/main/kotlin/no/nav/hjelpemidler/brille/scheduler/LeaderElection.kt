@@ -19,7 +19,6 @@ class LeaderElection(electorPath: String) {
 
     private val hostname = InetAddress.getLocalHost().hostName
     private var leader = ""
-    private var lastCalled = LocalDateTime.MIN
     private val electorUri = "http://" + electorPath
     private val engine: HttpClientEngine = engineFactory { StubEngine.leaderElection() }
 
@@ -47,11 +46,8 @@ class LeaderElection(electorPath: String) {
     }
 
     private suspend fun getLeader(): String {
-        if (leader.isBlank() || lastCalled.isBefore(LocalDateTime.now().minusMinutes(2))) {
-            leader = client.get(electorUri).body<Elector>().name
-            LOG.debug("Running leader election getLeader is {} ", leader)
-            lastCalled = LocalDateTime.now()
-        }
+        leader = client.get(electorUri).body<Elector>().name
+        LOG.debug("Running leader election getLeader is {} ", leader)
         return leader
     }
 }
