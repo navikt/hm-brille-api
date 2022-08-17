@@ -102,7 +102,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
     }
 }
 
-fun Route.rapportApiAdmin(rapportService: RapportService, altinnService: AltinnService) {
+fun Route.rapportApiAdmin(rapportService: RapportService) {
     route("/efdf378e-523c-44a3-aeb6-de9d5bf538f6") {
         get("/csv/{orgnr}") {
             val orgnr = call.orgnr()

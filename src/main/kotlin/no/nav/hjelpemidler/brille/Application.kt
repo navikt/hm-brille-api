@@ -30,6 +30,7 @@ import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
+import no.nav.hjelpemidler.brille.innsyn.innsynApi
 import no.nav.hjelpemidler.brille.internal.selfTestRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
@@ -62,7 +63,7 @@ private val log = KotlinLogging.logger {}
 
 fun main(args: Array<String>) {
     when (System.getenv("CRONJOB_TYPE")) {
-        "SYNC_TSS" -> cronjobSyncTss(args)
+        "SYNC_TSS" -> cronjobSyncTss()
         else -> io.ktor.server.cio.EngineMain.main(args)
     }
 }
@@ -151,6 +152,7 @@ fun Application.setupRoutes() {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
+                    innsynApi(vedtakStore)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
                     kravApi(vedtakService, auditService)
@@ -160,12 +162,12 @@ fun Application.setupRoutes() {
             }
 
             // Admin apis
-            // rapportApiAdmin(rapportService, altinnService)
+            // rapportApiAdmin(rapportService)
         }
     }
 }
 
-fun cronjobSyncTss(args: Array<String>) {
+fun cronjobSyncTss() {
     log.info("cronjob sync tss start")
 
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()

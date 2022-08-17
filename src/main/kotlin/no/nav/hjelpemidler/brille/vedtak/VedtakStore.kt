@@ -10,6 +10,8 @@ import javax.sql.DataSource
 interface VedtakStore : Store {
     fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
+    fun hentVedtak(fnrInnsender: String, vedtakId: Long): EksisterendeVedtak?
+    fun hentAlleVedtak(fnrInnsender: String): List<EksisterendeVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
 }
 
@@ -22,6 +24,42 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             WHERE fnr_barn = :fnr_barn 
         """.trimIndent()
         return ds.queryList(sql, mapOf("fnr_barn" to fnrBarn)) { row ->
+            EksisterendeVedtak(
+                id = row.long("id"),
+                fnrBarn = row.string("fnr_barn"),
+                bestillingsdato = row.localDate("bestillingsdato"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                opprettet = row.localDateTime("opprettet"),
+            )
+        }
+    }
+
+    override fun hentVedtak(fnrInnsender: String, vedtakId: Long): EksisterendeVedtak? {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT id, fnr_barn, bestillingsdato, behandlingsresultat, opprettet
+            FROM vedtak_v1
+            WHERE fnr_innsender = :fnr_innsender AND id = :vedtak_id
+        """.trimIndent()
+        return ds.query(sql, mapOf("fnr_innsender" to fnrInnsender, "vedtak_id" to vedtakId)) { row ->
+            EksisterendeVedtak(
+                id = row.long("id"),
+                fnrBarn = row.string("fnr_barn"),
+                bestillingsdato = row.localDate("bestillingsdato"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                opprettet = row.localDateTime("opprettet"),
+            )
+        }
+    }
+
+    override fun hentAlleVedtak(fnrInnsender: String): List<EksisterendeVedtak> {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT id, fnr_barn, bestillingsdato, behandlingsresultat, opprettet
+            FROM vedtak_v1
+            WHERE fnr_innsender = :fnr_innsender
+        """.trimIndent()
+        return ds.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
             EksisterendeVedtak(
                 id = row.long("id"),
                 fnrBarn = row.string("fnr_barn"),
