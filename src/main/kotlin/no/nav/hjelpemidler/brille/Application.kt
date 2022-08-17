@@ -20,7 +20,6 @@ import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
-import no.nav.hjelpemidler.brille.avtale.Avtale
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
