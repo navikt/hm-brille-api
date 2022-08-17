@@ -7,6 +7,7 @@ import mu.KotlinLogging
 import mu.withLoggingContext
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.Barn
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
@@ -46,6 +47,7 @@ class MedlemskapBarn(
     private val medlemskapClient: MedlemskapClient,
     private val pdlClient: PdlClient,
     private val redisClient: RedisClient,
+    private val kafkaService: KafkaService,
 ) {
     fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsdato: LocalDate): MedlemskapResultat = runBlocking {
         log.info("Sjekker medlemskap for barn")
@@ -100,6 +102,7 @@ class MedlemskapBarn(
             log.info("Barnet har ikke folkeregistrert adresse i Norge og vi antar derfor at hen ikke er medlem i folketrygden")
             val medlemskapResultat = MedlemskapResultat(false, false, saksgrunnlag)
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
+            kafkaService.medlemskapFolketrygdenAvvist(fnrBarn)
             return@runBlocking medlemskapResultat
         }
 
@@ -169,6 +172,7 @@ class MedlemskapBarn(
                                     saksgrunnlag = saksgrunnlag
                                 )
                                 redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
+                                kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
                                 return@runBlocking medlemskapResultat
                             }
                             else -> { /* Sjekk de andre */
@@ -197,7 +201,7 @@ class MedlemskapBarn(
                         log.info("Skipper relasjon pga. adressebeskyttelse")
                     } else {
                         // Andre type exceptions kaster vi videre.
-                        log.error(e) { "Skipper relasjon da PDL kastet en exception" }
+                        log.error(e) { "Skipper relasjon da PDL/LovMe kastet en exception" }
                     }
                 }
             }
@@ -213,6 +217,7 @@ class MedlemskapBarn(
                 saksgrunnlag = saksgrunnlag
             )
         redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
+        kafkaService.medlemskapFolketrygdenAntatt(fnrBarn)
         log.info("Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge")
         medlemskapResultat
     }

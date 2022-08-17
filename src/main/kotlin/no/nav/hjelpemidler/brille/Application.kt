@@ -31,6 +31,7 @@ import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.internalRoutes
+import no.nav.hjelpemidler.brille.innsyn.innsynApi
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -65,11 +66,8 @@ private val log = KotlinLogging.logger {}
 
 fun main(args: Array<String>) {
     when (System.getenv("CRONJOB_TYPE")) {
-        "SYNC_TSS" -> cronjobSyncTss(args)
-        else -> {
-            log.info("DEBUG: Normal run of ktor main")
-            io.ktor.server.cio.EngineMain.main(args)
-        }
+        "SYNC_TSS" -> cronjobSyncTss()
+        else -> io.ktor.server.cio.EngineMain.main(args)
     }
 }
 
@@ -131,7 +129,7 @@ fun Application.setupRoutes() {
     val pdlClient = PdlClient(Configuration.pdlProperties)
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
     // Tjenester
-    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient)
+    val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
     val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
     val pdlService = PdlService(pdlClient)
     val auditService = AuditService(auditStore)
@@ -159,6 +157,7 @@ fun Application.setupRoutes() {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
+                    if (Configuration.dev) innsynApi(vedtakStore)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
                     kravApi(vedtakService, auditService)
@@ -168,14 +167,34 @@ fun Application.setupRoutes() {
             }
 
             // Admin apis
-            // rapportApiAdmin(rapportService, altinnService)
+            // rapportApiAdmin(rapportService)
         }
     }
 }
 
-fun cronjobSyncTss(args: Array<String>) {
+fun cronjobSyncTss() {
     log.info("cronjob sync tss start")
-    log.info("Args: ${jsonMapper.writePrettyString(args)}")
-    log.info("Env: ${jsonMapper.writePrettyString(System.getenv())}")
-    log.info("cronjob sync tss end")
+
+    val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
+    val virksomhetStore = VirksomhetStorePostgres(dataSource)
+
+    val kafkaService = KafkaService {
+        when (Configuration.profile) {
+            Configuration.Profile.LOCAL -> MockProducer(true, StringSerializer(), StringSerializer())
+            else -> AivenKafkaConfiguration().aivenKafkaProducer()
+        }
+    }
+
+    val virksomheter = virksomhetStore.hentAlleVirksomheterMedKontonr().map {
+        Pair(it.orgnr, it.kontonr)
+    }
+
+    virksomheter.forEach {
+        kafkaService.oppdaterTSS(
+            orgnr = it.first,
+            kontonr = it.second,
+        )
+    }
+
+    log.info("Virksomheter er oppdatert i TSS: $virksomheter")
 }

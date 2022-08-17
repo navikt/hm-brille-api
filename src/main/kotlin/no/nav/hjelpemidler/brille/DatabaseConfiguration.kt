@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import mu.KotlinLogging
 import org.flywaydb.core.Flyway
-import java.lang.String
 import java.net.Socket
 import java.time.LocalDateTime
 import java.util.Properties
@@ -19,20 +18,23 @@ class DatabaseConfiguration(private val props: Configuration.DatabaseProperties)
     fun dataSource(): DataSource {
         val dataSource = if (Configuration.cronjob) {
             // Set up URL parameters
-            val jdbcURL = String.format("jdbc:postgresql:///%s", "brilleapidb")
-            val connProps = Properties()
-            connProps.setProperty("user", "naisjob")
-            connProps.setProperty("password", props.databasePassword)
-            connProps.setProperty("sslmode", "disable")
-            connProps.setProperty("socketFactory", "com.google.cloud.sql.postgres.SocketFactory")
-            connProps.setProperty("cloudSqlInstance", "teamdigihot-dev-9705:europe-north1:hm-brille-api-db-dev")
-            connProps.setProperty("enableIamAuth", "true")
+            val jdbcURL = "jdbc:postgresql:///${props.databaseNavn}"
+            val connProps = Properties().apply {
+                setProperty("socketFactory", "com.google.cloud.sql.postgres.SocketFactory")
+                setProperty("cloudSqlInstance", "teamdigihot-dev-9705:europe-north1:hm-brille-api-db-dev")
+                // setProperty("sslmode", "disable")
+                // setProperty("enableIamAuth", "true")
+            }
 
             // Initialize connection pool
-            val config = HikariConfig()
-            config.jdbcUrl = jdbcURL
-            config.dataSourceProperties = connProps
-            config.connectionTimeout = 10000 // 10s
+            val config = HikariConfig().apply {
+                jdbcUrl = jdbcURL
+                dataSourceProperties = connProps
+                username = props.databaseUser
+                password = props.databasePassword
+                connectionTimeout = 10000 // 10s
+                maximumPoolSize = 1
+            }
 
             val dataSource = HikariDataSource(config)
             dataSource

@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille
 
 import io.getunleash.DefaultUnleash
-import io.getunleash.FakeUnleash
 import io.getunleash.Unleash
 import io.getunleash.strategy.Strategy
 import io.getunleash.util.UnleashConfig
@@ -20,7 +19,6 @@ object UnleashKlient {
                     .build(),
                 ClusterStrategy(miljø)
             )
-            else -> FakeUnleash()
         }
     }
 

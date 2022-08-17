@@ -14,6 +14,8 @@ import javax.sql.DataSource
 interface VedtakStore : Store {
     fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
+    fun hentVedtak(fnrInnsender: String, vedtakId: Long): InnsynVedtak?
+    fun hentAlleVedtak(fnrInnsender: String): List<InnsynVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
     fun <T> hentVedtakIkkeRegistrertForUtbetaling(opprettet: LocalDateTime, behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET): List<Vedtak<T>>
 }
@@ -32,6 +34,80 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 fnrBarn = row.string("fnr_barn"),
                 bestillingsdato = row.localDate("bestillingsdato"),
                 behandlingsresultat = row.string("behandlingsresultat"),
+                opprettet = row.localDateTime("opprettet"),
+            )
+        }
+    }
+
+    override fun hentVedtak(fnrInnsender: String, vedtakId: Long): InnsynVedtak? {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT
+                id,
+                fnr_barn,
+                orgnr,
+                bestillingsdato,
+                brillepris,
+                bestillingsreferanse,
+                vilkarsvurdering,
+                behandlingsresultat,
+                sats,
+                sats_belop,
+                sats_beskrivelse,
+                belop,
+                opprettet
+            FROM vedtak_v1
+            WHERE fnr_innsender = :fnr_innsender AND id = :vedtak_id
+        """.trimIndent()
+        return ds.query(sql, mapOf("fnr_innsender" to fnrInnsender, "vedtak_id" to vedtakId)) { row ->
+            InnsynVedtak(
+                id = row.long("id"),
+                orgnr = row.string("orgnr"),
+                barnsNavn = "",
+                barnsAlder = -1,
+                bestillingsdato = row.localDate("bestillingsdato"),
+                sats = SatsType.valueOf(row.string("sats")),
+                satsBeløp = row.int("sats_belop"),
+                satsBeskrivelse = row.string("sats_beskrivelse"),
+                brillepris = row.bigDecimal("brillepris"),
+                utbetalingsdato = null,
+                opprettet = row.localDateTime("opprettet"),
+            )
+        }
+    }
+
+    override fun hentAlleVedtak(fnrInnsender: String): List<InnsynVedtak> {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT
+                id,
+                fnr_barn,
+                orgnr,
+                bestillingsdato,
+                brillepris,
+                bestillingsreferanse,
+                vilkarsvurdering,
+                behandlingsresultat,
+                sats,
+                sats_belop,
+                sats_beskrivelse,
+                belop,
+                opprettet
+            FROM vedtak_v1
+            WHERE fnr_innsender = :fnr_innsender
+        """.trimIndent()
+        return ds.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
+            InnsynVedtak(
+                id = row.long("id"),
+                orgnr = row.string("orgnr"),
+                barnsNavn = "",
+                barnsAlder = -1,
+                bestillingsdato = row.localDate("bestillingsdato"),
+                sats = SatsType.valueOf(row.string("sats")),
+                satsBeløp = row.int("sats_belop"),
+                satsBeskrivelse = row.string("sats_beskrivelse"),
+                brillepris = row.bigDecimal("brillepris"),
+                utbetalingsdato = null,
                 opprettet = row.localDateTime("opprettet"),
             )
         }

@@ -29,7 +29,7 @@ private val dataSource: DataSource by lazy {
         }
 }
 
-private val flyway: Flyway by lazy { Flyway.configure().dataSource(dataSource).load() }
+private val flyway: Flyway by lazy { Flyway.configure().cleanDisabled(false).dataSource(dataSource).load() }
 
 internal fun migrate(): DataSource = dataSource.also {
     flyway.clean()

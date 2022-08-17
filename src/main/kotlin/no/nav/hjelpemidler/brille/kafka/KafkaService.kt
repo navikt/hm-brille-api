@@ -135,6 +135,35 @@ class KafkaService(
         )
     }
 
+    fun medlemskapFolketrygdenBevist(fnrBarn: String, vedtakId: Long = -1) {
+        sendTilBigQuery(
+            fnrBarn,
+            MedlemskapFolketrygdenStatistikk(
+                vedtakId = vedtakId,
+                bevist = true,
+            ),
+        )
+    }
+
+    fun medlemskapFolketrygdenAntatt(fnrBarn: String, vedtakId: Long = -1) {
+        sendTilBigQuery(
+            fnrBarn,
+            MedlemskapFolketrygdenStatistikk(
+                vedtakId = vedtakId,
+                antatt = true,
+            ),
+        )
+    }
+
+    fun medlemskapFolketrygdenAvvist(fnrBarn: String) {
+        sendTilBigQuery(
+            fnrBarn,
+            MedlemskapFolketrygdenStatistikk(
+                avvist = true,
+            ),
+        )
+    }
+
     private fun <T> produceEvent(key: String?, event: T) {
         try {
             val record = ProducerRecord(topic, key, mapper.writeValueAsString(event))
@@ -160,8 +189,8 @@ class KafkaService(
         )
     }
 
-    private fun oppdaterTSS(orgnr: String, kontonr: String) {
-        if (!Configuration.dev) return
+    fun oppdaterTSS(orgnr: String, kontonr: String) {
+        if (!Configuration.dev) return // TODO: Remove when going live with tss updates in prod.
         produceEvent(
             null,
             mapOf(
@@ -253,6 +282,16 @@ class KafkaService(
         val bestillingsdatoOppfylt: Boolean,
         val bestillingsdatoTilbakeITidOppfylt: Boolean,
         val opprettet: LocalDateTime
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "medlemskap_folketrygden_v1")
+    internal data class MedlemskapFolketrygdenStatistikk(
+        val vedtakId: Long = -1,
+        val bevist: Boolean = false,
+        val antatt: Boolean = false,
+        val avvist: Boolean = false,
+        val opprettet: LocalDateTime = LocalDateTime.now(),
     )
 
     class KafkaException(message: String, cause: Throwable?) : RuntimeException(message, cause)

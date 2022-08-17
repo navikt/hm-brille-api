@@ -45,6 +45,7 @@ jobs:
           docker build . --pull -t $IMAGE -t $TAG_LATEST
           echo "$GITHUB_TOKEN" | docker login --username "$GITHUB_REPOSITORY" --password-stdin docker.pkg.github.com
           docker push $IMAGE
+          docker push $TAG_LATEST
       - name: deploy to dev-gcp
         uses: nais/deploy/actions/deploy@v1
         env:

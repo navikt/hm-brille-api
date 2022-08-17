@@ -32,6 +32,20 @@ data class EksisterendeVedtak(
     val opprettet: LocalDateTime,
 )
 
+data class InnsynVedtak(
+    val id: Long,
+    val orgnr: String,
+    val barnsNavn: String,
+    val barnsAlder: Int,
+    val bestillingsdato: LocalDate,
+    val sats: SatsType,
+    val satsBeløp: Int,
+    val satsBeskrivelse: String,
+    val brillepris: BigDecimal,
+    val utbetalingsdato: LocalDate?,
+    val opprettet: LocalDateTime,
+)
+
 data class Kravlinje(
     val id: Long,
     val bestillingsdato: LocalDate,
