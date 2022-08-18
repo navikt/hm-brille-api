@@ -38,7 +38,7 @@ class LeaderElection(electorPath: String) {
         if (response.status == HttpStatusCode.OK) {
             val elector = jsonMapper.readValue(response.bodyAsText(), Elector::class.java)
             leader = elector.name
-            LOG.info("Running leader election getLeader is {} ", leader)
+            LOG.debug("Running leader election getLeader is {} ", leader)
         }
         return leader
     }

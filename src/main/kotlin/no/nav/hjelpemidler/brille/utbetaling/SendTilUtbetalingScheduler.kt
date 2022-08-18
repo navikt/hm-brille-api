@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory
 class SendTilUtbetalingScheduler(
     private val utbetalingService: UtbetalingService,
     leaderElection: LeaderElection,
-    timeInMs: Long = 60000
+    timeInMs: Long = 60 * 60 * 1000
 ) : SimpleScheduler(leaderElection, timeInMs) {
 
     companion object {
@@ -15,6 +15,6 @@ class SendTilUtbetalingScheduler(
     }
 
     override suspend fun action() {
-        LOG.info("Send melding til utbetaling")
+        LOG.info("Send melding til utbetaling, simulert (Vi sender ingenting enda)")
     }
 }

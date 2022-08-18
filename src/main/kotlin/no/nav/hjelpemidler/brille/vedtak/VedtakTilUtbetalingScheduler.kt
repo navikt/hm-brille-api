@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 class VedtakTilUtbetalingScheduler(
     private val vedtakService: VedtakService,
     leaderElection: LeaderElection,
-    timeInMs: Long = 5 * 60 * 1000 // every 5 min
+    timeInMs: Long = 60 * 60 * 1000
 ) : SimpleScheduler(leaderElection, timeInMs) {
 
     companion object {
@@ -17,7 +17,7 @@ class VedtakTilUtbetalingScheduler(
 
     override suspend fun action() {
         val vedtakList = vedtakService.hentVedtakIkkeRegistrertForUtbetaling(opprettet = LocalDateTime.now().minusDays(1))
-        LOG.info("fant ${vedtakList.size} vedtak for registrering")
+        LOG.info("fant ${vedtakList.size} vedtak for registrering, ssimulert (Vi sender ingenting enda)")
         // TODO innvilget vedtak som ikke finnes i utbetaling tabellen bør insertes her.
     }
 }
