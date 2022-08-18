@@ -1,20 +1,15 @@
 package no.nav.hjelpemidler.brille.scheduler
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
+import no.nav.hjelpemidler.brille.jsonMapper
 import org.slf4j.LoggerFactory
 import java.net.InetAddress
-
 
 class LeaderElection(electorPath: String) {
 
@@ -25,13 +20,6 @@ class LeaderElection(electorPath: String) {
 
     private val client = HttpClient(engine) {
         expectSuccess = true
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            }
-        }
     }
 
     init {
@@ -45,11 +33,11 @@ class LeaderElection(electorPath: String) {
     suspend fun isLeader(): Boolean {
         return hostname == getLeader()
     }
-
     private suspend fun getLeader(): String {
         val response = client.get(electorUri)
         if (response.status == HttpStatusCode.OK) {
-            leader = response.body<Elector>().name
+            val elector = jsonMapper.readValue(response.bodyAsText(), Elector::class.java)
+            leader = elector.name
             LOG.info("Running leader election getLeader is {} ", leader)
         }
         return leader
