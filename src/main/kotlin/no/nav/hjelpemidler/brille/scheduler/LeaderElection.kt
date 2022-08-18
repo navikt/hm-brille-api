@@ -8,6 +8,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
+import io.ktor.http.*
 import io.ktor.serialization.jackson.jackson
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
@@ -46,8 +47,11 @@ class LeaderElection(electorPath: String) {
     }
 
     private suspend fun getLeader(): String {
-        leader = client.get(electorUri).body<Elector>().name
-        LOG.debug("Running leader election getLeader is {} ", leader)
+        val response = client.get(electorUri)
+        if (response.status == HttpStatusCode.OK) {
+            leader = response.body<Elector>().name
+            LOG.info("Running leader election getLeader is {} ", leader)
+        }
         return leader
     }
 }
