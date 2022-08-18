@@ -14,9 +14,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.azuread.Token
+import no.nav.hjelpemidler.brille.scheduler.Elector
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Godkjenning
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Kode
+import java.net.InetAddress
 
 private val log = KotlinLogging.logger { }
 
@@ -112,6 +114,12 @@ object StubEngine {
         }
         post("/default/token") {
             respond(Token(120, ""))
+        }
+    }
+
+    fun leaderElection(): HttpClientEngine = mockEngine {
+        get("/") {
+            respond(Elector(name = InetAddress.getLocalHost().hostName))
         }
     }
 }

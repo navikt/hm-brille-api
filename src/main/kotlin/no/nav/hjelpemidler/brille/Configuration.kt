@@ -22,7 +22,8 @@ object Configuration {
             "altinn.proxyConsumerId" to "",
             "ALTINN_APIKEY" to "",
             "ALTINN_APIGW_APIKEY" to "",
-            "UTBETALING_ENABLED" to "false"
+            "UTBETALING_ENABLED" to "false",
+            "ELECTOR_PATH" to ""
         )
     )
 
@@ -137,6 +138,7 @@ object Configuration {
     val redisProperties = RedisProperties()
     val altinnProperties = AltinnProperties()
     val utbetalingProperties = UtbetalingProperties()
+    val electorPath = get("ELECTOR_PATH")
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))

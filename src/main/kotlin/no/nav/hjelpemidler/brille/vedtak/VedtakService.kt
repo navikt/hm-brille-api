@@ -10,6 +10,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingException
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
@@ -68,5 +69,9 @@ class VedtakService(
             LOG.error("Opprett utbetaling feilet", e)
         }
         return vedtak
+    }
+
+    suspend fun hentVedtakIkkeRegistrertForUtbetaling(opprettet: LocalDateTime): List<Vedtak<Vilkårsgrunnlag>> {
+        return vedtakStore.hentVedtakIkkeRegistrertForUtbetaling(opprettet)
     }
 }
