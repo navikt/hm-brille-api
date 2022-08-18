@@ -20,7 +20,7 @@ fun Route.innsynApi(
         get("/{vedtakId}") {
             val vedtakId = (call.parameters["vedtakId"] ?: error("Mangler vedtakId i url")).toLong()
             val fnrInnsender = call.extractFnr()
-            val vedtak = vedtakStore.hentVedtak(fnrInnsender, vedtakId)
+            val vedtak = vedtakStore.hentVedtakForOptiker(fnrInnsender, vedtakId)
             if (vedtak == null) {
                 call.respond(HttpStatusCode.NotFound, """{"error":"not found"}""")
                 return@get
@@ -31,7 +31,7 @@ fun Route.innsynApi(
         // Alle krav sendt inn av innlogget optiker
         get("/") {
             val fnrInnsender = call.extractFnr()
-            call.respond(vedtakStore.hentAlleVedtak(fnrInnsender))
+            call.respond(vedtakStore.hentAlleVedtakForOptiker(fnrInnsender))
         }
     }
 }

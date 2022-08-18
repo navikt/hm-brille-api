@@ -6,13 +6,14 @@ import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import org.intellij.lang.annotations.Language
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 interface VedtakStore : Store {
     fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
-    fun hentVedtak(fnrInnsender: String, vedtakId: Long): InnsynVedtak?
-    fun hentAlleVedtak(fnrInnsender: String): List<InnsynVedtak>
+    fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long, vedtakSisteXMåneder: Long = 6): InnsynVedtak?
+    fun hentAlleVedtakForOptiker(fnrInnsender: String, vedtakSisteXMåneder: Long = 6): List<InnsynVedtak>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
 }
 
@@ -35,75 +36,105 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }
     }
 
-    override fun hentVedtak(fnrInnsender: String, vedtakId: Long): InnsynVedtak? {
+    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long, vedtakSisteXMåneder: Long): InnsynVedtak? {
         @Language("PostgreSQL")
         val sql = """
             SELECT
-                id,
-                fnr_barn,
-                orgnr,
-                bestillingsdato,
-                brillepris,
-                bestillingsreferanse,
-                vilkarsvurdering,
-                behandlingsresultat,
-                sats,
-                sats_belop,
-                sats_beskrivelse,
-                belop,
-                opprettet
-            FROM vedtak_v1
-            WHERE fnr_innsender = :fnr_innsender AND id = :vedtak_id
+                v.id,
+                v.orgnr,
+                v.bestillingsdato,
+                v.brillepris,
+                v.bestillingsreferanse,
+                v.sats,
+                v.sats_belop,
+                v.sats_beskrivelse,
+                v.belop,
+                v.behandlingsresultat,
+                u.utbetalingsdato,
+                v.opprettet,
+                v.fnr_barn,
+                v.vilkarsvurdering
+            FROM vedtak_v1 v
+            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
+            WHERE
+                v.fnr_innsender = :fnr_innsender AND
+                v.opprettet > :datoTidEtter AND
+                v.id = :vedtak_id
         """.trimIndent()
-        return ds.query(sql, mapOf("fnr_innsender" to fnrInnsender, "vedtak_id" to vedtakId)) { row ->
+        return ds.query(
+            sql,
+            mapOf(
+                "fnr_innsender" to fnrInnsender,
+                "datoTidEtter" to LocalDateTime.now().minusMonths(vedtakSisteXMåneder),
+                "vedtak_id" to vedtakId,
+            )
+        ) { row ->
             InnsynVedtak(
                 id = row.long("id"),
                 orgnr = row.string("orgnr"),
                 barnsNavn = "",
                 barnsAlder = -1,
                 bestillingsdato = row.localDate("bestillingsdato"),
+                brillepris = row.bigDecimal("brillepris"),
+                bestillingsreferanse = row.string("bestillingsreferanse"),
                 sats = SatsType.valueOf(row.string("sats")),
                 satsBeløp = row.int("sats_belop"),
                 satsBeskrivelse = row.string("sats_beskrivelse"),
-                brillepris = row.bigDecimal("brillepris"),
-                utbetalingsdato = null,
+                beløp = row.bigDecimal("belop"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                 opprettet = row.localDateTime("opprettet"),
             )
         }
     }
 
-    override fun hentAlleVedtak(fnrInnsender: String): List<InnsynVedtak> {
+    // TODO: Trim ned datamodell når design er landet for liste-viewet
+    override fun hentAlleVedtakForOptiker(fnrInnsender: String, vedtakSisteXMåneder: Long): List<InnsynVedtak> {
         @Language("PostgreSQL")
         val sql = """
             SELECT
-                id,
-                fnr_barn,
-                orgnr,
-                bestillingsdato,
-                brillepris,
-                bestillingsreferanse,
-                vilkarsvurdering,
-                behandlingsresultat,
-                sats,
-                sats_belop,
-                sats_beskrivelse,
-                belop,
-                opprettet
-            FROM vedtak_v1
-            WHERE fnr_innsender = :fnr_innsender
+                v.id,
+                v.orgnr,
+                v.bestillingsdato,
+                v.brillepris,
+                v.bestillingsreferanse,
+                v.sats,
+                v.sats_belop,
+                v.sats_beskrivelse,
+                v.belop,
+                v.behandlingsresultat,
+                u.utbetalingsdato,
+                v.opprettet,
+                v.fnr_barn,
+                v.vilkarsvurdering
+            FROM vedtak_v1 v
+            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
+            WHERE
+                v.fnr_innsender = :fnr_innsender AND
+                v.opprettet > :datoTidEtter
+            ORDER BY v.opprettet DESC
         """.trimIndent()
-        return ds.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
+        return ds.queryList(
+            sql,
+            mapOf(
+                "fnr_innsender" to fnrInnsender,
+                "datoTidEtter" to LocalDateTime.now().minusMonths(vedtakSisteXMåneder)
+            )
+        ) { row ->
             InnsynVedtak(
                 id = row.long("id"),
                 orgnr = row.string("orgnr"),
                 barnsNavn = "",
                 barnsAlder = -1,
                 bestillingsdato = row.localDate("bestillingsdato"),
+                brillepris = row.bigDecimal("brillepris"),
+                bestillingsreferanse = row.string("bestillingsreferanse"),
                 sats = SatsType.valueOf(row.string("sats")),
                 satsBeløp = row.int("sats_belop"),
                 satsBeskrivelse = row.string("sats_beskrivelse"),
-                brillepris = row.bigDecimal("brillepris"),
-                utbetalingsdato = null,
+                beløp = row.bigDecimal("belop"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                 opprettet = row.localDateTime("opprettet"),
             )
         }
