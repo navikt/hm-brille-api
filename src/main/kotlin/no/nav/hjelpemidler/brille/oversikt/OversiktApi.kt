@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.oversikt
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
@@ -9,9 +10,10 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
-import no.nav.hjelpemidler.brille.pdl.PdlService
+import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.vedtak.OversiktVedtak
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 
@@ -20,7 +22,6 @@ private val log = KotlinLogging.logger {}
 fun Route.oversiktApi(
     vedtakStore: VedtakStore,
     enhetsregisteretService: EnhetsregisteretService,
-    pdlService: PdlService,
 ) {
     route("/oversikt") {
         // Detealjene for et gitt krav sendt inn av optiker
@@ -28,12 +29,11 @@ fun Route.oversiktApi(
             val vedtakId = (call.parameters["vedtakId"] ?: error("Mangler vedtakId i url")).toLong()
             val fnrInnsender = call.extractFnr()
             val vedtak = vedtakStore.hentVedtakForOptiker(fnrInnsender, vedtakId)?.let { vedtak ->
-                pdlService.hentPerson(vedtak.barnsFnr)?.let {
-                    vedtak.barnsNavn = it.navn()
-                    vedtak.barnsAlder = it.alder() ?: -1
-                }
-                vedtak.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "Ukjent"
-                vedtak
+                val person: Person = jsonMapper.readValue(vedtak.second)
+                vedtak.first.barnsNavn = person.navn()
+                vedtak.first.barnsAlder = person.alder() ?: -1
+                vedtak.first.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.first.orgnr)?.navn ?: "Ukjent"
+                vedtak.first
             }
             if (vedtak == null) {
                 call.respond(HttpStatusCode.NotFound, """{"error":"not found"}""")
@@ -56,12 +56,11 @@ fun Route.oversiktApi(
                     if (!indexRange.contains(idx)) {
                         null
                     } else {
-                        pdlService.hentPerson(vedtak.barnsFnr)?.let {
-                            vedtak.barnsNavn = it.navn()
-                            vedtak.barnsAlder = it.alder() ?: -1
-                        }
-                        vedtak.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "Ukjent"
-                        vedtak
+                        val person: Person = jsonMapper.readValue(vedtak.second)
+                        vedtak.first.barnsNavn = person.navn()
+                        vedtak.first.barnsAlder = person.alder() ?: -1
+                        vedtak.first.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.first.orgnr)?.navn ?: "Ukjent"
+                        vedtak.first
                     }
                 }
 

@@ -157,7 +157,7 @@ fun Application.setupRoutes() {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
-                    if (Configuration.dev) oversiktApi(vedtakStore, enhetsregisteretService, pdlService)
+                    if (Configuration.dev) oversiktApi(vedtakStore, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
                     kravApi(vedtakService, auditService)
