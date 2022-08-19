@@ -12,6 +12,7 @@ import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PdlService
+import no.nav.hjelpemidler.brille.vedtak.OversiktVedtak
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 
 private val log = KotlinLogging.logger {}
@@ -43,10 +44,18 @@ fun Route.oversiktApi(
 
         // Alle krav sendt inn av innlogget optiker
         get("/") {
+            val itemsPerPage = 10
+            val page = (call.request.queryParameters["page"] ?: "1").toInt()
+            val indexRange = (page - 1) * itemsPerPage until page * itemsPerPage
+
             val fnrInnsender = call.extractFnr()
-            call.respond(
-                vedtakStore.hentAlleVedtakForOptiker(fnrInnsender)
-                    .map { vedtak ->
+            val alleVedtak = vedtakStore.hentAlleVedtakForOptiker(fnrInnsender)
+            val totaltAntallVedtak = alleVedtak.count()
+            val filtrerteVedtak = alleVedtak
+                .mapIndexedNotNull { idx, vedtak ->
+                    if (!indexRange.contains(idx)) {
+                        null
+                    } else {
                         pdlService.hentPerson(vedtak.barnsFnr)?.let {
                             vedtak.barnsNavn = it.navn()
                             vedtak.barnsAlder = it.alder() ?: -1
@@ -54,6 +63,22 @@ fun Route.oversiktApi(
                         vedtak.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "Ukjent"
                         vedtak
                     }
+                }
+
+            data class Response(
+                val numberOfPages: Int,
+                val itemsPerPage: Int,
+                val totalItems: Int,
+                val items: List<OversiktVedtak>,
+            )
+
+            call.respond(
+                Response(
+                    numberOfPages = Math.ceil(totaltAntallVedtak.toDouble() / itemsPerPage.toDouble()).toInt(),
+                    itemsPerPage = itemsPerPage,
+                    totalItems = totaltAntallVedtak,
+                    items = filtrerteVedtak,
+                )
             )
         }
     }
