@@ -51,6 +51,10 @@ fun Route.oversiktApi(
             val fnrInnsender = call.extractFnr()
             val alleVedtak = vedtakStore.hentAlleVedtakForOptiker(fnrInnsender)
             val totaltAntallVedtak = alleVedtak.count()
+
+            // In-mem cache av enhetsregister-oppslag slik at vi ikke hit'er redis 10 gang på rad per request
+            val enhetsregisterOppslagCache = mutableMapOf<String, String>()
+
             val filtrerteVedtak = alleVedtak
                 .mapIndexedNotNull { idx, vedtak ->
                     if (!indexRange.contains(idx)) {
@@ -59,9 +63,15 @@ fun Route.oversiktApi(
                         val person: Person = jsonMapper.readValue(vedtak.second)
                         vedtak.first.barnsNavn = person.navn()
                         vedtak.first.barnsAlder = person.alder() ?: -1
-                        // TODO: Lag en lokal map utenfor denne loopen som cache'er oppslag mot enhetsregisteret, så
-                        //  slipper vi 10 kall mot enhetsregisteret (redis) på hver request når én ofte er nok
-                        vedtak.first.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.first.orgnr)?.navn ?: "Ukjent"
+                        vedtak.first.orgnavn = enhetsregisterOppslagCache[vedtak.first.orgnr].let {
+                            if (it != null) it
+                            else {
+                                val orgnavn =
+                                    enhetsregisteretService.hentOrganisasjonsenhet(vedtak.first.orgnr)?.navn ?: "<Ukjent>"
+                                enhetsregisterOppslagCache[vedtak.first.orgnr] = orgnavn
+                                orgnavn
+                            }
+                        }
                         vedtak.first
                     }
                 }
