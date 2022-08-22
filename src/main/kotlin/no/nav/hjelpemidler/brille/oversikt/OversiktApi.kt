@@ -59,6 +59,8 @@ fun Route.oversiktApi(
                         val person: Person = jsonMapper.readValue(vedtak.second)
                         vedtak.first.barnsNavn = person.navn()
                         vedtak.first.barnsAlder = person.alder() ?: -1
+                        // TODO: Lag en lokal map utenfor denne loopen som cache'er oppslag mot enhetsregisteret, så
+                        //  slipper vi 10 kall mot enhetsregisteret (redis) på hver request når én ofte er nok
                         vedtak.first.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.first.orgnr)?.navn ?: "Ukjent"
                         vedtak.first
                     }
