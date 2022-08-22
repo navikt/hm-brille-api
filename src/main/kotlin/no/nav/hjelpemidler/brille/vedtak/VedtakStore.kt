@@ -14,8 +14,8 @@ import javax.sql.DataSource
 interface VedtakStore : Store {
     fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
-    fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long, vedtakSisteXMåneder: Long = 6): InnsynVedtak?
-    fun hentAlleVedtakForOptiker(fnrInnsender: String, vedtakSisteXMåneder: Long = 6): List<InnsynVedtak>
+    fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long, vedtakSisteXMåneder: Long = 6): Pair<OversiktVedtak, String>?
+    fun hentAlleVedtakForOptiker(fnrInnsender: String, vedtakSisteXMåneder: Long = 6): List<Pair<OversiktVedtak, String>>
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
     fun <T> hentVedtakIkkeRegistrertForUtbetaling(opprettet: LocalDateTime, behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET): List<Vedtak<T>>
 }
@@ -39,7 +39,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }
     }
 
-    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long, vedtakSisteXMåneder: Long): InnsynVedtak? {
+    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long, vedtakSisteXMåneder: Long): Pair<OversiktVedtak, String>? {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -56,7 +56,11 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 u.utbetalingsdato,
                 v.opprettet,
                 v.fnr_barn,
-                v.vilkarsvurdering
+                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
+                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS høyreSylinder,
+                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSfære' AS venstreSfære,
+                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSylinder' AS venstreSylinder,
+                v.vilkarsvurdering -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag
             FROM vedtak_v1 v
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE
@@ -72,27 +76,36 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 "vedtak_id" to vedtakId,
             )
         ) { row ->
-            InnsynVedtak(
-                id = row.long("id"),
-                orgnr = row.string("orgnr"),
-                barnsNavn = "",
-                barnsAlder = -1,
-                bestillingsdato = row.localDate("bestillingsdato"),
-                brillepris = row.bigDecimal("brillepris"),
-                bestillingsreferanse = row.string("bestillingsreferanse"),
-                sats = SatsType.valueOf(row.string("sats")),
-                satsBeløp = row.int("sats_belop"),
-                satsBeskrivelse = row.string("sats_beskrivelse"),
-                beløp = row.bigDecimal("belop"),
-                behandlingsresultat = row.string("behandlingsresultat"),
-                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-                opprettet = row.localDateTime("opprettet"),
+            Pair(
+                OversiktVedtak(
+                    id = row.long("id"),
+                    orgnavn = "",
+                    orgnr = row.string("orgnr"),
+                    barnsNavn = "",
+                    barnsFnr = row.string("fnr_barn"),
+                    barnsAlder = -1,
+                    høyreSfære = row.double("høyreSfære"),
+                    høyreSylinder = row.double("høyreSylinder"),
+                    venstreSfære = row.double("venstreSfære"),
+                    venstreSylinder = row.double("venstreSylinder"),
+                    bestillingsdato = row.localDate("bestillingsdato"),
+                    brillepris = row.bigDecimal("brillepris"),
+                    beløp = row.bigDecimal("belop"),
+                    bestillingsreferanse = row.string("bestillingsreferanse"),
+                    satsNr = SatsType.valueOf(row.string("sats")).sats,
+                    satsBeløp = row.int("sats_belop"),
+                    satsBeskrivelse = row.string("sats_beskrivelse"),
+                    behandlingsresultat = row.string("behandlingsresultat"),
+                    utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                    opprettet = row.localDateTime("opprettet"),
+                ),
+                row.string("pdlOppslag"),
             )
         }
     }
 
     // TODO: Trim ned datamodell når design er landet for liste-viewet
-    override fun hentAlleVedtakForOptiker(fnrInnsender: String, vedtakSisteXMåneder: Long): List<InnsynVedtak> {
+    override fun hentAlleVedtakForOptiker(fnrInnsender: String, vedtakSisteXMåneder: Long): List<Pair<OversiktVedtak, String>> {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -109,7 +122,11 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 u.utbetalingsdato,
                 v.opprettet,
                 v.fnr_barn,
-                v.vilkarsvurdering
+                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
+                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS høyreSylinder,
+                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSfære' AS venstreSfære,
+                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSylinder' AS venstreSylinder,
+                v.vilkarsvurdering -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag
             FROM vedtak_v1 v
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE
@@ -124,21 +141,30 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 "datoTidEtter" to LocalDateTime.now().minusMonths(vedtakSisteXMåneder)
             )
         ) { row ->
-            InnsynVedtak(
-                id = row.long("id"),
-                orgnr = row.string("orgnr"),
-                barnsNavn = "",
-                barnsAlder = -1,
-                bestillingsdato = row.localDate("bestillingsdato"),
-                brillepris = row.bigDecimal("brillepris"),
-                bestillingsreferanse = row.string("bestillingsreferanse"),
-                sats = SatsType.valueOf(row.string("sats")),
-                satsBeløp = row.int("sats_belop"),
-                satsBeskrivelse = row.string("sats_beskrivelse"),
-                beløp = row.bigDecimal("belop"),
-                behandlingsresultat = row.string("behandlingsresultat"),
-                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-                opprettet = row.localDateTime("opprettet"),
+            Pair(
+                OversiktVedtak(
+                    id = row.long("id"),
+                    orgnavn = "",
+                    orgnr = row.string("orgnr"),
+                    barnsNavn = "",
+                    barnsFnr = row.string("fnr_barn"),
+                    barnsAlder = -1,
+                    høyreSfære = row.double("høyreSfære"),
+                    høyreSylinder = row.double("høyreSylinder"),
+                    venstreSfære = row.double("venstreSfære"),
+                    venstreSylinder = row.double("venstreSylinder"),
+                    bestillingsdato = row.localDate("bestillingsdato"),
+                    brillepris = row.bigDecimal("brillepris"),
+                    beløp = row.bigDecimal("belop"),
+                    bestillingsreferanse = row.string("bestillingsreferanse"),
+                    satsNr = SatsType.valueOf(row.string("sats")).sats,
+                    satsBeløp = row.int("sats_belop"),
+                    satsBeskrivelse = row.string("sats_beskrivelse"),
+                    behandlingsresultat = row.string("behandlingsresultat"),
+                    utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                    opprettet = row.localDateTime("opprettet"),
+                ),
+                row.string("pdlOppslag"),
             )
         }
     }

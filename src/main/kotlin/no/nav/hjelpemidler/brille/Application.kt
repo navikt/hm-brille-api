@@ -30,7 +30,6 @@ import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
-import no.nav.hjelpemidler.brille.innsyn.innsynApi
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.KafkaConfig
@@ -39,6 +38,7 @@ import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.kafka.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
+import no.nav.hjelpemidler.brille.oversikt.oversiktApi
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.rapportering.RapportService
@@ -154,6 +154,7 @@ fun Application.setupRoutes() {
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
+
     routing {
         internalRoutes(vedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler)
 
@@ -165,7 +166,7 @@ fun Application.setupRoutes() {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
-                    if (Configuration.dev) innsynApi(vedtakStore)
+                    if (Configuration.dev) oversiktApi(vedtakStore, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
                     kravApi(vedtakService, auditService)
@@ -190,8 +191,18 @@ fun cronjobSyncTss() {
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
 
-    val kafkaConfig = KafkaConfig(bootstrapServers = "localhost:9092", consumerGroupId = "hm-brille-api-v1")
-    val rapid = KafkaRapid.create(kafkaConfig, "rapidTopic", emptyList())
+    val kafkaProps = Configuration.kafkaProperties
+    val kafkaConfig = KafkaConfig(
+        bootstrapServers = kafkaProps.bootstrapServers,
+        consumerGroupId = kafkaProps.clientId,
+        clientId = kafkaProps.clientId,
+        truststore = kafkaProps.truststorePath,
+        truststorePassword = kafkaProps.truststorePassword,
+        keystoreLocation = kafkaProps.keystorePath,
+        keystorePassword = kafkaProps.keystorePassword
+    )
+
+    val rapid = KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
     val kafkaService = KafkaService(rapid)
 
     val virksomheter = virksomhetStore.hentAlleVirksomheterMedKontonr().map {
