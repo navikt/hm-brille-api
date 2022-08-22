@@ -1,11 +1,7 @@
 package no.nav.hjelpemidler.brille.kafka
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.annotation.JsonNaming
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.avtale.Avtale
@@ -17,28 +13,15 @@ import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
-import org.apache.kafka.clients.producer.Producer
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.KafkaException
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.findAnnotation
 
 private val log = KotlinLogging.logger {}
 
-class KafkaService(
-    private val topic: String = Configuration.kafkaProperties.topic,
-    kafkaProducerFactory: () -> Producer<String, String>,
-) {
-    private val kafkaProducer = kafkaProducerFactory()
-    private val mapper = jacksonMapperBuilder()
-        .addModule(JavaTimeModule())
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .serializationInclusion(JsonInclude.Include.NON_NULL)
-        .build()
+class KafkaService(private val kafkaRapid: KafkaRapid) {
 
     fun avtaleOpprettet(avtale: Avtale) {
         // Metrics
@@ -165,13 +148,7 @@ class KafkaService(
     }
 
     private fun <T> produceEvent(key: String?, event: T) {
-        try {
-            val record = ProducerRecord(topic, key, mapper.writeValueAsString(event))
-            kafkaProducer.send(record).get(10, TimeUnit.SECONDS)
-        } catch (e: Exception) {
-            log.error(e) { "Sending av event til '$topic' feilet" }
-            throw KafkaException("Sending av event til '$topic' feilet", e)
-        }
+        kafkaRapid.publishTimeOut(key, event)
     }
 
     private fun <T : Any> sendTilBigQuery(key: String?, payload: T) {

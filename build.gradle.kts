@@ -19,6 +19,7 @@ application {
 
 repositories {
     mavenCentral()
+    // maven("https://jitpack.io")
 }
 
 dependencies {
@@ -86,6 +87,9 @@ dependencies {
 
     // Postgres from naisjob
     implementation("com.google.cloud.sql:postgres-socket-factory:1.6.3")
+
+    // Rapids and Rivers
+    // implementation("com.github.navikt:rapids-and-rivers:2022.04.05-09.40.11a466d7ac70")
 
     // Testing
     testImplementation(kotlin("test"))
