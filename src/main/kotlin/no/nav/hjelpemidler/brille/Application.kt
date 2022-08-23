@@ -202,7 +202,6 @@ fun cronjobSyncTss() {
         keystoreLocation = kafkaProps.keystorePath,
         keystorePassword = kafkaProps.keystorePassword
     )
-
     val rapid = KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
     val kafkaService = KafkaService(rapid)
 
