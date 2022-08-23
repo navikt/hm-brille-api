@@ -15,6 +15,8 @@ import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
+import no.nav.helse.rapids_rivers.KafkaConfig
+import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
@@ -32,8 +34,6 @@ import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
-import no.nav.hjelpemidler.brille.kafka.KafkaConfig
-import no.nav.hjelpemidler.brille.kafka.KafkaRapid
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.kafka.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
@@ -153,10 +153,15 @@ fun Application.setupRoutes() {
     val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection)
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
+    UtbetalingsKvitteringRiver(rapid)
+    thread(isDaemon = false) {
+        rapid.start()
+    }
+
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {
-        internalRoutes(vedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler)
+        internalRoutes(vedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler, kafkaService)
 
         route("/api") {
             satsApi()
@@ -178,10 +183,6 @@ fun Application.setupRoutes() {
             // Admin apis
             // rapportApiAdmin(rapportService)
         }
-    }
-    UtbetalingsKvitteringRiver(rapid)
-    thread(isDaemon = false) {
-        rapid.start()
     }
 }
 

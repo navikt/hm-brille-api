@@ -1,5 +1,10 @@
 package no.nav.hjelpemidler.brille.kafka
 
+import no.nav.helse.rapids_rivers.JsonMessage
+import no.nav.helse.rapids_rivers.KafkaRapid
+import no.nav.helse.rapids_rivers.MessageContext
+import no.nav.helse.rapids_rivers.MessageProblems
+import no.nav.helse.rapids_rivers.River
 import org.slf4j.LoggerFactory
 
 class UtbetalingsKvitteringRiver(rapid: KafkaRapid) : River.PacketListener {

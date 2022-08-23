@@ -1,8 +1,13 @@
 package no.nav.hjelpemidler.brille.kafka
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.annotation.JsonNaming
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
+import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.avtale.Avtale
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
@@ -22,6 +27,12 @@ import kotlin.reflect.full.findAnnotation
 private val log = KotlinLogging.logger {}
 
 class KafkaService(private val kafkaRapid: KafkaRapid) {
+
+    private val mapper = jacksonMapperBuilder()
+        .addModule(JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        .serializationInclusion(JsonInclude.Include.NON_NULL)
+        .build()
 
     fun avtaleOpprettet(avtale: Avtale) {
         // Metrics
@@ -148,7 +159,14 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     }
 
     private fun <T> produceEvent(key: String?, event: T) {
-        kafkaRapid.publishTimeOut(key, event)
+        try {
+            val message = mapper.writeValueAsString(event)
+            if (key != null) kafkaRapid.publishWithTimeout(key, message, 10)
+            else kafkaRapid.publishWithTimeout(message, 10)
+        } catch (e: Exception) {
+            log.error("We got error while sending to kafka", e)
+            throw KafkaException("Error while sending to kafka", e)
+        }
     }
 
     private fun <T : Any> sendTilBigQuery(key: String?, payload: T) {
@@ -178,6 +196,9 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             )
         )
     }
+
+    fun isAlive() = kafkaRapid.isRunning()
+    fun isReady() = kafkaRapid.isReady()
 
     internal data class VedtakOpprettet(
         val eventId: UUID = UUID.randomUUID(),
