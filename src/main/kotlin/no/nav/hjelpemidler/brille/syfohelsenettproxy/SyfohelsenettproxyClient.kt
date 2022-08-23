@@ -12,8 +12,14 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.post
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
@@ -65,6 +71,53 @@ class SyfohelsenettproxyClient(
             }
         } catch (e: Exception) {
             throw SyfohelsenettproxyClientException("Ukjent feil under henting av behandler data", e)
+        }
+    }
+
+    suspend fun hentBehandlerMedHprNummer(hprnr: String): Behandler = runCatching {
+        val url = "$baseUrl/api/v2/behandlerMedHprNummer"
+        log.info { "Henter behandler data med url: $url" }
+        val response = client.get(url) {
+            headers["hprNummer"] = hprnr
+        }
+        if (response.status == HttpStatusCode.OK) {
+            return response.body()
+        }
+        throw SyfohelsenettproxyClientException("Uventet svar fra tjeneste: ${response.status}", null)
+    }.getOrElse { throw SyfohelsenettproxyClientException("Feil under henting av behandler data", it) }
+}
+
+fun Route.sjekkErOptikerMedHprnr(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
+    post("/admin/sjekkErOptikerMedHprnr/{hprnr}") {
+        kotlin.runCatching {
+            val hprnr = call.parameters["hprnr"] ?: error("Mangler hprnr i url")
+
+            val behandler =
+                runCatching { runBlocking { syfohelsenettproxyClient.hentBehandlerMedHprNummer(hprnr) } }.getOrElse {
+                    log.error(it) { "Feil oppstod ved kall mot HPR" }
+                    throw SjekkOptikerPluginException(
+                        HttpStatusCode.InternalServerError,
+                        "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
+                        it
+                    )
+                }
+
+            data class Response(
+                val behandler: Behandler,
+                val erOptiker: Boolean,
+            )
+
+            call.respond(
+                Response(
+                    behandler = behandler,
+                    erOptiker = behandler.godkjenninger.any {
+                        it.helsepersonellkategori?.aktiv == true && it.helsepersonellkategori.verdi == "OP"
+                    },
+                )
+            )
+        }.getOrElse {
+            log.error(it) { "sjekkErOptikerMedHprnr feilet!" }
+            call.respond(HttpStatusCode.InternalServerError, it.stackTraceToString())
         }
     }
 }
