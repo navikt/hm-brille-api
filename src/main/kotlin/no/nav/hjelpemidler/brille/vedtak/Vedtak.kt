@@ -32,13 +32,20 @@ data class EksisterendeVedtak(
     val opprettet: LocalDateTime,
 )
 
+data class OversiktVedtakPaged(
+    val numberOfPages: Int,
+    val itemsPerPage: Int,
+    val totalItems: Int,
+    var items: List<OversiktVedtak>,
+)
+
 data class OversiktVedtak(
     val id: Long,
     var orgnavn: String,
     val orgnr: String,
-    var barnsNavn: String,
+    val barnsNavn: String,
     val barnsFnr: String,
-    var barnsAlder: Int,
+    val barnsAlder: Int,
     val høyreSfære: Double,
     val høyreSylinder: Double,
     val venstreSfære: Double,

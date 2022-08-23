@@ -1,6 +1,11 @@
 package no.nav.hjelpemidler.brille.vedtak
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.nav.hjelpemidler.brille.json
+import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
+import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.store.Store
@@ -10,12 +15,13 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import javax.sql.DataSource
+import kotlin.math.ceil
 
 interface VedtakStore : Store {
     fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
-    fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long, vedtakSisteXMåneder: Long = 6): Pair<OversiktVedtak, String>?
-    fun hentAlleVedtakForOptiker(fnrInnsender: String, vedtakSisteXMåneder: Long = 6): List<Pair<OversiktVedtak, String>>
+    fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak?
+    fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int = 10): OversiktVedtakPaged
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
     fun <T> hentVedtakIkkeRegistrertForUtbetaling(opprettet: LocalDateTime, behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET): List<Vedtak<T>>
 }
@@ -39,7 +45,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }
     }
 
-    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long, vedtakSisteXMåneder: Long): Pair<OversiktVedtak, String>? {
+    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak? {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -65,47 +71,57 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE
                 v.fnr_innsender = :fnr_innsender AND
-                v.opprettet > :datoTidEtter AND
                 v.id = :vedtak_id
         """.trimIndent()
         return ds.query(
             sql,
             mapOf(
                 "fnr_innsender" to fnrInnsender,
-                "datoTidEtter" to LocalDateTime.now().minusMonths(vedtakSisteXMåneder),
                 "vedtak_id" to vedtakId,
             )
         ) { row ->
-            Pair(
-                OversiktVedtak(
-                    id = row.long("id"),
-                    orgnavn = "",
-                    orgnr = row.string("orgnr"),
-                    barnsNavn = "",
-                    barnsFnr = row.string("fnr_barn"),
-                    barnsAlder = -1,
-                    høyreSfære = row.double("høyreSfære"),
-                    høyreSylinder = row.double("høyreSylinder"),
-                    venstreSfære = row.double("venstreSfære"),
-                    venstreSylinder = row.double("venstreSylinder"),
-                    bestillingsdato = row.localDate("bestillingsdato"),
-                    brillepris = row.bigDecimal("brillepris"),
-                    beløp = row.bigDecimal("belop"),
-                    bestillingsreferanse = row.string("bestillingsreferanse"),
-                    satsNr = SatsType.valueOf(row.string("sats")).sats,
-                    satsBeløp = row.int("sats_belop"),
-                    satsBeskrivelse = row.string("sats_beskrivelse"),
-                    behandlingsresultat = row.string("behandlingsresultat"),
-                    utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-                    opprettet = row.localDateTime("opprettet"),
-                ),
-                row.string("pdlOppslag"),
+            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+
+            OversiktVedtak(
+                id = row.long("id"),
+                orgnavn = "",
+                orgnr = row.string("orgnr"),
+                barnsNavn = person.navn(),
+                barnsFnr = row.string("fnr_barn"),
+                barnsAlder = person.alder() ?: -1,
+                høyreSfære = row.double("høyreSfære"),
+                høyreSylinder = row.double("høyreSylinder"),
+                venstreSfære = row.double("venstreSfære"),
+                venstreSylinder = row.double("venstreSylinder"),
+                bestillingsdato = row.localDate("bestillingsdato"),
+                brillepris = row.bigDecimal("brillepris"),
+                beløp = row.bigDecimal("belop"),
+                bestillingsreferanse = row.string("bestillingsreferanse"),
+                satsNr = SatsType.valueOf(row.string("sats")).sats,
+                satsBeløp = row.int("sats_belop"),
+                satsBeskrivelse = row.string("sats_beskrivelse"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                opprettet = row.localDateTime("opprettet"),
             )
         }
     }
 
     // TODO: Trim ned datamodell når design er landet for liste-viewet
-    override fun hentAlleVedtakForOptiker(fnrInnsender: String, vedtakSisteXMåneder: Long): List<Pair<OversiktVedtak, String>> {
+    override fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int): OversiktVedtakPaged {
+        val offset = (page - 1) * itemsPerPage
+
+        @Language("PostgreSQL")
+        val sqlTotal = """
+            SELECT COUNT(id) AS antall
+            FROM vedtak_v1
+            WHERE fnr_innsender = :fnr_innsender
+        """.trimIndent()
+
+        val totaltAntall = ds.query(sqlTotal, mapOf("fnr_innsender" to fnrInnsender)) { row ->
+            row.int("antall")
+        } ?: 0
+
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -130,43 +146,51 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             FROM vedtak_v1 v
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE
-                v.fnr_innsender = :fnr_innsender AND
-                v.opprettet > :datoTidEtter
+                v.fnr_innsender = :fnr_innsender
             ORDER BY v.opprettet DESC
+            LIMIT :limit OFFSET :offset
         """.trimIndent()
-        return ds.queryList(
+
+        val items = ds.queryList(
             sql,
             mapOf(
                 "fnr_innsender" to fnrInnsender,
-                "datoTidEtter" to LocalDateTime.now().minusMonths(vedtakSisteXMåneder)
+                "limit" to itemsPerPage,
+                "offset" to offset,
             )
         ) { row ->
-            Pair(
-                OversiktVedtak(
-                    id = row.long("id"),
-                    orgnavn = "",
-                    orgnr = row.string("orgnr"),
-                    barnsNavn = "",
-                    barnsFnr = row.string("fnr_barn"),
-                    barnsAlder = -1,
-                    høyreSfære = row.double("høyreSfære"),
-                    høyreSylinder = row.double("høyreSylinder"),
-                    venstreSfære = row.double("venstreSfære"),
-                    venstreSylinder = row.double("venstreSylinder"),
-                    bestillingsdato = row.localDate("bestillingsdato"),
-                    brillepris = row.bigDecimal("brillepris"),
-                    beløp = row.bigDecimal("belop"),
-                    bestillingsreferanse = row.string("bestillingsreferanse"),
-                    satsNr = SatsType.valueOf(row.string("sats")).sats,
-                    satsBeløp = row.int("sats_belop"),
-                    satsBeskrivelse = row.string("sats_beskrivelse"),
-                    behandlingsresultat = row.string("behandlingsresultat"),
-                    utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-                    opprettet = row.localDateTime("opprettet"),
-                ),
-                row.string("pdlOppslag"),
+            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+
+            OversiktVedtak(
+                id = row.long("id"),
+                orgnavn = "",
+                orgnr = row.string("orgnr"),
+                barnsNavn = person.navn(),
+                barnsFnr = row.string("fnr_barn"),
+                barnsAlder = person.alder() ?: -1,
+                høyreSfære = row.double("høyreSfære"),
+                høyreSylinder = row.double("høyreSylinder"),
+                venstreSfære = row.double("venstreSfære"),
+                venstreSylinder = row.double("venstreSylinder"),
+                bestillingsdato = row.localDate("bestillingsdato"),
+                brillepris = row.bigDecimal("brillepris"),
+                beløp = row.bigDecimal("belop"),
+                bestillingsreferanse = row.string("bestillingsreferanse"),
+                satsNr = SatsType.valueOf(row.string("sats")).sats,
+                satsBeløp = row.int("sats_belop"),
+                satsBeskrivelse = row.string("sats_beskrivelse"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                opprettet = row.localDateTime("opprettet"),
             )
         }
+
+        return OversiktVedtakPaged(
+            numberOfPages = ceil(totaltAntall.toDouble() / itemsPerPage.toDouble()).toInt(),
+            itemsPerPage = itemsPerPage,
+            totalItems = totaltAntall,
+            items = items,
+        )
     }
 
     override fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String> {

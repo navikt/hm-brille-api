@@ -53,7 +53,7 @@ internal class VedtakStorePostgresTest {
         orgnr shouldBe virksomhet.orgnr
         orgnr shouldBe lagretVedtak.orgnr
 
-        val vedtak2 = store.lagreVedtak(
+        store.lagreVedtak(
             Vedtak(
                 fnrBarn = "12121314156",
                 fnrInnsender = "11080642360",
