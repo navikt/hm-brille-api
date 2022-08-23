@@ -19,7 +19,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 internal class KafkaServiceTest {
-    val kafkaRapid = mockk<KafkaRapid>()
+    private val kafkaRapid = mockk<KafkaRapid>()
     private val service = KafkaService(kafkaRapid)
 
     @Test
