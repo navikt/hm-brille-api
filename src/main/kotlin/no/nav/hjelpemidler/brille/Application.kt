@@ -51,7 +51,6 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
-import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
@@ -63,7 +62,6 @@ import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
-import kotlin.concurrent.thread
 
 private val log = KotlinLogging.logger {}
 
@@ -156,10 +154,10 @@ fun Application.setupRoutes() {
     val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection)
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
-    UtbetalingsKvitteringRiver(rapid)
-    thread(isDaemon = false) {
-        rapid.start()
-    }
+    // UtbetalingsKvitteringRiver(rapid)
+    // thread(isDaemon = false) {
+    // rapid.start()
+    // }
 
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
