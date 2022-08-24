@@ -161,7 +161,6 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     private fun <T> produceEvent(key: String?, event: T) {
         try {
             val message = mapper.writeValueAsString(event)
-            println("sending kafka message $message")
             if (key != null) kafkaRapid.publishWithTimeout(key, message, 10)
             else kafkaRapid.publishWithTimeout(message, 10)
         } catch (e: Exception) {
