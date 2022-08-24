@@ -118,10 +118,7 @@ fun Application.setupRoutes() {
     val utbetalingStore = UtbetalingStorePostgres(dataSource)
 
     // Kafka
-    val instanceId = InetAddress.getLocalHost().hostName
-    val kafkaProps = Configuration.kafkaProperties
-    val kafkaConfig = kafkaConfig(kafkaProps, instanceId)
-    val rapid = KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
+    val rapid = createKafkaRapid()
     val kafkaService = KafkaService(rapid)
 
     // Klienter
@@ -181,15 +178,20 @@ fun Application.setupRoutes() {
     }
 }
 
+private fun createKafkaRapid(): KafkaRapid {
+    val instanceId = InetAddress.getLocalHost().hostName
+    val kafkaProps = Configuration.kafkaProperties
+    val kafkaConfig = kafkaConfig(kafkaProps, instanceId)
+    return KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
+}
+
 fun cronjobSyncTss() {
     log.info("cronjob sync tss start")
 
     val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
 
-    val kafkaProps = Configuration.kafkaProperties
-    val kafkaConfig = kafkaConfig(kafkaProps, kafkaProps.clientId)
-    val rapid = KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
+    val rapid = createKafkaRapid()
     val kafkaService = KafkaService(rapid)
 
     val virksomheter = virksomhetStore.hentAlleVirksomheterMedKontonr().map {
