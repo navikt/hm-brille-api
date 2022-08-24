@@ -23,10 +23,39 @@ interface VedtakStore : Store {
     fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak?
     fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int = 10): OversiktVedtakPaged
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
-    fun <T> hentVedtakIkkeRegistrertForUtbetaling(opprettet: LocalDateTime, behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET): List<Vedtak<T>>
+    fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime)
+    fun <T> hentVedtakIkkeRegistrertForUtbetaling(
+        opprettet: LocalDateTime,
+        behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET
+    ): List<Vedtak<T>>
 }
 
 internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
+    override fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime) {
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO vedtak_ko_v1 (
+                id,
+                opprettet
+            )
+            VALUES (
+                :vedtakId,
+                :opprettet
+            )
+            RETURNING id
+        """.trimIndent()
+        val id = ds.query(
+            sql,
+            mapOf(
+                "vedtakId" to vedtakId,
+                "opprettet" to opprettet,
+            )
+        ) { row ->
+            row.long("id")
+        }
+        requireNotNull(id) { "Lagring av vedtak feilet, id var null" }
+    }
+
     override fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak> {
         @Language("PostgreSQL")
         val sql = """
@@ -265,7 +294,10 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         return vedtak.copy(id = id)
     }
 
-    override fun <T> hentVedtakIkkeRegistrertForUtbetaling(opprettet: LocalDateTime, behandlingsresultat: Behandlingsresultat): List<Vedtak<T>> {
+    override fun <T> hentVedtakIkkeRegistrertForUtbetaling(
+        opprettet: LocalDateTime,
+        behandlingsresultat: Behandlingsresultat
+    ): List<Vedtak<T>> {
         @Language("PostgreSQL")
         val sql = """
             SELECT

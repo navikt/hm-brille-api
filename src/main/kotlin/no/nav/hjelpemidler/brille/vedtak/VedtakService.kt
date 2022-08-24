@@ -56,6 +56,8 @@ class VedtakService(
                 beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
             )
         )
+        vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
+
         kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)
         if (vilkårsvurdering.grunnlag.medlemskapResultat.medlemskapBevist) {
             kafkaService.medlemskapFolketrygdenBevist(vilkårsgrunnlag.fnrBarn, vedtak.id)

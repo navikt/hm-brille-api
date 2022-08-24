@@ -45,6 +45,9 @@ internal class VedtakStorePostgresTest {
                 beløp = sats.beløp.toBigDecimal(),
             )
         )
+
+        store.lagreVedtakIKø(lagretVedtak.id, lagretVedtak.opprettet)
+
         val vedtakForBarn = store.hentVedtakForBarn(lagretVedtak.fnrBarn).firstOrNull()
         vedtakForBarn.shouldNotBeNull()
         vedtakForBarn.fnrBarn shouldBe lagretVedtak.fnrBarn
@@ -53,7 +56,7 @@ internal class VedtakStorePostgresTest {
         orgnr shouldBe virksomhet.orgnr
         orgnr shouldBe lagretVedtak.orgnr
 
-        store.lagreVedtak(
+        val vedtak = store.lagreVedtak(
             Vedtak(
                 fnrBarn = "12121314156",
                 fnrInnsender = "11080642360",
@@ -69,6 +72,8 @@ internal class VedtakStorePostgresTest {
                 beløp = sats.beløp.toBigDecimal(),
             )
         )
+
+        store.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
 
         val vedtakList =
             store.hentVedtakIkkeRegistrertForUtbetaling<Vedtak<*>>(opprettet = LocalDateTime.now().minusDays(1))

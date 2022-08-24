@@ -94,6 +94,10 @@ internal class KravApiTest {
             vedtakStore.lagreVedtak<Vilkårsgrunnlag>(any())
         } returnsArgument 0
 
+        every {
+            vedtakStore.lagreVedtakIKø(any(), any())
+        } returns Unit
+
         coEvery {
             pdlClient.hentPerson(krav.vilkårsgrunnlag.fnrBarn)
         } returns lagMockPdlOppslag(fødselsdato)

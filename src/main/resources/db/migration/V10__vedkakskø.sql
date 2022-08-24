@@ -1,0 +1,6 @@
+
+CREATE TABLE IF NOT EXISTS vedtak_ko_v1
+(
+    id   BIGSERIAL PRIMARY KEY REFERENCES vedtak_v1 ON DELETE CASCADE,
+    opprettet      TIMESTAMP NOT NULL
+);
