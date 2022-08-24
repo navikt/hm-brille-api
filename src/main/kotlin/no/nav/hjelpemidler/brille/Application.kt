@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.callid.callIdMdc
@@ -36,7 +35,7 @@ import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.KafkaService
-import no.nav.hjelpemidler.brille.kafka.UtbetalingsKvitteringRiver
+import no.nav.hjelpemidler.brille.kafka.VedtakOpprettetRiver
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.oversikt.oversiktApi
@@ -53,6 +52,7 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
@@ -156,6 +156,7 @@ fun Application.setupRoutes() {
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
     UtbetalingsKvitteringRiver(rapid)
+    VedtakOpprettetRiver(rapid)
     thread(isDaemon = false) {
         rapid.start()
     }

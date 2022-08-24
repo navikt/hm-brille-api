@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.kafka
+package no.nav.hjelpemidler.brille.utbetaling
 
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.KafkaRapid
