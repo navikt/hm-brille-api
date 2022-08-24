@@ -35,7 +35,6 @@ import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.KafkaService
-import no.nav.hjelpemidler.brille.kafka.VedtakOpprettetRiver
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
 import no.nav.hjelpemidler.brille.oversikt.oversiktApi
@@ -156,7 +155,6 @@ fun Application.setupRoutes() {
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
     UtbetalingsKvitteringRiver(rapid)
-    //VedtakOpprettetRiver(rapid)
     thread(isDaemon = false) {
         rapid.start()
     }
