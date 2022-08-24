@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.callid.callIdMdc
@@ -51,7 +52,6 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
-import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
@@ -72,6 +72,15 @@ fun main(args: Array<String>) {
         "SYNC_TSS" -> cronjobSyncTss()
         else -> io.ktor.server.cio.EngineMain.main(args)
     }
+}
+
+fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
+
+    fun onStopPreparing() {
+        log.info("Application is shutting down, stopping rapid app aswell!")
+        kafkaRapid.stop()
+    }
+    environment.monitor.subscribe(ApplicationStopPreparing) { onStopPreparing() }
 }
 
 fun Application.module() {
@@ -144,7 +153,7 @@ fun Application.setupRoutes() {
     val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection)
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
-    //UtbetalingsKvitteringRiver(rapid)
+    // UtbetalingsKvitteringRiver(rapid)
     thread(isDaemon = false) {
         rapid.start()
     }
@@ -176,6 +185,7 @@ fun Application.setupRoutes() {
             sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
         }
     }
+    applicationEvents(rapid)
 }
 
 private fun createKafkaRapid(): KafkaRapid {
