@@ -61,6 +61,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import org.slf4j.event.Level
+import java.net.InetAddress
 import java.util.TimeZone
 import kotlin.concurrent.thread
 
@@ -117,11 +118,12 @@ fun Application.setupRoutes() {
     val utbetalingStore = UtbetalingStorePostgres(dataSource)
 
     // Kafka
+    val instanceId = InetAddress.getLocalHost().hostName
     val kafkaProps = Configuration.kafkaProperties
     val kafkaConfig = KafkaConfig(
         bootstrapServers = kafkaProps.bootstrapServers,
         consumerGroupId = kafkaProps.clientId,
-        clientId = kafkaProps.clientId,
+        clientId = instanceId,
         truststore = kafkaProps.truststorePath,
         truststorePassword = kafkaProps.truststorePassword,
         keystoreLocation = kafkaProps.keystorePath,
