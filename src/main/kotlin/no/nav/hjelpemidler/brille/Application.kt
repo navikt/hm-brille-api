@@ -120,16 +120,7 @@ fun Application.setupRoutes() {
     // Kafka
     val instanceId = InetAddress.getLocalHost().hostName
     val kafkaProps = Configuration.kafkaProperties
-    val kafkaConfig = KafkaConfig(
-        bootstrapServers = kafkaProps.bootstrapServers,
-        consumerGroupId = kafkaProps.clientId,
-        clientId = instanceId,
-        truststore = kafkaProps.truststorePath,
-        truststorePassword = kafkaProps.truststorePassword,
-        keystoreLocation = kafkaProps.keystorePath,
-        keystorePassword = kafkaProps.keystorePassword
-    )
-
+    val kafkaConfig = kafkaConfig(kafkaProps, instanceId)
     val rapid = KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
     val kafkaService = KafkaService(rapid)
 
@@ -197,15 +188,7 @@ fun cronjobSyncTss() {
     val virksomhetStore = VirksomhetStorePostgres(dataSource)
 
     val kafkaProps = Configuration.kafkaProperties
-    val kafkaConfig = KafkaConfig(
-        bootstrapServers = kafkaProps.bootstrapServers,
-        consumerGroupId = kafkaProps.clientId,
-        clientId = kafkaProps.clientId,
-        truststore = kafkaProps.truststorePath,
-        truststorePassword = kafkaProps.truststorePassword,
-        keystoreLocation = kafkaProps.keystorePath,
-        keystorePassword = kafkaProps.keystorePassword
-    )
+    val kafkaConfig = kafkaConfig(kafkaProps, kafkaProps.clientId)
     val rapid = KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
     val kafkaService = KafkaService(rapid)
 
@@ -222,3 +205,16 @@ fun cronjobSyncTss() {
 
     log.info("Virksomheter er oppdatert i TSS: $virksomheter")
 }
+
+private fun kafkaConfig(
+    kafkaProps: Configuration.KafkaProperties,
+    instanceId: String?
+) = KafkaConfig(
+    bootstrapServers = kafkaProps.bootstrapServers,
+    consumerGroupId = kafkaProps.clientId,
+    clientId = instanceId,
+    truststore = kafkaProps.truststorePath,
+    truststorePassword = kafkaProps.truststorePassword,
+    keystoreLocation = kafkaProps.keystorePath,
+    keystorePassword = kafkaProps.keystorePassword
+)
