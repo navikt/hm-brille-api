@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
+import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.avtale.Avtale
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
@@ -17,23 +18,16 @@ import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
-import org.apache.kafka.clients.producer.Producer
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.KafkaException
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import kotlin.reflect.full.findAnnotation
 
 private val log = KotlinLogging.logger {}
 
-class KafkaService(
-    private val topic: String = Configuration.kafkaProperties.topic,
-    kafkaProducerFactory: () -> Producer<String, String>,
-) {
-    private val kafkaProducer = kafkaProducerFactory()
+class KafkaService(private val kafkaRapid: KafkaRapid) {
+
     private val mapper = jacksonMapperBuilder()
         .addModule(JavaTimeModule())
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -166,11 +160,12 @@ class KafkaService(
 
     private fun <T> produceEvent(key: String?, event: T) {
         try {
-            val record = ProducerRecord(topic, key, mapper.writeValueAsString(event))
-            kafkaProducer.send(record).get(10, TimeUnit.SECONDS)
+            val message = mapper.writeValueAsString(event)
+            if (key != null) kafkaRapid.publishWithTimeout(key, message, 10)
+            else kafkaRapid.publishWithTimeout(message, 10)
         } catch (e: Exception) {
-            log.error(e) { "Sending av event til '$topic' feilet" }
-            throw KafkaException("Sending av event til '$topic' feilet", e)
+            log.error("We got error while sending to kafka", e)
+            throw KafkaException("Error while sending to kafka", e)
         }
     }
 
@@ -201,6 +196,9 @@ class KafkaService(
             )
         )
     }
+
+    fun isAlive() = kafkaRapid.isRunning()
+    fun isReady() = kafkaRapid.isReady()
 
     internal data class VedtakOpprettet(
         val eventId: UUID = UUID.randomUUID(),

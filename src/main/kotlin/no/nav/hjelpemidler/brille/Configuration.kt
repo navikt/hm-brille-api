@@ -47,7 +47,7 @@ object Configuration {
             "AZURE_APP_TENANT_ID" to "123",
             "AZURE_APP_CLIENT_ID" to "321",
             "AZURE_APP_CLIENT_SECRET" to "dummy",
-            "KAFKA_BROKERS" to "host.docker.internal:9092",
+            "KAFKA_BROKERS" to "localhost:9092",
             "TOKEN_X_WELL_KNOWN_URL" to "http://host.docker.internal:8080/default/.well-known/openid-configuration",
             "TOKEN_X_CLIENT_ID" to "local",
             "userclaim" to "sub",

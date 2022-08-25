@@ -19,6 +19,9 @@ application {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+    }
 }
 
 dependencies {
@@ -35,6 +38,7 @@ dependencies {
 
     // Kafka
     implementation("org.apache.kafka:kafka-clients:3.1.1")
+    implementation("com.github.navikt:hm-rapids-and-rivers-v2:1.c428e41")
 
     // Unleash
     implementation("io.getunleash:unleash-client-java:6.0.1")
