@@ -9,7 +9,7 @@ import io.ktor.server.routing.post
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 
-fun Route.kravApi(vedtakService: VedtakService, auditService: AuditService) {
+internal fun Route.kravApi(vedtakService: VedtakService, auditService: AuditService) {
     post("/krav") {
         val kravDto = call.receive<KravDto>()
         val fnrInnsender = call.extractFnr()

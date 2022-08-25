@@ -1,14 +1,15 @@
 package no.nav.hjelpemidler.brille.virksomhet
 
 import kotliquery.Row
+import kotliquery.Session
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.store.Store
+import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
-import javax.sql.DataSource
 
 private val log = KotlinLogging.logger {}
 
@@ -33,33 +34,35 @@ data class Virksomhet(
     val oppdatert: LocalDateTime = opprettet,
 )
 
-internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetStore {
+class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : VirksomhetStore,
+    TransactionalStore(sessionFactory) {
 
-    override fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet? {
+    override fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet? = session {
         @Language("PostgreSQL")
         val sql = """
             SELECT orgnr, kontonr, epost, fnr_innsender, fnr_oppdatert_av, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
             FROM virksomhet_v1
             WHERE orgnr = :orgnr
         """.trimIndent()
-        return ds.query(sql, mapOf("orgnr" to orgnr), ::mapper)
+        it.query(sql, mapOf("orgnr" to orgnr), ::mapper)
     }
 
-    override fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet> {
+    override fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet> = session {
         if (orgnr.isEmpty()) {
-            return emptyList()
-        }
-        @Language("PostgreSQL")
-        var sql = """
+            emptyList()
+        } else {
+            @Language("PostgreSQL")
+            var sql = """
             SELECT orgnr, kontonr, epost, fnr_innsender, fnr_oppdatert_av, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
             FROM virksomhet_v1
             WHERE orgnr in (?)
-        """.trimIndent()
-        sql = sql.replace("(?)", "(" + (0 until orgnr.count()).joinToString { "?" } + ")")
-        return ds.queryList(sql, orgnr, ::mapper)
+            """.trimIndent()
+            sql = sql.replace("(?)", "(" + (0 until orgnr.count()).joinToString { "?" } + ")")
+            it.queryList(sql, orgnr, ::mapper)
+        }
     }
 
-    override fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet {
+    override fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet = session {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO virksomhet_v1 (orgnr,
@@ -74,7 +77,7 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
             VALUES (:orgnr, :kontonr, :epost, :fnr_innsender, :navn_innsender, :aktiv, :avtaleversjon, :opprettet, :oppdatert)
             ON CONFLICT DO NOTHING
         """.trimIndent()
-        ds.update(
+        it.update(
             sql,
             mapOf(
                 "orgnr" to virksomhet.orgnr,
@@ -88,17 +91,17 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
                 "oppdatert" to virksomhet.oppdatert,
             )
         ).validate()
-        return virksomhet
+        virksomhet
     }
 
-    override fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet {
+    override fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet = session {
         @Language("PostgreSQL")
         val sql = """
             UPDATE virksomhet_v1
             SET kontonr = :kontonr, epost = :epost, fnr_oppdatert_av = :fnr_oppdatert_av, oppdatert = :oppdatert
             WHERE orgnr = :orgnr
         """.trimIndent()
-        ds.update(
+        it.update(
             sql,
             mapOf(
                 "kontonr" to virksomhet.kontonr,
@@ -108,17 +111,17 @@ internal class VirksomhetStorePostgres(private val ds: DataSource) : VirksomhetS
                 "oppdatert" to virksomhet.oppdatert
             )
         ).validate()
-        return virksomhet
+        virksomhet
     }
 
-    override fun hentAlleVirksomheterMedKontonr(): List<Virksomhet> {
+    override fun hentAlleVirksomheterMedKontonr(): List<Virksomhet> = session {
         @Language("PostgreSQL")
         var sql = """
             SELECT orgnr, kontonr, epost, fnr_innsender, fnr_oppdatert_av, navn_innsender, aktiv, avtaleversjon, opprettet, oppdatert
             FROM virksomhet_v1
             WHERE LENGTH(kontonr) > 1
         """.trimIndent()
-        return ds.queryList(sql, mapOf(), ::mapper)
+        it.queryList(sql, mapOf(), ::mapper)
     }
 
     private fun mapper(row: Row): Virksomhet = Virksomhet(

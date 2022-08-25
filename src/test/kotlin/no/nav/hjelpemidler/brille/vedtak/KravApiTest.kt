@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
+import io.kotest.common.runBlocking
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -9,6 +10,9 @@ import io.ktor.server.auth.authenticate
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.hjelpemidler.brille.audit.AuditService
+import no.nav.hjelpemidler.brille.db.createDatabaseContext
+import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.pdl.PdlClient
@@ -27,35 +31,43 @@ import java.time.LocalDate
 
 internal class KravApiTest {
 
-    private val vedtakStore = mockk<VedtakStore>()
     private val pdlClient = mockk<PdlClient>()
     private val medlemskapBarn = mockk<MedlemskapBarn>()
     private val dagensDatoFactory = mockk<() -> LocalDate>()
     private val utbetalingService = mockk<UtbetalingService>()
+    private val auditService = mockk<AuditService>(relaxed = true)
+
+    val sessionContext = createDatabaseSessionContextWithMocks()
+    val databaseContext = createDatabaseContext(sessionContext)
 
     private val vilkårsvurderingService = VilkårsvurderingService(
-        vedtakStore,
+        databaseContext,
         pdlClient,
         medlemskapBarn,
         dagensDatoFactory
     )
 
-    private val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, mockk(relaxed = true), utbetalingService)
+    private val vedtakService =
+        VedtakService(databaseContext, vilkårsvurderingService, mockk(relaxed = true))
 
     private val routing = TestRouting {
         authenticate("test") {
-            kravApi(vedtakService, mockk(relaxed = true))
+            kravApi(vedtakService, auditService)
         }
     }
 
     @Test
-    internal fun `happy day`() = kjørTest(
-        krav = KravDto(
-            vilkårsgrunnlag, orgAdresse = "", orgNavn = "",
-            bestillingsreferanse = "", brukersNavn = ""
-        )
+    internal fun `happy day`() {
+        runBlocking {
+            kjørTest(
+                krav = KravDto(
+                    vilkårsgrunnlag, orgAdresse = "", orgNavn = "",
+                    bestillingsreferanse = "", brukersNavn = ""
+                )
 
-    )
+            )
+        }
+    }
 
     private val vilkårsgrunnlag = VilkårsgrunnlagDto(
         orgnr = "",
@@ -82,22 +94,18 @@ internal class KravApiTest {
         ),
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
     ) {
-        every {
-            dagensDatoFactory()
-        } returns dagensDato
 
         every {
-            vedtakStore.hentVedtakForBarn(krav.vilkårsgrunnlag.fnrBarn)
+            sessionContext.vedtakStore.hentVedtakForBarn(krav.vilkårsgrunnlag.fnrBarn)
         } returns vedtakForBruker
 
         every {
-            vedtakStore.lagreVedtak<Vilkårsgrunnlag>(any())
+            sessionContext.vedtakStore.lagreVedtak<Vilkårsgrunnlag>(any())
         } returnsArgument 0
 
         every {
-            vedtakStore.lagreVedtakIKø(any(), any())
-        } returns Unit
-
+            dagensDatoFactory()
+        } returns dagensDato
         coEvery {
             pdlClient.hentPerson(krav.vilkårsgrunnlag.fnrBarn)
         } returns lagMockPdlOppslag(fødselsdato)

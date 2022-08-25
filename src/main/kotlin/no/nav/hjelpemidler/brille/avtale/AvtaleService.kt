@@ -4,19 +4,20 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.AltinnRolle
 import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.altinn.AltinnService
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
-import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class AvtaleService(
-    private val virksomhetStore: VirksomhetStore,
+    val databaseContext: DatabaseContext,
     private val altinnService: AltinnService,
     private val enhetsregisteretService: EnhetsregisteretService,
     private val kafkaService: KafkaService,
@@ -59,8 +60,10 @@ class AvtaleService(
         }
 
         val virksomheter =
-            virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert.map { it.orgnr }).associateBy {
-                it.orgnr
+            transaction(databaseContext) { ctx ->
+                ctx.virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert.map { it.orgnr }).associateBy {
+                    it.orgnr
+                }
             }
 
         return avgivereFiltrert
@@ -88,17 +91,19 @@ class AvtaleService(
         log.info { "Oppretter avtale for orgnr: $orgnr" }
         sikkerLog.info { "fnrInnsender: $fnrInnsender, opprettAvtale: $opprettAvtale" }
 
-        val virksomhet = virksomhetStore.lagreVirksomhet(
-            Virksomhet(
-                orgnr = orgnr,
-                kontonr = opprettAvtale.kontonr,
-                epost = opprettAvtale.epost,
-                fnrInnsender = fnrInnsender,
-                navnInnsender = "", // todo -> slett
-                aktiv = true,
-                avtaleversjon = null
+        val virksomhet = transaction(databaseContext) { ctx ->
+            ctx.virksomhetStore.lagreVirksomhet(
+                Virksomhet(
+                    orgnr = orgnr,
+                    kontonr = opprettAvtale.kontonr,
+                    epost = opprettAvtale.epost,
+                    fnrInnsender = fnrInnsender,
+                    navnInnsender = "", // todo -> slett
+                    aktiv = true,
+                    avtaleversjon = null
+                )
             )
-        )
+        }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
         val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
@@ -116,16 +121,18 @@ class AvtaleService(
         log.info { "Oppdaterer avtale for orgnr: $orgnr" }
         sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
 
-        val virksomhet = virksomhetStore.oppdaterVirksomhet(
-            requireNotNull(virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
-                "Fant ikke virksomhet med orgnr: $orgnr"
-            }.copy(
-                kontonr = oppdaterAvtale.kontonr,
-                epost = oppdaterAvtale.epost,
-                fnrOppdatertAv = fnrOppdatertAv,
-                oppdatert = LocalDateTime.now(),
+        val virksomhet = transaction(databaseContext) { ctx ->
+            ctx.virksomhetStore.oppdaterVirksomhet(
+                requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
+                    "Fant ikke virksomhet med orgnr: $orgnr"
+                }.copy(
+                    kontonr = oppdaterAvtale.kontonr,
+                    epost = oppdaterAvtale.epost,
+                    fnrOppdatertAv = fnrOppdatertAv,
+                    oppdatert = LocalDateTime.now(),
+                )
             )
-        )
+        }
 
         if (virksomhet.fnrInnsender != virksomhet.fnrOppdatertAv) {
             sikkerLog.warn {

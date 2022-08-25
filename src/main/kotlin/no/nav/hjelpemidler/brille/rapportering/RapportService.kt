@@ -1,28 +1,32 @@
 package no.nav.hjelpemidler.brille.rapportering
 
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.store.Page
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import java.time.LocalDate
 
 class RapportService(
-    private val rapportStore: RapportStore,
+    private val databaseContext: DatabaseContext,
 ) {
-    fun hentKravlinjer(
+    suspend fun hentKravlinjer(
         orgNr: String,
         kravFilter: KravFilter? = null,
         fraDato: LocalDate? = null,
         tilDato: LocalDate? = null
     ): List<Kravlinje> {
-        val kravlinjer = rapportStore.hentKravlinjerForOrgNummer(
-            orgNr = orgNr,
-            kravFilter = kravFilter,
-            fraDato = fraDato,
-            tilDato = tilDato
-        )
+        val kravlinjer = transaction(databaseContext) { ctx ->
+            ctx.rapportStore.hentKravlinjerForOrgNummer(
+                orgNr = orgNr,
+                kravFilter = kravFilter,
+                fraDato = fraDato,
+                tilDato = tilDato
+            )
+        }
         return kravlinjer
     }
 
-    fun hentPagedKravlinjer(
+    suspend fun hentPagedKravlinjer(
         orgNr: String,
         kravFilter: KravFilter? = null,
         fraDato: LocalDate? = null,
@@ -30,14 +34,16 @@ class RapportService(
         limit: Int = 20,
         offset: Int = 0,
     ): Page<Kravlinje> {
-        val kravlinjer = rapportStore.hentPagedKravlinjerForOrgNummer(
-            orgNr = orgNr,
-            kravFilter = kravFilter,
-            fraDato = fraDato,
-            tilDato = tilDato,
-            limit = limit,
-            offset = offset
-        )
+        val kravlinjer = transaction(databaseContext) { ctx ->
+            ctx.rapportStore.hentPagedKravlinjerForOrgNummer(
+                orgNr = orgNr,
+                kravFilter = kravFilter,
+                fraDato = fraDato,
+                tilDato = tilDato,
+                limit = limit,
+                offset = offset
+            )
+        }
         return kravlinjer
     }
 }

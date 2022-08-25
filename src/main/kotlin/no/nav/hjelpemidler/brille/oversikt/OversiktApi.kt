@@ -7,14 +7,15 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.extractFnr
-import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 
 private val log = KotlinLogging.logger {}
 
 fun Route.oversiktApi(
-    vedtakStore: VedtakStore,
+    databaseContext: DatabaseContext,
     enhetsregisteretService: EnhetsregisteretService,
 ) {
     route("/oversikt") {
@@ -22,10 +23,16 @@ fun Route.oversiktApi(
         get("/{vedtakId}") {
             val vedtakId = (call.parameters["vedtakId"] ?: error("Mangler vedtakId i url")).toLong()
             val fnrInnsender = call.extractFnr()
-            val vedtak = vedtakStore.hentVedtakForOptiker(fnrInnsender, vedtakId)?.let { vedtak ->
+            val vedtak = transaction(databaseContext) { ctx ->
+                ctx.vedtakStore.hentVedtakForOptiker(
+                    fnrInnsender,
+                    vedtakId
+                )
+            }?.let { vedtak ->
                 vedtak.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "Ukjent"
                 vedtak
             }
+
             if (vedtak == null) {
                 call.respond(HttpStatusCode.NotFound, """{"error":"not found"}""")
                 return@get
@@ -38,7 +45,9 @@ fun Route.oversiktApi(
             val page = (call.request.queryParameters["page"] ?: "1").toInt()
             val fnrInnsender = call.extractFnr()
 
-            val resultat = vedtakStore.hentAlleVedtakForOptiker(fnrInnsender, page)
+            val resultat = transaction(databaseContext) { ctx ->
+                ctx.vedtakStore.hentAlleVedtakForOptiker(fnrInnsender, page)
+            }
 
             // In-mem cache av enhetsregister-oppslag slik at vi ikke hit'er redis 10 gang på rad per request
             val enhetsregisterOppslagCache = mutableMapOf<String, String>()

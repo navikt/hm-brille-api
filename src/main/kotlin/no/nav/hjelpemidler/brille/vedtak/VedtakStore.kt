@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
@@ -9,12 +10,12 @@ import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.store.Store
+import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
-import javax.sql.DataSource
 import kotlin.math.ceil
 
 interface VedtakStore : Store {
@@ -23,15 +24,17 @@ interface VedtakStore : Store {
     fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak?
     fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int = 10): OversiktVedtakPaged
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
-    fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime)
+    fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime): Long
     fun <T> hentVedtakIkkeRegistrertForUtbetaling(
         opprettet: LocalDateTime,
         behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET
     ): List<Vedtak<T>>
 }
 
-internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
-    override fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime) {
+class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakStore,
+    TransactionalStore(sessionFactory) {
+
+    override fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime) = transaction {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO vedtak_ko_v1 (
@@ -44,7 +47,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             )
             RETURNING id
         """.trimIndent()
-        val id = ds.query(
+        val id = it.query(
             sql,
             mapOf(
                 "vedtakId" to vedtakId,
@@ -54,16 +57,17 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             row.long("id")
         }
         requireNotNull(id) { "Lagring av vedtak feilet, id var null" }
+        id
     }
 
-    override fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak> {
+    override fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak> = session {
         @Language("PostgreSQL")
         val sql = """
             SELECT id, fnr_barn, bestillingsdato, behandlingsresultat, opprettet
             FROM vedtak_v1
             WHERE fnr_barn = :fnr_barn 
         """.trimIndent()
-        return ds.queryList(sql, mapOf("fnr_barn" to fnrBarn)) { row ->
+        it.queryList(sql, mapOf("fnr_barn" to fnrBarn)) { row ->
             EksisterendeVedtak(
                 id = row.long("id"),
                 fnrBarn = row.string("fnr_barn"),
@@ -74,7 +78,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
         }
     }
 
-    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak? {
+    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak? = session {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -102,7 +106,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 v.fnr_innsender = :fnr_innsender AND
                 v.id = :vedtak_id
         """.trimIndent()
-        return ds.query(
+        it.query(
             sql,
             mapOf(
                 "fnr_innsender" to fnrInnsender,
@@ -137,22 +141,23 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
     }
 
     // TODO: Trim ned datamodell når design er landet for liste-viewet
-    override fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int): OversiktVedtakPaged {
-        val offset = (page - 1) * itemsPerPage
+    override fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int): OversiktVedtakPaged =
+        session {
+            val offset = (page - 1) * itemsPerPage
 
-        @Language("PostgreSQL")
-        val sqlTotal = """
+            @Language("PostgreSQL")
+            val sqlTotal = """
             SELECT COUNT(id) AS antall
             FROM vedtak_v1
             WHERE fnr_innsender = :fnr_innsender
-        """.trimIndent()
+            """.trimIndent()
 
-        val totaltAntall = ds.query(sqlTotal, mapOf("fnr_innsender" to fnrInnsender)) { row ->
-            row.int("antall")
-        } ?: 0
+            val totaltAntall = sessionFactory().query(sqlTotal, mapOf("fnr_innsender" to fnrInnsender)) { row ->
+                row.int("antall")
+            } ?: 0
 
-        @Language("PostgreSQL")
-        val sql = """
+            @Language("PostgreSQL")
+            val sql = """
             SELECT
                 v.id,
                 v.orgnr,
@@ -178,51 +183,51 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
                 v.fnr_innsender = :fnr_innsender
             ORDER BY v.opprettet DESC
             LIMIT :limit OFFSET :offset
-        """.trimIndent()
+            """.trimIndent()
 
-        val items = ds.queryList(
-            sql,
-            mapOf(
-                "fnr_innsender" to fnrInnsender,
-                "limit" to itemsPerPage,
-                "offset" to offset,
-            )
-        ) { row ->
-            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+            val items = it.queryList(
+                sql,
+                mapOf(
+                    "fnr_innsender" to fnrInnsender,
+                    "limit" to itemsPerPage,
+                    "offset" to offset,
+                )
+            ) { row ->
+                val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
 
-            OversiktVedtak(
-                id = row.long("id"),
-                orgnavn = "",
-                orgnr = row.string("orgnr"),
-                barnsNavn = person.navn(),
-                barnsFnr = row.string("fnr_barn"),
-                barnsAlder = person.alder() ?: -1,
-                høyreSfære = row.double("høyreSfære"),
-                høyreSylinder = row.double("høyreSylinder"),
-                venstreSfære = row.double("venstreSfære"),
-                venstreSylinder = row.double("venstreSylinder"),
-                bestillingsdato = row.localDate("bestillingsdato"),
-                brillepris = row.bigDecimal("brillepris"),
-                beløp = row.bigDecimal("belop"),
-                bestillingsreferanse = row.string("bestillingsreferanse"),
-                satsNr = SatsType.valueOf(row.string("sats")).sats,
-                satsBeløp = row.int("sats_belop"),
-                satsBeskrivelse = row.string("sats_beskrivelse"),
-                behandlingsresultat = row.string("behandlingsresultat"),
-                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-                opprettet = row.localDateTime("opprettet"),
+                OversiktVedtak(
+                    id = row.long("id"),
+                    orgnavn = "",
+                    orgnr = row.string("orgnr"),
+                    barnsNavn = person.navn(),
+                    barnsFnr = row.string("fnr_barn"),
+                    barnsAlder = person.alder() ?: -1,
+                    høyreSfære = row.double("høyreSfære"),
+                    høyreSylinder = row.double("høyreSylinder"),
+                    venstreSfære = row.double("venstreSfære"),
+                    venstreSylinder = row.double("venstreSylinder"),
+                    bestillingsdato = row.localDate("bestillingsdato"),
+                    brillepris = row.bigDecimal("brillepris"),
+                    beløp = row.bigDecimal("belop"),
+                    bestillingsreferanse = row.string("bestillingsreferanse"),
+                    satsNr = SatsType.valueOf(row.string("sats")).sats,
+                    satsBeløp = row.int("sats_belop"),
+                    satsBeskrivelse = row.string("sats_beskrivelse"),
+                    behandlingsresultat = row.string("behandlingsresultat"),
+                    utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                    opprettet = row.localDateTime("opprettet"),
+                )
+            }
+
+            OversiktVedtakPaged(
+                numberOfPages = ceil(totaltAntall.toDouble() / itemsPerPage.toDouble()).toInt(),
+                itemsPerPage = itemsPerPage,
+                totalItems = totaltAntall,
+                items = items,
             )
         }
 
-        return OversiktVedtakPaged(
-            numberOfPages = ceil(totaltAntall.toDouble() / itemsPerPage.toDouble()).toInt(),
-            itemsPerPage = itemsPerPage,
-            totalItems = totaltAntall,
-            items = items,
-        )
-    }
-
-    override fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String> {
+    override fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String> = session {
         @Language("PostgreSQL")
         val sql = """
             SELECT orgnr
@@ -230,12 +235,12 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             WHERE fnr_innsender = :fnr_innsender
             ORDER BY opprettet DESC
         """.trimIndent()
-        return ds.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
+        it.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
             row.string("orgnr")
         }.toSet().toList()
     }
 
-    override fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T> {
+    override fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T> = transaction {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO vedtak_v1 (
@@ -270,7 +275,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             )
             RETURNING id
         """.trimIndent()
-        val id = ds.query(
+        val id = it.query(
             sql,
             mapOf(
                 "fnr_barn" to vedtak.fnrBarn,
@@ -291,13 +296,13 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             row.long("id")
         }
         requireNotNull(id) { "Lagring av vedtak feilet, id var null" }
-        return vedtak.copy(id = id)
+        vedtak.copy(id = id)
     }
 
     override fun <T> hentVedtakIkkeRegistrertForUtbetaling(
         opprettet: LocalDateTime,
         behandlingsresultat: Behandlingsresultat
-    ): List<Vedtak<T>> {
+    ): List<Vedtak<T>> = session {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -320,7 +325,7 @@ internal class VedtakStorePostgres(private val ds: DataSource) : VedtakStore {
             AND NOT EXISTS(SELECT FROM utbetaling_v1 WHERE id = utbetaling_v1.vedtak_id)
             ORDER by opprettet LIMIT 1000
         """.trimIndent()
-        return ds.queryList<Vedtak<T>>(
+        sessionFactory().queryList<Vedtak<T>>(
             sql,
             mapOf(
                 "opprettet" to opprettet,
