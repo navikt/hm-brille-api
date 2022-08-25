@@ -1,6 +1,8 @@
 package no.nav.hjelpemidler.brille.kafka
 
+import io.mockk.every
 import io.mockk.mockk
+import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
@@ -11,20 +13,23 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
-import org.apache.kafka.clients.producer.MockProducer
-import org.apache.kafka.common.serialization.StringSerializer
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlin.test.Test
 
 internal class KafkaServiceTest {
-    private val service = KafkaService("test") {
-        MockProducer(true, StringSerializer(), StringSerializer())
-    }
+    private val kafkaRapid = mockk<KafkaRapid>()
+    private val service = KafkaService(kafkaRapid)
 
     @Test
     internal fun `vedtak fattet`() {
+
+        every {
+            kafkaRapid.publishWithTimeout(any(), any(), any())
+            kafkaRapid.publishWithTimeout(any(), any())
+        }
+
         val sats = SatsType.SATS_1
         val krav = KravDto(
             VilkårsgrunnlagDto(

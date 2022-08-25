@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
-import io.ktor.server.application.call
+import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.callid.callIdMdc
@@ -17,6 +17,8 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import no.nav.helse.rapids_rivers.KafkaConfig
+import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
@@ -34,7 +36,6 @@ import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
-import no.nav.hjelpemidler.brille.kafka.AivenKafkaConfiguration
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
@@ -56,10 +57,10 @@ import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
-import org.apache.kafka.clients.producer.MockProducer
-import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.event.Level
+import java.net.InetAddress
 import java.util.TimeZone
+import kotlin.concurrent.thread
 
 private val log = KotlinLogging.logger {}
 
@@ -68,6 +69,15 @@ fun main(args: Array<String>) {
         "SYNC_TSS" -> cronjobSyncTss()
         else -> io.ktor.server.cio.EngineMain.main(args)
     }
+}
+
+fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
+
+    fun onStopPreparing() {
+        log.info("Application is shutting down, stopping rapid app aswell!")
+        kafkaRapid.stop()
+    }
+    environment.monitor.subscribe(ApplicationStopPreparing) { onStopPreparing() }
 }
 
 fun Application.module() {
@@ -108,12 +118,8 @@ fun Application.setupRoutes() {
     val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
 
     // Kafka
-    val kafkaService = KafkaService {
-        when (Configuration.profile) {
-            Configuration.Profile.LOCAL -> MockProducer(true, StringSerializer(), StringSerializer())
-            else -> AivenKafkaConfiguration().aivenKafkaProducer()
-        }
-    }
+    val rapid = createKafkaRapid()
+    val kafkaService = KafkaService(rapid)
 
     // Klienter
     val redisClient = RedisClient()
@@ -137,10 +143,16 @@ fun Application.setupRoutes() {
     val leaderElection = LeaderElection(Configuration.electorPath)
     val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection)
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
+
+    // UtbetalingsKvitteringRiver(rapid)
+    thread(isDaemon = false) {
+        rapid.start()
+    }
+
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {
-        internalRoutes(vedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler)
+        internalRoutes(vedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler, kafkaService)
 
         route("/api") {
             satsApi()
@@ -164,6 +176,14 @@ fun Application.setupRoutes() {
             sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
         }
     }
+    applicationEvents(rapid)
+}
+
+private fun createKafkaRapid(): KafkaRapid {
+    val instanceId = InetAddress.getLocalHost().hostName
+    val kafkaProps = Configuration.kafkaProperties
+    val kafkaConfig = kafkaConfig(kafkaProps, instanceId)
+    return KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
 }
 
 fun cronjobSyncTss() {
@@ -171,12 +191,8 @@ fun cronjobSyncTss() {
 
     val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
 
-    val kafkaService = KafkaService {
-        when (Configuration.profile) {
-            Configuration.Profile.LOCAL -> MockProducer(true, StringSerializer(), StringSerializer())
-            else -> AivenKafkaConfiguration().aivenKafkaProducer()
-        }
-    }
+    val rapid = createKafkaRapid()
+    val kafkaService = KafkaService(rapid)
 
     runBlocking {
         val virksomheter = transaction(databaseContext) { ctx ->
@@ -195,3 +211,16 @@ fun cronjobSyncTss() {
         log.info("Virksomheter er oppdatert i TSS: $virksomheter")
     }
 }
+
+private fun kafkaConfig(
+    kafkaProps: Configuration.KafkaProperties,
+    instanceId: String?
+) = KafkaConfig(
+    bootstrapServers = kafkaProps.bootstrapServers,
+    consumerGroupId = kafkaProps.clientId,
+    clientId = instanceId,
+    truststore = kafkaProps.truststorePath,
+    truststorePassword = kafkaProps.truststorePassword,
+    keystoreLocation = kafkaProps.keystorePath,
+    keystorePassword = kafkaProps.keystorePassword
+)
