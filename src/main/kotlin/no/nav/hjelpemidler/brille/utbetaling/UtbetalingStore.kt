@@ -18,11 +18,9 @@ interface UtbetalingStore : Store {
     fun oppdaterStatus(utbetaling: Utbetaling): Utbetaling
 }
 
-internal class UtbetalingStorePostgres(private val ds: DataSource) : UtbetalingStore {
-    private val allColums = "id, vedtak_id, referanse, utbetalingsdato, opprettet, oppdatert, vedtak, status"
-    override fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling? {
 internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : UtbetalingStore,
     TransactionalStore(sessionFactory) {
+    private val allColums = "id, vedtak_id, referanse, utbetalingsdato, opprettet, oppdatert, vedtak, status"
 
     override fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling? = session {
         @Language("PostgreSQL")
@@ -31,31 +29,19 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
             FROM utbetaling_v1
             WHERE vedtak_id = :vedtak_id
         """.trimIndent()
-        it.query(sql, mapOf("vedtak_id" to vedtakId)) { row ->
-            Utbetaling(
-                id = row.long("id"),
-                vedtakId = row.long("vedtak_id"),
-                referanse = row.string("referanse"),
-                utbetalingsdato = row.localDate("utbetalingsdato"),
-                opprettet = row.localDateTime("opprettet"),
-                oppdatert = row.localDateTime("oppdatert"),
-                vedtak = row.json("vedtak"),
-                status = UtbetalingStatus.valueOf(row.string("status"))
-            )
-        }
-    }
-        return ds.query(sql, mapOf("vedtak_id" to vedtakId)) { mapUtbetaling(it) }
+        it.query(sql, mapOf("vedtak_id" to vedtakId)) { row -> mapUtbetaling(row) }
     }
 
-    override fun hentUtbetalingerMedStatus(status: UtbetalingStatus, limit: Int): List<Utbetaling> {
+    override fun hentUtbetalingerMedStatus(status: UtbetalingStatus, limit: Int): List<Utbetaling> = session {
         @Language("PostgreSQL")
         val sql = """
             SELECT $allColums
             FROM utbetaling_v1
             WHERE status = :status LIMIT :limit 
         """.trimIndent()
-        return ds.queryList(sql, mapOf("status" to status.name, "limit" to limit)) {
-            mapUtbetaling(it)
+        it.queryList(sql, mapOf("status" to status.name, "limit" to limit)) {
+                row ->
+            mapUtbetaling(row)
         }
     }
 

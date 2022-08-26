@@ -136,7 +136,7 @@ fun Application.setupRoutes() {
     val rapportService = RapportService(databaseContext)
     val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, medlemskapBarn)
-    val utbetalingService = UtbetalingService(databaseContext, Configuration.utbetalingProperties)
+    val utbetalingService = UtbetalingService(databaseContext, Configuration.utbetalingProperties, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()

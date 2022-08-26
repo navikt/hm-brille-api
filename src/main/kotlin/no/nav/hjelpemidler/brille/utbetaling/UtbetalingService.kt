@@ -12,10 +12,9 @@ import java.time.LocalDateTime
 
 class UtbetalingService(
     private val databaseContext: DatabaseContext,
-    private val props: Configuration.UtbetalingProperties
+    private val props: Configuration.UtbetalingProperties,
+    private val kafkaService: KafkaService
 ) {
-class UtbetalingService(private val store: UtbetalingStore, private val props: Configuration.UtbetalingProperties,
-                        private val kafkaService: KafkaService) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(UtbetalingService::class.java)
@@ -44,11 +43,17 @@ class UtbetalingService(private val store: UtbetalingStore, private val props: C
         return props.enabledUtbetaling
     }
 
-    fun sendBatchTilUtbetaling(utbetalingsBatch: UtbetalingsBatch) {
+    suspend fun sendBatchTilUtbetaling(utbetalingsBatch: UtbetalingsBatch) {
         kafkaService.produceEvent(utbetalingsBatch.batchId, utbetalingsBatch.lagMelding())
-        utbetalingsBatch.utbetalinger.forEach {
-            store.oppdaterStatus(it.copy(status = UtbetalingStatus.TIL_UTBETALING,
-                oppdatert = LocalDateTime.now(), batchId = utbetalingsBatch.batchId))
+        transaction(databaseContext) { ctx ->
+            utbetalingsBatch.utbetalinger.forEach {
+                ctx.utbetalingStore.oppdaterStatus(
+                    it.copy(
+                        status = UtbetalingStatus.TIL_UTBETALING,
+                        oppdatert = LocalDateTime.now()
+                    )
+                )
+            }
         }
     }
 
@@ -64,8 +69,9 @@ class UtbetalingService(private val store: UtbetalingStore, private val props: C
         }
     }
 
-    fun hentUtbetalingerSomSkalTilUtbetaling(): List<Utbetaling> {
-        return store.hentUtbetalingerMedStatus(status= UtbetalingStatus.NY, limit=100)
+    suspend fun hentUtbetalingerSomSkalTilUtbetaling(): List<Utbetaling> {
+        return transaction(databaseContext) { ctx ->
+            ctx.utbetalingStore.hentUtbetalingerMedStatus(status = UtbetalingStatus.NY, limit = 100)
+        }
     }
-
 }
