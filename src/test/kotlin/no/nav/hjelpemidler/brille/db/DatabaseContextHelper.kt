@@ -8,7 +8,6 @@ import no.nav.hjelpemidler.brille.rapportering.RapportStore
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStore
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
-import no.nav.hjelpemidler.saksbehandling.db.SessionFactory
 import javax.sql.DataSource
 
 fun createDatabaseContext(sessionContext: DatabaseSessionContext = createDatabaseSessionContextWithMocks()): DatabaseContext {
