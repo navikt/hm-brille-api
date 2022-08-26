@@ -15,6 +15,7 @@ class SendTilUtbetalingScheduler(
     }
 
     override suspend fun action() {
+
         LOG.info("Send melding til utbetaling, simulert (Vi sender ingenting enda)")
     }
 }

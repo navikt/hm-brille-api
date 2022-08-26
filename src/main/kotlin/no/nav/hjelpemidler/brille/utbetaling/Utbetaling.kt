@@ -12,7 +12,8 @@ data class Utbetaling(
     val utbetalingsdato: LocalDate,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val oppdatert: LocalDateTime = LocalDateTime.now(),
-    val status: UtbetalingStatus = UtbetalingStatus.NY
+    val status: UtbetalingStatus = UtbetalingStatus.NY,
+    val batchId: String? = null
 )
 
 enum class UtbetalingStatus {

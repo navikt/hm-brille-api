@@ -1,41 +1,56 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import kotliquery.Row
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.query
+import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 import javax.sql.DataSource
 
 interface UtbetalingStore : Store {
     fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling?
+    fun hentUtbetalingerMedStatus(status: UtbetalingStatus = UtbetalingStatus.NY, limit: Int = 100): List<Utbetaling>
     fun lagreUtbetaling(utbetaling: Utbetaling): Utbetaling
     fun oppdaterStatus(utbetaling: Utbetaling): Utbetaling
 }
 
 internal class UtbetalingStorePostgres(private val ds: DataSource) : UtbetalingStore {
-
+    private val allColums = "id, vedtak_id, referanse, utbetalingsdato, opprettet, oppdatert, vedtak, status"
     override fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling? {
         @Language("PostgreSQL")
         val sql = """
-            SELECT id, vedtak_id, referanse, utbetalingsdato, opprettet, oppdatert, vedtak, status
+            SELECT $allColums
             FROM utbetaling_v1
             WHERE vedtak_id = :vedtak_id
         """.trimIndent()
-        return ds.query(sql, mapOf("vedtak_id" to vedtakId)) { row ->
-            Utbetaling(
-                id = row.long("id"),
-                vedtakId = row.long("vedtak_id"),
-                referanse = row.string("referanse"),
-                utbetalingsdato = row.localDate("utbetalingsdato"),
-                opprettet = row.localDateTime("opprettet"),
-                oppdatert = row.localDateTime("oppdatert"),
-                vedtak = row.json("vedtak"),
-                status = UtbetalingStatus.valueOf(row.string("status"))
-            )
+        return ds.query(sql, mapOf("vedtak_id" to vedtakId)) { mapUtbetaling(it) }
+    }
+
+    override fun hentUtbetalingerMedStatus(status: UtbetalingStatus, limit: Int): List<Utbetaling> {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT $allColums
+            FROM utbetaling_v1
+            WHERE status = :status LIMIT :limit 
+        """.trimIndent()
+        return ds.queryList(sql, mapOf("status" to status.name, "limit" to limit)) {
+            mapUtbetaling(it)
         }
     }
+
+    private fun mapUtbetaling(row: Row) = Utbetaling(
+        id = row.long("id"),
+        vedtakId = row.long("vedtak_id"),
+        referanse = row.string("referanse"),
+        utbetalingsdato = row.localDate("utbetalingsdato"),
+        opprettet = row.localDateTime("opprettet"),
+        oppdatert = row.localDateTime("oppdatert"),
+        vedtak = row.json("vedtak"),
+        status = UtbetalingStatus.valueOf(row.string("status"))
+    )
 
     override fun lagreUtbetaling(utbetaling: Utbetaling): Utbetaling {
         @Language("PostgreSQL")
