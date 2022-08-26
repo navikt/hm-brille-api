@@ -13,6 +13,8 @@ import io.ktor.server.auth.authenticate
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.hjelpemidler.brille.db.createDatabaseContext
+import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
@@ -26,19 +28,20 @@ import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
-import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 
 internal class VilkårApiTest {
-    private val vedtakStore = mockk<VedtakStore>()
     private val pdlClient = mockk<PdlClient>()
     private val medlemskapBarn = mockk<MedlemskapBarn>()
     private val dagensDatoFactory = mockk<() -> LocalDate>()
 
+    val sessionContext = createDatabaseSessionContextWithMocks()
+    val databaseContext = createDatabaseContext(sessionContext)
+
     private val vilkårsvurderingService = VilkårsvurderingService(
-        vedtakStore,
+        databaseContext,
         pdlClient,
         medlemskapBarn,
         dagensDatoFactory
@@ -166,7 +169,7 @@ internal class VilkårApiTest {
         } returns dagensDato
 
         every {
-            vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn)
+            sessionContext.vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn)
         } returns vedtakForBruker
 
         coEvery {

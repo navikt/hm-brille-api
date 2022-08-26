@@ -1,14 +1,15 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
 import kotliquery.Row
+import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.store.Store
+import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
-import javax.sql.DataSource
 
 interface UtbetalingStore : Store {
     fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling?
@@ -20,12 +21,29 @@ interface UtbetalingStore : Store {
 internal class UtbetalingStorePostgres(private val ds: DataSource) : UtbetalingStore {
     private val allColums = "id, vedtak_id, referanse, utbetalingsdato, opprettet, oppdatert, vedtak, status"
     override fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling? {
+internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : UtbetalingStore,
+    TransactionalStore(sessionFactory) {
+
+    override fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling? = session {
         @Language("PostgreSQL")
         val sql = """
             SELECT $allColums
             FROM utbetaling_v1
             WHERE vedtak_id = :vedtak_id
         """.trimIndent()
+        it.query(sql, mapOf("vedtak_id" to vedtakId)) { row ->
+            Utbetaling(
+                id = row.long("id"),
+                vedtakId = row.long("vedtak_id"),
+                referanse = row.string("referanse"),
+                utbetalingsdato = row.localDate("utbetalingsdato"),
+                opprettet = row.localDateTime("opprettet"),
+                oppdatert = row.localDateTime("oppdatert"),
+                vedtak = row.json("vedtak"),
+                status = UtbetalingStatus.valueOf(row.string("status"))
+            )
+        }
+    }
         return ds.query(sql, mapOf("vedtak_id" to vedtakId)) { mapUtbetaling(it) }
     }
 
@@ -52,7 +70,7 @@ internal class UtbetalingStorePostgres(private val ds: DataSource) : UtbetalingS
         status = UtbetalingStatus.valueOf(row.string("status"))
     )
 
-    override fun lagreUtbetaling(utbetaling: Utbetaling): Utbetaling {
+    override fun lagreUtbetaling(utbetaling: Utbetaling): Utbetaling = session {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO utbetaling_v1 (
@@ -75,7 +93,7 @@ internal class UtbetalingStorePostgres(private val ds: DataSource) : UtbetalingS
             )
             RETURNING id
         """.trimIndent()
-        val id = ds.query(
+        val id = it.query(
             sql,
             mapOf(
                 "vedtak_id" to utbetaling.vedtakId,
@@ -90,17 +108,17 @@ internal class UtbetalingStorePostgres(private val ds: DataSource) : UtbetalingS
             row.long("id")
         }
         requireNotNull(id) { "Lagring av utbetaling feilet, id var null" }
-        return utbetaling.copy(id = id)
+        utbetaling.copy(id = id)
     }
 
-    override fun oppdaterStatus(utbetaling: Utbetaling): Utbetaling {
+    override fun oppdaterStatus(utbetaling: Utbetaling): Utbetaling = session {
         @Language("PostgreSQL")
         val sql = """
             UPDATE utbetaling_v1
             SET status = :status, oppdatert = :oppdatert
             WHERE id = :id
         """.trimIndent()
-        ds.update(
+        it.update(
             sql,
             mapOf(
                 "status" to utbetaling.status.name,
@@ -108,6 +126,6 @@ internal class UtbetalingStorePostgres(private val ds: DataSource) : UtbetalingS
                 "id" to utbetaling.id
             )
         ).validate()
-        return utbetaling
+        utbetaling
     }
 }

@@ -15,6 +15,7 @@ import io.ktor.server.request.path
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
@@ -22,16 +23,16 @@ import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
-import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
+import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
 import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.innsender.InnsenderService
-import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -42,7 +43,6 @@ import no.nav.hjelpemidler.brille.oversikt.oversiktApi
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.rapportering.RapportService
-import no.nav.hjelpemidler.brille.rapportering.RapportStorePostgres
 import no.nav.hjelpemidler.brille.rapportering.rapportApi
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
@@ -51,14 +51,11 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
-import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
-import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
-import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import org.slf4j.event.Level
 import java.net.InetAddress
@@ -118,13 +115,7 @@ fun Application.configure() {
 // Wire up services and routes
 fun Application.setupRoutes() {
     // Database
-    val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
-    val auditStore = AuditStorePostgres(dataSource)
-    val innsenderStore = InnsenderStorePostgres(dataSource)
-    val rapportStore = RapportStorePostgres(dataSource)
-    val vedtakStore = VedtakStorePostgres(dataSource)
-    val virksomhetStore = VirksomhetStorePostgres(dataSource)
-    val utbetalingStore = UtbetalingStorePostgres(dataSource)
+    val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
 
     // Kafka
     val rapid = createKafkaRapid()
@@ -140,14 +131,14 @@ fun Application.setupRoutes() {
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
     val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
     val pdlService = PdlService(pdlClient)
-    val auditService = AuditService(auditStore)
-    val innsenderService = InnsenderService(innsenderStore)
-    val rapportService = RapportService(rapportStore)
+    val auditService = AuditService(databaseContext)
+    val innsenderService = InnsenderService(databaseContext)
+    val rapportService = RapportService(databaseContext)
     val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
-    val vilkårsvurderingService = VilkårsvurderingService(vedtakStore, pdlClient, medlemskapBarn)
-    val utbetalingService = UtbetalingService(utbetalingStore, Configuration.utbetalingProperties)
-    val vedtakService = VedtakService(vedtakStore, vilkårsvurderingService, kafkaService, utbetalingService)
-    val avtaleService = AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService)
+    val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, medlemskapBarn)
+    val utbetalingService = UtbetalingService(databaseContext, Configuration.utbetalingProperties)
+    val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
+    val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
     val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection)
@@ -170,8 +161,8 @@ fun Application.setupRoutes() {
             authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
-                    virksomhetApi(vedtakStore, enhetsregisteretService, virksomhetStore)
-                    if (Configuration.dev) oversiktApi(vedtakStore, enhetsregisteretService)
+                    virksomhetApi(databaseContext, enhetsregisteretService)
+                    if (Configuration.dev) oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
                     kravApi(vedtakService, auditService)
@@ -198,24 +189,27 @@ private fun createKafkaRapid(): KafkaRapid {
 fun cronjobSyncTss() {
     log.info("cronjob sync tss start")
 
-    val dataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()
-    val virksomhetStore = VirksomhetStorePostgres(dataSource)
+    val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
 
     val rapid = createKafkaRapid()
     val kafkaService = KafkaService(rapid)
 
-    val virksomheter = virksomhetStore.hentAlleVirksomheterMedKontonr().map {
-        Pair(it.orgnr, it.kontonr)
-    }
+    runBlocking {
+        val virksomheter = transaction(databaseContext) { ctx ->
+            ctx.virksomhetStore.hentAlleVirksomheterMedKontonr().map {
+                Pair(it.orgnr, it.kontonr)
+            }
+        }
 
-    virksomheter.forEach {
-        kafkaService.oppdaterTSS(
-            orgnr = it.first,
-            kontonr = it.second,
-        )
-    }
+        virksomheter.forEach {
+            kafkaService.oppdaterTSS(
+                orgnr = it.first,
+                kontonr = it.second,
+            )
+        }
 
-    log.info("Virksomheter er oppdatert i TSS: $virksomheter")
+        log.info("Virksomheter er oppdatert i TSS: $virksomheter")
+    }
 }
 
 private fun kafkaConfig(

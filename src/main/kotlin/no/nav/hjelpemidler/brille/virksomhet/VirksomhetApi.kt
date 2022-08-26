@@ -7,25 +7,27 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.extractFnr
-import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 
 private val log = KotlinLogging.logger {}
 
 fun Route.virksomhetApi(
-    vedtakStore: VedtakStore,
+    databaseContext: DatabaseContext,
     enhetsregisteretService: EnhetsregisteretService,
-    virksomhetStore: VirksomhetStore,
 ) {
     route("/virksomheter") {
         get {
             val fnrOptiker = call.extractFnr()
 
             val tidligereBrukteOrgnrForOptiker: List<String> =
-                vedtakStore.hentTidligereBrukteOrgnrForInnsender(fnrOptiker)
+                transaction(databaseContext) { ctx ->
+                    ctx.vedtakStore.hentTidligereBrukteOrgnrForInnsender(fnrOptiker)
+                }
 
             try {
                 val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptiker.map {
@@ -57,7 +59,8 @@ fun Route.virksomhetApi(
             val orgnr =
                 call.parameters["orgnr"] ?: error("Mangler orgnr i url")
 
-            val virksomhet = virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)
+            val virksomhet =
+                transaction(databaseContext) { ctx -> ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr) }
             log.info { "Søker etter $orgnr fant $virksomhet" }
             val harAktivNavAvtale = virksomhet?.aktiv ?: false
 

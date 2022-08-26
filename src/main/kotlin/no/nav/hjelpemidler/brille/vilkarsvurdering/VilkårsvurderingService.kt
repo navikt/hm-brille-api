@@ -2,22 +2,23 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PdlClient
-import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
 class VilkårsvurderingService(
-    private val vedtakStore: VedtakStore,
+    private val databaseContext: DatabaseContext,
     private val pdlClient: PdlClient,
     private val medlemskapBarn: MedlemskapBarn,
     private val dagensDatoFactory: () -> LocalDate = { LocalDate.now() },
 ) {
     suspend fun vurderVilkår(vilkårsgrunnlagDto: VilkårsgrunnlagDto): Vilkårsvurdering<Vilkårsgrunnlag> {
-        val vedtakBarn = vedtakStore.hentVedtakForBarn(vilkårsgrunnlagDto.fnrBarn)
+        val vedtakBarn = transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(vilkårsgrunnlagDto.fnrBarn) }
         val pdlOppslagBarn = pdlClient.hentPerson(vilkårsgrunnlagDto.fnrBarn)
         val medlemskapResultat =
             medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlagDto.fnrBarn, vilkårsgrunnlagDto.bestillingsdato)

@@ -12,25 +12,28 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
+import no.nav.hjelpemidler.brille.db.createDatabaseContext
+import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
-import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 internal class AvtaleApiTest {
-    private val virksomhetStore = mockk<VirksomhetStore>()
     private val altinnService = mockk<AltinnService>()
     private val enhetsregisteretService = mockk<EnhetsregisteretService>()
     private val kafkaService = mockk<KafkaService>()
 
     private val routing = TestRouting {
+        val sessionContext = createDatabaseSessionContextWithMocks()
+        val databaseContext = createDatabaseContext(sessionContext)
+
         authenticate("test") {
-            avtaleApi(AvtaleService(virksomhetStore, altinnService, enhetsregisteretService, kafkaService))
+            avtaleApi(AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService))
         }
     }
 
@@ -61,12 +64,6 @@ internal class AvtaleApiTest {
 
     @BeforeTest
     internal fun setUp() {
-        every {
-            virksomhetStore.hentVirksomheterForOrganisasjoner(listOf(virksomhet.orgnr))
-        } returns listOf(virksomhet)
-        every {
-            virksomhetStore.hentVirksomhetForOrganisasjon(virksomhet.orgnr)
-        } returns virksomhet
         coEvery {
             altinnService.hentAvgivereHovedadministrator(fnrInnsender)
         } returns listOf(avgiver)
@@ -85,12 +82,6 @@ internal class AvtaleApiTest {
             naeringskode2 = null,
             naeringskode3 = null
         )
-        every {
-            virksomhetStore.lagreVirksomhet(any())
-        } returnsArgument 0
-        every {
-            virksomhetStore.oppdaterVirksomhet(any())
-        } returnsArgument 0
         every {
             kafkaService.avtaleOpprettet(any())
         } returns Unit
