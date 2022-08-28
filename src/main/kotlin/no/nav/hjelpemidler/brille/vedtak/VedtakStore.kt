@@ -13,6 +13,7 @@ import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
+import no.nav.hjelpemidler.brille.store.update
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
@@ -25,10 +26,11 @@ interface VedtakStore : Store {
     fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int = 10): OversiktVedtakPaged
     fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T>
     fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime): Long
-    fun <T> hentVedtakIkkeRegistrertForUtbetaling(
+    fun <T> hentVedtakForUtbetaling(
         opprettet: LocalDateTime,
         behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET
     ): List<Vedtak<T>>
+    fun fjernFraVedTakKø(vedtakId: Long): Int?
 }
 
 class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakStore,
@@ -299,31 +301,28 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         vedtak.copy(id = id)
     }
 
-    override fun <T> hentVedtakIkkeRegistrertForUtbetaling(
+    override fun <T> hentVedtakForUtbetaling(
         opprettet: LocalDateTime,
         behandlingsresultat: Behandlingsresultat
     ): List<Vedtak<T>> = session {
         @Language("PostgreSQL")
         val sql = """
-            SELECT
-                id,
-                fnr_barn,
-                fnr_innsender,
-                orgnr,
-                bestillingsdato,
-                brillepris,
-                bestillingsreferanse,
-                vilkarsvurdering,
-                behandlingsresultat,
-                sats,
-                sats_belop,
-                sats_beskrivelse,
-                belop,
-                opprettet
-            FROM vedtak_v1
-            WHERE opprettet >= :opprettet AND behandlingsresultat = :behandlingsresultat 
-            AND NOT EXISTS(SELECT FROM utbetaling_v1 WHERE id = utbetaling_v1.vedtak_id)
-            ORDER by opprettet LIMIT 1000
+            SELECT 
+                v.id,
+                v.fnr_barn,
+                v.fnr_innsender,
+                v.orgnr,
+                v.bestillingsdato,
+                v.brillepris,
+                v.bestillingsreferanse,
+                v.vilkarsvurdering,
+                v.behandlingsresultat,
+                v.sats,
+                v.sats_belop,
+                v.sats_beskrivelse,
+                v.belop,
+                v.opprettet FROM vedtak_v1 v, vedtak_ko_v1 k WHERE k.opprettet <= :opprettet AND k.id=v.id 
+                AND v.behandlingsresultat = :behandlingsresultat
         """.trimIndent()
         sessionFactory().queryList<Vedtak<T>>(
             sql,
@@ -349,5 +348,13 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 opprettet = row.localDateTime("opprettet")
             )
         }.toList()
+    }
+
+    override fun fjernFraVedTakKø(vedtakId: Long) = session {
+        @Language("PostgreSQL")
+        val sql = """
+                DELETE from vedtak_ko_v1 where id = :vedtakId
+        """.trimIndent()
+        sessionFactory().update(sql, mapOf("vedtakId" to vedtakId)).rowCount
     }
 }

@@ -5,11 +5,10 @@ import java.time.LocalDate
 
 data class UtbetalingsBatch(
     val utbetalinger: List<Utbetaling>,
-    val orgNr: String,
+    val orgNr: String = utbetalinger[0].vedtak.orgnr,
     val batchId: String = utbetalinger[0].batchId
 ) {
     init {
-        check(utbetalinger.size < 100)
         check(utbetalinger.all { it.vedtak.orgnr == orgNr })
         check(utbetalinger.all { it.batchId == batchId })
     }
@@ -36,5 +35,5 @@ fun UtbetalingsBatch.lagMelding(): UtbetalingsMelding = UtbetalingsMelding(
     utbetalingslinjer = utbetalinger.map { it.toUtbetalingsLinje() }
 )
 
-fun lagUtbetalingsBatch(utbetalinger: List<Utbetaling>): List<UtbetalingsBatch> =
-    utbetalinger.groupBy { it.vedtak.orgnr }.map { UtbetalingsBatch(utbetalinger = it.value, orgNr = it.key) }
+fun List<Utbetaling>.toUtbetalingsBatchList(): List<UtbetalingsBatch> =
+    groupBy { it.batchId }.map { UtbetalingsBatch(utbetalinger = it.value) }

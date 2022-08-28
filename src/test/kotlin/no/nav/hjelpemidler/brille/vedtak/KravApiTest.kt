@@ -114,10 +114,6 @@ internal class KravApiTest {
             medlemskapBarn.sjekkMedlemskapBarn(krav.vilkårsgrunnlag.fnrBarn, krav.vilkårsgrunnlag.bestillingsdato)
         } returns medlemskapResultat
 
-        every {
-            utbetalingService.isEnabled()
-        } returns false
-
         routing.test {
             val response = client.post("/krav") {
                 setBody(krav)

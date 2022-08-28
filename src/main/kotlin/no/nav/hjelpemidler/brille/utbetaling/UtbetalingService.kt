@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -8,20 +7,16 @@ import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vedtak.toDto
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class UtbetalingService(
     private val databaseContext: DatabaseContext,
-    private val props: Configuration.UtbetalingProperties,
     private val kafkaService: KafkaService
 ) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(UtbetalingService::class.java)
-    }
-
-    init {
-        LOG.info("Utbetalingservice er skrudd ${if (isEnabled()) "på" else "av"}")
     }
 
     suspend fun <T> opprettNyUtbetaling(vedtak: Vedtak<T>): Utbetaling {
@@ -39,12 +34,7 @@ class UtbetalingService(
         }
     }
 
-    fun isEnabled(): Boolean {
-        return props.enabledUtbetaling
-    }
-
     suspend fun sendBatchTilUtbetaling(utbetalingsBatch: UtbetalingsBatch) {
-        kafkaService.produceEvent(utbetalingsBatch.batchId, utbetalingsBatch.lagMelding())
         transaction(databaseContext) { ctx ->
             utbetalingsBatch.utbetalinger.forEach {
                 ctx.utbetalingStore.oppdaterStatus(
@@ -54,6 +44,7 @@ class UtbetalingService(
                     )
                 )
             }
+            kafkaService.produceEvent(null, utbetalingsBatch.lagMelding())
         }
     }
 
@@ -69,9 +60,9 @@ class UtbetalingService(
         }
     }
 
-    suspend fun hentUtbetalingerSomSkalTilUtbetaling(): List<Utbetaling> {
+    suspend fun hentUtbetalingerMedStatusBatchDato(batchDato: LocalDate): List<Utbetaling> {
         return transaction(databaseContext) { ctx ->
-            ctx.utbetalingStore.hentUtbetalingerMedStatus(status = UtbetalingStatus.NY, limit = 100)
+            ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDato(status = UtbetalingStatus.NY, batchDato = batchDato)
         }
     }
 }

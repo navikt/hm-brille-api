@@ -69,9 +69,23 @@ class VedtakService(
         }
     }
 
-    suspend fun hentVedtakIkkeRegistrertForUtbetaling(opprettet: LocalDateTime): List<Vedtak<Vilkårsgrunnlag>> {
+    suspend fun hentVedtakForUtbetaling(opprettet: LocalDateTime): List<Vedtak<Vilkårsgrunnlag>> {
         return transaction(databaseContext) { ctx ->
-            ctx.vedtakStore.hentVedtakIkkeRegistrertForUtbetaling(opprettet)
+            ctx.vedtakStore.hentVedtakForUtbetaling(opprettet)
+        }
+    }
+
+    suspend fun fjernFraVedTakKø(vedtakList: List<Vedtak<*>>) {
+        return transaction(databaseContext) { ctx ->
+            vedtakList.forEach {
+                ctx.vedtakStore.fjernFraVedTakKø(it.id)
+            }
+        }
+    }
+
+    suspend fun fjernFraVedTakKø(vedtak: Vedtak<*>) {
+        return transaction(databaseContext) { ctx ->
+            ctx.vedtakStore.fjernFraVedTakKø(vedtak.id)
         }
     }
 }

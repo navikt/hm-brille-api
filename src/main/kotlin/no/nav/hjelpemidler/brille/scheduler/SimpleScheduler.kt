@@ -7,6 +7,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * A very simple implementation of a scheduler using coroutines and leaderElection
@@ -14,7 +16,7 @@ import org.slf4j.LoggerFactory
  */
 abstract class SimpleScheduler(
     private val leaderElection: LeaderElection,
-    private val delayTimeMillis: Long = 5000L
+    private val delay: Duration = 1.minutes
 ) {
     private val job: Job
     private val mySchedulerName: String = this.javaClass.simpleName
@@ -32,14 +34,14 @@ abstract class SimpleScheduler(
 
     suspend fun runTask() = coroutineScope {
         while (true) {
-            delay(delayTimeMillis)
+            delay(delay)
             if (leaderElection.isLeader()) {
                 launch {
                     val time = System.currentTimeMillis()
                     action()
                     val duration = System.currentTimeMillis() - time
-                    if (duration > delayTimeMillis) {
-                        LOG.warn("$mySchedulerName spent $duration ms which is greater than delayTime: $delayTimeMillis")
+                    if (duration > delay.inWholeMilliseconds) {
+                        LOG.warn("$mySchedulerName spent $duration ms which is greater than delayTime: $delay")
                     }
                 }
             }

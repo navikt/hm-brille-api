@@ -14,7 +14,8 @@ data class Utbetaling(
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val oppdatert: LocalDateTime = LocalDateTime.now(),
     val status: UtbetalingStatus = UtbetalingStatus.NY,
-    val batchId: String = vedtak.orgnr + vedtak.opprettet.toLocalDate().format(batchIdDateFormatter)
+    val batchDato: LocalDate = vedtak.opprettet.toLocalDate(),
+    val batchId: String = "${vedtak.orgnr}-${vedtak.opprettet.toLocalDate().format(batchIdDateFormatter)}"
 )
 
 val batchIdDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")

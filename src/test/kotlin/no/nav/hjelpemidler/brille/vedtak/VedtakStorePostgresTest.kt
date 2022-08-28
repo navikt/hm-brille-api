@@ -1,5 +1,7 @@
 package no.nav.hjelpemidler.brille.vedtak
 
+import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.comparables.shouldBeGreaterThanOrEqualTo
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper
@@ -81,10 +83,19 @@ internal class VedtakStorePostgresTest {
                     this.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
 
                     val vedtakList =
-                        this.hentVedtakIkkeRegistrertForUtbetaling<Vedtak<*>>(
-                            opprettet = LocalDateTime.now().minusDays(1)
+                        this.hentVedtakForUtbetaling<Vedtak<*>>(
+                            opprettet = LocalDateTime.now()
                         )
-                    // vedtakList.size shouldBeGreaterThan 1
+                    vedtakList.size shouldBeGreaterThan 1
+                    vedtakList.forEach {
+                        this.fjernFraVedTakKø(it.id)
+                    }
+                    val tomtList =
+                        this.hentVedtakForUtbetaling<Vedtak<*>>(
+                            opprettet = LocalDateTime.now()
+                        )
+                    tomtList.isEmpty() shouldBe true
+                    hentVedtakForBarn("12121314156").size shouldBeGreaterThanOrEqualTo 1
                 }
             }
         }

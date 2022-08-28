@@ -86,7 +86,7 @@ class UtbetalingsBatchTest {
         )
 
         val utbetalinger = listOf<Utbetaling>(ut1, ut2, ut3)
-        val batcher = lagUtbetalingsBatch(utbetalinger)
+        val batcher = utbetalinger.toUtbetalingsBatchList()
 
         batcher.size shouldBe 2
         val batch1 = batcher[0]
