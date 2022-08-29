@@ -66,4 +66,10 @@ class UtbetalingService(
             ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDato(status = UtbetalingStatus.NY, batchDato = batchDato)
         }
     }
+
+    suspend fun hentUtbetalingerMedBatchId(batchId: String): List<Utbetaling> {
+        return transaction(databaseContext) { ctx ->
+            ctx.utbetalingStore.hentUtbetalingerMedBatchId(batchId)
+        }
+    }
 }
