@@ -65,7 +65,7 @@ data class UtbetalingsMelding(
 }
 
 fun Utbetaling.toUtbetalingsLinje(): UtbetalingsLinje = UtbetalingsLinje(
-    delytelseId = id,
+    delytelseId = vedtakId,
     endringskode = "NY",
     klassekode = "BARNEBRILLER",
     fom = LocalDate.now(),
