@@ -19,11 +19,11 @@ class SendTilUtbetalingScheduler(
     }
 
     override suspend fun action() {
-        LOG.info("Starter opp SendTilUtbetaling")
         val utbetalinger = utbetalingService.hentUtbetalingerMedStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
+        LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
         if (utbetalinger.isNotEmpty()) {
             val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
-            LOG.info("Skal sende ${utbetalinger.size} utbetalinger, fordelt på ${utbetalingsBatchList.size} batch")
+            LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
             utbetalingsBatchList.forEach {
                 if (it.utbetalinger.size > 100)
                     LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
