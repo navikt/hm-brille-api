@@ -12,7 +12,7 @@ class SendTilUtbetalingScheduler(
     leaderElection: LeaderElection,
     delay: Duration = 60.minutes,
     private val dager: Long = 8,
-) : SimpleScheduler(leaderElection, delay) {
+) : SimpleScheduler(leaderElection= leaderElection, delay = delay, onlyWorkHours = true) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)
