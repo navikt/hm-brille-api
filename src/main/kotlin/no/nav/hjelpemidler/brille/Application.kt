@@ -51,8 +51,8 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
-import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
@@ -136,15 +136,16 @@ fun Application.setupRoutes() {
     val rapportService = RapportService(databaseContext)
     val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, medlemskapBarn)
-    val utbetalingService = UtbetalingService(databaseContext, Configuration.utbetalingProperties)
+    val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
-    val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection)
+    // Under testing, disabled
+    // val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService)
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
-    // UtbetalingsKvitteringRiver(rapid)
+    UtbetalingsKvitteringRiver(rapid, utbetalingService)
     thread(isDaemon = false) {
         rapid.start()
     }
@@ -152,7 +153,7 @@ fun Application.setupRoutes() {
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {
-        internalRoutes(vedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler, kafkaService)
+        internalRoutes(kafkaService)
 
         route("/api") {
             satsApi()

@@ -3,18 +3,33 @@ package no.nav.hjelpemidler.brille.utbetaling
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
 import org.slf4j.LoggerFactory
+import java.time.LocalDate
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 class SendTilUtbetalingScheduler(
     private val utbetalingService: UtbetalingService,
     leaderElection: LeaderElection,
-    timeInMs: Long = 60 * 60 * 1000
-) : SimpleScheduler(leaderElection, timeInMs) {
+    delay: Duration = 10.minutes,
+    private val dager: Long = 8,
+    onlyWorkHours: Boolean = true
+) : SimpleScheduler(leaderElection, delay, onlyWorkHours) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)
     }
 
     override suspend fun action() {
-        LOG.info("Send melding til utbetaling, simulert (Vi sender ingenting enda) .")
+        val utbetalinger = utbetalingService.hentUtbetalingerMedStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
+        LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
+        if (utbetalinger.isNotEmpty()) {
+            val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
+            LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
+            utbetalingsBatchList.forEach {
+                if (it.utbetalinger.size > 100)
+                    LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
+                utbetalingService.sendBatchTilUtbetaling(it)
+            }
+        }
     }
 }

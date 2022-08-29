@@ -2,22 +2,29 @@ package no.nav.hjelpemidler.brille.vedtak
 
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 
 class VedtakTilUtbetalingScheduler(
     private val vedtakService: VedtakService,
     leaderElection: LeaderElection,
-    timeInMs: Long = 60 * 60 * 1000
-) : SimpleScheduler(leaderElection, timeInMs) {
+    private val utbetalingService: UtbetalingService,
+    delay: Duration = 5.minutes,
+    private val dager: Long = 7
+) : SimpleScheduler(leaderElection, delay) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(VedtakTilUtbetalingScheduler::class.java)
     }
 
     override suspend fun action() {
-        val vedtakList = vedtakService.hentVedtakIkkeRegistrertForUtbetaling(opprettet = LocalDateTime.now().minusDays(1))
-        LOG.info("fant ${vedtakList.size} vedtak for registrering, ssimulert (Vi sender ingenting enda)")
-        // TODO innvilget vedtak som ikke finnes i utbetaling tabellen bør insertes her.
+        val vedtakList = vedtakService.hentVedtakForUtbetaling(opprettet = LocalDateTime.now().minusDays(dager))
+        LOG.info("fant ${vedtakList.size} vedtak for utbetaling")
+        vedtakList.forEach {
+            utbetalingService.opprettNyUtbetaling(it)
+        }
     }
 }
