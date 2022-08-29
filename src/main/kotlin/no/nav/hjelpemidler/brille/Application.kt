@@ -53,7 +53,6 @@ import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
-import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
@@ -142,7 +141,8 @@ fun Application.setupRoutes() {
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
-    val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService)
+    // Under testing, disabled
+    // val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService)
     val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
     UtbetalingsKvitteringRiver(rapid, utbetalingService)
@@ -153,7 +153,7 @@ fun Application.setupRoutes() {
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {
-        internalRoutes(vedtakTilUtbetalingScheduler, sendTilUtbetalingScheduler, kafkaService)
+        internalRoutes(kafkaService)
 
         route("/api") {
             satsApi()

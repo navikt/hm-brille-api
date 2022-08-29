@@ -10,9 +10,10 @@ import kotlin.time.Duration.Companion.minutes
 class SendTilUtbetalingScheduler(
     private val utbetalingService: UtbetalingService,
     leaderElection: LeaderElection,
-    delay: Duration = 60.minutes,
+    delay: Duration = 10.minutes,
     private val dager: Long = 8,
-) : SimpleScheduler(leaderElection= leaderElection, delay = delay, onlyWorkHours = true) {
+    onlyWorkHours: Boolean = true
+) : SimpleScheduler(leaderElection, delay, onlyWorkHours) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)

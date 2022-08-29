@@ -30,8 +30,8 @@ abstract class SimpleScheduler(
     }
 
     init {
-        LOG.info("starting scheduler: $mySchedulerName")
-        if (onlyWorkHours) LOG.info("$mySchedulerName task kjøres kun på arbeidstid")
+        LOG.info("starting scheduler: $mySchedulerName with a delay of $delay")
+        if (onlyWorkHours) LOG.info("$mySchedulerName task will only be launched during working hours.")
         job = CoroutineScope(Dispatchers.Default).launch {
             runTask()
         }

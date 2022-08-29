@@ -12,7 +12,7 @@ class VedtakTilUtbetalingScheduler(
     private val vedtakService: VedtakService,
     leaderElection: LeaderElection,
     private val utbetalingService: UtbetalingService,
-    delay: Duration = 30.minutes,
+    delay: Duration = 5.minutes,
     private val dager: Long = 7
 ) : SimpleScheduler(leaderElection, delay) {
 
