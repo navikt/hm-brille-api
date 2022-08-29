@@ -14,7 +14,6 @@ import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
-import no.nav.hjelpemidler.saksbehandling.db.SessionFactory
 import javax.sql.DataSource
 
 interface DatabaseContext {

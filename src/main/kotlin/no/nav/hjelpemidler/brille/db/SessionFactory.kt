@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.saksbehandling.db
+package no.nav.hjelpemidler.brille.db
 
 import kotliquery.Session
 import kotliquery.TransactionalSession
