@@ -3,10 +3,10 @@ package no.nav.hjelpemidler.brille.store
 import kotliquery.Session
 import kotliquery.TransactionalSession
 import kotliquery.using
-import no.nav.hjelpemidler.saksbehandling.db.SessionFactory
-import no.nav.hjelpemidler.saksbehandling.db.TransactionalSessionFactory
+import no.nav.hjelpemidler.brille.db.SessionFactory
+import no.nav.hjelpemidler.brille.db.TransactionalSessionFactory
 
-abstract class TransactionalStore(private val sessionFactory: SessionFactory) {
+abstract class TransactionalStore(private val sessionFactory: SessionFactory) : Store {
     protected fun <T> session(block: (Session) -> T): T = when (sessionFactory) {
         // closing should be handled in top-level transaction function in this case
         is TransactionalSessionFactory -> block(sessionFactory())
