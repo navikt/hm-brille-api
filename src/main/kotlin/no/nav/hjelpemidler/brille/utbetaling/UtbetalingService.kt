@@ -23,6 +23,7 @@ class UtbetalingService(
         if (vedtak.behandlingsresultat != Behandlingsresultat.INNVILGET)
             throw UtbetalingsException("Vedtaket må være innvilget")
         return transaction(databaseContext) { ctx ->
+            ctx.vedtakStore.fjernFraVedTakKø(vedtak.id)
             ctx.utbetalingStore.lagreUtbetaling(
                 Utbetaling(
                     vedtakId = vedtak.id,

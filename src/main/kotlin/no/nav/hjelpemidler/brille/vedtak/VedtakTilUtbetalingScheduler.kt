@@ -25,7 +25,6 @@ class VedtakTilUtbetalingScheduler(
         LOG.info("fant ${vedtakList.size} vedtak for utbetaling")
         vedtakList.forEach {
             utbetalingService.opprettNyUtbetaling(it)
-            vedtakService.fjernFraVedTakKø(it)
         }
     }
 }
