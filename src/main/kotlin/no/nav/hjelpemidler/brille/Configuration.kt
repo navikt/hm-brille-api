@@ -58,6 +58,7 @@ object Configuration {
 
     private val devProperties = ConfigurationMap(
         mapOf(
+            "kafka.client-id" to "hm-brille-api-v2",
             "application.profile" to "DEV",
             "application.cluster" to "DEV-GCP",
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
