@@ -15,7 +15,7 @@ class UtbetalingsKvitteringRiver(
     val utbetalingService: UtbetalingService
 ) : PacketListenerWithOnError {
 
-    private val eventName = "hm-utbetaling-kvittering"
+    private val eventName = "hm-oppdragHarUtbetaltKrav"
 
     companion object {
         private val LOG = LoggerFactory.getLogger(UtbetalingsKvitteringRiver::class.java)
@@ -25,7 +25,7 @@ class UtbetalingsKvitteringRiver(
         LOG.info("registering ${this.javaClass.simpleName}")
         River(rapid).apply {
             validate {
-                it.demandValue("hm-oppdragHarUtbetaltKrav", eventName)
+                it.demandValue("eventName", eventName)
             }
             validate {
                 it.requireKey(
