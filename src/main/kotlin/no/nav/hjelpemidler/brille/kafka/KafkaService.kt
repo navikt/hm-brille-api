@@ -185,7 +185,6 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     }
 
     fun oppdaterTSS(orgnr: String, kontonr: String) {
-        if (!Configuration.dev) return // TODO: Remove when going live with tss updates in prod.
         produceEvent(
             null,
             mapOf(

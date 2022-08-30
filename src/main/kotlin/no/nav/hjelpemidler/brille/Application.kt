@@ -208,8 +208,8 @@ fun cronjobSyncTss() {
             }
         }
 
-        virksomheter.forEach {
-            log.info("cronjob sync-tss: Oppdaterer tss for orgnr=${it.first}")
+        virksomheter.subList(0, 5).forEach {
+            log.info("cronjob sync-tss: Oppdaterer tss med=$it")
             kafkaService.oppdaterTSS(
                 orgnr = it.first,
                 kontonr = it.second,
