@@ -142,11 +142,16 @@ fun Application.setupRoutes() {
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
-    // Under testing, disabled
-    val vedtakTilUtbetalingScheduler = VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService)
-    val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
 
-    UtbetalingsKvitteringRiver(rapid, utbetalingService)
+    if (Configuration.dev) {
+        // Under testing, disabled i prod.
+        val vedtakTilUtbetalingScheduler =
+            VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService)
+        val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
+
+        UtbetalingsKvitteringRiver(rapid, utbetalingService)
+    }
+
     thread(isDaemon = false) {
         rapid.start()
     }
