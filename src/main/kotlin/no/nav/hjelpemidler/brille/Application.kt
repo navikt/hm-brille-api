@@ -194,7 +194,7 @@ private fun createKafkaRapid(): KafkaRapid {
 }
 
 fun cronjobSyncTss() {
-    log.info("cronjob sync tss start")
+    log.info("cronjob sync-tss: start")
 
     val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
 
@@ -208,7 +208,7 @@ fun cronjobSyncTss() {
             }
         }
 
-        virksomheter.subList(0, 5).forEach {
+        virksomheter.forEach {
             log.info("cronjob sync-tss: Oppdaterer tss med=$it")
             kafkaService.oppdaterTSS(
                 orgnr = it.first,
@@ -216,7 +216,7 @@ fun cronjobSyncTss() {
             )
         }
 
-        log.info("Virksomheter er oppdatert i TSS: $virksomheter")
+        log.info("cronjob sync-tss: Virksomheter er oppdatert i TSS!")
     }
 }
 
