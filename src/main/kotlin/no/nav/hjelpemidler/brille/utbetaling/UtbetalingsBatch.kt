@@ -46,18 +46,18 @@ data class UtbetalingsMelding(
             it["orgNr"] = this.orgNr
             it["batchId"] = this.batchId
             it["Utbetaling"] = Utbetaling(
-                listOf("BARNBRIL"),
-                listOf("NY"),
-                "BB",
-                orgNr,
-                utbetalingslinjer
+                fagområde = "BARNBRIL",
+                endringskode = "NY",
+                saksbehandler = "BB",
+                mottaker = orgNr,
+                linjer = utbetalingslinjer
             )
         }.toJson()
     }
 
     data class Utbetaling(
-        val fagområde: List<String>,
-        val endringskode: List<String>,
+        val fagområde: String,
+        val endringskode: String,
         val saksbehandler: String,
         val mottaker: String,
         val linjer: List<UtbetalingsLinje>
