@@ -45,7 +45,7 @@ class UtbetalingService(
                     )
                 )
             }
-            //kafkaService.produceEvent(null, utbetalingsBatch.lagMelding().toJson())
+            kafkaService.produceEvent(null, utbetalingsBatch.lagMelding().toJson())
         }
     }
 

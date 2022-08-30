@@ -1,7 +1,5 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
-import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.MessageProblems
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -38,22 +36,21 @@ data class UtbetalingsMelding(
     val utbetalingslinjer: List<UtbetalingsLinje>
 
 ) {
-    internal fun toJson(): String {
-        return JsonMessage("{}", MessageProblems("")).also {
-            it["eventName"] = this.eventName
-            it["eventId"] = UUID.randomUUID()
-            it["opprettetDato"] = LocalDateTime.now()
-            it["orgNr"] = this.orgNr
-            it["batchId"] = this.batchId
-            it["Utbetaling"] = Utbetaling(
-                fagområde = "BARNBRIL",
-                endringskode = "NY",
-                saksbehandler = "BB",
-                mottaker = orgNr,
-                linjer = utbetalingslinjer
-            )
-        }.toJson()
-    }
+    internal fun toJson() = mapOf(
+        "eventName" to this.eventName,
+        "eventId" to UUID.randomUUID(),
+        "opprettetDato" to LocalDateTime.now(),
+        "orgNr" to this.orgNr,
+        "batchId" to this.batchId,
+        "Utbetaling" to Utbetaling(
+            fagområde = "BARNBRIL",
+            endringskode = "NY",
+            saksbehandler = "BB",
+            mottaker = orgNr,
+            linjer = utbetalingslinjer
+        )
+
+    )
 
     data class Utbetaling(
         val fagområde: String,
