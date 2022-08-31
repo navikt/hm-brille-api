@@ -42,7 +42,6 @@ internal class AvtaleApiTest {
         navn = "Brillesjø AS",
         orgnr = "456313701",
         parentOrgnr = null,
-        harRolle = true
     )
     private val virksomhet = Virksomhet(
         orgnr = avgiver.orgnr,

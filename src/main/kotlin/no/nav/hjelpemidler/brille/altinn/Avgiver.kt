@@ -11,8 +11,6 @@ data class Avgiver(
     @JsonProperty("ParentOrganizationNumber")
     val parentOrgnr: String?,
     @JsonIgnore
-    val harRolle: Boolean = false,
-    @JsonIgnore
     val rettigheter: Rettigheter = Rettigheter.INGEN,
 ) {
     fun harRettighet(rettighet: Rettighet): Boolean =
