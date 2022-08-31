@@ -139,7 +139,6 @@ object Configuration {
     val azureAdProperties = AzureAdProperties()
     val dbProperties = DatabaseProperties()
     val kafkaProperties = KafkaProperties()
-    val pdfProperties = PdfProperties()
     val pdlProperties = PdlProperties()
     val tokenXProperties = TokenXProperties()
     val enhetsregisteretProperties = EnhetsregisteretProperties()
@@ -186,10 +185,6 @@ object Configuration {
         val keystorePassword: String? = getOrNull("KAFKA_CREDSTORE_PASSWORD"),
     )
 
-    data class PdfProperties(
-        val pdfgenUri: String = this["pdfgen.rest-uri"],
-    )
-
     data class PdlProperties(
         val baseUrl: String = this["pdl.graphql-uri"],
         val scope: String = this["pdl.apiScope"],
@@ -232,7 +227,7 @@ object Configuration {
     )
 
     data class UtbetalingProperties(
-        val enabledUtbetaling: Boolean = "true" == this["UTBETALING_ENABLED"]
+        val enabledUtbetaling: Boolean = "true" == this["UTBETALING_ENABLED"],
     )
 
     enum class Profile {
