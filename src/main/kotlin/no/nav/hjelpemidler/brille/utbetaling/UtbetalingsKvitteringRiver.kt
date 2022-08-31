@@ -5,13 +5,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import no.nav.helse.rapids_rivers.JsonMessage
-import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.helse.rapids_rivers.MessageContext
+import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import org.slf4j.LoggerFactory
 
 class UtbetalingsKvitteringRiver(
-    rapid: KafkaRapid,
+    rapidsConnection: RapidsConnection,
     val utbetalingService: UtbetalingService
 ) : PacketListenerWithOnError {
 
@@ -23,7 +23,7 @@ class UtbetalingsKvitteringRiver(
 
     init {
         LOG.info("registering ${this.javaClass.simpleName}")
-        River(rapid).apply {
+        River(rapidsConnection).apply {
             validate {
                 it.demandValue("eventName", eventName)
             }
@@ -46,6 +46,7 @@ class UtbetalingsKvitteringRiver(
     }
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
+        LOG.info("Mottok kvitteringsevent")
         runBlocking {
             withContext(Dispatchers.IO) {
                 launch {

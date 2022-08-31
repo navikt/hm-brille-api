@@ -156,6 +156,8 @@ fun Application.setupRoutes() {
         rapid.start()
     }
 
+
+
     installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
 
     routing {
