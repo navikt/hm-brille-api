@@ -171,7 +171,7 @@ fun Application.setupRoutes() {
 
             if (!Configuration.prod) {
                 get("/test/rettigheter") {
-                    val rettigheter = altinnService.hentRettigheter(call.extractFnr())
+                    val rettigheter = altinnService.hentRettigheter("15084300133")
                     call.respond(HttpStatusCode.OK, rettigheter)
                 }
             }
