@@ -65,10 +65,7 @@ internal class AvtaleApiTest {
     @BeforeTest
     internal fun setUp() {
         coEvery {
-            altinnService.hentAvgivereHovedadministrator(fnrInnsender)
-        } returns listOf(avgiver)
-        coEvery {
-            altinnService.hentAvgivereMedRolle(fnrInnsender, any())
+            altinnService.hentAvgivereMedRettighet(fnrInnsender, any())
         } returns listOf(avgiver)
         coEvery {
             enhetsregisteretService.hentOrganisasjonsenhet(avgiver.orgnr)
@@ -104,7 +101,7 @@ internal class AvtaleApiTest {
 
     @Test
     internal fun `oppretter ny avtale`() = routing.test {
-        erHovedadministratorFor(opprettAvtale.orgnr)
+        harRettighetOppgjørsavtale(opprettAvtale.orgnr)
         val response = client.post("/avtale/virksomheter") {
             setBody(opprettAvtale)
         }
@@ -113,7 +110,7 @@ internal class AvtaleApiTest {
 
     @Test
     internal fun `oppretter ny avtale uten tilgang`() = routing.test {
-        erIkkeHovedadministratorFor(opprettAvtale.orgnr)
+        harIkkeRettighetOppgjørsavtale(opprettAvtale.orgnr)
         val response = client.post("/avtale/virksomheter") {
             setBody(opprettAvtale)
         }
@@ -122,7 +119,7 @@ internal class AvtaleApiTest {
 
     @Test
     internal fun `redigerer avtale`() = routing.test {
-        erHovedadministratorFor(avgiver.orgnr)
+        harRettighetOppgjørsavtale(avgiver.orgnr)
         val response = client.put("/avtale/virksomheter/${avgiver.orgnr}") {
             setBody(oppdaterAvtale)
         }
@@ -131,18 +128,18 @@ internal class AvtaleApiTest {
 
     @Test
     internal fun `redigerer avtale uten tilgang`() = routing.test {
-        erIkkeHovedadministratorFor(avgiver.orgnr)
+        harIkkeRettighetOppgjørsavtale(avgiver.orgnr)
         val response = client.put("/avtale/virksomheter/${avgiver.orgnr}") {
             setBody(oppdaterAvtale)
         }
         response.status shouldBe HttpStatusCode.Forbidden
     }
 
-    private fun erHovedadministratorFor(orgnr: String) = coEvery {
-        altinnService.erHovedadministratorFor(fnrInnsender, orgnr)
+    private fun harRettighetOppgjørsavtale(orgnr: String) = coEvery {
+        altinnService.harRettighetOppgjørsavtale(fnrInnsender, orgnr)
     } returns true
 
-    private fun erIkkeHovedadministratorFor(orgnr: String) = coEvery {
-        altinnService.erHovedadministratorFor(fnrInnsender, orgnr)
+    private fun harIkkeRettighetOppgjørsavtale(orgnr: String) = coEvery {
+        altinnService.harRettighetOppgjørsavtale(fnrInnsender, orgnr)
     } returns false
 }

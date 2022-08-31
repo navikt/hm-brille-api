@@ -3,20 +3,16 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
-import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
-import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.runBlocking
@@ -170,13 +166,6 @@ fun Application.setupRoutes() {
         route("/api") {
             satsApi()
             featureToggleApi(featureToggleService)
-
-            if (!Configuration.prod) {
-                get("/test/rettigheter") {
-                    val rettigheter = altinnService.hentRettigheter("15084300133")
-                    call.respond(HttpStatusCode.OK, rettigheter)
-                }
-            }
 
             authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {

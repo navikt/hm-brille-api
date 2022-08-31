@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.altinn
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Rettighet(
@@ -25,15 +26,9 @@ data class Rettigheter(
     @JsonProperty("Rights")
     val rettigheter: List<Rettighet>,
 ) {
-    val harRettighetOppgjørsavtale: Boolean
-        get() = rettigheter.any {
-            it == Rettighet.OPPGJØRSAVTALE
-        }
-
-    val harRettighetUtbetalingsrapport: Boolean
-        get() = rettigheter.any {
-            it == Rettighet.UTBETALINGSRAPPORT
-        }
+    @JsonIgnore
+    fun harRettighet(rettighet: Rettighet): Boolean =
+        rettigheter.contains(rettighet)
 
     companion object {
         val INGEN: Rettigheter = Rettigheter(rettigheter = emptyList())
