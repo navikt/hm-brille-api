@@ -24,14 +24,14 @@ data class Rettighet(
 data class Rettigheter(
     @JsonProperty("Rights")
     val rettigheter: List<Rettighet>,
-) : List<Rettighet> by rettigheter {
+) {
     val harRettighetOppgjørsavtale: Boolean
-        get() = any {
+        get() = rettigheter.any {
             it == Rettighet.OPPGJØRSAVTALE
         }
 
     val harRettighetUtbetalingsrapport: Boolean
-        get() = any {
+        get() = rettigheter.any {
             it == Rettighet.UTBETALINGSRAPPORT
         }
 
