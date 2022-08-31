@@ -21,9 +21,7 @@ class DatabaseConfiguration(private val props: Configuration.DatabaseProperties)
             val jdbcURL = "jdbc:postgresql:///${props.databaseNavn}"
             val connProps = Properties().apply {
                 setProperty("socketFactory", "com.google.cloud.sql.postgres.SocketFactory")
-                setProperty("cloudSqlInstance", "teamdigihot-dev-9705:europe-north1:hm-brille-api-db-dev")
-                // setProperty("sslmode", "disable")
-                // setProperty("enableIamAuth", "true")
+                setProperty("cloudSqlInstance", "${props.cronjobGcpProject}:${props.cronjobGcpRegion}:${props.cronjobGcpDbInstance}")
             }
 
             // Initialize connection pool

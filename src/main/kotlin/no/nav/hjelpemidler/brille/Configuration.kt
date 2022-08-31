@@ -23,7 +23,10 @@ object Configuration {
             "ALTINN_APIKEY" to "",
             "ALTINN_APIGW_APIKEY" to "",
             "UTBETALING_ENABLED" to "false",
-            "ELECTOR_PATH" to ""
+            "ELECTOR_PATH" to "",
+            "cronjob.gcp.project" to "",
+            "cronjob.gcp.region" to "",
+            "cronjob.gcp.dbinstance" to "",
         )
     )
 
@@ -71,6 +74,9 @@ object Configuration {
             "enhetsregisteret_base_url" to "http://hm-mocks/brille/enhetsregisteret/api",
             "altinn.altinnUrl" to "https://api-gw-q1.oera.no/ekstern/altinn/api/serviceowner",
             "altinn.proxyConsumerId" to "hjelpemidlerdigitalsoknad-api-dev",
+            "cronjob.gcp.project" to "teamdigihot-dev-9705",
+            "cronjob.gcp.region" to "europe-north1",
+            "cronjob.gcp.dbinstance" to "hm-brille-api-db-dev",
         )
     )
 
@@ -88,6 +94,9 @@ object Configuration {
             "enhetsregisteret_base_url" to "https://data.brreg.no/enhetsregisteret/api",
             "altinn.altinnUrl" to "https://api-gw.oera.no/ekstern/altinn/api/serviceowner",
             "altinn.proxyConsumerId" to "hjelpemidlerdigitalsoknad-api-prod",
+            "cronjob.gcp.project" to "teamdigihot-prod-6f0d",
+            "cronjob.gcp.region" to "europe-north1",
+            "cronjob.gcp.dbinstance" to "hm-brille-api-db-prod",
         )
     )
 
@@ -130,7 +139,6 @@ object Configuration {
     val azureAdProperties = AzureAdProperties()
     val dbProperties = DatabaseProperties()
     val kafkaProperties = KafkaProperties()
-    val pdfProperties = PdfProperties()
     val pdlProperties = PdlProperties()
     val tokenXProperties = TokenXProperties()
     val enhetsregisteretProperties = EnhetsregisteretProperties()
@@ -161,6 +169,10 @@ object Configuration {
         val databasePassword: String = this["DB_PASSWORD"],
         val databaseHost: String = this["DB_HOST"],
         val databasePort: String = this["DB_PORT"],
+
+        val cronjobGcpProject: String = this["cronjob.gcp.project"],
+        val cronjobGcpRegion: String = this["cronjob.gcp.region"],
+        val cronjobGcpDbInstance: String = this["cronjob.gcp.dbinstance"],
     )
 
     data class KafkaProperties(
@@ -171,10 +183,6 @@ object Configuration {
         val truststorePassword: String? = getOrNull("KAFKA_CREDSTORE_PASSWORD"),
         val keystorePath: String? = getOrNull("KAFKA_KEYSTORE_PATH"),
         val keystorePassword: String? = getOrNull("KAFKA_CREDSTORE_PASSWORD"),
-    )
-
-    data class PdfProperties(
-        val pdfgenUri: String = this["pdfgen.rest-uri"],
     )
 
     data class PdlProperties(
@@ -219,7 +227,7 @@ object Configuration {
     )
 
     data class UtbetalingProperties(
-        val enabledUtbetaling: Boolean = "true" == this["UTBETALING_ENABLED"]
+        val enabledUtbetaling: Boolean = "true" == this["UTBETALING_ENABLED"],
     )
 
     enum class Profile {

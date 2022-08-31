@@ -99,4 +99,20 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         log.warn { "Kunne ikke hente roller, status: ${response.status}" }
         return false
     }
+
+    suspend fun hentRettigheter(fnr: String, orgnr: String): Rettigheter {
+        val response = client.get("$baseUrl/authorization/rights") {
+            url {
+                parameters.append("ForceEIAuthentication", "true")
+                parameters.append("subject", fnr)
+                parameters.append("reportee", orgnr)
+            }
+        }
+        sikkerLog.info { "Hentet rettigheter med url: ${response.request.url}" }
+        if (response.status == HttpStatusCode.OK) {
+            return response.body()
+        }
+        log.warn { "Kunne ikke hente rettigheter, status: ${response.status}" }
+        return Rettigheter.INGEN
+    }
 }

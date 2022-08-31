@@ -5,6 +5,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.Configuration
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
@@ -65,5 +66,21 @@ class AltinnService(private val altinnClient: AltinnClient) {
         }
 
         avgivereHovedadministrator
+    }
+
+    suspend fun hentRettigheter(fnr: String): List<Rettigheter> = withContext(Dispatchers.IO) {
+        if (Configuration.prod) {
+            return@withContext emptyList()
+        }
+
+        val alleAvgivere = altinnClient.hentAvgivere(fnr)
+
+        val rettigheter = alleAvgivere.map {
+            async {
+                altinnClient.hentRettigheter(fnr, it.orgnr)
+            }
+        }.awaitAll()
+
+        rettigheter
     }
 }

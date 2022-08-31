@@ -3,16 +3,20 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
+import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
+import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import kotlinx.coroutines.runBlocking
@@ -167,6 +171,13 @@ fun Application.setupRoutes() {
             satsApi()
             featureToggleApi(featureToggleService)
 
+            if (!Configuration.prod) {
+                get("/test/rettigheter") {
+                    val rettigheter = altinnService.hentRettigheter("15084300133")
+                    call.respond(HttpStatusCode.OK, rettigheter)
+                }
+            }
+
             authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
@@ -196,7 +207,7 @@ private fun createKafkaRapid(): KafkaRapid {
 }
 
 fun cronjobSyncTss() {
-    log.info("cronjob sync tss start")
+    log.info("cronjob sync-tss: start")
 
     val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
 
@@ -211,20 +222,20 @@ fun cronjobSyncTss() {
         }
 
         virksomheter.forEach {
-            log.info("cronjob sync-tss: Oppdaterer tss for orgnr=${it.first}")
+            log.info("cronjob sync-tss: Oppdaterer tss med=$it")
             kafkaService.oppdaterTSS(
                 orgnr = it.first,
                 kontonr = it.second,
             )
         }
 
-        log.info("Virksomheter er oppdatert i TSS: $virksomheter")
+        log.info("cronjob sync-tss: Virksomheter er oppdatert i TSS!")
     }
 }
 
 private fun kafkaConfig(
     kafkaProps: Configuration.KafkaProperties,
-    instanceId: String?
+    instanceId: String?,
 ) = KafkaConfig(
     bootstrapServers = kafkaProps.bootstrapServers,
     consumerGroupId = kafkaProps.clientId,
