@@ -18,7 +18,6 @@ import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.jsonMapper
 
 const val LANGUAGE_NORSK_BOKMÅL = "1044"
 const val ROLE_DEFINITION_CODE_HOVEDADMINISTRATOR = "HADM"
@@ -101,13 +100,12 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         return false
     }
 
-    suspend fun hentRettigheter(fnr: String, orgnr: String): JsonNode {
+    suspend fun hentRettigheter(fnr: String, orgnr: String): Rettigheter {
         val response = client.get("$baseUrl/authorization/rights") {
             url {
                 parameters.append("ForceEIAuthentication", "true")
                 parameters.append("subject", fnr)
                 parameters.append("reportee", orgnr)
-                parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
             }
         }
         sikkerLog.info { "Hentet rettigheter med url: ${response.request.url}" }
@@ -115,23 +113,6 @@ class AltinnClient(props: Configuration.AltinnProperties) {
             return response.body()
         }
         log.warn { "Kunne ikke hente rettigheter, status: ${response.status}" }
-        return jsonMapper.nullNode()
-    }
-
-    suspend fun hentApprettigheter(fnr: String, orgnr: String): JsonNode {
-        val response = client.get("$baseUrl/authorization/apprights") {
-            url {
-                parameters.append("ForceEIAuthentication", "true")
-                parameters.append("subject", fnr)
-                parameters.append("reportee", orgnr)
-                parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
-            }
-        }
-        sikkerLog.info { "Hentet apprettigheter med url: ${response.request.url}" }
-        if (response.status == HttpStatusCode.OK) {
-            return response.body()
-        }
-        log.warn { "Kunne ikke hente apprettigheter, status: ${response.status}" }
-        return jsonMapper.nullNode()
+        return Rettigheter.INGEN
     }
 }

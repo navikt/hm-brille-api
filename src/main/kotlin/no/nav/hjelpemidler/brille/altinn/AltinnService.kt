@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille.altinn
 
-import com.fasterxml.jackson.databind.JsonNode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -69,9 +68,9 @@ class AltinnService(private val altinnClient: AltinnClient) {
         avgivereHovedadministrator
     }
 
-    suspend fun hentRettigheter(fnr: String): Map<String, List<JsonNode>> = withContext(Dispatchers.IO) {
+    suspend fun hentRettigheter(fnr: String): List<Rettigheter> = withContext(Dispatchers.IO) {
         if (Configuration.prod) {
-            return@withContext emptyMap()
+            return@withContext emptyList()
         }
 
         val alleAvgivere = altinnClient.hentAvgivere(fnr)
@@ -82,15 +81,6 @@ class AltinnService(private val altinnClient: AltinnClient) {
             }
         }.awaitAll()
 
-        val apprettigheter = alleAvgivere.map {
-            async {
-                altinnClient.hentApprettigheter(fnr, it.orgnr)
-            }
-        }.awaitAll()
-
-        mapOf(
-            "rettigheter" to rettigheter,
-            "apprettigheter" to apprettigheter
-        )
+        rettigheter
     }
 }
