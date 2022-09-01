@@ -43,11 +43,17 @@ abstract class SimpleScheduler(
             if (leaderElection.isLeader() && (!onlyWorkHours || LocalDateTime.now().isWorkingHours())) {
                 LOG.info("Running $mySchedulerName")
                 launch {
-                    val time = System.currentTimeMillis()
-                    action()
-                    val duration = System.currentTimeMillis() - time
-                    if (duration > delay.inWholeMilliseconds) {
-                        LOG.warn("$mySchedulerName spent $duration ms which is greater than delayTime: $delay")
+                    try {
+                        val time = System.currentTimeMillis()
+                        action()
+                        val duration = System.currentTimeMillis() - time
+                        if (duration > delay.inWholeMilliseconds) {
+                            LOG.warn("$mySchedulerName spent $duration ms which is greater than delayTime: $delay")
+                        }
+                    }
+                    catch (e: Exception) {
+                        LOG.error("Scheduler $mySchedulerName has failed with an exception, the scheduler will be stopped", e)
+                        throw e
                     }
                 }
             } else {
