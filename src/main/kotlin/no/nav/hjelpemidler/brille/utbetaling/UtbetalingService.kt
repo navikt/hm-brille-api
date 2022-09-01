@@ -53,7 +53,7 @@ class UtbetalingService(
     suspend fun settTilUtbetalt(utbetaling: Utbetaling): Utbetaling {
         if (utbetaling.status != UtbetalingStatus.TIL_UTBETALING) throw UtbetalingsException("Utbetalingstatus må være sendt til Utbetaling")
         return transaction(databaseContext) { ctx ->
-            ctx.utbetalingStore.oppdaterStatus(
+            ctx.utbetalingStore.oppdaterStatusOgUtbetalingsdato(
                 utbetaling.copy(
                     status = UtbetalingStatus.UTBETALT,
                     oppdatert = LocalDateTime.now(),

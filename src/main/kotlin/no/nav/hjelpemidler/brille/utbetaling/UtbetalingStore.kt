@@ -20,6 +20,8 @@ interface UtbetalingStore : Store {
     fun hentUtbetalingerMedBatchId(batchId: String): List<Utbetaling>
     fun lagreUtbetalingsBatch(utbetalingsBatch: UtbetalingsBatch): Int?
     fun hentUtbetalingsBatch(batchId: String): UtbetalingsBatch?
+
+    fun oppdaterStatusOgUtbetalingsdato(utbetaling: Utbetaling): Utbetaling
 }
 
 internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : UtbetalingStore,
@@ -121,6 +123,25 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
             mapOf(
                 "status" to utbetaling.status.name,
                 "oppdatert" to utbetaling.oppdatert,
+                "id" to utbetaling.id
+            )
+        ).validate()
+        utbetaling
+    }
+
+    override fun oppdaterStatusOgUtbetalingsdato(utbetaling: Utbetaling): Utbetaling = session {
+        @Language("PostgreSQL")
+        val sql = """
+            UPDATE utbetaling_v1
+            SET status = :status, oppdatert = :oppdatert, utbetalingsdato = :utbetalingsdato
+            WHERE id = :id
+        """.trimIndent()
+        it.update(
+            sql,
+            mapOf(
+                "status" to utbetaling.status.name,
+                "oppdatert" to utbetaling.oppdatert,
+                "utbetalingsdato" to utbetaling.utbetalingsdato,
                 "id" to utbetaling.id
             )
         ).validate()
