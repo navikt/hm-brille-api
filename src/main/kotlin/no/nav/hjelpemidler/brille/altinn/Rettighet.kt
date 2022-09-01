@@ -2,6 +2,9 @@ package no.nav.hjelpemidler.brille.altinn
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
+import mu.KotlinLogging
+
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 data class Rettighet(
     @JsonProperty("ServiceCode")
@@ -25,14 +28,14 @@ data class Rettighet(
 }
 
 data class Rettigheter(
+    @JsonIgnore
+    val fnr: String = "",
+    @JsonIgnore
+    val orgnr: String = "",
     @JsonProperty("Rights")
     val rettigheter: List<Rettighet>,
 ) {
     @JsonIgnore
     fun harRettighet(rettighet: Rettighet): Boolean =
         rettigheter.contains(rettighet)
-
-    companion object {
-        val INGEN: Rettigheter = Rettigheter(rettigheter = emptyList())
-    }
 }
