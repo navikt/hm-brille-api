@@ -9,7 +9,7 @@ fun kravlinjeQuery(
     tilDato: LocalDate?
 ): String {
     var sql = """
-                SELECT v.id, v.bestillingsdato, v.behandlingsresultat, v.opprettet, v.belop, v.bestillingsreferanse, u.utbetalingsdato, count(v.*) over() AS $COLUMN_LABEL_TOTAL
+                SELECT v.id, v.bestillingsdato, v.behandlingsresultat, v.opprettet, v.belop, v.bestillingsreferanse, u.utbetalingsdato, u.batch_id, count(v.*) over() AS $COLUMN_LABEL_TOTAL
             FROM vedtak_v1 v 
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE v.orgnr = :orgNr 
