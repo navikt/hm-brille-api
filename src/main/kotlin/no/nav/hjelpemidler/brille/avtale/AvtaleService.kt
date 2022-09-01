@@ -50,7 +50,7 @@ class AvtaleService(
             }
 
         sikkerLog.info {
-            "fnrInnsender: $fnrInnsender kan opprette avtale for: ${avgivereFiltrert.map { it.orgnr }}"
+            "fnrInnsender: $fnrInnsender har rettighet: $rettighet for: ${avgivereFiltrert.map { it.orgnr }}"
         }
 
         val virksomheter =
