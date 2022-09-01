@@ -24,7 +24,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
     route("/kravlinjer") {
         get("/paged/{orgnr}") {
             val orgnr = call.orgnr()
-            if (!altinnService.harRettighetUtbetalingsrapport(
+            if (!altinnService.harTilgangTilUtbetalingsrapport(
                     call.extractFnr(),
                     orgnr,
                 )
@@ -61,7 +61,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
         get("/csv/{orgnr}") {
             val orgnr = call.orgnr()
-            if (!altinnService.harRettighetUtbetalingsrapport(
+            if (!altinnService.harTilgangTilUtbetalingsrapport(
                     call.extractFnr(),
                     orgnr,
                 )

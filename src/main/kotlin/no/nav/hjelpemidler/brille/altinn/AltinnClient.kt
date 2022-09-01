@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.altinn
 
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -63,6 +64,10 @@ class AltinnClient(props: Configuration.AltinnProperties) {
                 parameters.append("ForceEIAuthentication", "true")
                 parameters.append("subject", fnr)
                 parameters.append("reportee", orgnr)
+                parameters.append(
+                    "\$filter",
+                    "ServiceCode eq '5849' or ServiceCode eq '5850'}"
+                )
             }
         }
         sikkerLog.info { "Hentet rettigheter med url: ${response.request.url}" }
@@ -71,5 +76,29 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         }
         log.warn { "Kunne ikke hente rettigheter, status: ${response.status}" }
         return Rettigheter()
+    }
+
+    suspend fun harRolleFor(fnr: String, orgnr: String, roller: AltinnRoller): Boolean {
+        val response = client.get("$baseUrl/authorization/roles") {
+            url {
+                parameters.append("ForceEIAuthentication", "true")
+                parameters.append("subject", fnr)
+                parameters.append("reportee", orgnr)
+                parameters.append(
+                    "\$filter",
+                    "RoleDefinitionCode ${buildRolleQuery(roller)}"
+                )
+            }
+        }
+        sikkerLog.info { "Hentet roller med url: ${response.request.url}" }
+        if (response.status == HttpStatusCode.OK) {
+            val alleRoller = response.body<List<JsonNode>?>()
+            sikkerLog.info {
+                "Hentet roller for fnr: $fnr, orgnr: $orgnr, roller: $alleRoller"
+            }
+            return alleRoller?.isNotEmpty() ?: false
+        }
+        log.warn { "Kunne ikke hente roller, status: ${response.status}" }
+        return false
     }
 }
