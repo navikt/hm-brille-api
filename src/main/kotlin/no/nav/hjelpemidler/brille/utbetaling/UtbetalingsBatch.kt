@@ -32,7 +32,6 @@ data class UtbetalingsMelding(
     val opprettetDato: LocalDateTime,
     val orgNr: String,
     val batchId: String,
-    val utbetalingsdato: LocalDate,
     val utbetalingslinjer: List<UtbetalingsLinje>
 
 ) {
@@ -76,7 +75,6 @@ fun UtbetalingsBatch.lagMelding(): UtbetalingsMelding = UtbetalingsMelding(
     opprettetDato = LocalDateTime.now(),
     orgNr = orgNr,
     batchId = batchId,
-    utbetalingsdato = utbetalinger.first().utbetalingsdato,
     utbetalingslinjer = utbetalinger.map { it.toUtbetalingsLinje() }
 )
 

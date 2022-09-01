@@ -10,7 +10,7 @@ data class Utbetaling(
     val vedtakId: Long,
     val vedtak: VedtakDto,
     val referanse: String,
-    val utbetalingsdato: LocalDate,
+    val utbetalingsdato: LocalDate?,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val oppdatert: LocalDateTime = LocalDateTime.now(),
     val status: UtbetalingStatus = UtbetalingStatus.NY,

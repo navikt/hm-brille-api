@@ -59,7 +59,6 @@ class UtbetalingsKvitteringRiver(
                         if (it.status == UtbetalingStatus.TIL_UTBETALING) {
                             utbetalingService.settTilUtbetalt(it)
                         }
-
                     }
 
                     LOG.info("Oppdaterte alle rader. for batchId $batchId")

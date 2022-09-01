@@ -28,7 +28,7 @@ class UtbetalingService(
                 Utbetaling(
                     vedtakId = vedtak.id,
                     referanse = vedtak.bestillingsreferanse,
-                    utbetalingsdato = vedtak.bestillingsdato,
+                    utbetalingsdato = null,
                     vedtak = vedtak.toDto()
                 )
             )
@@ -55,7 +55,8 @@ class UtbetalingService(
             ctx.utbetalingStore.oppdaterStatus(
                 utbetaling.copy(
                     status = UtbetalingStatus.UTBETALT,
-                    oppdatert = LocalDateTime.now()
+                    oppdatert = LocalDateTime.now(),
+                    utbetalingsdato = LocalDate.now()
                 )
             )
         }
