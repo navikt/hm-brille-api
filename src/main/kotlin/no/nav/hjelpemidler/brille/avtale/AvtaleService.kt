@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Rettighet
 import no.nav.hjelpemidler.brille.db.DatabaseContext
@@ -26,8 +27,8 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentVirksomheter(fnrInnsender: String, rettighet: Rettighet): List<Avtale> {
-        val avgivereFiltrert = altinnService.hentAvgivereMedRettighet(fnrInnsender, rettighet)
+    suspend fun hentVirksomheter(fnrInnsender: String, rettighet: Rettighet, roller: AltinnRoller): List<Avtale> {
+        val avgivereFiltrert = altinnService.hentAvgivere(fnrInnsender, rettighet, roller)
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
                 val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
@@ -53,12 +54,11 @@ class AvtaleService(
             "fnrInnsender: $fnrInnsender har rettighet: $rettighet for: ${avgivereFiltrert.map { it.orgnr }}"
         }
 
-        val virksomheter =
-            transaction(databaseContext) { ctx ->
-                ctx.virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert.map { it.orgnr }).associateBy {
-                    it.orgnr
-                }
+        val virksomheter = transaction(databaseContext) { ctx ->
+            ctx.virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert.map { it.orgnr }).associateBy {
+                it.orgnr
             }
+        }
 
         return avgivereFiltrert
             .map {
@@ -78,7 +78,7 @@ class AvtaleService(
     suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): Avtale {
         val orgnr = opprettAvtale.orgnr
 
-        if (!altinnService.harRettighetOppgjørsavtale(fnrInnsender, orgnr)) {
+        if (!altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
 
@@ -108,7 +108,7 @@ class AvtaleService(
     }
 
     suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): Avtale {
-        if (!altinnService.harRettighetOppgjørsavtale(fnrOppdatertAv, orgnr)) {
+        if (!altinnService.harTilgangTilOppgjørsavtale(fnrOppdatertAv, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
 

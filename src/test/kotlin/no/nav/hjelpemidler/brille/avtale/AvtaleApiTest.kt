@@ -64,7 +64,7 @@ internal class AvtaleApiTest {
     @BeforeTest
     internal fun setUp() {
         coEvery {
-            altinnService.hentAvgivereMedRettighet(fnrInnsender, any())
+            altinnService.hentAvgivere(fnrInnsender, any(), any())
         } returns listOf(avgiver)
         coEvery {
             enhetsregisteretService.hentOrganisasjonsenhet(avgiver.orgnr)
@@ -135,10 +135,10 @@ internal class AvtaleApiTest {
     }
 
     private fun harRettighetOppgjørsavtale(orgnr: String) = coEvery {
-        altinnService.harRettighetOppgjørsavtale(fnrInnsender, orgnr)
+        altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)
     } returns true
 
     private fun harIkkeRettighetOppgjørsavtale(orgnr: String) = coEvery {
-        altinnService.harRettighetOppgjørsavtale(fnrInnsender, orgnr)
+        altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)
     } returns false
 }

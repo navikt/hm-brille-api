@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -17,6 +18,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import org.junit.jupiter.api.Test
+import org.postgresql.util.PSQLException
 import java.time.LocalDate
 
 internal class UtbetalingStorePostgresTest {
@@ -104,6 +106,18 @@ internal class UtbetalingStorePostgresTest {
                         val batchUtbetalinger = hentUtbetalingerMedBatchId(utbetaling.batchId)
                         nyUtbetalinger.size shouldBe 2
                         batchUtbetalinger.size shouldBe nyUtbetalinger.size
+                        val batchList = batchUtbetalinger.toUtbetalingsBatchList()
+                        batchList.size shouldBe 1
+                        val batchRecord = batchList[0].toUtbetalingsBatch()
+                        lagreUtbetalingsBatch(batchRecord) shouldBe 1
+                        val hentDb = hentUtbetalingsBatch(batchRecord.batchId)
+                        hentDb.shouldNotBeNull()
+                        hentDb.antallUtbetalinger shouldBe batchRecord.antallUtbetalinger
+
+                        val duplicateException = shouldThrow<PSQLException> {
+                            lagreUtbetalingsBatch(batchRecord)
+                        }
+                        duplicateException.message shouldContain "duplicate key"
                     }
                 }
             }

@@ -9,7 +9,7 @@ import mu.KotlinLogging
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class AltinnService(private val altinnClient: AltinnClient) {
-    suspend fun hentAvgivereMedRettighet(fnr: String, rettighet: Rettighet): List<Avgiver> =
+    suspend fun hentAvgivere(fnr: String, rettighet: Rettighet, roller: AltinnRoller): List<Avgiver> =
         withContext(Dispatchers.IO) {
             val alleAvgivere = altinnClient.hentAvgivere(fnr)
 
@@ -20,13 +20,16 @@ class AltinnService(private val altinnClient: AltinnClient) {
             val avgivere = alleAvgivere
                 .map {
                     async {
-                        it.copy(rettigheter = hentRettigheter(fnr = fnr, orgnr = it.orgnr))
+                        it.copy(
+                            rettigheter = hentRettigheter(fnr = fnr, orgnr = it.orgnr),
+                            harRoller = altinnClient.harRolleFor(fnr = fnr, orgnr = it.orgnr, roller)
+                        )
                     }
                 }
                 .awaitAll()
 
             val avgivereRettighet = avgivere.filter {
-                it.harRettighet(rettighet)
+                it.harRettighet(rettighet) || it.harRoller
             }
 
             sikkerLog.info {
@@ -48,11 +51,19 @@ class AltinnService(private val altinnClient: AltinnClient) {
         hentRettigheter(fnr, orgnr).harRettighet(rettighet)
     }
 
-    suspend fun harRettighetOppgjørsavtale(fnr: String, orgnr: String): Boolean = withContext(Dispatchers.IO) {
-        harRettighet(fnr, orgnr, Rettighet.OPPGJØRSAVTALE)
+    suspend fun harTilgangTilOppgjørsavtale(fnr: String, orgnr: String): Boolean = withContext(Dispatchers.IO) {
+        val roller = AltinnRoller(
+            AltinnRolle.HOVEDADMINISTRATOR,
+        )
+        harRettighet(fnr, orgnr, Rettighet.OPPGJØRSAVTALE) || altinnClient.harRolleFor(fnr, orgnr, roller)
     }
 
-    suspend fun harRettighetUtbetalingsrapport(fnr: String, orgnr: String): Boolean = withContext(Dispatchers.IO) {
-        harRettighet(fnr, orgnr, Rettighet.UTBETALINGSRAPPORT)
+    suspend fun harTilgangTilUtbetalingsrapport(fnr: String, orgnr: String): Boolean = withContext(Dispatchers.IO) {
+        val roller = AltinnRoller(
+            AltinnRolle.HOVEDADMINISTRATOR,
+            AltinnRolle.REGNSKAPSMEDARBEIDER,
+            AltinnRolle.REGNSKAPSFØRER,
+        )
+        harRettighet(fnr, orgnr, Rettighet.UTBETALINGSRAPPORT) || altinnClient.harRolleFor(fnr, orgnr, roller)
     }
 }

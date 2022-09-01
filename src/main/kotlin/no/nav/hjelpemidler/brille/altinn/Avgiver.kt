@@ -12,6 +12,8 @@ data class Avgiver(
     val parentOrgnr: String?,
     @JsonIgnore
     val rettigheter: Rettigheter = Rettigheter(),
+    @JsonIgnore
+    val harRoller: Boolean = false,
 ) {
     fun harRettighet(rettighet: Rettighet): Boolean =
         rettigheter.harRettighet(rettighet)

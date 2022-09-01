@@ -1,10 +1,18 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
 data class UtbetalingsBatch(
+    val batchId: String,
+    val totalbeløp: BigDecimal,
+    val antallUtbetalinger: Int,
+    val opprettet: LocalDateTime = LocalDateTime.now()
+)
+
+data class UtbetalingsBatchDTO(
     val utbetalinger: List<Utbetaling>,
     val orgNr: String = utbetalinger[0].vedtak.orgnr,
     val batchId: String = utbetalinger[0].batchId
@@ -71,12 +79,16 @@ fun Utbetaling.toUtbetalingsLinje(): UtbetalingsLinje = UtbetalingsLinje(
     saksbehandler = "BB"
 )
 
-fun UtbetalingsBatch.lagMelding(): UtbetalingsMelding = UtbetalingsMelding(
+fun UtbetalingsBatchDTO.lagMelding(): UtbetalingsMelding = UtbetalingsMelding(
     opprettetDato = LocalDateTime.now(),
     orgNr = orgNr,
     batchId = batchId,
     utbetalingslinjer = utbetalinger.map { it.toUtbetalingsLinje() }
 )
 
-fun List<Utbetaling>.toUtbetalingsBatchList(): List<UtbetalingsBatch> =
-    groupBy { it.batchId }.map { UtbetalingsBatch(utbetalinger = it.value) }
+fun List<Utbetaling>.toUtbetalingsBatchList(): List<UtbetalingsBatchDTO> =
+    groupBy { it.batchId }.map { UtbetalingsBatchDTO(utbetalinger = it.value) }
+
+fun UtbetalingsBatchDTO.toUtbetalingsBatch(): UtbetalingsBatch = UtbetalingsBatch(
+    batchId = batchId, antallUtbetalinger = utbetalinger.size, totalbeløp = utbetalinger.sumOf { it.vedtak.beløp }
+)

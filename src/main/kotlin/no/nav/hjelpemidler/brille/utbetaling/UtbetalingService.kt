@@ -35,9 +35,10 @@ class UtbetalingService(
         }
     }
 
-    suspend fun sendBatchTilUtbetaling(utbetalingsBatch: UtbetalingsBatch) {
+    suspend fun sendBatchTilUtbetaling(utbetalingsBatchDTO: UtbetalingsBatchDTO) {
         transaction(databaseContext) { ctx ->
-            utbetalingsBatch.utbetalinger.forEach {
+            ctx.utbetalingStore.lagreUtbetalingsBatch(utbetalingsBatchDTO.toUtbetalingsBatch())
+            utbetalingsBatchDTO.utbetalinger.forEach {
                 ctx.utbetalingStore.oppdaterStatus(
                     it.copy(
                         status = UtbetalingStatus.TIL_UTBETALING,
@@ -45,7 +46,7 @@ class UtbetalingService(
                     )
                 )
             }
-            kafkaService.produceEvent(null, utbetalingsBatch.lagMelding().toJson())
+            kafkaService.produceEvent(null, utbetalingsBatchDTO.lagMelding().toJson())
         }
     }
 
