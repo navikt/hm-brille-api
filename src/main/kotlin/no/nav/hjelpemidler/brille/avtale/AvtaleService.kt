@@ -1,9 +1,8 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.altinn.AltinnService
-import no.nav.hjelpemidler.brille.altinn.Rettighet
+import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -27,8 +26,12 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentVirksomheter(fnrInnsender: String, rettighet: Rettighet, roller: AltinnRoller): List<Avtale> {
-        val avgivereFiltrert = altinnService.hentAvgivere(fnrInnsender, rettighet, roller)
+    suspend fun hentVirksomheter(
+        fnrInnsender: String,
+        filter: (avgiver: Avgiver) -> Boolean,
+    ): List<Avtale> {
+        val avgivereFiltrert = altinnService.hentAvgivere(fnrInnsender)
+            .filter(filter)
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
                 val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
@@ -51,7 +54,7 @@ class AvtaleService(
             }
 
         sikkerLog.info {
-            "fnrInnsender: $fnrInnsender har rettighet: $rettighet for: ${avgivereFiltrert.map { it.orgnr }}"
+            "fnrInnsender: $fnrInnsender, avgivere: $avgivereFiltrert"
         }
 
         val virksomheter = transaction(databaseContext) { ctx ->

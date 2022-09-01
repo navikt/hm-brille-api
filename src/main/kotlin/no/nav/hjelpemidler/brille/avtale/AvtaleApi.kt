@@ -11,9 +11,6 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.altinn.AltinnRolle
-import no.nav.hjelpemidler.brille.altinn.AltinnRoller
-import no.nav.hjelpemidler.brille.altinn.Rettighet
 import no.nav.hjelpemidler.brille.extractFnr
 
 private val log = KotlinLogging.logger { }
@@ -25,9 +22,7 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
             get {
                 val virksomheter = avtaleService.hentVirksomheter(
                     fnrInnsender = call.extractFnr(),
-                    rettighet = Rettighet.OPPGJØRSAVTALE,
-                    roller = AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR)
-                )
+                ) { it.harTilgangTilOppgjørsavtale() }
                 call.respond(HttpStatusCode.OK, virksomheter)
             }
             // hent avtale for virksomhet
@@ -35,9 +30,9 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
                 val orgnr = call.orgnr()
                 val virksomhet = avtaleService.hentVirksomheter(
                     fnrInnsender = call.extractFnr(),
-                    rettighet = Rettighet.OPPGJØRSAVTALE,
-                    roller = AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR)
-                ).associateBy {
+                ) {
+                    it.harTilgangTilOppgjørsavtale()
+                }.associateBy {
                     it.orgnr
                 }[orgnr]
                 if (virksomhet == null) {
@@ -66,26 +61,18 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
                 get {
                     val virksomheter = avtaleService.hentVirksomheter(
                         fnrInnsender = call.extractFnr(),
-                        rettighet = Rettighet.UTBETALINGSRAPPORT,
-                        AltinnRoller(
-                            AltinnRolle.HOVEDADMINISTRATOR,
-                            AltinnRolle.REGNSKAPSMEDARBEIDER,
-                            AltinnRolle.REGNSKAPSFØRER,
-                        )
-                    )
+                    ) {
+                        it.harTilgangTilUtbetalingsrapport()
+                    }
                     call.respond(HttpStatusCode.OK, virksomheter)
                 }
                 get("/{orgnr}") {
                     val orgnr = call.orgnr()
                     val virksomhet = avtaleService.hentVirksomheter(
                         fnrInnsender = call.extractFnr(),
-                        rettighet = Rettighet.UTBETALINGSRAPPORT,
-                        AltinnRoller(
-                            AltinnRolle.HOVEDADMINISTRATOR,
-                            AltinnRolle.REGNSKAPSMEDARBEIDER,
-                            AltinnRolle.REGNSKAPSFØRER,
-                        )
-                    ).associateBy {
+                    ) {
+                        it.harTilgangTilUtbetalingsrapport()
+                    }.associateBy {
                         it.orgnr
                     }[orgnr]
                     if (virksomhet == null) {

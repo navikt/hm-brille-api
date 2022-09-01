@@ -1,7 +1,7 @@
 package no.nav.hjelpemidler.brille.altinn
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -58,47 +58,57 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         return emptyList()
     }
 
-    suspend fun hentRettigheter(fnr: String, orgnr: String): Rettigheter {
+    suspend fun hentRettigheter(fnr: String, orgnr: String): Set<Avgiver.Rettighet> {
         val response = client.get("$baseUrl/authorization/rights") {
             url {
                 parameters.append("ForceEIAuthentication", "true")
                 parameters.append("subject", fnr)
                 parameters.append("reportee", orgnr)
-                parameters.append(
-                    "\$filter",
-                    "ServiceCode eq '5849' or ServiceCode eq '5850'}"
-                )
+                parameters.append("\$filter", Avgiver.Rettighet.FILTER)
             }
         }
         sikkerLog.info { "Hentet rettigheter med url: ${response.request.url}" }
         if (response.status == HttpStatusCode.OK) {
-            return response.body() ?: Rettigheter()
+            return response.body<HentRettigheterResponse?>()?.tilSet() ?: emptySet()
         }
         log.warn { "Kunne ikke hente rettigheter, status: ${response.status}" }
-        return Rettigheter()
+        return emptySet()
     }
 
-    suspend fun harRolleFor(fnr: String, orgnr: String, roller: AltinnRoller): Boolean {
+    suspend fun hentRoller(fnr: String, orgnr: String): Set<Avgiver.Rolle> {
         val response = client.get("$baseUrl/authorization/roles") {
             url {
                 parameters.append("ForceEIAuthentication", "true")
                 parameters.append("subject", fnr)
                 parameters.append("reportee", orgnr)
-                parameters.append(
-                    "\$filter",
-                    "RoleDefinitionCode ${buildRolleQuery(roller)}"
-                )
+                parameters.append("\$filter", Avgiver.Rolle.FILTER)
             }
         }
         sikkerLog.info { "Hentet roller med url: ${response.request.url}" }
         if (response.status == HttpStatusCode.OK) {
-            val alleRoller = response.body<List<JsonNode>?>()
-            sikkerLog.info {
-                "Hentet roller for fnr: $fnr, orgnr: $orgnr, roller: $alleRoller"
-            }
-            return alleRoller?.isNotEmpty() ?: false
+            return response.body<HentRollerResponse?>()?.tilSet() ?: emptySet()
         }
         log.warn { "Kunne ikke hente roller, status: ${response.status}" }
-        return false
+        return emptySet()
+    }
+
+    data class Rettighet(
+        @JsonProperty("ServiceCode") val kode: String,
+        @JsonProperty("ServiceEditionCode") val versjon: Int,
+    )
+
+    data class Rolle(@JsonProperty("RoleDefinitionCode") val kode: String)
+
+    private data class HentRettigheterResponse(@JsonProperty("Rights") val rettigheter: List<Rettighet>) {
+        fun tilSet(): Set<Avgiver.Rettighet> = rettigheter.mapNotNull {
+            Avgiver.Rettighet.fra(it.kode, it.versjon)
+        }.toSet()
+    }
+
+    private data class HentRollerResponse(val roller: MutableList<Rolle> = mutableListOf()) :
+        MutableList<Rolle> by roller {
+        fun tilSet(): Set<Avgiver.Rolle> = roller.mapNotNull {
+            Avgiver.Rolle.fra(it.kode)
+        }.toSet()
     }
 }
