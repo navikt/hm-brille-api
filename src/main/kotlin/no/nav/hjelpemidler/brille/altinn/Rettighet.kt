@@ -9,6 +9,8 @@ data class Rettighet(
     @JsonProperty("ServiceEditionCode")
     val serviceEditionCode: Int,
 ) {
+    override fun toString(): String = "[$serviceCode,$serviceEditionCode]"
+
     companion object {
         /**
          * Avtale om direkte oppgjør av briller for barn - serviceCode 5849 editionCode 1
