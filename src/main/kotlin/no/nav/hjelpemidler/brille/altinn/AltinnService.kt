@@ -5,82 +5,50 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class AltinnService(private val altinnClient: AltinnClient) {
-    suspend fun erHovedadministratorFor(fnr: String, orgnr: String): Boolean =
-        altinnClient.erHovedadministratorFor(fnr, orgnr)
+    suspend fun hentAvgivereMedRettighet(fnr: String, rettighet: Rettighet): List<Avgiver> =
+        withContext(Dispatchers.IO) {
+            val alleAvgivere = altinnClient.hentAvgivere(fnr)
 
-    suspend fun harRolleFor(fnr: String, orgnr: String, roller: AltinnRoller): Boolean =
-        altinnClient.harRolleFor(fnr, orgnr, roller)
-
-    suspend fun hentAvgivereHovedadministrator(fnr: String): List<Avgiver> = withContext(Dispatchers.IO) {
-        val alleAvgivere = altinnClient.hentAvgivere(fnr)
-
-        sikkerLog.info {
-            "Hentet avgivere for fnr: $fnr, avgivere: ${alleAvgivere.map { it.orgnr }}"
-        }
-
-        val avgivere = alleAvgivere
-            .map {
-                async {
-                    it.copy(harRolle = erHovedadministratorFor(fnr, it.orgnr))
-                }
+            sikkerLog.info {
+                "Hentet avgivere for fnr: $fnr, avgivere: ${alleAvgivere.map { it.orgnr }}"
             }
-            .awaitAll()
 
-        val avgivereHovedadministrator = avgivere.filter {
-            it.harRolle
+            val avgivere = alleAvgivere
+                .map {
+                    async {
+                        it.copy(rettigheter = hentRettigheter(fnr = fnr, orgnr = it.orgnr))
+                    }
+                }
+                .awaitAll()
+
+            val avgivereRettighet = avgivere.filter {
+                it.harRettighet(rettighet)
+            }
+
+            sikkerLog.info {
+                "Avgivere hvor fnr: $fnr har rettighet: $rettighet, avgivere: ${avgivereRettighet.map { it.orgnr }}"
+            }
+
+            avgivereRettighet
         }
 
-        sikkerLog.info {
-            "Avgivere hvor fnr: $fnr er hovedadministrator, avgivere: ${avgivereHovedadministrator.map { it.orgnr }}"
-        }
-
-        avgivereHovedadministrator
+    suspend fun hentRettigheter(fnr: String, orgnr: String): Rettigheter = withContext(Dispatchers.IO) {
+        altinnClient.hentRettigheter(fnr, orgnr)
     }
 
-    suspend fun hentAvgivereMedRolle(fnr: String, roller: AltinnRoller): List<Avgiver> = withContext(Dispatchers.IO) {
-        val alleAvgivere = altinnClient.hentAvgivere(fnr)
-
-        sikkerLog.info {
-            "Hentet avgivere for fnr: $fnr, avgivere: ${alleAvgivere.map { it.orgnr }}"
-        }
-
-        val avgivere = alleAvgivere
-            .map {
-                async {
-                    it.copy(harRolle = harRolleFor(fnr, it.orgnr, roller))
-                }
-            }
-            .awaitAll()
-
-        val avgivereHovedadministrator = avgivere.filter {
-            it.harRolle
-        }
-
-        sikkerLog.info {
-            "Avgivere hvor fnr: $fnr er hovedadministrator, avgivere: ${avgivereHovedadministrator.map { it.orgnr }}"
-        }
-
-        avgivereHovedadministrator
+    suspend fun harRettighet(fnr: String, orgnr: String, rettighet: Rettighet): Boolean = withContext(Dispatchers.IO) {
+        altinnClient.hentRettigheter(fnr, orgnr).harRettighet(rettighet)
     }
 
-    suspend fun hentRettigheter(fnr: String): List<Rettigheter> = withContext(Dispatchers.IO) {
-        if (Configuration.prod) {
-            return@withContext emptyList()
-        }
+    suspend fun harRettighetOppgjørsavtale(fnr: String, orgnr: String): Boolean = withContext(Dispatchers.IO) {
+        harRettighet(fnr, orgnr, Rettighet.OPPGJØRSAVTALE)
+    }
 
-        val alleAvgivere = altinnClient.hentAvgivere(fnr)
-
-        val rettigheter = alleAvgivere.map {
-            async {
-                altinnClient.hentRettigheter(fnr, it.orgnr)
-            }
-        }.awaitAll()
-
-        rettigheter
+    suspend fun harRettighetUtbetalingsrapport(fnr: String, orgnr: String): Boolean = withContext(Dispatchers.IO) {
+        harRettighet(fnr, orgnr, Rettighet.UTBETALINGSRAPPORT)
     }
 }

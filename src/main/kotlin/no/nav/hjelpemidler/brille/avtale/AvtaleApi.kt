@@ -11,8 +11,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.altinn.AltinnRolle
-import no.nav.hjelpemidler.brille.altinn.AltinnRoller
+import no.nav.hjelpemidler.brille.altinn.Rettighet
 import no.nav.hjelpemidler.brille.extractFnr
 
 private val log = KotlinLogging.logger { }
@@ -22,36 +21,18 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
         route("/virksomheter") {
             // hent alle avtaler
             get {
-                val virksomheter = avtaleService.hentVirksomheter(call.extractFnr())
+                val virksomheter = avtaleService.hentVirksomheter(
+                    fnrInnsender = call.extractFnr(),
+                    rettighet = Rettighet.OPPGJØRSAVTALE
+                )
                 call.respond(HttpStatusCode.OK, virksomheter)
             }
             // hent avtale for virksomhet
             get("/{orgnr}") {
                 val orgnr = call.orgnr()
-                val virksomhet = avtaleService.hentVirksomheter(call.extractFnr()).associateBy {
-                    it.orgnr
-                }[orgnr]
-                if (virksomhet == null) {
-                    call.response.status(HttpStatusCode.NotFound)
-                    return@get
-                }
-                call.respond(HttpStatusCode.OK, virksomhet)
-            }
-
-            // Egne get-endepunkt for hovedadministrator + regnskapsmedarbeider for brillerapport
-            get("/regna") {
-                val virksomheter = avtaleService.hentVirksomheter(
-                    call.extractFnr(),
-                    AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR, AltinnRolle.REGNSKAPSMEDARBEIDER)
-                )
-                call.respond(HttpStatusCode.OK, virksomheter)
-            }
-            // hent avtale for virksomhet
-            get("/regna/{orgnr}") {
-                val orgnr = call.orgnr()
                 val virksomhet = avtaleService.hentVirksomheter(
-                    call.extractFnr(),
-                    AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR, AltinnRolle.REGNSKAPSMEDARBEIDER)
+                    fnrInnsender = call.extractFnr(),
+                    rettighet = Rettighet.OPPGJØRSAVTALE
                 ).associateBy {
                     it.orgnr
                 }[orgnr]
@@ -74,6 +55,31 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
                 val oppdaterAvtale = call.receive<OppdaterAvtale>()
                 val avtale = avtaleService.oppdaterAvtale(call.extractFnr(), orgnr, oppdaterAvtale)
                 call.respond(HttpStatusCode.OK, avtale)
+            }
+
+            // Egne endepunkter for rettighet utbetalingsrapport
+            route("/regna") {
+                get {
+                    val virksomheter = avtaleService.hentVirksomheter(
+                        fnrInnsender = call.extractFnr(),
+                        rettighet = Rettighet.UTBETALINGSRAPPORT
+                    )
+                    call.respond(HttpStatusCode.OK, virksomheter)
+                }
+                get("/{orgnr}") {
+                    val orgnr = call.orgnr()
+                    val virksomhet = avtaleService.hentVirksomheter(
+                        fnrInnsender = call.extractFnr(),
+                        rettighet = Rettighet.UTBETALINGSRAPPORT
+                    ).associateBy {
+                        it.orgnr
+                    }[orgnr]
+                    if (virksomhet == null) {
+                        call.response.status(HttpStatusCode.NotFound)
+                        return@get
+                    }
+                    call.respond(HttpStatusCode.OK, virksomhet)
+                }
             }
         }
     }

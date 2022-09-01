@@ -1,9 +1,8 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.altinn.AltinnRolle
-import no.nav.hjelpemidler.brille.altinn.AltinnRoller
 import no.nav.hjelpemidler.brille.altinn.AltinnService
+import no.nav.hjelpemidler.brille.altinn.Rettighet
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -27,13 +26,8 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentVirksomheter(
-        fnrInnsender: String,
-        roller: AltinnRoller = AltinnRoller(AltinnRolle.HOVEDADMINISTRATOR)
-    ): List<Avtale> {
-        val avgivereFiltrert = altinnService.hentAvgivereMedRolle(
-            fnrInnsender, roller
-        )
+    suspend fun hentVirksomheter(fnrInnsender: String, rettighet: Rettighet): List<Avtale> {
+        val avgivereFiltrert = altinnService.hentAvgivereMedRettighet(fnrInnsender, rettighet)
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
                 val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
@@ -84,7 +78,7 @@ class AvtaleService(
     suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): Avtale {
         val orgnr = opprettAvtale.orgnr
 
-        if (!altinnService.erHovedadministratorFor(fnrInnsender, orgnr)) {
+        if (!altinnService.harRettighetOppgjørsavtale(fnrInnsender, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
 
@@ -114,7 +108,7 @@ class AvtaleService(
     }
 
     suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): Avtale {
-        if (!altinnService.erHovedadministratorFor(fnrOppdatertAv, orgnr)) {
+        if (!altinnService.harRettighetOppgjørsavtale(fnrOppdatertAv, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
 

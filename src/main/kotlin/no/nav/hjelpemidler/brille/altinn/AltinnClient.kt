@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.altinn
 
 import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -18,9 +17,6 @@ import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
-
-const val LANGUAGE_NORSK_BOKMÅL = "1044"
-const val ROLE_DEFINITION_CODE_HOVEDADMINISTRATOR = "HADM"
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -59,45 +55,6 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         }
         log.warn { "Kunne ikke hente avgivere, status: ${response.status}" }
         return emptyList()
-    }
-
-    suspend fun erHovedadministratorFor(fnr: String, orgnr: String): Boolean {
-        val response = client.get("$baseUrl/authorization/roles") {
-            url {
-                parameters.append("ForceEIAuthentication", "true")
-                parameters.append("subject", fnr)
-                parameters.append("reportee", orgnr)
-                parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
-                parameters.append("\$filter", "RoleDefinitionCode eq '$ROLE_DEFINITION_CODE_HOVEDADMINISTRATOR'")
-            }
-        }
-        sikkerLog.info { "Hentet roller med url: ${response.request.url}" }
-        if (response.status == HttpStatusCode.OK) {
-            return response.body<List<JsonNode>?>()?.isNotEmpty() ?: false
-        }
-        log.warn { "Kunne ikke hente roller, status: ${response.status}" }
-        return false
-    }
-
-    suspend fun harRolleFor(fnr: String, orgnr: String, roller: AltinnRoller): Boolean {
-        val response = client.get("$baseUrl/authorization/roles") {
-            url {
-                parameters.append("ForceEIAuthentication", "true")
-                parameters.append("subject", fnr)
-                parameters.append("reportee", orgnr)
-                parameters.append("language", LANGUAGE_NORSK_BOKMÅL)
-                parameters.append(
-                    "\$filter",
-                    "RoleDefinitionCode ${buildRolleQuery(roller)}"
-                )
-            }
-        }
-        sikkerLog.info { "Hentet roller med url: ${response.request.url}" }
-        if (response.status == HttpStatusCode.OK) {
-            return response.body<List<JsonNode>?>()?.isNotEmpty() ?: false
-        }
-        log.warn { "Kunne ikke hente roller, status: ${response.status}" }
-        return false
     }
 
     suspend fun hentRettigheter(fnr: String, orgnr: String): Rettigheter {
