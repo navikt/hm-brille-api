@@ -41,6 +41,7 @@ abstract class SimpleScheduler(
         while (true) {
             delay(delay)
             if (leaderElection.isLeader() && (!onlyWorkHours || LocalDateTime.now().isWorkingHours())) {
+                LOG.info("Running $mySchedulerName")
                 launch {
                     val time = System.currentTimeMillis()
                     action()
@@ -49,6 +50,13 @@ abstract class SimpleScheduler(
                         LOG.warn("$mySchedulerName spent $duration ms which is greater than delayTime: $delay")
                     }
                 }
+            } else {
+                LOG.info(
+                    "NOT running $mySchedulerName: isLeader: ${leaderElection.isLeader()}" +
+                            ", onlyWorkHours: $onlyWorkHours, isWorkingHours: ${
+                                LocalDateTime.now().isWorkingHours()
+                            }"
+                )
             }
         }
     }
