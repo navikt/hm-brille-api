@@ -39,7 +39,7 @@ class AltinnService(private val altinnClient: AltinnClient) {
     suspend fun hentRettigheter(fnr: String, orgnr: String): Rettigheter = withContext(Dispatchers.IO) {
         val rettigheter = altinnClient.hentRettigheter(fnr, orgnr)
         sikkerLog.info {
-            "Hentet rettigheter: $rettigheter"
+            "Hentet rettigheter for fnr: $fnr, orgnr: $orgnr, rettigheter: ${rettigheter.rettigheter}"
         }
         rettigheter
     }

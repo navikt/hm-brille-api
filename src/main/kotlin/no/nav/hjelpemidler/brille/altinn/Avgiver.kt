@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class Avgiver(
-    @JsonIgnore
-    val fnr: String = "",
     @JsonProperty("Name")
     val navn: String,
     @JsonProperty("OrganizationNumber")
@@ -13,7 +11,7 @@ data class Avgiver(
     @JsonProperty("ParentOrganizationNumber")
     val parentOrgnr: String?,
     @JsonIgnore
-    val rettigheter: Rettigheter = Rettigheter(fnr = fnr, orgnr = orgnr, rettigheter = emptyList()),
+    val rettigheter: Rettigheter = Rettigheter(),
 ) {
     fun harRettighet(rettighet: Rettighet): Boolean =
         rettigheter.harRettighet(rettighet)

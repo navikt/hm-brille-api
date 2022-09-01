@@ -51,8 +51,7 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         }
         sikkerLog.info { "Hentet avgivere med url: ${response.request.url}" }
         if (response.status == HttpStatusCode.OK) {
-            val avgivere: List<Avgiver> = response.body() ?: emptyList()
-            return avgivere.map { it.copy(fnr = fnr) }
+            return response.body() ?: emptyList()
         }
         log.warn { "Kunne ikke hente avgivere, status: ${response.status}" }
         return emptyList()
@@ -67,12 +66,10 @@ class AltinnClient(props: Configuration.AltinnProperties) {
             }
         }
         sikkerLog.info { "Hentet rettigheter med url: ${response.request.url}" }
-        val ingenRettigheter = Rettigheter(fnr = fnr, orgnr = orgnr, rettigheter = emptyList())
         if (response.status == HttpStatusCode.OK) {
-            val rettigheter: Rettigheter = response.body() ?: ingenRettigheter
-            return rettigheter.copy(fnr = fnr, orgnr = orgnr)
+            return response.body() ?: Rettigheter()
         }
         log.warn { "Kunne ikke hente rettigheter, status: ${response.status}" }
-        return ingenRettigheter
+        return Rettigheter()
     }
 }
