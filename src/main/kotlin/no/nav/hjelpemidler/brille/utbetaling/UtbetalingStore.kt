@@ -18,6 +18,8 @@ interface UtbetalingStore : Store {
     fun lagreUtbetaling(utbetaling: Utbetaling): Utbetaling
     fun oppdaterStatus(utbetaling: Utbetaling): Utbetaling
     fun hentUtbetalingerMedBatchId(batchId: String): List<Utbetaling>
+    fun lagreUtbetalingsBatch(utbetalingsBatch: UtbetalingsBatch): Int?
+    fun hentUtbetalingsBatch(batchId: String): UtbetalingsBatch?
 }
 
 internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : UtbetalingStore,
@@ -135,6 +137,51 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
         it.queryList(sql, mapOf("batchId" to batchId)) {
                 row ->
             mapUtbetaling(row)
+        }
+    }
+
+    override fun lagreUtbetalingsBatch(utbetalingsBatch: UtbetalingsBatch): Int? = session {
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO utbetalingsbatch_v1 (
+                batch_id,
+                antall_utbetalinger,
+                totalbelop,
+                opprettet
+             )
+            VALUES (
+                :batch_id,
+                :antall_utbetalinger,
+                :totalbelop,
+                :opprettet
+            )
+        """.trimIndent()
+        it.update(
+            sql,
+            mapOf(
+                "batch_id" to utbetalingsBatch.batchId,
+                "antall_utbetalinger" to utbetalingsBatch.antallUtbetalinger,
+                "totalbelop" to utbetalingsBatch.totalbeløp,
+                "opprettet" to utbetalingsBatch.opprettet,
+            )
+        ).rowCount
+    }
+
+    override fun hentUtbetalingsBatch(batchId: String): UtbetalingsBatch? = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT batch_id, antall_utbetalinger, totalbelop,opprettet
+            FROM utbetalingsbatch_v1
+            WHERE batch_id = :batchId
+        """.trimIndent()
+        it.query(sql, mapOf("batchId" to batchId)) {
+                row ->
+            UtbetalingsBatch(
+                batchId = row.string("batch_id"),
+                totalbeløp = row.bigDecimal("totalbelop"),
+                antallUtbetalinger = row.int("antall_utbetalinger"),
+                opprettet = row.localDateTime("opprettet")
+            )
         }
     }
 }
