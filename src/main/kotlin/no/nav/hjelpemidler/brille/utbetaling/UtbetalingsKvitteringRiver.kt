@@ -56,7 +56,10 @@ class UtbetalingsKvitteringRiver(
 
                     val utbetalingerTilOppdatering = utbetalingService.hentUtbetalingerMedBatchId(batchId)
                     utbetalingerTilOppdatering.forEach {
-                        utbetalingService.settTilUtbetalt(it)
+                        if (it.status == UtbetalingStatus.TIL_UTBETALING) {
+                            utbetalingService.settTilUtbetalt(it)
+                        }
+
                     }
 
                     LOG.info("Oppdaterte alle rader. for batchId $batchId")
