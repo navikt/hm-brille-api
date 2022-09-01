@@ -53,7 +53,7 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
         id = row.long("id"),
         vedtakId = row.long("vedtak_id"),
         referanse = row.string("referanse"),
-        utbetalingsdato = row.localDate("utbetalingsdato"),
+        utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
         opprettet = row.localDateTime("opprettet"),
         oppdatert = row.localDateTime("oppdatert"),
         vedtak = row.json("vedtak"),
