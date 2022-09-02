@@ -7,6 +7,7 @@ import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.micrometer.core.instrument.binder.MeterBinder
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
@@ -15,7 +16,7 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 
-fun Application.setupMetrics() {
+fun Application.setupMetrics(extraMetrics: List<MeterBinder> = emptyList()) {
     val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
     install(MicrometerMetrics) {
@@ -25,8 +26,8 @@ fun Application.setupMetrics() {
             JvmGcMetrics(),
             ProcessorMetrics(),
             JvmThreadMetrics(),
-            LogbackMetrics()
-        )
+            LogbackMetrics(),
+        ) + extraMetrics
     }
 
     routing {

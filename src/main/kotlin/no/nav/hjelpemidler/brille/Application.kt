@@ -92,7 +92,6 @@ fun Application.configure() {
     TimeZone.setDefault(TimeZone.getTimeZone("Europe/Oslo"))
 
     setupCallId()
-    setupMetrics()
     configureStatusPages()
 
     install(ContentNegotiation) {
@@ -184,6 +183,7 @@ fun Application.setupRoutes() {
         }
     }
     applicationEvents(rapid)
+    setupMetrics(rapid.getMetrics())
 }
 
 private fun createKafkaRapid(): KafkaRapid {

@@ -36,9 +36,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.github.seratch:kotliquery:1.8.0")
 
-    // Kafka
-    implementation("org.apache.kafka:kafka-clients:3.1.1")
-    implementation("com.github.navikt:hm-rapids-and-rivers-v2:1.c428e41")
+    implementation("com.github.navikt:hm-rapids-and-rivers-v2:202208300926")
 
     // Unleash
     implementation("io.getunleash:unleash-client-java:6.0.1")
