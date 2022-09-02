@@ -50,7 +50,7 @@ class AvtaleService(
             }
 
         sikkerLog.info {
-            "Filtrert avgivere for fnr: $fnr, avgivere: $avgivereFiltrert"
+            "Filtrert avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivereFiltrert"
         }
 
         val virksomheter = transaction(databaseContext) { ctx ->
