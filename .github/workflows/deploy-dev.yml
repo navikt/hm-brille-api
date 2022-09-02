@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - trigger-full-tss-sync
+      - rettighet
 
 jobs:
   build-and-deploy:

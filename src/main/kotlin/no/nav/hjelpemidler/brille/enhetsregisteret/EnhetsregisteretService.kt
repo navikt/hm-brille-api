@@ -9,7 +9,6 @@ class EnhetsregisteretService(
     private val enhetsregisteretClient: EnhetsregisteretClient,
     private val redisClient: RedisClient,
 ) {
-
     suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet? {
         log.info { "Henter organisasjonsenhet med orgnr: $orgnr" }
 

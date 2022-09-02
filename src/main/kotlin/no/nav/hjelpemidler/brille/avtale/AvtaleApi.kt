@@ -11,6 +11,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.extractFnr
 
 private val log = KotlinLogging.logger { }
@@ -20,21 +21,20 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
         route("/virksomheter") {
             // hent alle avtaler
             get {
-                val virksomheter = avtaleService.hentVirksomheter(
-                    fnrInnsender = call.extractFnr(),
-                ) { it.harTilgangTilOppgjørsavtale() }
+                val virksomheter = avtaleService.hentAvtaler(
+                    fnr = call.extractFnr(),
+                    tjeneste = Avgiver.Tjeneste.OPPGJØRSAVTALE,
+                )
                 call.respond(HttpStatusCode.OK, virksomheter)
             }
             // hent avtale for virksomhet
             get("/{orgnr}") {
                 val orgnr = call.orgnr()
-                val virksomhet = avtaleService.hentVirksomheter(
-                    fnrInnsender = call.extractFnr(),
-                ) {
-                    it.harTilgangTilOppgjørsavtale()
-                }.associateBy {
-                    it.orgnr
-                }[orgnr]
+                val virksomhet = avtaleService.hentAvtale(
+                    fnr = call.extractFnr(),
+                    orgnr = orgnr,
+                    tjeneste = Avgiver.Tjeneste.OPPGJØRSAVTALE,
+                )
                 if (virksomhet == null) {
                     call.response.status(HttpStatusCode.NotFound)
                     return@get
@@ -59,22 +59,19 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
             // Egne endepunkter for rettighet utbetalingsrapport
             route("/regna") {
                 get {
-                    val virksomheter = avtaleService.hentVirksomheter(
-                        fnrInnsender = call.extractFnr(),
-                    ) {
-                        it.harTilgangTilUtbetalingsrapport()
-                    }
+                    val virksomheter = avtaleService.hentAvtaler(
+                        fnr = call.extractFnr(),
+                        tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT,
+                    )
                     call.respond(HttpStatusCode.OK, virksomheter)
                 }
                 get("/{orgnr}") {
                     val orgnr = call.orgnr()
-                    val virksomhet = avtaleService.hentVirksomheter(
-                        fnrInnsender = call.extractFnr(),
-                    ) {
-                        it.harTilgangTilUtbetalingsrapport()
-                    }.associateBy {
-                        it.orgnr
-                    }[orgnr]
+                    val virksomhet = avtaleService.hentAvtale(
+                        fnr = call.extractFnr(),
+                        orgnr = orgnr,
+                        tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT,
+                    )
                     if (virksomhet == null) {
                         call.response.status(HttpStatusCode.NotFound)
                         return@get

@@ -26,12 +26,8 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentVirksomheter(
-        fnrInnsender: String,
-        filter: (avgiver: Avgiver) -> Boolean,
-    ): List<Avtale> {
-        val avgivereFiltrert = altinnService.hentAvgivere(fnrInnsender)
-            .filter(filter)
+    suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avtale> {
+        val avgivereFiltrert = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
                 val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
@@ -39,7 +35,7 @@ class AvtaleService(
                     false
                 } else {
                     log.info {
-                        "orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
+                        "Hentet enhet med orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
                     }
                     setOf(
                         Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER,
@@ -54,7 +50,7 @@ class AvtaleService(
             }
 
         sikkerLog.info {
-            "fnrInnsender: $fnrInnsender, avgivere: $avgivereFiltrert"
+            "Filtrert avgivere for fnr: $fnr, avgivere: $avgivereFiltrert"
         }
 
         val virksomheter = transaction(databaseContext) { ctx ->
@@ -77,6 +73,14 @@ class AvtaleService(
                 )
             }
     }
+
+    suspend fun hentAvtale(
+        fnr: String,
+        orgnr: String,
+        tjeneste: Avgiver.Tjeneste,
+    ): Avtale? = hentAvtaler(fnr = fnr, tjeneste = tjeneste).associateBy {
+        it.orgnr
+    }[orgnr]
 
     suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): Avtale {
         val orgnr = opprettAvtale.orgnr
