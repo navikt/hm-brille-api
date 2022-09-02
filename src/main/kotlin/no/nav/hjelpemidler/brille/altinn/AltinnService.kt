@@ -11,7 +11,7 @@ class AltinnService(private val altinnClient: AltinnClient) {
         withContext(Dispatchers.IO) {
             val avgivere = altinnClient.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
             sikkerLog.info {
-                "Avgivere for fnr: $fnr, avgivere: $avgivere"
+                "Avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivere"
             }
             avgivere
         }
