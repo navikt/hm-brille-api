@@ -31,10 +31,10 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus:1.9.3")
 
     // Database
-    implementation("org.postgresql:postgresql:42.4.1")
-    implementation("org.flywaydb:flyway-core:9.1.5")
+    implementation("org.postgresql:postgresql:42.5.0")
+    implementation("org.flywaydb:flyway-core:9.2.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
-    implementation("com.github.seratch:kotliquery:1.8.0")
+    implementation("com.github.seratch:kotliquery:1.9.0")
 
     implementation("com.github.navikt:hm-rapids-and-rivers-v2:202208300926")
 
@@ -92,7 +92,7 @@ dependencies {
     // Testing
     testImplementation(kotlin("test"))
     testImplementation(ktorServer("test-host"))
-    testImplementation("io.mockk:mockk:1.12.5")
+    testImplementation("io.mockk:mockk:1.12.7")
     val kotestVersion = "5.4.2"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")

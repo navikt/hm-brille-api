@@ -41,11 +41,13 @@ class AltinnClient(props: Configuration.AltinnProperties) {
     }
     private val baseUrl = props.baseUrl
 
-    suspend fun hentAvgivere(fnr: String): List<Avgiver> {
+    suspend fun hentAvgivere(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avgiver> {
         val response = client.get("$baseUrl/reportees") {
             url {
                 parameters.append("ForceEIAuthentication", "true")
                 parameters.append("subject", fnr)
+                parameters.append("serviceCode", tjeneste.kode)
+                parameters.append("serviceEdition", tjeneste.versjon.toString())
                 parameters.append("\$filter", "Type ne 'Person' and Status eq 'Active'")
                 parameters.append("\$top", "200")
             }
@@ -58,13 +60,13 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         return emptyList()
     }
 
-    suspend fun hentRettigheter(fnr: String, orgnr: String): Set<Avgiver.Rettighet> {
+    suspend fun hentRettigheter(fnr: String, orgnr: String): Set<Avgiver.Tjeneste> {
         val response = client.get("$baseUrl/authorization/rights") {
             url {
                 parameters.append("ForceEIAuthentication", "true")
                 parameters.append("subject", fnr)
                 parameters.append("reportee", orgnr)
-                parameters.append("\$filter", Avgiver.Rettighet.FILTER)
+                parameters.append("\$filter", Avgiver.Tjeneste.FILTER)
             }
         }
         sikkerLog.info { "Hentet rettigheter med url: ${response.request.url}" }
@@ -75,40 +77,14 @@ class AltinnClient(props: Configuration.AltinnProperties) {
         return emptySet()
     }
 
-    suspend fun hentRoller(fnr: String, orgnr: String): Set<Avgiver.Rolle> {
-        val response = client.get("$baseUrl/authorization/roles") {
-            url {
-                parameters.append("ForceEIAuthentication", "true")
-                parameters.append("subject", fnr)
-                parameters.append("reportee", orgnr)
-                parameters.append("\$filter", Avgiver.Rolle.FILTER)
-            }
-        }
-        sikkerLog.info { "Hentet roller med url: ${response.request.url}" }
-        if (response.status == HttpStatusCode.OK) {
-            return response.body<HentRollerResponse?>()?.tilSet() ?: emptySet()
-        }
-        log.warn { "Kunne ikke hente roller, status: ${response.status}" }
-        return emptySet()
-    }
-
-    data class Rettighet(
+    private data class Rettighet(
         @JsonProperty("ServiceCode") val kode: String,
         @JsonProperty("ServiceEditionCode") val versjon: Int,
     )
 
-    data class Rolle(@JsonProperty("RoleDefinitionCode") val kode: String)
-
     private data class HentRettigheterResponse(@JsonProperty("Rights") val rettigheter: List<Rettighet>) {
-        fun tilSet(): Set<Avgiver.Rettighet> = rettigheter.mapNotNull {
-            Avgiver.Rettighet.fra(it.kode, it.versjon)
-        }.toSet()
-    }
-
-    private data class HentRollerResponse(val roller: MutableList<Rolle> = mutableListOf()) :
-        MutableList<Rolle> by roller {
-        fun tilSet(): Set<Avgiver.Rolle> = roller.mapNotNull {
-            Avgiver.Rolle.fra(it.kode)
+        fun tilSet(): Set<Avgiver.Tjeneste> = rettigheter.mapNotNull {
+            Avgiver.Tjeneste.fra(it.kode, it.versjon)
         }.toSet()
     }
 }
