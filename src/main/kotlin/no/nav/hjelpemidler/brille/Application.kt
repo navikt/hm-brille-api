@@ -15,6 +15,11 @@ import io.ktor.server.request.path
 import io.ktor.server.routing.IgnoreTrailingSlash
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
+import io.micrometer.core.instrument.binder.logging.LogbackMetrics
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
@@ -34,6 +39,7 @@ import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
+import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -142,12 +148,20 @@ fun Application.setupRoutes() {
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
 
+    val metrics = MetricsConfig(
+        meterbinders = listOf(
+            JvmMemoryMetrics(), JvmGcMetrics(), ProcessorMetrics(),
+            JvmThreadMetrics(), LogbackMetrics()
+        ) + rapid.getMetrics()
+    )
+
+    setupMetrics(metrics)
+
     if (Configuration.dev) {
         // Under testing, disabled i prod.
         val vedtakTilUtbetalingScheduler =
-            VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService)
-        val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection)
-
+        VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
+        val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection, metrics)
         UtbetalingsKvitteringRiver(rapid, utbetalingService)
     }
 
@@ -183,7 +197,6 @@ fun Application.setupRoutes() {
         }
     }
     applicationEvents(rapid)
-    setupMetrics(rapid.getMetrics())
 }
 
 private fun createKafkaRapid(): KafkaRapid {

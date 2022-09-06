@@ -8,31 +8,24 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.micrometer.core.instrument.binder.MeterBinder
-import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
-import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
-import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
-import io.micrometer.core.instrument.binder.logging.LogbackMetrics
-import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 
-fun Application.setupMetrics(extraMetrics: List<MeterBinder> = emptyList()) {
-    val appMicrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+fun Application.setupMetrics(metricsConfig: MetricsConfig) {
 
     install(MicrometerMetrics) {
-        registry = appMicrometerRegistry
-        meterBinders = listOf(
-            JvmMemoryMetrics(),
-            JvmGcMetrics(),
-            ProcessorMetrics(),
-            JvmThreadMetrics(),
-            LogbackMetrics(),
-        ) + extraMetrics
+        registry = metricsConfig.registry
+        meterBinders = metricsConfig.meterbinders
     }
 
     routing {
         get("/internal/metrics") {
-            call.respond(appMicrometerRegistry.scrape())
+            call.respond(metricsConfig.registry.scrape())
         }
     }
 }
+
+data class MetricsConfig(
+    val registry: PrometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
+    val meterbinders: List<MeterBinder>
+)
