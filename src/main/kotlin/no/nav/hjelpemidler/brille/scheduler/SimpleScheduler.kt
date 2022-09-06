@@ -6,12 +6,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import org.slf4j.LoggerFactory
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
 
 /**
  * A very simple implementation of a scheduler using coroutines and leaderElection
@@ -20,7 +23,8 @@ import kotlin.time.Duration.Companion.minutes
 abstract class SimpleScheduler(
     private val leaderElection: LeaderElection,
     private val delay: Duration = 1.minutes,
-    private val onlyWorkHours: Boolean = false
+    private val metricsConfig: MetricsConfig,
+    private val onlyWorkHours: Boolean = false,
 ) {
     private val job: Job
     private val mySchedulerName: String = this.javaClass.simpleName
@@ -46,12 +50,13 @@ abstract class SimpleScheduler(
                     try {
                         val time = System.currentTimeMillis()
                         action()
-                        val duration = System.currentTimeMillis() - time
-                        if (duration > delay.inWholeMilliseconds) {
+                        val duration = (System.currentTimeMillis() - time).milliseconds
+                        metricsConfig.registry.counter("scheduler_duration_seconds", "name", mySchedulerName)
+                            .increment(duration.toDouble(DurationUnit.SECONDS))
+                        if (duration > delay) {
                             LOG.warn("$mySchedulerName spent $duration ms which is greater than delayTime: $delay")
                         }
-                    }
-                    catch (e: Exception) {
+                    } catch (e: Exception) {
                         LOG.error("Scheduler $mySchedulerName has failed with an exception, the scheduler will be stopped", e)
                         throw e
                     }
@@ -59,9 +64,9 @@ abstract class SimpleScheduler(
             } else {
                 LOG.info(
                     "NOT running $mySchedulerName: isLeader: ${leaderElection.isLeader()}" +
-                            ", onlyWorkHours: $onlyWorkHours, isWorkingHours: ${
-                                LocalDateTime.now().isWorkingHours()
-                            }"
+                        ", onlyWorkHours: $onlyWorkHours, isWorkingHours: ${
+                        LocalDateTime.now().isWorkingHours()
+                        }"
                 )
             }
         }
