@@ -8,6 +8,7 @@ import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
@@ -96,6 +97,10 @@ internal class VedtakStorePostgresTest {
                         )
                     tomtList.isEmpty() shouldBe true
                     hentVedtakForBarn("12121314156").size shouldBeGreaterThanOrEqualTo 1
+                    val vedtak2: Vedtak<Vilkårsgrunnlag>? = hentVedtak(vedtak.id)
+                    vedtak2.shouldNotBeNull()
+                    slettVedtak(vedtak2.id) shouldBe 1
+                    hentVedtakForBarn("12121314156").size shouldBe 0
                 }
             }
         }

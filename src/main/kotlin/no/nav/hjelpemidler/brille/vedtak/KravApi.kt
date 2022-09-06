@@ -5,25 +5,45 @@ import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 
 internal fun Route.kravApi(vedtakService: VedtakService, auditService: AuditService) {
-    post("/krav") {
-        val kravDto = call.receive<KravDto>()
-        val fnrInnsender = call.extractFnr()
+    route("/krav") {
+        post {
+            val kravDto = call.receive<KravDto>()
+            val fnrInnsender = call.extractFnr()
 
-        auditService.lagreOppslag(
-            fnrInnlogget = fnrInnsender,
-            fnrOppslag = kravDto.vilkårsgrunnlag.fnrBarn,
-            oppslagBeskrivelse = "[POST] /krav - Innsending av krav"
-        )
+            auditService.lagreOppslag(
+                fnrInnlogget = fnrInnsender,
+                fnrOppslag = kravDto.vilkårsgrunnlag.fnrBarn,
+                oppslagBeskrivelse = "[POST] /krav - Innsending av krav"
+            )
 
-        val vedtak = vedtakService.lagVedtak(fnrInnsender, kravDto)
-        call.respond(
-            HttpStatusCode.OK,
-            vedtak.toDto()
-        )
+            val vedtak = vedtakService.lagVedtak(fnrInnsender, kravDto)
+            call.respond(
+                HttpStatusCode.OK,
+                vedtak.toDto()
+            )
+        }
+
+        delete("/{orgnr}/{id}") {
+            val orgNr = call.parameters["orgnr"]
+            val vedtakId = call.parameters["id"]!!.toLong()
+            val fnrInnsender = call.extractFnr()
+            val vedtak = vedtakService.hentVedtak(vedtakId)
+            auditService.lagreOppslag(
+                fnrInnlogget = fnrInnsender,
+                fnrOppslag = vedtak!!.fnrBarn,
+                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
+            )
+            if (vedtak?.orgnr == orgNr) {
+                vedtakService.slettVedtak(vedtakId)
+            }
+            call.respond(HttpStatusCode.OK)
+        }
     }
 }

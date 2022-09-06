@@ -160,7 +160,7 @@ fun Application.setupRoutes() {
     if (Configuration.dev) {
         // Under testing, disabled i prod.
         val vedtakTilUtbetalingScheduler =
-        VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
+            VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
         val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection, metrics)
         UtbetalingsKvitteringRiver(rapid, utbetalingService)
     }

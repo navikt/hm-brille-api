@@ -75,6 +75,12 @@ class VedtakService(
         }
     }
 
+    suspend fun hentVedtak(vedtakId: Long): Vedtak<Vilkårsgrunnlag>? {
+        return transaction(databaseContext) { ctx ->
+            ctx.vedtakStore.hentVedtak(vedtakId)
+        }
+    }
+
     suspend fun fjernFraVedTakKø(vedtakList: List<Vedtak<*>>) {
         return transaction(databaseContext) { ctx ->
             vedtakList.forEach {
@@ -86,6 +92,12 @@ class VedtakService(
     suspend fun fjernFraVedTakKø(vedtak: Vedtak<*>) {
         return transaction(databaseContext) { ctx ->
             ctx.vedtakStore.fjernFraVedTakKø(vedtak.id)
+        }
+    }
+
+    suspend fun slettVedtak(vedtakId: Long) {
+        return transaction(databaseContext) { ctx ->
+            ctx.vedtakStore.slettVedtak(vedtakId)
         }
     }
 }

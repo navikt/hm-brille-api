@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotliquery.Row
 import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
@@ -31,6 +32,8 @@ interface VedtakStore : Store {
         behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET
     ): List<Vedtak<T>>
     fun fjernFraVedTakKø(vedtakId: Long): Int?
+    fun slettVedtak(vedtakId: Long): Int?
+    fun <T> hentVedtak(vedtakId: Long): Vedtak<T>?
 }
 
 class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakStore,
@@ -330,25 +333,25 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 "opprettet" to opprettet,
                 "behandlingsresultat" to behandlingsresultat.toString()
             )
-        ) { row ->
-            Vedtak(
-                id = row.long("id"),
-                fnrBarn = row.string("fnr_barn"),
-                fnrInnsender = row.string("fnr_innsender"),
-                orgnr = row.string("orgnr"),
-                bestillingsdato = row.localDate("bestillingsdato"),
-                brillepris = row.bigDecimal("brillepris"),
-                bestillingsreferanse = row.string("bestillingsreferanse"),
-                vilkårsvurdering = row.json<Vilkårsvurdering<T>>("vilkarsvurdering"),
-                behandlingsresultat = Behandlingsresultat.valueOf(row.string("behandlingsresultat")),
-                sats = SatsType.valueOf(row.string("sats")),
-                satsBeløp = row.int("sats_belop"),
-                satsBeskrivelse = row.string("sats_beskrivelse"),
-                beløp = row.bigDecimal("belop"),
-                opprettet = row.localDateTime("opprettet")
-            )
-        }.toList()
+        ) { row -> mapVedtak(row) }.toList()
     }
+
+    private fun <T> mapVedtak(row: Row) = Vedtak(
+        id = row.long("id"),
+        fnrBarn = row.string("fnr_barn"),
+        fnrInnsender = row.string("fnr_innsender"),
+        orgnr = row.string("orgnr"),
+        bestillingsdato = row.localDate("bestillingsdato"),
+        brillepris = row.bigDecimal("brillepris"),
+        bestillingsreferanse = row.string("bestillingsreferanse"),
+        vilkårsvurdering = row.json<Vilkårsvurdering<T>>("vilkarsvurdering"),
+        behandlingsresultat = Behandlingsresultat.valueOf(row.string("behandlingsresultat")),
+        sats = SatsType.valueOf(row.string("sats")),
+        satsBeløp = row.int("sats_belop"),
+        satsBeskrivelse = row.string("sats_beskrivelse"),
+        beløp = row.bigDecimal("belop"),
+        opprettet = row.localDateTime("opprettet")
+    )
 
     override fun fjernFraVedTakKø(vedtakId: Long) = session {
         @Language("PostgreSQL")
@@ -356,5 +359,55 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 DELETE from vedtak_ko_v1 where id = :vedtakId
         """.trimIndent()
         sessionFactory().update(sql, mapOf("vedtakId" to vedtakId)).rowCount
+    }
+
+    override fun slettVedtak(vedtakId: Long) = session {
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO vedtak_slettet_v1
+            SELECT id,
+                   fnr_barn,
+                   fnr_innsender,
+                   orgnr,
+                   bestillingsdato,
+                   brillepris,
+                   bestillingsreferanse,
+                   vilkarsvurdering,
+                   behandlingsresultat,
+                   sats,
+                   sats_belop,
+                   sats_beskrivelse,
+                   belop,
+                   opprettet
+            FROM vedtak_v1
+            WHERE id =:id;
+            DELETE FROM vedtak_v1 where id =:id;
+        """.trimIndent()
+        sessionFactory().update(sql, mapOf("id" to vedtakId)).rowCount
+    }
+
+    override fun <T> hentVedtak(vedtakId: Long): Vedtak<T>? = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT 
+                id,
+                fnr_barn,
+                fnr_innsender,
+                orgnr,
+                bestillingsdato,
+                brillepris,
+                bestillingsreferanse,
+                vilkarsvurdering,
+                behandlingsresultat,
+                sats,
+                sats_belop,
+                sats_beskrivelse,
+                belop,
+                opprettet FROM vedtak_v1 WHERE id =:id
+        """.trimIndent()
+        sessionFactory().query(sql, mapOf("id" to vedtakId)) {
+                row ->
+            mapVedtak(row)
+        }
     }
 }
