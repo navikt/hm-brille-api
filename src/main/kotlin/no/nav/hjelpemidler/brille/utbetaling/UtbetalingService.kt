@@ -74,4 +74,11 @@ class UtbetalingService(
             ctx.utbetalingStore.hentUtbetalingerMedBatchId(batchId)
         }
     }
+
+    suspend fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling? {
+        return transaction(databaseContext) {
+                ctx ->
+            ctx.utbetalingStore.hentUtbetalingForVedtak(vedtakId)
+        }
+    }
 }

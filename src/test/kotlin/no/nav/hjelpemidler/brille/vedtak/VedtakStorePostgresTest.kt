@@ -6,14 +6,12 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
-import no.nav.hjelpemidler.brille.writePrettyString
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime

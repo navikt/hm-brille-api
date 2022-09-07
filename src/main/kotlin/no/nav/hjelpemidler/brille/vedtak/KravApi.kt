@@ -10,8 +10,13 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 
-internal fun Route.kravApi(vedtakService: VedtakService, auditService: AuditService) {
+internal fun Route.kravApi(
+    vedtakService: VedtakService,
+    auditService: AuditService,
+    utbetalingService: UtbetalingService
+) {
     route("/krav") {
         post {
             val kravDto = call.receive<KravDto>()
@@ -33,17 +38,22 @@ internal fun Route.kravApi(vedtakService: VedtakService, auditService: AuditServ
         delete("/{id}") {
             val vedtakId = call.parameters["id"]!!.toLong()
             val fnrInnsender = call.extractFnr()
+            println("DELETE $fnrInnsender")
             val vedtak = vedtakService.hentVedtak(vedtakId)
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnsender,
                 fnrOppslag = vedtak!!.fnrBarn,
                 oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
             )
-            if (fnrInnsender == vedtak.fnrInnsender) {
+            if (fnrInnsender != vedtak.fnrInnsender) {
+                println("vedtak ${vedtak.fnrInnsender}")
+                call.respond(HttpStatusCode.Unauthorized, "Ikke autorisert")
+            } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
+                call.respond(HttpStatusCode.Conflict, "vedtaket er utbetalt")
+            } else {
                 vedtakService.slettVedtak(vedtakId)
                 call.respond(HttpStatusCode.OK)
             }
-            else call.respond(HttpStatusCode.Unauthorized, "Not authorized")
         }
     }
 }
