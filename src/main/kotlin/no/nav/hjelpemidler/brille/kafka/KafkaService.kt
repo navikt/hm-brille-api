@@ -124,6 +124,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 satsBeløp = vedtak.satsBeløp,
                 satsBeskrivelse = vedtak.satsBeskrivelse,
                 beløp = vedtak.beløp,
+                bestillingsreferanse = vedtak.bestillingsreferanse,
             )
         )
     }
@@ -263,6 +264,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val satsBeløp: Int,
         val satsBeskrivelse: String,
         val beløp: BigDecimal,
+        val bestillingsreferanse: String,
     )
 
     @JsonNaming(BigQueryStrategy::class)
