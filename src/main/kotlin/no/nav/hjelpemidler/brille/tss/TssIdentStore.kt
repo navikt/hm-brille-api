@@ -10,6 +10,7 @@ import org.intellij.lang.annotations.Language
 interface TssIdentStore : Store {
     fun hentTssIdent(orgnr: String): String?
     fun settTssIdent(orgnr: String, tssIdent: String)
+    fun glemEksisterendeTssIdent(orgnr: String)
 }
 
 class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIdentStore, TransactionalStore(sessionFactory) {
@@ -38,5 +39,19 @@ class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIden
                 "tssIdent" to tssIdent
             )
         ).validate()
+    }
+
+    override fun glemEksisterendeTssIdent(orgnr: String) = session {
+        @Language("PostgreSQL")
+        val sql = "DELETE FROM tssident_v1 WHERE orgnr = :orgnr"
+
+        it.update(
+            sql,
+            mapOf(
+                "orgnr" to orgnr,
+            )
+        )
+
+        Unit
     }
 }
