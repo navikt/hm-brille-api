@@ -122,7 +122,7 @@ internal class KravApiTest {
             response.status shouldBe HttpStatusCode.OK
             val vedtak = response.body<VedtakDto>()
             vedtak.beløp shouldBe BigDecimal.valueOf(2650)
-            val delete = client.delete("/krav/123456789/${vedtak.id}")
+            val delete = client.delete("/krav/${vedtak.id}")
             delete.status shouldBe HttpStatusCode.OK
         }
     }

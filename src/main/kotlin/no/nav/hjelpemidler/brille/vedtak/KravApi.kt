@@ -30,8 +30,7 @@ internal fun Route.kravApi(vedtakService: VedtakService, auditService: AuditServ
             )
         }
 
-        delete("/{orgnr}/{id}") {
-            val orgNr = call.parameters["orgnr"]
+        delete("/{id}") {
             val vedtakId = call.parameters["id"]!!.toLong()
             val fnrInnsender = call.extractFnr()
             val vedtak = vedtakService.hentVedtak(vedtakId)
@@ -40,10 +39,11 @@ internal fun Route.kravApi(vedtakService: VedtakService, auditService: AuditServ
                 fnrOppslag = vedtak!!.fnrBarn,
                 oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
             )
-            if (vedtak?.orgnr == orgNr) {
+            if (fnrInnsender == vedtak.fnrInnsender) {
                 vedtakService.slettVedtak(vedtakId)
+                call.respond(HttpStatusCode.OK)
             }
-            call.respond(HttpStatusCode.OK)
+            else call.respond(HttpStatusCode.Unauthorized, "Not authorized")
         }
     }
 }
