@@ -32,8 +32,8 @@ class SendTilUtbetalingScheduler(
                     LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
                 utbetalingService.sendBatchTilUtbetaling(it)
             }
-            this.metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")
-                .increment(utbetalinger.size.toDouble())
         }
+        this.metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")
+            .increment(utbetalinger.size.toDouble())
     }
 }
