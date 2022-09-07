@@ -6,12 +6,14 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
+import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
+import no.nav.hjelpemidler.brille.writePrettyString
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -101,6 +103,11 @@ internal class VedtakStorePostgresTest {
                     vedtak2.shouldNotBeNull()
                     slettVedtak(vedtak2.id) shouldBe 1
                     hentVedtakForBarn("12121314156").size shouldBe 0
+                    with(VedtakSlettetStorePostgres(PostgresTestHelper.sessionFactory)) {
+                        val slettet = hentVedtakSlettet(vedtak2.id)
+                        slettet.shouldNotBeNull()
+                        slettet.slettet.shouldNotBeNull()
+                    }
                 }
             }
         }
