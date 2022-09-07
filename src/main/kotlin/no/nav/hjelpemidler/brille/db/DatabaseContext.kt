@@ -8,6 +8,8 @@ import no.nav.hjelpemidler.brille.innsender.InnsenderStore
 import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
 import no.nav.hjelpemidler.brille.rapportering.RapportStore
 import no.nav.hjelpemidler.brille.rapportering.RapportStorePostgres
+import no.nav.hjelpemidler.brille.tss.TssIdentStore
+import no.nav.hjelpemidler.brille.tss.TssIdentStorePostgres
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStore
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
@@ -35,6 +37,7 @@ interface DatabaseSessionContext {
     val innsenderStore: InnsenderStore
     val rapportStore: RapportStore
     val utbetalingStore: UtbetalingStore
+    val tssIdentStore: TssIdentStore
 }
 
 class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSessionContext {
@@ -44,4 +47,5 @@ class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSe
     override val innsenderStore: InnsenderStore = InnsenderStorePostgres(sessionFactory)
     override val rapportStore: RapportStore = RapportStorePostgres(sessionFactory)
     override val utbetalingStore: UtbetalingStore = UtbetalingStorePostgres(sessionFactory)
+    override val tssIdentStore: TssIdentStore = TssIdentStorePostgres(sessionFactory)
 }

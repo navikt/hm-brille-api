@@ -55,6 +55,7 @@ import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
+import no.nav.hjelpemidler.brille.tss.TssIdentRiver
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
@@ -160,9 +161,10 @@ fun Application.setupRoutes() {
     if (Configuration.dev) {
         // Under testing, disabled i prod.
         val vedtakTilUtbetalingScheduler =
-        VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
+            VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
         val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection, metrics)
         UtbetalingsKvitteringRiver(rapid, utbetalingService)
+        TssIdentRiver(rapid, databaseContext)
     }
 
     thread(isDaemon = false) {
