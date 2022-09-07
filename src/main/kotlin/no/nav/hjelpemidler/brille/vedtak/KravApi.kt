@@ -38,7 +38,6 @@ internal fun Route.kravApi(
         delete("/{id}") {
             val vedtakId = call.parameters["id"]!!.toLong()
             val fnrInnsender = call.extractFnr()
-            println("DELETE $fnrInnsender")
             val vedtak = vedtakService.hentVedtak(vedtakId)
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnsender,
@@ -46,7 +45,6 @@ internal fun Route.kravApi(
                 oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
             )
             if (fnrInnsender != vedtak.fnrInnsender) {
-                println("vedtak ${vedtak.fnrInnsender}")
                 call.respond(HttpStatusCode.Unauthorized, "Ikke autorisert")
             } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
                 call.respond(HttpStatusCode.Conflict, "vedtaket er utbetalt")
