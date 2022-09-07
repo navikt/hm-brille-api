@@ -28,7 +28,7 @@ class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIden
             INSERT INTO tssident_v1 (orgnr, tss_ident, opprettet)
             VALUES (:orgnr, :tssIdent, now())
             ON CONFLICT (orgnr)
-            DO UPDATE SET tss_ident = :tssIdent
+            DO UPDATE SET tss_ident = :tssIdent, opprettet = NOW()
         """.trimIndent()
 
         it.update(
