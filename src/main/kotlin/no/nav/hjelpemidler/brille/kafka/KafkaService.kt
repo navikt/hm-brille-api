@@ -50,6 +50,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     }
 
     fun avtaleOppdatert(avtale: Avtale) {
+        // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
     }
@@ -186,12 +187,13 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
 
     fun oppdaterTSS(orgnr: String, kontonr: String) {
         produceEvent(
-            null,
+            orgnr,
             mapOf(
                 "eventId" to UUID.randomUUID(),
                 "eventName" to "hm-utbetaling-tss-optiker",
                 "orgnr" to orgnr,
                 "kontonr" to kontonr,
+                "opprettet" to LocalDateTime.now(),
             )
         )
     }

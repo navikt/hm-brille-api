@@ -109,6 +109,13 @@ class AvtaleService(
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
         val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
+        // For å unngå at gammelt kontonr kan brukes innen nytt er ferdigregistrert i TSS så glemmer vi alle gamle
+        // TSS-identer her. Disse vil settes igjen etter TSS har kvittert mottak av nytt kontonr. Se: TssIdentRiver.
+        // (finnes vanligvis ikke fra før på nye avtaler)
+        transaction(databaseContext) { ctx ->
+            ctx.tssIdentStore.glemEksisterendeTssIdent(orgnr)
+        }
+
         kafkaService.avtaleOpprettet(avtale)
 
         return avtale
@@ -143,6 +150,12 @@ class AvtaleService(
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
         val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+
+        // For å unngå at gammelt kontonr kan brukes innen nytt er ferdigregistrert i TSS så glemmer vi alle gamle
+        // TSS-identer her. Disse vil settes igjen etter TSS har kvittert mottak av nytt kontonr. Se: TssIdentRiver.
+        transaction(databaseContext) { ctx ->
+            ctx.tssIdentStore.glemEksisterendeTssIdent(orgnr)
+        }
 
         kafkaService.avtaleOppdatert(avtale)
 
