@@ -64,6 +64,8 @@ class TssIdentRiver(
 
                     // Oppdater databasen med ny tss ident
                     ctx.tssIdentStore.settTssIdent(packet.orgnr, packet.tssIdent)
+
+                    LOG.info("Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, kvittert=${packet.opprettet}")
                 }
             }
         }
