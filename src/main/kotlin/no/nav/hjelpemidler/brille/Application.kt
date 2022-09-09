@@ -60,6 +60,7 @@ import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import no.nav.hjelpemidler.brille.vedtak.VedtakSlettetService
 import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
@@ -146,6 +147,7 @@ fun Application.setupRoutes() {
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
+    val vedtakSlettetService = VedtakSlettetService(databaseContext)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
@@ -189,7 +191,7 @@ fun Application.setupRoutes() {
                     if (Configuration.dev) oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
-                    kravApi(vedtakService, auditService, utbetalingService)
+                    kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)

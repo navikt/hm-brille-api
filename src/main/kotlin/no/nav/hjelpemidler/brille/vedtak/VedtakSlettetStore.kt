@@ -7,6 +7,7 @@ import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
+import no.nav.hjelpemidler.brille.store.update
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
@@ -15,6 +16,7 @@ import java.time.LocalDateTime
 
 interface VedtakSlettetStore : Store {
     fun hentVedtakSlettet(vedtakId: Long): VedtakSlettet?
+    fun slettVedtak(vedtakId: Long): Int?
 }
 
 class VedtakSlettetStorePostgres(private val sessionFactory: () -> Session) : VedtakSlettetStore,
@@ -43,6 +45,31 @@ class VedtakSlettetStorePostgres(private val sessionFactory: () -> Session) : Ve
                 row ->
             mapVedtakSlettet(row)
         }
+    }
+
+    override fun slettVedtak(vedtakId: Long) = session {
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO vedtak_slettet_v1
+            SELECT id,
+                   fnr_barn,
+                   fnr_innsender,
+                   orgnr,
+                   bestillingsdato,
+                   brillepris,
+                   bestillingsreferanse,
+                   vilkarsvurdering,
+                   behandlingsresultat,
+                   sats,
+                   sats_belop,
+                   sats_beskrivelse,
+                   belop,
+                   opprettet
+            FROM vedtak_v1
+            WHERE id =:id;
+            DELETE FROM vedtak_v1 where id =:id;
+        """.trimIndent()
+        sessionFactory().update(sql, mapOf("id" to vedtakId)).rowCount
     }
 
     private fun mapVedtakSlettet(row: Row) = VedtakSlettet(
