@@ -40,19 +40,21 @@ internal fun Route.kravApi(
             val vedtakId = call.parameters["id"]!!.toLong()
             val fnrInnsender = call.extractFnr()
             val vedtak = vedtakService.hentVedtak(vedtakId)
-            auditService.lagreOppslag(
-                fnrInnlogget = fnrInnsender,
-                fnrOppslag = vedtak!!.fnrBarn,
-                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
-            )
-            if (fnrInnsender != vedtak.fnrInnsender) {
-                call.respond(HttpStatusCode.Unauthorized, "Ikke autorisert")
-            } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
-                call.respond(HttpStatusCode.Conflict, "vedtaket er utbetalt")
-            } else {
-                vedtakSlettetService.slettVedtak(vedtakId)
-                call.respond(HttpStatusCode.OK)
-            }
+            if (vedtak != null) {
+                auditService.lagreOppslag(
+                    fnrInnlogget = fnrInnsender,
+                    fnrOppslag = vedtak.fnrBarn,
+                    oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
+                )
+                if (fnrInnsender != vedtak.fnrInnsender) {
+                    call.respond(HttpStatusCode.Unauthorized, "Ikke autorisert")
+                } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
+                    call.respond(HttpStatusCode.Conflict, "vedtaket er utbetalt")
+                } else {
+                    vedtakSlettetService.slettVedtak(vedtakId)
+                    call.respond(HttpStatusCode.OK)
+                }
+            } else call.respond(HttpStatusCode.NotFound, "ikke funnet")
         }
     }
 }
