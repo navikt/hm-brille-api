@@ -32,7 +32,6 @@ interface VedtakStore : Store {
         behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET
     ): List<Vedtak<T>>
     fun fjernFraVedTakKø(vedtakId: Long): Int?
-    fun slettVedtak(vedtakId: Long): Int?
     fun <T> hentVedtak(vedtakId: Long): Vedtak<T>?
 }
 
@@ -359,31 +358,6 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 DELETE from vedtak_ko_v1 where id = :vedtakId
         """.trimIndent()
         sessionFactory().update(sql, mapOf("vedtakId" to vedtakId)).rowCount
-    }
-
-    override fun slettVedtak(vedtakId: Long) = session {
-        @Language("PostgreSQL")
-        val sql = """
-            INSERT INTO vedtak_slettet_v1
-            SELECT id,
-                   fnr_barn,
-                   fnr_innsender,
-                   orgnr,
-                   bestillingsdato,
-                   brillepris,
-                   bestillingsreferanse,
-                   vilkarsvurdering,
-                   behandlingsresultat,
-                   sats,
-                   sats_belop,
-                   sats_beskrivelse,
-                   belop,
-                   opprettet
-            FROM vedtak_v1
-            WHERE id =:id;
-            DELETE FROM vedtak_v1 where id =:id;
-        """.trimIndent()
-        sessionFactory().update(sql, mapOf("id" to vedtakId)).rowCount
     }
 
     override fun <T> hentVedtak(vedtakId: Long): Vedtak<T>? = session {

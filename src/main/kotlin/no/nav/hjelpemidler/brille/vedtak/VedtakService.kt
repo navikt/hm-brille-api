@@ -94,10 +94,4 @@ class VedtakService(
             ctx.vedtakStore.fjernFraVedTakKø(vedtak.id)
         }
     }
-
-    suspend fun slettVedtak(vedtakId: Long) {
-        return transaction(databaseContext) { ctx ->
-            ctx.vedtakStore.slettVedtak(vedtakId)
-        }
-    }
 }

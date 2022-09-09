@@ -26,7 +26,7 @@ internal object PostgresTestHelper {
                     jdbcUrl = instance.jdbcUrl
                     username = instance.username
                     password = instance.password
-                    maximumPoolSize = 10
+                    maximumPoolSize = 20
                     minimumIdle = 1
                     idleTimeout = 10001
                     connectionTimeout = 1000
