@@ -189,7 +189,7 @@ fun Application.setupRoutes() {
                     if (Configuration.dev) oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
-                    kravApi(vedtakService, auditService)
+                    kravApi(vedtakService, auditService, utbetalingService)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)
