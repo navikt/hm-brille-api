@@ -163,7 +163,7 @@ fun Application.setupRoutes() {
         // Under testing, disabled i prod.
         val vedtakTilUtbetalingScheduler =
             VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
-        val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, leaderElection, metrics)
+        val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
         UtbetalingsKvitteringRiver(rapid, utbetalingService)
     }
 

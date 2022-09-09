@@ -39,6 +39,7 @@ data class UtbetalingsMelding(
     val type: String = "Batch",
     val opprettetDato: LocalDateTime,
     val orgNr: String,
+    val tssIdent: String,
     val batchId: String,
     val utbetalingslinjer: List<UtbetalingsLinje>
 
@@ -48,6 +49,7 @@ data class UtbetalingsMelding(
         "eventId" to UUID.randomUUID(),
         "opprettetDato" to LocalDateTime.now(),
         "orgNr" to this.orgNr,
+        "tssIdent" to this.tssIdent,
         "batchId" to this.batchId,
         "Utbetaling" to Utbetaling(
             fagområde = "BARNBRIL",
@@ -79,9 +81,10 @@ fun Utbetaling.toUtbetalingsLinje(): UtbetalingsLinje = UtbetalingsLinje(
     saksbehandler = "BB"
 )
 
-fun UtbetalingsBatchDTO.lagMelding(): UtbetalingsMelding = UtbetalingsMelding(
+fun UtbetalingsBatchDTO.lagMelding(tssIdent: String): UtbetalingsMelding = UtbetalingsMelding(
     opprettetDato = LocalDateTime.now(),
     orgNr = orgNr,
+    tssIdent = tssIdent,
     batchId = batchId,
     utbetalingslinjer = utbetalinger.map { it.toUtbetalingsLinje() }
 )
