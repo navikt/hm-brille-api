@@ -18,11 +18,18 @@ class VedtakTilUtbetalingScheduler(
     private val dager: Long = 7,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig) {
 
+    private var vedtakKø: Int = 0
+
+    init {
+        metricsConfig.registry.gauge("vedtak_til_utbetaling_kø", vedtakKø)
+    }
+
     companion object {
         private val LOG = LoggerFactory.getLogger(VedtakTilUtbetalingScheduler::class.java)
     }
 
     override suspend fun action() {
+        vedtakKø = vedtakService.hentAntallVedtakIKø()
         val vedtakList = vedtakService.hentVedtakForUtbetaling(opprettet = LocalDateTime.now().minusDays(dager))
         LOG.info("fant ${vedtakList.size} vedtak for utbetaling")
         vedtakList.forEach {

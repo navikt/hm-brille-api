@@ -34,6 +34,7 @@ interface VedtakStore : Store {
     fun fjernFraVedTakKø(vedtakId: Long): Int?
     fun slettVedtak(vedtakId: Long): Int?
     fun <T> hentVedtak(vedtakId: Long): Vedtak<T>?
+    fun hentAntallVedtakIKø(): Int
 }
 
 class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakStore,
@@ -409,5 +410,16 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 row ->
             mapVedtak(row)
         }
+    }
+
+    override fun hentAntallVedtakIKø(): Int = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT COUNT(*) as total FROM vedtak_ko_v1
+        """.trimIndent()
+        sessionFactory().query(sql) {
+                row ->
+            row.int("total")
+        }!!
     }
 }

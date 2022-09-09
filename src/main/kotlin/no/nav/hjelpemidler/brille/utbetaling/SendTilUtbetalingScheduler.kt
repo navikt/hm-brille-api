@@ -17,6 +17,11 @@ class SendTilUtbetalingScheduler(
     onlyWorkHours: Boolean = true
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
+    private var maxUtbetalinger: Int = 0
+
+    init {
+        metricsConfig.registry.gauge("send_til_utbetalinger_max", maxUtbetalinger)
+    }
     companion object {
         private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)
     }
@@ -28,12 +33,17 @@ class SendTilUtbetalingScheduler(
             val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
             LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
             utbetalingsBatchList.forEach {
-                if (it.utbetalinger.size > 100)
+                val antUtbetalinger = it.utbetalinger.size
+                if (maxUtbetalinger < antUtbetalinger) {
+                    maxUtbetalinger = antUtbetalinger
+                }
+                if (it.utbetalinger.size > 100) {
                     LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
+                }
                 utbetalingService.sendBatchTilUtbetaling(it)
             }
         }
-        this.metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")
+        metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")
             .increment(utbetalinger.size.toDouble())
     }
 }

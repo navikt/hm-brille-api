@@ -82,6 +82,7 @@ internal class VedtakStorePostgresTest {
                     )
 
                     this.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
+                    this.hentAntallVedtakIKø() shouldBe 2
 
                     val vedtakList =
                         this.hentVedtakForUtbetaling<Vedtak<*>>(
@@ -96,16 +97,11 @@ internal class VedtakStorePostgresTest {
                             opprettet = LocalDateTime.now()
                         )
                     tomtList.isEmpty() shouldBe true
+
                     hentVedtakForBarn("12121314156").size shouldBeGreaterThanOrEqualTo 1
                     val vedtak2: Vedtak<Vilkårsgrunnlag>? = hentVedtak(vedtak.id)
                     vedtak2.shouldNotBeNull()
-                    slettVedtak(vedtak2.id) shouldBe 1
-                    hentVedtakForBarn("12121314156").size shouldBe 0
-                    with(VedtakSlettetStorePostgres(PostgresTestHelper.sessionFactory)) {
-                        val slettet = hentVedtakSlettet(vedtak2.id)
-                        slettet.shouldNotBeNull()
-                        slettet.slettet.shouldNotBeNull()
-                    }
+                    this.hentAntallVedtakIKø() shouldBe 0
                 }
             }
         }

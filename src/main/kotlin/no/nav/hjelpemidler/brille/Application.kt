@@ -159,7 +159,7 @@ fun Application.setupRoutes() {
 
     setupMetrics(metrics)
 
-    if (Configuration.dev) {
+    if (Configuration.dev || Configuration.local) {
         // Under testing, disabled i prod.
         val vedtakTilUtbetalingScheduler =
             VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)

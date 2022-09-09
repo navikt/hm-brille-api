@@ -58,7 +58,7 @@ class VedtakService(
                     beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
                 )
             )
-            // ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
+            ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
             kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)
             if (vilkårsvurdering.grunnlag.medlemskapResultat.medlemskapBevist) {
                 kafkaService.medlemskapFolketrygdenBevist(vilkårsgrunnlag.fnrBarn, vedtak.id)
@@ -98,6 +98,12 @@ class VedtakService(
     suspend fun slettVedtak(vedtakId: Long) {
         return transaction(databaseContext) { ctx ->
             ctx.vedtakStore.slettVedtak(vedtakId)
+        }
+    }
+
+    suspend fun hentAntallVedtakIKø(): Int {
+        return transaction(databaseContext) { ctx ->
+            ctx.vedtakStore.hentAntallVedtakIKø()
         }
     }
 }
