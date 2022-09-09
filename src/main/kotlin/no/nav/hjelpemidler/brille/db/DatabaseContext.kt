@@ -12,6 +12,8 @@ import no.nav.hjelpemidler.brille.tss.TssIdentStore
 import no.nav.hjelpemidler.brille.tss.TssIdentStorePostgres
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStore
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
+import no.nav.hjelpemidler.brille.vedtak.VedtakSlettetStore
+import no.nav.hjelpemidler.brille.vedtak.VedtakSlettetStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
@@ -38,6 +40,7 @@ interface DatabaseSessionContext {
     val rapportStore: RapportStore
     val utbetalingStore: UtbetalingStore
     val tssIdentStore: TssIdentStore
+    val vedtakSlettetStore: VedtakSlettetStore
 }
 
 class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSessionContext {
@@ -48,4 +51,5 @@ class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSe
     override val rapportStore: RapportStore = RapportStorePostgres(sessionFactory)
     override val utbetalingStore: UtbetalingStore = UtbetalingStorePostgres(sessionFactory)
     override val tssIdentStore: TssIdentStore = TssIdentStorePostgres(sessionFactory)
+    override val vedtakSlettetStore: VedtakSlettetStore = VedtakSlettetStorePostgres(sessionFactory)
 }

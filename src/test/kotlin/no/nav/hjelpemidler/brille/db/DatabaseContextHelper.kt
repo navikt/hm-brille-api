@@ -7,6 +7,7 @@ import no.nav.hjelpemidler.brille.innsender.InnsenderStore
 import no.nav.hjelpemidler.brille.rapportering.RapportStore
 import no.nav.hjelpemidler.brille.tss.TssIdentStore
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStore
+import no.nav.hjelpemidler.brille.vedtak.VedtakSlettetStore
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
 import javax.sql.DataSource
@@ -37,5 +38,6 @@ fun createDatabaseSessionContextWithMocks(): DatabaseSessionContext {
         override val innsenderStore: InnsenderStore = mockk(relaxed = true)
         override val rapportStore: RapportStore = mockk(relaxed = true)
         override val tssIdentStore: TssIdentStore = mockk(relaxed = true)
+        override val vedtakSlettetStore: VedtakSlettetStore = mockk(relaxed = true)
     }
 }

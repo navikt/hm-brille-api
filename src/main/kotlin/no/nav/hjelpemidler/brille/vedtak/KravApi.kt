@@ -15,7 +15,8 @@ import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 internal fun Route.kravApi(
     vedtakService: VedtakService,
     auditService: AuditService,
-    utbetalingService: UtbetalingService
+    utbetalingService: UtbetalingService,
+    vedtakSlettetService: VedtakSlettetService
 ) {
     route("/krav") {
         post {
@@ -49,7 +50,7 @@ internal fun Route.kravApi(
             } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
                 call.respond(HttpStatusCode.Conflict, "vedtaket er utbetalt")
             } else {
-                vedtakService.slettVedtak(vedtakId)
+                vedtakSlettetService.slettVedtak(vedtakId)
                 call.respond(HttpStatusCode.OK)
             }
         }
