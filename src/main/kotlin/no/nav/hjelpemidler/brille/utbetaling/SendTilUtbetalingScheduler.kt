@@ -5,7 +5,6 @@ import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
-import no.nav.hjelpemidler.brille.tss.TssIdentStore
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.time.Duration
