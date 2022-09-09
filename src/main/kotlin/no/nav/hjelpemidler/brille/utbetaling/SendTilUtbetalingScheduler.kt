@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import io.micrometer.core.instrument.Gauge
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
@@ -17,10 +18,11 @@ class SendTilUtbetalingScheduler(
     onlyWorkHours: Boolean = true
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
-    private var maxUtbetalinger: Int = 0
+    private var maxUtbetalinger: Double = 0.0
 
     init {
-        metricsConfig.registry.gauge("send_til_utbetalinger_max", maxUtbetalinger)
+        Gauge.builder("utbetalingslinjer_max", this) { this.maxUtbetalinger }
+            .register(metricsConfig.registry)
     }
     companion object {
         private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)
@@ -35,9 +37,9 @@ class SendTilUtbetalingScheduler(
             utbetalingsBatchList.forEach {
                 val antUtbetalinger = it.utbetalinger.size
                 if (maxUtbetalinger < antUtbetalinger) {
-                    maxUtbetalinger = antUtbetalinger
+                    maxUtbetalinger = antUtbetalinger.toDouble()
                 }
-                if (it.utbetalinger.size > 100) {
+                if (antUtbetalinger > 100) {
                     LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
                 }
                 utbetalingService.sendBatchTilUtbetaling(it)

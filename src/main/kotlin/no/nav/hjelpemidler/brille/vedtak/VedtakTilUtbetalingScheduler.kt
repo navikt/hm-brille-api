@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
+import io.micrometer.core.instrument.Gauge
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
@@ -18,10 +19,11 @@ class VedtakTilUtbetalingScheduler(
     private val dager: Long = 7,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig) {
 
-    private var vedtakKø: Int = 0
+    private var vedtakKo: Double = 0.0
 
     init {
-        metricsConfig.registry.gauge("vedtak_til_utbetaling_kø", vedtakKø)
+        Gauge.builder("vedtak_til_utbetaling_ko", this) { this.vedtakKo }
+            .register(metricsConfig.registry)
     }
 
     companion object {
@@ -29,7 +31,7 @@ class VedtakTilUtbetalingScheduler(
     }
 
     override suspend fun action() {
-        vedtakKø = vedtakService.hentAntallVedtakIKø()
+        vedtakKo = vedtakService.hentAntallVedtakIKø().toDouble()
         val vedtakList = vedtakService.hentVedtakForUtbetaling(opprettet = LocalDateTime.now().minusDays(dager))
         LOG.info("fant ${vedtakList.size} vedtak for utbetaling")
         vedtakList.forEach {
