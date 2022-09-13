@@ -18,14 +18,15 @@ class SendTilUtbetalingScheduler(
     delay: Duration = 2.minutes,
     private val dager: Long = 8,
     onlyWorkHours: Boolean = true
-) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
+) : SimpleScheduler(leaderElection, delay, metricsConfig, false) {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)
     }
 
     override suspend fun action() {
-        val utbetalinger = utbetalingService.hentUtbetalingerMedStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
+        val utbetalinger =
+            utbetalingService.hentUtbetalingerMedStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
         LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
         if (utbetalinger.isNotEmpty()) {
             val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
