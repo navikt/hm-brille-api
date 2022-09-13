@@ -1,5 +1,7 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
@@ -10,6 +12,7 @@ import kotlin.time.Duration.Companion.minutes
 
 class SendTilUtbetalingScheduler(
     private val utbetalingService: UtbetalingService,
+    private val databaseContext: DatabaseContext,
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
     delay: Duration = 2.minutes,
@@ -30,7 +33,9 @@ class SendTilUtbetalingScheduler(
             utbetalingsBatchList.forEach {
                 if (it.utbetalinger.size > 100)
                     LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
-                utbetalingService.sendBatchTilUtbetaling(it)
+                val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
+                    ?: throw RuntimeException("ingen tss ident tilgjengelig for batch (skal ikke skje)")
+                utbetalingService.sendBatchTilUtbetaling(it, tssIdent)
             }
         }
         this.metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")

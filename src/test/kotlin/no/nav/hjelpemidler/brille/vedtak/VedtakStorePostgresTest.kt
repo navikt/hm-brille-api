@@ -8,6 +8,7 @@ import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.tss.TssIdentStorePostgres
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
@@ -82,6 +83,18 @@ internal class VedtakStorePostgresTest {
                     )
 
                     this.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
+
+                    // Test før tss-ident eksisterer
+                    val vedtakListTom =
+                        this.hentVedtakForUtbetaling<Vedtak<*>>(
+                            opprettet = LocalDateTime.now()
+                        )
+                    vedtakListTom.size shouldBe 0
+
+                    // Test etter tss-ident eksisterer
+                    with(TssIdentStorePostgres(PostgresTestHelper.sessionFactory)) {
+                        this.settTssIdent(virksomhet.orgnr, "12345678910")
+                    }
 
                     val vedtakList =
                         this.hentVedtakForUtbetaling<Vedtak<*>>(

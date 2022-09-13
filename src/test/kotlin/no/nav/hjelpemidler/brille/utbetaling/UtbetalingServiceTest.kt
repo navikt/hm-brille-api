@@ -6,6 +6,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
@@ -68,9 +69,16 @@ class UtbetalingServiceTest {
                 1
             }
 
+            every {
+                sessionContext.tssIdentStore.hentTssIdent(any())
+            } answers {
+                "1234"
+            }
+
             val batchList = utbetalingService.hentUtbetalingerMedBatchId(nyUtbetaling.batchId).toUtbetalingsBatchList()
             batchList.forEach {
-                utbetalingService.sendBatchTilUtbetaling(it)
+                val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }!!
+                utbetalingService.sendBatchTilUtbetaling(it, tssIdent)
             }
         }
     }

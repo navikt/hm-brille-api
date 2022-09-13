@@ -323,7 +323,15 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 v.sats_belop,
                 v.sats_beskrivelse,
                 v.belop,
-                v.opprettet FROM vedtak_v1 v, vedtak_ko_v1 k WHERE k.opprettet <= :opprettet AND k.id=v.id 
+                v.opprettet
+            FROM
+                vedtak_v1 v,
+                vedtak_ko_v1 k,
+                tssident_v1 t
+            WHERE
+                k.opprettet <= :opprettet
+                AND k.id = v.id 
+                AND v.orgnr = t.orgnr
                 AND v.behandlingsresultat = :behandlingsresultat
         """.trimIndent()
         sessionFactory().queryList<Vedtak<T>>(
