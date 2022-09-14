@@ -83,6 +83,7 @@ internal class VedtakStorePostgresTest {
                     )
 
                     this.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
+                    this.hentAntallVedtakIKø() shouldBe 2
 
                     // Test før tss-ident eksisterer
                     val vedtakListTom =
@@ -109,9 +110,11 @@ internal class VedtakStorePostgresTest {
                             opprettet = LocalDateTime.now()
                         )
                     tomtList.isEmpty() shouldBe true
+
                     hentVedtakForBarn("12121314156").size shouldBeGreaterThanOrEqualTo 1
                     val vedtak2: Vedtak<Vilkårsgrunnlag>? = hentVedtak(vedtak.id)
                     vedtak2.shouldNotBeNull()
+                    this.hentAntallVedtakIKø() shouldBe 0
                 }
             }
         }

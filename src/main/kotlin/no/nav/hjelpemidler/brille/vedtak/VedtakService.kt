@@ -94,4 +94,11 @@ class VedtakService(
             ctx.vedtakStore.fjernFraVedTakKø(vedtak.id)
         }
     }
+
+    suspend fun hentAntallVedtakIKø(): Int {
+        return transaction(databaseContext) {
+                ctx ->
+            ctx.vedtakStore.hentAntallVedtakIKø()
+        }
+    }
 }

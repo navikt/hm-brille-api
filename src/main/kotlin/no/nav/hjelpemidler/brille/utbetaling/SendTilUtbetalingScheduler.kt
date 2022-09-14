@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import io.micrometer.core.instrument.Gauge
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
@@ -20,6 +21,12 @@ class SendTilUtbetalingScheduler(
     onlyWorkHours: Boolean = true
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, false) {
 
+    private var maxUtbetalinger: Double = 0.0
+
+    init {
+        Gauge.builder("utbetalingslinjer_max", this) { this.maxUtbetalinger }
+            .register(metricsConfig.registry)
+    }
     companion object {
         private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)
     }
@@ -32,14 +39,19 @@ class SendTilUtbetalingScheduler(
             val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
             LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
             utbetalingsBatchList.forEach {
-                if (it.utbetalinger.size > 100)
-                    LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
                 val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
                     ?: throw RuntimeException("ingen tss ident tilgjengelig for batch (skal ikke skje)")
                 utbetalingService.sendBatchTilUtbetaling(it, tssIdent)
+                val antUtbetalinger = it.utbetalinger.size
+                if (maxUtbetalinger < antUtbetalinger) {
+                    maxUtbetalinger = antUtbetalinger.toDouble()
+                }
+                if (antUtbetalinger > 100) {
+                    LOG.warn("En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!")
+                }
             }
         }
-        this.metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")
+        metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")
             .increment(utbetalinger.size.toDouble())
     }
 }
