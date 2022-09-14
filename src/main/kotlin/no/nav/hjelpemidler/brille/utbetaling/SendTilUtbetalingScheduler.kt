@@ -40,7 +40,7 @@ class SendTilUtbetalingScheduler(
                     maxUtbetalinger = antUtbetalinger.toDouble()
                 }
                 if (antUtbetalinger > 100) {
-                    LOG.warn("En batch ${it.batchId} har ${antUtbetalinger}} som er mer enn 100 utbetalinger!")
+                    LOG.warn("En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!")
                 }
                 utbetalingService.sendBatchTilUtbetaling(it)
             }

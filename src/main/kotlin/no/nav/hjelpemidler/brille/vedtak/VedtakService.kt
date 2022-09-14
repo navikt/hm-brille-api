@@ -97,7 +97,8 @@ class VedtakService(
 
     suspend fun hentAntallVedtakIKø(): Int {
         return transaction(databaseContext) {
-            ctx -> ctx.vedtakStore.hentAntallVedtakIKø()
+                ctx ->
+            ctx.vedtakStore.hentAntallVedtakIKø()
         }
     }
 }
