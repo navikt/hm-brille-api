@@ -35,7 +35,7 @@ class UtbetalingService(
         }
     }
 
-    suspend fun sendBatchTilUtbetaling(utbetalingsBatchDTO: UtbetalingsBatchDTO) {
+    suspend fun sendBatchTilUtbetaling(utbetalingsBatchDTO: UtbetalingsBatchDTO, tssIdent: String) {
         transaction(databaseContext) { ctx ->
             ctx.utbetalingStore.lagreUtbetalingsBatch(utbetalingsBatchDTO.toUtbetalingsBatch())
             utbetalingsBatchDTO.utbetalinger.forEach {
@@ -46,7 +46,7 @@ class UtbetalingService(
                     )
                 )
             }
-            kafkaService.produceEvent(null, utbetalingsBatchDTO.lagMelding().toJson())
+            kafkaService.produceEvent(null, utbetalingsBatchDTO.lagMelding(tssIdent).toJson())
         }
     }
 

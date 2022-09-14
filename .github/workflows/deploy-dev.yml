@@ -8,8 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - trigger-full-tss-sync
-      - rettighet
+      - utbetale-med-tssident
 
 jobs:
   build-and-deploy:

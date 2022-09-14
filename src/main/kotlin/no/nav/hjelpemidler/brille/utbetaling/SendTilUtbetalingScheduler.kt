@@ -1,5 +1,7 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import io.micrometer.core.instrument.Gauge
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
@@ -11,12 +13,13 @@ import kotlin.time.Duration.Companion.minutes
 
 class SendTilUtbetalingScheduler(
     private val utbetalingService: UtbetalingService,
+    private val databaseContext: DatabaseContext,
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
     delay: Duration = 2.minutes,
     private val dager: Long = 8,
     onlyWorkHours: Boolean = true
-) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
+) : SimpleScheduler(leaderElection, delay, metricsConfig, false) {
 
     private var maxUtbetalinger: Double = 0.0
 
@@ -29,12 +32,16 @@ class SendTilUtbetalingScheduler(
     }
 
     override suspend fun action() {
-        val utbetalinger = utbetalingService.hentUtbetalingerMedStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
+        val utbetalinger =
+            utbetalingService.hentUtbetalingerMedStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
         LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
         if (utbetalinger.isNotEmpty()) {
             val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
             LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
             utbetalingsBatchList.forEach {
+                val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
+                    ?: throw RuntimeException("ingen tss ident tilgjengelig for batch (skal ikke skje)")
+                utbetalingService.sendBatchTilUtbetaling(it, tssIdent)
                 val antUtbetalinger = it.utbetalinger.size
                 if (maxUtbetalinger < antUtbetalinger) {
                     maxUtbetalinger = antUtbetalinger.toDouble()
@@ -42,7 +49,6 @@ class SendTilUtbetalingScheduler(
                 if (antUtbetalinger > 100) {
                     LOG.warn("En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!")
                 }
-                utbetalingService.sendBatchTilUtbetaling(it)
             }
         }
         metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")
