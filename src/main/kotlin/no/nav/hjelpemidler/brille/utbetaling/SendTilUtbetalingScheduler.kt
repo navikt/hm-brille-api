@@ -1,8 +1,8 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import io.micrometer.core.instrument.Gauge
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
-import io.micrometer.core.instrument.Gauge
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
