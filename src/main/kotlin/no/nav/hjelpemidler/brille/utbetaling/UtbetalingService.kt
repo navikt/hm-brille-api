@@ -35,6 +35,21 @@ class UtbetalingService(
         }
     }
 
+    suspend fun rekjorBatchTilUtbetaling(utbetalingsBatchDTO: UtbetalingsBatchDTO, tssIdent: String) {
+        transaction(databaseContext) { ctx ->
+            // ctx.utbetalingStore.lagreUtbetalingsBatch(utbetalingsBatchDTO.toUtbetalingsBatch())
+            utbetalingsBatchDTO.utbetalinger.forEach {
+                ctx.utbetalingStore.oppdaterStatus(
+                    it.copy(
+                        status = UtbetalingStatus.TIL_UTBETALING,
+                        oppdatert = LocalDateTime.now()
+                    )
+                )
+            }
+            kafkaService.produceEvent(null, utbetalingsBatchDTO.lagMelding(tssIdent).toJson())
+        }
+    }
+
     suspend fun sendBatchTilUtbetaling(utbetalingsBatchDTO: UtbetalingsBatchDTO, tssIdent: String) {
         transaction(databaseContext) { ctx ->
             ctx.utbetalingStore.lagreUtbetalingsBatch(utbetalingsBatchDTO.toUtbetalingsBatch())
@@ -69,6 +84,12 @@ class UtbetalingService(
         }
     }
 
+    suspend fun hentUtbetalingerSomSkalRekjøres(): List<Utbetaling> {
+        return transaction(databaseContext) { ctx ->
+            ctx.utbetalingStore.hentUtbetalingerMedStatus(status = UtbetalingStatus.REKJOR)
+        }
+    }
+
     suspend fun hentUtbetalingerMedBatchId(batchId: String): List<Utbetaling> {
         return transaction(databaseContext) { ctx ->
             ctx.utbetalingStore.hentUtbetalingerMedBatchId(batchId)
@@ -76,8 +97,7 @@ class UtbetalingService(
     }
 
     suspend fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling? {
-        return transaction(databaseContext) {
-                ctx ->
+        return transaction(databaseContext) { ctx ->
             ctx.utbetalingStore.hentUtbetalingForVedtak(vedtakId)
         }
     }

@@ -23,5 +23,6 @@ val batchIdDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
 enum class UtbetalingStatus {
     NY, // Ved innvilget vedtak, blir det registrert ny utbetaling for vedtaket.
     TIL_UTBETALING, // sendt til utbetaling
-    UTBETALT // utbetalt kvittering fra Utbetalingsmodulen
+    UTBETALT, // utbetalt kvittering fra Utbetalingsmodulen,
+    REKJOR // Manuell verdi for utbetalinger som skal rekjøres
 }

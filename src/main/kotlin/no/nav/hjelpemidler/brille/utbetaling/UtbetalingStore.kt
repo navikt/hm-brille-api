@@ -15,6 +15,7 @@ import java.time.LocalDate
 interface UtbetalingStore : Store {
     fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling?
     fun hentUtbetalingerMedStatusBatchDato(status: UtbetalingStatus = UtbetalingStatus.NY, batchDato: LocalDate): List<Utbetaling>
+    fun hentUtbetalingerMedStatus(status: UtbetalingStatus = UtbetalingStatus.REKJOR): List<Utbetaling>
     fun lagreUtbetaling(utbetaling: Utbetaling): Utbetaling
     fun oppdaterStatus(utbetaling: Utbetaling): Utbetaling
     fun hentUtbetalingerMedBatchId(batchId: String): List<Utbetaling>
@@ -46,6 +47,19 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
             WHERE status = :status and batch_dato <= :batchDato
         """.trimIndent()
         it.queryList(sql, mapOf("status" to status.name, "batchDato" to batchDato)) {
+                row ->
+            mapUtbetaling(row)
+        }
+    }
+
+    override fun hentUtbetalingerMedStatus(status: UtbetalingStatus): List<Utbetaling> = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT $allColums
+            FROM utbetaling_v1
+            WHERE status = :status
+        """.trimIndent()
+        it.queryList(sql, mapOf("status" to status.name)) {
                 row ->
             mapUtbetaling(row)
         }
