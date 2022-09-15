@@ -189,7 +189,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
 
             @Language("PostgreSQL")
             val sqlTotal = """
-                SELECT count(id) AS antall FROM ($sql)
+                SELECT COUNT(subq.id) AS antall FROM (${sql}) AS subq
             """.trimIndent()
 
             val totaltAntall = sessionFactory().query(sqlTotal, mapOf("fnr_innsender" to fnrInnsender)) { row ->
