@@ -162,14 +162,15 @@ fun Application.setupRoutes() {
 
     setupMetrics(metrics)
 
-    if (Configuration.dev) {
-        // Under testing, disabled i prod.
-        val vedtakTilUtbetalingScheduler =
-            VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
-        val sendTilUtbetalingScheduler = SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
-        UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
-        val rekjorUtbetalingerScheduler = RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
-    }
+
+    val vedtakTilUtbetalingScheduler =
+        VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
+    val sendTilUtbetalingScheduler =
+        SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
+    UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
+    val rekjorUtbetalingerScheduler =
+        RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
+
 
     TssIdentRiver(rapid, databaseContext)
 
