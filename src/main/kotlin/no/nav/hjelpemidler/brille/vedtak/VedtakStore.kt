@@ -195,7 +195,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 (v.fnr_innsender = :fnr_innsender OR vs.fnr_innsender = :fnr_innsender) AND
                 (u.utbetalingsdato IS NULL OR (u.utbetalingsdato > NOW() - '28 days'::interval)) AND
                 (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::interval))
-            ORDER BY v.opprettet DESC
+            ORDER BY opprettet DESC
             LIMIT :limit OFFSET :offset
             """.trimIndent()
 
