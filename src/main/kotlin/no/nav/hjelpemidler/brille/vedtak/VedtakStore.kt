@@ -197,7 +197,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             } ?: 0
 
             val items = it.queryList(
-                sql.plus("LIMIT :limit OFFSET :offset"),
+                sql.plus(" LIMIT :limit OFFSET :offset"),
                 mapOf(
                     "fnr_innsender" to fnrInnsender,
                     "limit" to itemsPerPage,
