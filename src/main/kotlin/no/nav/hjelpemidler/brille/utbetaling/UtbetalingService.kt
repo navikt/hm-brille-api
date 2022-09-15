@@ -78,7 +78,13 @@ class UtbetalingService(
         }
     }
 
-    suspend fun hentUtbetalingerMedStatusBatchDato(batchDato: LocalDate): List<Utbetaling> {
+    suspend fun hentUtbetalingerMedStatusBatchDato(status: UtbetalingStatus, batchDato: LocalDate): List<Utbetaling> {
+        return transaction(databaseContext) { ctx ->
+            ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDato(status = status, batchDato = batchDato)
+        }
+    }
+
+    suspend fun hentUtbetalingerMedNyStatusBatchDato(batchDato: LocalDate): List<Utbetaling> {
         return transaction(databaseContext) { ctx ->
             ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDato(status = UtbetalingStatus.NY, batchDato = batchDato)
         }
@@ -100,5 +106,9 @@ class UtbetalingService(
         return transaction(databaseContext) { ctx ->
             ctx.utbetalingStore.hentUtbetalingForVedtak(vedtakId)
         }
+    }
+
+    suspend fun hentAntallUtbetalingerMedStatus(status: UtbetalingStatus): Int {
+        return transaction(databaseContext) { ctx -> ctx.utbetalingStore.hentAntallUtbetalingerMedStatus(status) }
     }
 }
