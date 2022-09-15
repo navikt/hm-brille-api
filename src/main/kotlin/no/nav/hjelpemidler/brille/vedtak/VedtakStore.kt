@@ -99,11 +99,11 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 COALESCE(v.behandlingsresultat, vs.behandlingsresultat) AS behandlingsresultat,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.fnr_barn, vs.fnr_barn) AS fnr_barn,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære', vs.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære') AS høyreSfære,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder', vs.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder') AS høyreSylinder,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSfære', vs.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSfære') AS venstreSfære,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSylinder', vs.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSylinder') AS venstreSylinder,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data', vs.vilkarsvurdering -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data') AS pdlOppslag,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSylinder,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSfære,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
                 vs.slettet
             FROM vedtak_v1 v
@@ -181,11 +181,11 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 COALESCE(v.behandlingsresultat, vs.behandlingsresultat) AS behandlingsresultat,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.fnr_barn, vs.fnr_barn) AS fnr_barn,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære', vs.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære') AS høyreSfære,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder', vs.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder') AS høyreSylinder,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSfære', vs.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSfære') AS venstreSfære,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSylinder', vs.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSylinder') AS venstreSylinder,
-                COALESCE(v.vilkarsvurdering -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data', vs.vilkarsvurdering -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data') AS pdlOppslag,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSylinder,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSfære,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
                 vs.slettet
             FROM vedtak_v1 v
