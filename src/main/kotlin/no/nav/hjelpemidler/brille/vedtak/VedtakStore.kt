@@ -109,7 +109,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE
                 v.fnr_innsender = :fnr_innsender AND
-                v.id = :vedtak_id
+                v.id = :vedtak_id AND
+                (u.utbetalingsdato IS NULL OR (u.utbetalingsdato > NOW() - '28 days'::interval))
         """.trimIndent()
         it.query(
             sql,
@@ -185,7 +186,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             FROM vedtak_v1 v
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE
-                v.fnr_innsender = :fnr_innsender
+                v.fnr_innsender = :fnr_innsender AND
+                (u.utbetalingsdato IS NULL OR (u.utbetalingsdato > NOW() - '28 days'::interval))
             ORDER BY v.opprettet DESC
             LIMIT :limit OFFSET :offset
             """.trimIndent()
