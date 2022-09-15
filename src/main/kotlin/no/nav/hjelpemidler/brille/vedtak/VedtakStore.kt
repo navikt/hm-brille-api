@@ -145,7 +145,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 behandlingsresultat = row.string("behandlingsresultat"),
                 utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                 opprettet = row.localDateTime("opprettet"),
-                slettet = row.localDateTime("slettet"),
+                slettet = row.localDateTimeOrNull("slettet"),
             )
         }
     }
@@ -230,7 +230,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     behandlingsresultat = row.string("behandlingsresultat"),
                     utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                     opprettet = row.localDateTime("opprettet"),
-                    slettet = row.localDateTime("slettet"),
+                    slettet = row.localDateTimeOrNull("slettet"),
                 )
             }
 
