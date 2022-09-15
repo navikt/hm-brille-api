@@ -162,7 +162,6 @@ fun Application.setupRoutes() {
 
     setupMetrics(metrics)
 
-
     val vedtakTilUtbetalingScheduler =
         VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
     val sendTilUtbetalingScheduler =
@@ -170,7 +169,6 @@ fun Application.setupRoutes() {
     UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
     val rekjorUtbetalingerScheduler =
         RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
-
 
     TssIdentRiver(rapid, databaseContext)
 

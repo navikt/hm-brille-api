@@ -60,6 +60,7 @@ data class OversiktVedtak(
     val behandlingsresultat: String,
     val utbetalingsdato: LocalDate?,
     val opprettet: LocalDateTime,
+    val slettet: LocalDateTime?,
 )
 
 data class Kravlinje(
