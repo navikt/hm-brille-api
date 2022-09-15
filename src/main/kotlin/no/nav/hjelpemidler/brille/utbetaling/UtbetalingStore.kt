@@ -21,8 +21,8 @@ interface UtbetalingStore : Store {
     fun hentUtbetalingerMedBatchId(batchId: String): List<Utbetaling>
     fun lagreUtbetalingsBatch(utbetalingsBatch: UtbetalingsBatch): Int?
     fun hentUtbetalingsBatch(batchId: String): UtbetalingsBatch?
-
     fun oppdaterStatusOgUtbetalingsdato(utbetaling: Utbetaling): Utbetaling
+    fun hentAntallUtbetalingerMedStatus(status: UtbetalingStatus): Int
 }
 
 internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : UtbetalingStore,
@@ -160,6 +160,14 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
             )
         ).validate()
         utbetaling
+    }
+
+    override fun hentAntallUtbetalingerMedStatus(status: UtbetalingStatus): Int = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT COUNT(*) as total FROM utbetaling_v1 where status = :status
+        """.trimIndent()
+        it.query(sql, mapOf("status" to status.name)) { row -> row.int("total") }!!
     }
 
     override fun hentUtbetalingerMedBatchId(batchId: String): List<Utbetaling> = session {
