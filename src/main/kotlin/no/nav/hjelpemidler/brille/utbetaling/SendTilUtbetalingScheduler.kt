@@ -22,9 +22,11 @@ class SendTilUtbetalingScheduler(
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
     private var maxUtbetalinger: Double = 0.0
-
+    private var tilUtbetaling: Double = 0.0
     init {
         Gauge.builder("utbetalingslinjer_max", this) { this.maxUtbetalinger }
+            .register(metricsConfig.registry)
+        Gauge.builder("til_utbetaling_ko", this) { tilUtbetaling }
             .register(metricsConfig.registry)
     }
     companion object {
@@ -33,7 +35,7 @@ class SendTilUtbetalingScheduler(
 
     override suspend fun action() {
         val utbetalinger =
-            utbetalingService.hentUtbetalingerMedStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
+            utbetalingService.hentUtbetalingerMedNyStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
         LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
         if (utbetalinger.isNotEmpty()) {
             val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
@@ -53,5 +55,6 @@ class SendTilUtbetalingScheduler(
         }
         metricsConfig.registry.counter("send_til_utbetaling", "type", "utbetalinger")
             .increment(utbetalinger.size.toDouble())
+        tilUtbetaling = utbetalingService.hentAntallUtbetalingerMedStatus(UtbetalingStatus.TIL_UTBETALING).toDouble()
     }
 }
