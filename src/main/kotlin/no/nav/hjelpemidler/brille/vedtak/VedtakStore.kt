@@ -87,29 +87,33 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         @Language("PostgreSQL")
         val sql = """
             SELECT
-                v.id,
-                v.orgnr,
-                v.bestillingsdato,
-                v.brillepris,
-                v.bestillingsreferanse,
-                v.sats,
-                v.sats_belop,
-                v.sats_beskrivelse,
-                v.belop,
-                v.behandlingsresultat,
+                COALESCE(v.id, vs.id) AS id,
+                COALESCE(v.orgnr, vs.orgnr) AS orgnr,
+                COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
+                COALESCE(v.brillepris, vs.brillepris) AS brillepris,
+                COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
+                COALESCE(v.sats, vs.sats) AS sats,
+                COALESCE(v.sats_belop, vs.sats_belop) AS sats_belop,
+                COALESCE(v.sats_beskrivelse, vs.sats_beskrivelse) AS sats_beskrivelse,
+                COALESCE(v.belop, vs.belop) AS belop,
+                COALESCE(v.behandlingsresultat, vs.behandlingsresultat) AS behandlingsresultat,
+                COALESCE(v.opprettet, vs.opprettet) AS opprettet,
+                COALESCE(v.fnr_barn, vs.fnr_barn) AS fnr_barn,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSylinder,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSfære,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
-                v.opprettet,
-                v.fnr_barn,
-                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
-                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS høyreSylinder,
-                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSfære' AS venstreSfære,
-                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSylinder' AS venstreSylinder,
-                v.vilkarsvurdering -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag
+                vs.slettet
             FROM vedtak_v1 v
+            FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE
-                v.fnr_innsender = :fnr_innsender AND
-                v.id = :vedtak_id
+                (v.id = :vedtak_id OR vs.id = :vedtak_id) AND
+                (v.fnr_innsender = :fnr_innsender OR vs.fnr_innsender = :fnr_innsender) AND
+                (u.utbetalingsdato IS NULL OR (u.utbetalingsdato > NOW() - '28 days'::interval)) AND
+                (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::interval))
         """.trimIndent()
         it.query(
             sql,
@@ -141,6 +145,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 behandlingsresultat = row.string("behandlingsresultat"),
                 utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                 opprettet = row.localDateTime("opprettet"),
+                slettet = row.localDateTimeOrNull("slettet"),
             )
         }
     }
@@ -151,47 +156,48 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             val offset = (page - 1) * itemsPerPage
 
             @Language("PostgreSQL")
+            val sql = """
+                SELECT
+                    COALESCE(v.id, vs.id) AS id,
+                    COALESCE(v.orgnr, vs.orgnr) AS orgnr,
+                    COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
+                    COALESCE(v.brillepris, vs.brillepris) AS brillepris,
+                    COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
+                    COALESCE(v.sats, vs.sats) AS sats,
+                    COALESCE(v.sats_belop, vs.sats_belop) AS sats_belop,
+                    COALESCE(v.sats_beskrivelse, vs.sats_beskrivelse) AS sats_beskrivelse,
+                    COALESCE(v.belop, vs.belop) AS belop,
+                    COALESCE(v.behandlingsresultat, vs.behandlingsresultat) AS behandlingsresultat,
+                    COALESCE(v.opprettet, vs.opprettet) AS opprettet,
+                    COALESCE(v.fnr_barn, vs.fnr_barn) AS fnr_barn,
+                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
+                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSylinder,
+                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSfære,
+                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
+                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
+                    u.utbetalingsdato,
+                    vs.slettet
+                FROM vedtak_v1 v
+                FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
+                LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
+                WHERE
+                    (v.fnr_innsender = :fnr_innsender OR vs.fnr_innsender = :fnr_innsender) AND
+                    (u.utbetalingsdato IS NULL OR (u.utbetalingsdato > NOW() - '28 days'::interval)) AND
+                    (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::interval))
+                ORDER BY opprettet DESC
+            """.trimIndent()
+
+            @Language("PostgreSQL")
             val sqlTotal = """
-            SELECT COUNT(id) AS antall
-            FROM vedtak_v1
-            WHERE fnr_innsender = :fnr_innsender
+                SELECT COUNT(subq.id) AS antall FROM (${sql}) AS subq
             """.trimIndent()
 
             val totaltAntall = sessionFactory().query(sqlTotal, mapOf("fnr_innsender" to fnrInnsender)) { row ->
                 row.int("antall")
             } ?: 0
 
-            @Language("PostgreSQL")
-            val sql = """
-            SELECT
-                v.id,
-                v.orgnr,
-                v.bestillingsdato,
-                v.brillepris,
-                v.bestillingsreferanse,
-                v.sats,
-                v.sats_belop,
-                v.sats_beskrivelse,
-                v.belop,
-                v.behandlingsresultat,
-                u.utbetalingsdato,
-                v.opprettet,
-                v.fnr_barn,
-                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
-                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS høyreSylinder,
-                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSfære' AS venstreSfære,
-                v.vilkarsvurdering -> 'grunnlag' -> 'brilleseddel' ->> 'venstreSylinder' AS venstreSylinder,
-                v.vilkarsvurdering -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag
-            FROM vedtak_v1 v
-            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
-            WHERE
-                v.fnr_innsender = :fnr_innsender
-            ORDER BY v.opprettet DESC
-            LIMIT :limit OFFSET :offset
-            """.trimIndent()
-
             val items = it.queryList(
-                sql,
+                sql.plus(" LIMIT :limit OFFSET :offset"),
                 mapOf(
                     "fnr_innsender" to fnrInnsender,
                     "limit" to itemsPerPage,
@@ -221,6 +227,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     behandlingsresultat = row.string("behandlingsresultat"),
                     utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                     opprettet = row.localDateTime("opprettet"),
+                    slettet = row.localDateTimeOrNull("slettet"),
                 )
             }
 
