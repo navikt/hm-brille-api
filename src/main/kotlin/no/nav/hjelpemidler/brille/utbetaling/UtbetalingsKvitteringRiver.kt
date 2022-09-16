@@ -34,7 +34,6 @@ class UtbetalingsKvitteringRiver(
                     "eventId",
                     "opprettet",
                     "tssId",
-                    "orgNr",
                     "avstemmingsnøkkel",
                     "status",
                     "feilkode_oppdrag",
