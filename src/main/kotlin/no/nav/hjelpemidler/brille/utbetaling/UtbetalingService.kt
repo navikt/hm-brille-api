@@ -9,6 +9,7 @@ import no.nav.hjelpemidler.brille.vedtak.toDto
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import java.time.LocalDateTime
+import kotlin.time.Duration
 
 class UtbetalingService(
     private val databaseContext: DatabaseContext,
@@ -78,15 +79,10 @@ class UtbetalingService(
         }
     }
 
-    suspend fun hentUtbetalingerMedStatusBatchDato(status: UtbetalingStatus, batchDato: LocalDate): List<Utbetaling> {
-        return transaction(databaseContext) { ctx ->
-            ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDato(status = status, batchDato = batchDato)
-        }
-    }
-
-    suspend fun hentUtbetalingerMedNyStatusBatchDato(batchDato: LocalDate): List<Utbetaling> {
-        return transaction(databaseContext) { ctx ->
-            ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDato(status = UtbetalingStatus.NY, batchDato = batchDato)
+    suspend fun hentUtbetalingerForOppdrag(batchDato: LocalDate,opprettetFor: Duration): List<Utbetaling> {
+        return transaction(databaseContext) {
+            ctx -> ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDatoOpprettet(batchDato = batchDato,
+            opprettet = LocalDateTime.now().minusMinutes(opprettetFor.inWholeMinutes))
         }
     }
 
