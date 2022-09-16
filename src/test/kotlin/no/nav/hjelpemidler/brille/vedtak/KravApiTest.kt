@@ -56,7 +56,7 @@ internal class KravApiTest {
 
     private val routing = TestRouting {
         authenticate("test") {
-            kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService)
+            kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService, databaseContext)
         }
     }
 

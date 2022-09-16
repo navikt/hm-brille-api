@@ -42,6 +42,7 @@ import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefRiver
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
@@ -171,6 +172,7 @@ fun Application.setupRoutes() {
 
     UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
     TssIdentRiver(rapid, databaseContext)
+    JoarkrefRiver(rapid, databaseContext)
 
     thread(isDaemon = false) {
         rapid.start()
@@ -192,7 +194,7 @@ fun Application.setupRoutes() {
                     if (Configuration.dev) oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
-                    kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService)
+                    kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService, databaseContext)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)

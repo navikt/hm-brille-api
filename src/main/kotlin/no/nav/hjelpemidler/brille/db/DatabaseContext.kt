@@ -6,6 +6,8 @@ import no.nav.hjelpemidler.brille.audit.AuditStore
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
 import no.nav.hjelpemidler.brille.innsender.InnsenderStore
 import no.nav.hjelpemidler.brille.innsender.InnsenderStorePostgres
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefStore
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefStorePostgres
 import no.nav.hjelpemidler.brille.rapportering.RapportStore
 import no.nav.hjelpemidler.brille.rapportering.RapportStorePostgres
 import no.nav.hjelpemidler.brille.tss.TssIdentStore
@@ -40,6 +42,7 @@ interface DatabaseSessionContext {
     val rapportStore: RapportStore
     val utbetalingStore: UtbetalingStore
     val tssIdentStore: TssIdentStore
+    val joarkrefStore: JoarkrefStore
     val vedtakSlettetStore: VedtakSlettetStore
 }
 
@@ -51,5 +54,6 @@ class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSe
     override val rapportStore: RapportStore = RapportStorePostgres(sessionFactory)
     override val utbetalingStore: UtbetalingStore = UtbetalingStorePostgres(sessionFactory)
     override val tssIdentStore: TssIdentStore = TssIdentStorePostgres(sessionFactory)
+    override val joarkrefStore: JoarkrefStore = JoarkrefStorePostgres(sessionFactory)
     override val vedtakSlettetStore: VedtakSlettetStore = VedtakSlettetStorePostgres(sessionFactory)
 }

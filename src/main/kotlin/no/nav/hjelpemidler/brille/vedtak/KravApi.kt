@@ -8,15 +8,21 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
+
+private val log = KotlinLogging.logger {}
 
 internal fun Route.kravApi(
     vedtakService: VedtakService,
     auditService: AuditService,
     utbetalingService: UtbetalingService,
-    vedtakSlettetService: VedtakSlettetService
+    vedtakSlettetService: VedtakSlettetService,
+    databaseContext: DatabaseContext,
 ) {
     route("/krav") {
         post {
@@ -51,7 +57,13 @@ internal fun Route.kravApi(
                 } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
                     call.respond(HttpStatusCode.Conflict, "vedtaket er utbetalt")
                 } else {
+                    val joarkRef = transaction(databaseContext) { it.joarkrefStore.hentJoarkRef(vedtakId) }
+                        ?: return@delete call.respond(HttpStatusCode.InternalServerError, "har ikke joarkref for krav")
+                    log.info("JoarkRef funnet: $joarkRef")
+
                     vedtakSlettetService.slettVedtak(vedtakId)
+                    // TODO: Feilregistrer i joark
+
                     call.respond(HttpStatusCode.OK, "{}")
                 }
             } else call.respond(HttpStatusCode.NotFound, "ikke funnet")
