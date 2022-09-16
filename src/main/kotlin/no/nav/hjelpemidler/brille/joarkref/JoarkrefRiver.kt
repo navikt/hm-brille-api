@@ -52,7 +52,7 @@ class JoarkrefRiver(
         runBlocking {
             withContext(Dispatchers.IO) {
                 transaction(databaseContext) { ctx ->
-                    ctx.joarkrefStore.lagreJoarkRef(packet.sakId, packet.joarkRef)
+                    ctx.joarkrefStore.lagreJoarkRef(packet.sakId.toLong(), packet.joarkRef.toLong())
                 }
             }
         }
