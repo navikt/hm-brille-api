@@ -52,7 +52,7 @@ internal fun Route.kravApi(
                     call.respond(HttpStatusCode.Conflict, "vedtaket er utbetalt")
                 } else {
                     vedtakSlettetService.slettVedtak(vedtakId)
-                    call.respond(HttpStatusCode.OK)
+                    call.respond(HttpStatusCode.OK, "{}")
                 }
             } else call.respond(HttpStatusCode.NotFound, "ikke funnet")
         }
