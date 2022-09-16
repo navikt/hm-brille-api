@@ -79,10 +79,13 @@ class UtbetalingService(
         }
     }
 
-    suspend fun hentUtbetalingerForOppdrag(batchDato: LocalDate,opprettetFor: Duration): List<Utbetaling> {
+    suspend fun hentUtbetalingerForOppdrag(batchDato: LocalDate, opprettetFor: Duration): List<Utbetaling> {
         return transaction(databaseContext) {
-            ctx -> ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDatoOpprettet(batchDato = batchDato,
-            opprettet = LocalDateTime.now().minusMinutes(opprettetFor.inWholeMinutes))
+                ctx ->
+            ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDatoOpprettet(
+                batchDato = batchDato,
+                opprettet = LocalDateTime.now().minusMinutes(opprettetFor.inWholeMinutes)
+            )
         }
     }
 
