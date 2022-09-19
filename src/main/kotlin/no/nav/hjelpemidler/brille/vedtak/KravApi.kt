@@ -63,7 +63,7 @@ internal fun Route.kravApi(
                     log.info("JoarkRef funnet: $joarkRef")
 
                     vedtakSlettetService.slettVedtak(vedtakId)
-                    kafkaService.feilregistrerBarnebrillerIJoark(joarkRef)
+                    kafkaService.feilregistrerBarnebrillerIJoark(vedtakId, joarkRef)
 
                     call.respond(HttpStatusCode.OK, "{}")
                 }
