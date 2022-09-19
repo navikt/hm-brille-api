@@ -136,7 +136,7 @@ fun Route.rapportApiAdmin(rapportService: RapportService) {
 }
 
 fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
-    write("NAV referanse; Deres referanse; Kravbeløp; Opprettet dato; Utbetalt; Utbetalingsdato".toByteArray())
+    write("NAV referanse; Deres referanse; Kravbeløp; Opprettet dato; Sendt til utbetaling; Dato - sendt til utbetaling".toByteArray())
     write("\n".toByteArray())
     kravlinjer.forEach {
         write(
