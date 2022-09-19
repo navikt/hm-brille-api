@@ -12,6 +12,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 
 private val log = KotlinLogging.logger {}
@@ -22,6 +23,7 @@ internal fun Route.kravApi(
     utbetalingService: UtbetalingService,
     vedtakSlettetService: VedtakSlettetService,
     joarkrefService: JoarkrefService,
+    kafkaService: KafkaService,
 ) {
     route("/krav") {
         post {
@@ -61,7 +63,7 @@ internal fun Route.kravApi(
                     log.info("JoarkRef funnet: $joarkRef")
 
                     vedtakSlettetService.slettVedtak(vedtakId)
-                    // TODO: Feilregistrer i joark
+                    kafkaService.feilregistrerBarnebrillerIJoark(joarkRef)
 
                     call.respond(HttpStatusCode.OK, "{}")
                 }

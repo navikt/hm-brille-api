@@ -15,6 +15,7 @@ import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
@@ -42,6 +43,7 @@ internal class KravApiTest {
     private val utbetalingService = mockk<UtbetalingService>(relaxed = true)
     private val vedtakSlettetService = mockk<VedtakSlettetService>(relaxed = true)
     private val joarkrefService = mockk<JoarkrefService>(relaxed = true)
+    private val kafkaService = mockk<KafkaService>(relaxed = true)
 
     val sessionContext = createDatabaseSessionContextWithMocks()
     val databaseContext = createDatabaseContext(sessionContext)
@@ -58,7 +60,7 @@ internal class KravApiTest {
 
     private val routing = TestRouting {
         authenticate("test") {
-            kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService, joarkrefService)
+            kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService, joarkrefService, kafkaService)
         }
     }
 
