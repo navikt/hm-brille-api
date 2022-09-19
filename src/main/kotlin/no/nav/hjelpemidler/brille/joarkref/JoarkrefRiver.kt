@@ -8,15 +8,13 @@ import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
-import no.nav.hjelpemidler.brille.db.DatabaseContext
-import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.utbetaling.PacketListenerWithOnError
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
 class JoarkrefRiver(
     rapidsConnection: RapidsConnection,
-    private val databaseContext: DatabaseContext
+    private val joarkrefService: JoarkrefService,
 ) : PacketListenerWithOnError {
 
     private val eventName = "hm-opprettetOgFerdigstiltBarnebrillerJournalpost"
@@ -51,9 +49,7 @@ class JoarkrefRiver(
         LOG.info("Kvittering for oppretting av journalpost mottatt: eventId=${packet.eventId}, sakId=${packet.sakId}, joarkRef=${packet.joarkRef}, opprettet=${packet.opprettet}")
         runBlocking {
             withContext(Dispatchers.IO) {
-                transaction(databaseContext) { ctx ->
-                    ctx.joarkrefStore.lagreJoarkRef(packet.sakId.toLong(), packet.joarkRef.toLong())
-                }
+                joarkrefService.lagreJoarkRef(packet.sakId.toLong(), packet.joarkRef.toLong())
             }
         }
     }

@@ -43,6 +43,7 @@ import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefRiver
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
@@ -57,6 +58,7 @@ import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
 import no.nav.hjelpemidler.brille.tss.TssIdentRiver
+import no.nav.hjelpemidler.brille.tss.TssIdentService
 import no.nav.hjelpemidler.brille.utbetaling.RekjorUtbetalingerScheduler
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
@@ -151,6 +153,8 @@ fun Application.setupRoutes() {
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
     val vedtakSlettetService = VedtakSlettetService(databaseContext)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
+    val joarkrefService = JoarkrefService(databaseContext)
+    val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
 
@@ -171,8 +175,8 @@ fun Application.setupRoutes() {
         RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
 
     UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
-    TssIdentRiver(rapid, databaseContext)
-    JoarkrefRiver(rapid, databaseContext)
+    TssIdentRiver(rapid, tssIdentService)
+    JoarkrefRiver(rapid, joarkrefService)
 
     thread(isDaemon = false) {
         rapid.start()
@@ -194,7 +198,7 @@ fun Application.setupRoutes() {
                     if (Configuration.dev) oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
-                    kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService, databaseContext)
+                    kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService, joarkrefService)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)
