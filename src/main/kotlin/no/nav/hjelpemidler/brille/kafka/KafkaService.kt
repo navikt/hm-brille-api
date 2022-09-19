@@ -200,6 +200,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
 
     fun isAlive() = kafkaRapid.isRunning()
     fun isReady() = kafkaRapid.isReady()
+    fun isConsumerClosed() = kafkaRapid.isConsumerClosed()
+    fun isProducerClosed() = kafkaRapid.isProducerClosed()
 
     internal data class VedtakOpprettet(
         val eventId: UUID = UUID.randomUUID(),

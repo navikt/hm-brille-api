@@ -11,17 +11,19 @@ import no.nav.hjelpemidler.brille.kafka.KafkaService
 fun Route.internalRoutes(kafkaService: KafkaService) {
     route("/internal") {
         get("/is-alive") {
-            if (kafkaService.isAlive())
-                call.respondText("Application is alive!", status = HttpStatusCode.OK)
+            if (kafkaService.isProducerClosed())
+                call.respondText("Kafka producer is not running", status = HttpStatusCode.InternalServerError)
+            else if (kafkaService.isConsumerClosed()) // Don't restart app, even consumer is closed.
+                call.respondText("Kafka consumer is not running", status = HttpStatusCode.OK)
             else
-                call.respondText("Kafka er nede", status = HttpStatusCode.InternalServerError)
+                call.respondText("Application is alive!", status = HttpStatusCode.OK)
         }
 
         get("/is-ready") {
-            if (kafkaService.isReady())
-                call.respondText("Application is ready!", status = HttpStatusCode.OK)
+            if (kafkaService.isProducerClosed())
+                call.respondText("Kafka producer is not running", status = HttpStatusCode.InternalServerError)
             else
-                call.respondText("Kafka er ikke ready()", status = HttpStatusCode.InternalServerError)
+                call.respondText("Application is ready!", status = HttpStatusCode.OK)
         }
     }
 }
