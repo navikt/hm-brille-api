@@ -42,6 +42,8 @@ import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefRiver
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapClient
@@ -56,6 +58,7 @@ import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
 import no.nav.hjelpemidler.brille.tss.TssIdentRiver
+import no.nav.hjelpemidler.brille.tss.TssIdentService
 import no.nav.hjelpemidler.brille.utbetaling.RekjorUtbetalingerScheduler
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
@@ -150,6 +153,8 @@ fun Application.setupRoutes() {
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
     val vedtakSlettetService = VedtakSlettetService(databaseContext)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
+    val joarkrefService = JoarkrefService(databaseContext)
+    val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
     val leaderElection = LeaderElection(Configuration.electorPath)
 
@@ -170,7 +175,8 @@ fun Application.setupRoutes() {
         RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
 
     UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
-    TssIdentRiver(rapid, databaseContext)
+    TssIdentRiver(rapid, tssIdentService)
+    JoarkrefRiver(rapid, joarkrefService)
 
     thread(isDaemon = false) {
         rapid.start()
@@ -189,10 +195,10 @@ fun Application.setupRoutes() {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(databaseContext, enhetsregisteretService)
-                    if (Configuration.dev) oversiktApi(databaseContext, enhetsregisteretService)
+                    oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
-                    kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService)
+                    kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService, joarkrefService, kafkaService)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)

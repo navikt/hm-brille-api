@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.hjelpemidler.brille.audit.AuditStore
 import no.nav.hjelpemidler.brille.innsender.InnsenderStore
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefStore
 import no.nav.hjelpemidler.brille.rapportering.RapportStore
 import no.nav.hjelpemidler.brille.tss.TssIdentStore
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStore
@@ -38,6 +39,7 @@ fun createDatabaseSessionContextWithMocks(): DatabaseSessionContext {
         override val innsenderStore: InnsenderStore = mockk(relaxed = true)
         override val rapportStore: RapportStore = mockk(relaxed = true)
         override val tssIdentStore: TssIdentStore = mockk(relaxed = true)
+        override val joarkrefStore: JoarkrefStore = mockk(relaxed = true)
         override val vedtakSlettetStore: VedtakSlettetStore = mockk(relaxed = true)
     }
 }

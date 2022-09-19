@@ -34,8 +34,10 @@ class SendTilUtbetalingScheduler(
     }
 
     override suspend fun action() {
-        val utbetalinger =
-            utbetalingService.hentUtbetalingerMedNyStatusBatchDato(batchDato = LocalDate.now().minusDays(dager))
+        val utbetalinger = utbetalingService.hentUtbetalingerForOppdrag(
+            batchDato = LocalDate.now().minusDays(dager),
+            opprettetFor = 2.minutes
+        ) // hent kun de som har blitt registrert minst x minutter siden.
         LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
         if (utbetalinger.isNotEmpty()) {
             val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()

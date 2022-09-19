@@ -198,6 +198,19 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
     }
 
+    fun feilregistrerBarnebrillerIJoark(sakId: Long, joarkRef: Long) {
+        produceEvent(
+            null,
+            mapOf(
+                "eventId" to UUID.randomUUID(),
+                "eventName" to "hm-barnebriller-feilregistrer-journalpost",
+                "sakId" to sakId.toString(),
+                "joarkRef" to joarkRef.toString(),
+                "opprettet" to LocalDateTime.now(),
+            )
+        )
+    }
+
     fun isAlive() = kafkaRapid.isRunning()
     fun isReady() = kafkaRapid.isReady()
 

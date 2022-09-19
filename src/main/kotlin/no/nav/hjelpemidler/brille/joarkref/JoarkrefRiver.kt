@@ -1,4 +1,4 @@
-package no.nav.hjelpemidler.brille.tss
+package no.nav.hjelpemidler.brille.joarkref
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -7,19 +7,20 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import no.nav.helse.rapids_rivers.asLocalDateTime
 import no.nav.hjelpemidler.brille.utbetaling.PacketListenerWithOnError
 import org.slf4j.LoggerFactory
 import java.util.UUID
 
-class TssIdentRiver(
+class JoarkrefRiver(
     rapidsConnection: RapidsConnection,
-    private val tssIdentService: TssIdentService
+    private val joarkrefService: JoarkrefService,
 ) : PacketListenerWithOnError {
 
-    private val eventName = "hm-utbetaling-tss-optiker-svar"
+    private val eventName = "hm-opprettetOgFerdigstiltBarnebrillerJournalpost"
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(TssIdentRiver::class.java)
+        private val LOG = LoggerFactory.getLogger(JoarkrefRiver::class.java)
     }
 
     init {
@@ -31,9 +32,8 @@ class TssIdentRiver(
             validate {
                 it.requireKey(
                     "eventId",
-                    "orgnr",
-                    "kontonr",
-                    "tssIdent",
+                    "sakId",
+                    "joarkRef",
                     "opprettet",
                 )
             }
@@ -41,17 +41,15 @@ class TssIdentRiver(
     }
 
     private val JsonMessage.eventId get() = this["eventId"].textValue().let { UUID.fromString(it) }!!
-    private val JsonMessage.orgnr get() = this["orgnr"].textValue()!!
-    private val JsonMessage.kontonr get() = this["kontonr"].textValue()!!
-    private val JsonMessage.tssIdent get() = this["tssIdent"].textValue()!!
-    private val JsonMessage.opprettet get() = this["opprettet"].textValue()!!
+    private val JsonMessage.sakId get() = this["sakId"].textValue()!!
+    private val JsonMessage.joarkRef get() = this["joarkRef"].textValue()!!
+    private val JsonMessage.opprettet get() = this["opprettet"].asLocalDateTime()
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        LOG.info("Kvittering for oppdatering av TSS mottatt: eventId=${packet.eventId}, orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, opprettet=${packet.opprettet}")
+        LOG.info("Kvittering for oppretting av journalpost mottatt: eventId=${packet.eventId}, sakId=${packet.sakId}, joarkRef=${packet.joarkRef}, opprettet=${packet.opprettet}")
         runBlocking {
             withContext(Dispatchers.IO) {
-                tssIdentService.settTssIdent(packet.orgnr, packet.kontonr, packet.tssIdent)
-                LOG.info("Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, kvittert=${packet.opprettet}")
+                joarkrefService.lagreJoarkRef(packet.sakId.toLong(), packet.joarkRef.toLong())
             }
         }
     }
