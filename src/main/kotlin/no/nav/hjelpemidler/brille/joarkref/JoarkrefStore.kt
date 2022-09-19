@@ -27,7 +27,9 @@ class JoarkrefStorePostgres(private val sessionFactory: () -> Session) : Joarkre
                 "vedtakId" to vedtakId,
                 "joarkRef" to joarkRef,
             )
-        ).validate()
+        )
+
+        Unit
     }
 
     override fun hentJoarkRef(vedtakId: Long) = session {
