@@ -20,6 +20,7 @@ import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 internal class UtbetalingStorePostgresTest {
 
@@ -102,7 +103,7 @@ internal class UtbetalingStorePostgresTest {
 
                         utbetaling.batchId shouldBe utbetaling2.batchId
                         utbetaling.batchDato shouldBe utbetaling2.batchDato
-                        val nyUtbetalinger = hentUtbetalingerMedStatusBatchDato(batchDato = LocalDate.now())
+                        val nyUtbetalinger = hentUtbetalingerMedStatusBatchDatoOpprettet(batchDato = LocalDate.now())
                         val batchUtbetalinger = hentUtbetalingerMedBatchId(utbetaling.batchId)
                         nyUtbetalinger.size shouldBe 2
                         batchUtbetalinger.size shouldBe nyUtbetalinger.size
@@ -113,6 +114,12 @@ internal class UtbetalingStorePostgresTest {
                         val hentDb = hentUtbetalingsBatch(batchRecord.batchId)
                         hentDb.shouldNotBeNull()
                         hentDb.antallUtbetalinger shouldBe batchRecord.antallUtbetalinger
+
+                        val tiMinutterSiden = LocalDateTime.now().minusMinutes(10)
+                        val utbetalinger10MinSiden = hentUtbetalingerMedStatusBatchDatoOpprettet(
+                            batchDato = LocalDate.now(), opprettet = tiMinutterSiden
+                        )
+                        utbetalinger10MinSiden.size shouldBe 0
 
                         val duplicateException = shouldThrow<PSQLException> {
                             lagreUtbetalingsBatch(batchRecord)

@@ -11,10 +11,11 @@ import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 interface UtbetalingStore : Store {
     fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling?
-    fun hentUtbetalingerMedStatusBatchDato(status: UtbetalingStatus = UtbetalingStatus.NY, batchDato: LocalDate): List<Utbetaling>
+    fun hentUtbetalingerMedStatusBatchDatoOpprettet(status: UtbetalingStatus = UtbetalingStatus.NY, batchDato: LocalDate, opprettet: LocalDateTime? = null): List<Utbetaling>
     fun hentUtbetalingerMedStatus(status: UtbetalingStatus = UtbetalingStatus.REKJOR): List<Utbetaling>
     fun lagreUtbetaling(utbetaling: Utbetaling): Utbetaling
     fun oppdaterStatus(utbetaling: Utbetaling): Utbetaling
@@ -39,14 +40,19 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
         it.query(sql, mapOf("vedtak_id" to vedtakId)) { row -> mapUtbetaling(row) }
     }
 
-    override fun hentUtbetalingerMedStatusBatchDato(status: UtbetalingStatus, batchDato: LocalDate): List<Utbetaling> = session {
+    override fun hentUtbetalingerMedStatusBatchDatoOpprettet(status: UtbetalingStatus, batchDato: LocalDate, opprettet: LocalDateTime?): List<Utbetaling> = session {
         @Language("PostgreSQL")
-        val sql = """
+        var sql = """
             SELECT $allColums
             FROM utbetaling_v1
-            WHERE status = :status and batch_dato <= :batchDato
+            WHERE status = :status AND batch_dato <= :batchDato
         """.trimIndent()
-        it.queryList(sql, mapOf("status" to status.name, "batchDato" to batchDato)) {
+
+        opprettet?.let {
+            sql = sql.plus(" AND opprettet <= :opprettet")
+        }
+
+        it.queryList(sql, mapOf("status" to status.name, "batchDato" to batchDato, "opprettet" to opprettet)) {
                 row ->
             mapUtbetaling(row)
         }
