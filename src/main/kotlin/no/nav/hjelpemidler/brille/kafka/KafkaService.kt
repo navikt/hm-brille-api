@@ -159,6 +159,15 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
     }
 
+    fun vedtakSlettet(vedtakId: Long) {
+        sendTilBigQuery(
+            null,
+            SlettedeVedtakStatistikk(
+                vedtakId = vedtakId,
+            ),
+        )
+    }
+
     fun <T> produceEvent(key: String?, event: T) {
         try {
             val message = mapper.writeValueAsString(event)
@@ -304,6 +313,13 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val bevist: Boolean = false,
         val antatt: Boolean = false,
         val avvist: Boolean = false,
+        val opprettet: LocalDateTime = LocalDateTime.now(),
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "slettede_vedtak_v1")
+    internal data class SlettedeVedtakStatistikk(
+        val vedtakId: Long,
         val opprettet: LocalDateTime = LocalDateTime.now(),
     )
 

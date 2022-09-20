@@ -151,7 +151,7 @@ fun Application.setupRoutes() {
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
-    val vedtakSlettetService = VedtakSlettetService(databaseContext)
+    val vedtakSlettetService = VedtakSlettetService(databaseContext, kafkaService)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val joarkrefService = JoarkrefService(databaseContext)
     val tssIdentService = TssIdentService(databaseContext)
