@@ -18,6 +18,7 @@ application {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
@@ -36,7 +37,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
-    implementation("com.github.navikt:hm-rapids-and-rivers-v2:202208300926")
+    implementation("com.github.navikt:hm-rapids-and-rivers-v2:202209201352")
 
     // Unleash
     implementation("io.getunleash:unleash-client-java:6.0.1")
