@@ -40,6 +40,7 @@ spec:
   envFrom:
     - secret: redis-password
     - secret: hm-soknad-api-secret
+    - secret: hm-slack-hook
   tokenx:
     enabled: true
   azure:
