@@ -35,4 +35,18 @@ class EnhetsregisteretService(
         log.info { "Klarte ikke å finne en organisasjonsenhet eller underenhet for orgnr: $orgnr" }
         return null
     }
+
+    suspend fun organisasjonSlettet(orgnr: String): Boolean {
+        kotlin.runCatching {
+            val org = kotlin.runCatching { hentOrganisasjonsenhet(orgnr) }.getOrNull()
+            if (org != null) {
+                return org.slettedato != null
+            }
+
+            throw RuntimeException("orgnr=$orgnr kunne ikke bekreftes å være en enhet eller underenhet")
+        }.getOrElse {
+            log.error(it) { "Kunne ikke sjekke om organisasjonen er slettet" }
+        }
+        return false
+    }
 }

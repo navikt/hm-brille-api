@@ -168,7 +168,7 @@ fun Application.setupRoutes() {
     setupMetrics(metrics)
 
     val vedtakTilUtbetalingScheduler =
-        VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, metrics)
+        VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
     val sendTilUtbetalingScheduler =
         SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     val rekjorUtbetalingerScheduler =
