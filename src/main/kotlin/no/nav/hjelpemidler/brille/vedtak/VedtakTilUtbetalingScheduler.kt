@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import io.micrometer.core.instrument.Gauge
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
@@ -56,7 +57,8 @@ class VedtakTilUtbetalingScheduler(
 
         // Rapporter til slack om alle orgnr med køet opp vedtak for utbetaling som er knyttet til en organisasjon som er slettet
         enhetsregisterCache.filter { it.value }.forEach { orgnr, _ ->
-            Slack.post("VedtakTilUtbetalingScheduler: Kan ikke opprette utbetalinger for organisasjon som er slettet i enhetsregisteret (orgnr=$orgnr)")
+            if (Configuration.dev || Configuration.prod)
+                Slack.post("VedtakTilUtbetalingScheduler: Kan ikke opprette utbetalinger for organisasjon som er slettet i enhetsregisteret (orgnr=$orgnr)")
         }
 
         this.metricsConfig.registry.counter("vedtak_til_utbetaling", "type", "vedtak")
