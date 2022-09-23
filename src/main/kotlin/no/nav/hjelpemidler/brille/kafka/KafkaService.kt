@@ -110,6 +110,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         sendTilBigQuery(
             fnrBarn,
             VedtakStatistikk(
+                vedtakId = vedtak.id,
                 opprettet = vedtak.opprettet,
                 orgnr = vedtak.orgnr,
                 orgNavn = krav.orgNavn,
@@ -275,6 +276,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     @JsonNaming(BigQueryStrategy::class)
     @BigQueryHendelse(schemaId = "vedtak_v1")
     internal data class VedtakStatistikk(
+        val vedtakId: Long,
         val opprettet: LocalDateTime,
         val orgnr: String,
         val orgNavn: String,
