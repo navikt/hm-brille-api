@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.db.DatabaseContext
@@ -9,6 +10,7 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.kafka.KafkaService
+import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import java.time.LocalDateTime
 
@@ -115,8 +117,10 @@ class AvtaleService(
         transaction(databaseContext) { ctx ->
             ctx.tssIdentStore.glemEksisterendeTssIdent(orgnr)
         }
-
         kafkaService.avtaleOpprettet(avtale)
+
+        if (Configuration.dev || Configuration.prod)
+            Slack.post("AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana ved å søke: `Kontonr synkronisert til TSS: orgnr=$orgnr`")
 
         return avtale
     }
