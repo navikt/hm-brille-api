@@ -16,7 +16,7 @@ class SendTilUtbetalingScheduler(
     private val databaseContext: DatabaseContext,
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
-    delay: Duration = 3.minutes,
+    delay: Duration = 8.minutes,
     private val dager: Long = 8,
     onlyWorkHours: Boolean = true
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
