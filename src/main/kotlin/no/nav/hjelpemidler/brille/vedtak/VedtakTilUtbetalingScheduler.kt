@@ -1,9 +1,12 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import io.micrometer.core.instrument.Gauge
+import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
+import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
@@ -14,6 +17,7 @@ class VedtakTilUtbetalingScheduler(
     private val vedtakService: VedtakService,
     leaderElection: LeaderElection,
     private val utbetalingService: UtbetalingService,
+    private val enhetsregisteretService: EnhetsregisteretService,
     private val metricsConfig: MetricsConfig,
     delay: Duration = 5.minutes,
     private val dager: Long = 7,
@@ -32,11 +36,31 @@ class VedtakTilUtbetalingScheduler(
 
     override suspend fun action() {
         vedtakKo = vedtakService.hentAntallVedtakIKø().toDouble()
+
         val vedtakList = vedtakService.hentVedtakForUtbetaling(opprettet = LocalDateTime.now().minusDays(dager))
         LOG.info("fant ${vedtakList.size} vedtak for utbetaling")
+
+        val enhetsregisterCache = mutableMapOf<String, Boolean>()
         vedtakList.forEach {
-            utbetalingService.opprettNyUtbetaling(it)
+            // Sjekk om organisasjon har blitt slettet
+            val orgnr = it.orgnr
+            val erSlettet = enhetsregisterCache[orgnr].let {
+                if (it == null) enhetsregisterCache[orgnr] = enhetsregisteretService.organisasjonSlettet(orgnr)
+                enhetsregisterCache[orgnr]!!
+            }
+
+            // ... hvis ikke, opprett ny utbetaling
+            if (!erSlettet) {
+                utbetalingService.opprettNyUtbetaling(it)
+            }
         }
+
+        // Rapporter til slack om alle orgnr med køet opp vedtak for utbetaling som er knyttet til en organisasjon som er slettet
+        enhetsregisterCache.filter { it.value }.forEach { orgnr, _ ->
+            if (Configuration.dev || Configuration.prod)
+                Slack.post("VedtakTilUtbetalingScheduler: Kan ikke opprette utbetalinger for organisasjon som er slettet i enhetsregisteret (orgnr=$orgnr)")
+        }
+
         this.metricsConfig.registry.counter("vedtak_til_utbetaling", "type", "vedtak")
             .increment(vedtakList.size.toDouble())
     }

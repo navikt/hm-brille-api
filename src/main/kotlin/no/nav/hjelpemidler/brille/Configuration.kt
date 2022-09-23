@@ -56,6 +56,7 @@ object Configuration {
             "userclaim" to "sub",
             "REDIS_HOST" to "localhost",
             "REDIS_PASSWORD" to "",
+            "SLACK_HOOK" to "http://dummy",
         )
     )
 
@@ -147,6 +148,7 @@ object Configuration {
     val redisProperties = RedisProperties()
     val altinnProperties = AltinnProperties()
     val utbetalingProperties = UtbetalingProperties()
+    val slackProperties = SlackProperties()
     val electorPath = get("ELECTOR_PATH")
 
     operator fun get(key: String): String = config[Key(key, stringType)]
@@ -228,6 +230,11 @@ object Configuration {
 
     data class UtbetalingProperties(
         val enabledUtbetaling: Boolean = "true" == this["UTBETALING_ENABLED"],
+    )
+
+    data class SlackProperties(
+        val slackHook: String = this["SLACK_HOOK"],
+        val environment: String = profile.toString(),
     )
 
     enum class Profile {

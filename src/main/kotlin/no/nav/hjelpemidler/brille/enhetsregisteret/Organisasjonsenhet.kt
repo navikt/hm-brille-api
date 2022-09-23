@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.time.LocalDate
 
 data class Organisasjonsenhet(
     @JsonProperty("organisasjonsnummer")
@@ -12,6 +13,7 @@ data class Organisasjonsenhet(
     val naeringskode1: Næringskode? = null,
     val naeringskode2: Næringskode? = null,
     val naeringskode3: Næringskode? = null,
+    val slettedato: LocalDate? = null,
 ) {
     fun næringskoder(): Set<Næringskode> = setOfNotNull(
         naeringskode1,

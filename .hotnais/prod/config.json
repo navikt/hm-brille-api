@@ -15,7 +15,8 @@
   "db_name": "brilleapidb",
   "external-hosts": [
     "data.brreg.no",
-    "pdl-api.prod-fss-pub.nais.io"
+    "pdl-api.prod-fss-pub.nais.io",
+    "hooks.slack.com"
   ],
   "outbound-applications": [
   ],
