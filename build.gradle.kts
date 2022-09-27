@@ -37,7 +37,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
-    implementation("com.github.navikt:hm-rapids-and-rivers-v2:202209201352")
+    implementation("com.github.navikt:hm-rapids-and-rivers-v2-core:202209270953")
 
     // Unleash
     implementation("io.getunleash:unleash-client-java:6.0.1")
