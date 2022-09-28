@@ -171,7 +171,7 @@ fun Application.setupRoutes() {
     VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
-    if (Configuration.dev) RapporterManglendeTssIdentScheduler(tssIdentService, enhetsregisteretService, leaderElection, metrics)
+    if (Configuration.prod) RapporterManglendeTssIdentScheduler(tssIdentService, enhetsregisteretService, leaderElection, metrics)
 
     UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
     TssIdentRiver(rapid, tssIdentService)

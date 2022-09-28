@@ -9,14 +9,13 @@ import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
 
 class RapporterManglendeTssIdentScheduler(
     private val tssIdentService: TssIdentService,
     private val enhetsregisteretService: EnhetsregisteretService,
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
-    delay: Duration = 5.minutes,
+    delay: Duration = 24.hours,
     onlyWorkHours: Boolean = false
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
