@@ -5,7 +5,6 @@ import kotliquery.Row
 import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
-import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alderPåDato
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.Person

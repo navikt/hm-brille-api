@@ -24,4 +24,10 @@ class TssIdentService(val databaseContext: DatabaseContext) {
             ctx.tssIdentStore.settTssIdent(orgnr, tssIdent)
         }
     }
+
+    suspend fun hentAlleOrgnrSomManglerTssIdent(): List<String> {
+        return transaction(databaseContext) { ctx ->
+            ctx.tssIdentStore.hentAlleOrgnrSomManglerTssIdent()
+        }
+    }
 }

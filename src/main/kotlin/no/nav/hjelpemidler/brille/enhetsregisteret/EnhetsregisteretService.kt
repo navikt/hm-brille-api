@@ -2,6 +2,7 @@ package no.nav.hjelpemidler.brille.enhetsregisteret
 
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.redis.RedisClient
+import java.time.LocalDate
 
 private val log = KotlinLogging.logger { }
 
@@ -48,5 +49,19 @@ class EnhetsregisteretService(
             log.error(it) { "Kunne ikke sjekke om organisasjonen er slettet" }
         }
         return false
+    }
+
+    suspend fun organisasjonSlettetNår(orgnr: String): LocalDate? {
+        kotlin.runCatching {
+            val org = kotlin.runCatching { hentOrganisasjonsenhet(orgnr) }.getOrNull()
+            if (org != null) {
+                return org.slettedato
+            }
+
+            throw RuntimeException("orgnr=$orgnr kunne ikke bekreftes å være en enhet eller underenhet")
+        }.getOrElse {
+            log.error(it) { "Kunne ikke sjekke om organisasjonen er slettet" }
+        }
+        return null
     }
 }
