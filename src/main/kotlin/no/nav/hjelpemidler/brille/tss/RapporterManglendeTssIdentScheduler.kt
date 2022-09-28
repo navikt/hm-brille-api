@@ -50,7 +50,7 @@ class RapporterManglendeTssIdentScheduler(
         val count = results.count()
         val resultString = results.joinToString { res ->
             if (res.slettet == null) res.orgnr
-            else "${res.orgnr} (${res.slettet})"
+            else "${res.orgnr} (slettet: ${res.slettet})"
         }
 
         Slack.post(
