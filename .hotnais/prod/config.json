@@ -7,7 +7,7 @@
     "hm-brillekalkulator"
   ],
   "port": 9090,
-  "db_tier": "db-custom-2-7680",
+  "db_tier": "db-custom-1-3840",
   "db_high_availability": true,
   "db_size": 20,
   "db_instance_name": "hm-brille-api-db-prod",
