@@ -141,13 +141,13 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
     kravlinjer.forEach {
         write(
             (
-                    "${it.id}; " +
-                            "${it.bestillingsreferanse}; " +
-                            "${it.beløp}; ${it.bestillingsdato}; " +
-                            "${if (it.utbetalingsdato == null) "Nei" else "Ja"}; " +
-                            "${it.utbetalingsdato} ;  " +
-                            "${it.batchId} "
-                    ).toByteArray()
+                "${it.id}; " +
+                    "${it.bestillingsreferanse}; " +
+                    "${it.beløp}; ${it.bestillingsdato}; " +
+                    "${if (it.utbetalingsdato == null) "Nei" else "Ja"}; " +
+                    "${it.utbetalingsdato} ;  " +
+                    "${it.batchId} "
+                ).toByteArray()
         )
         write("\n".toByteArray())
     }

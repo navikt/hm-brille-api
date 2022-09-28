@@ -4,6 +4,7 @@ import kotliquery.Session
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
+import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 
@@ -11,6 +12,7 @@ interface TssIdentStore : Store {
     fun hentTssIdent(orgnr: String): String?
     fun settTssIdent(orgnr: String, tssIdent: String)
     fun glemEksisterendeTssIdent(orgnr: String)
+    fun hentAlleOrgnrSomManglerTssIdent(): List<String>
 }
 
 class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIdentStore, TransactionalStore(sessionFactory) {
@@ -53,5 +55,19 @@ class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIden
         )
 
         Unit
+    }
+
+    override fun hentAlleOrgnrSomManglerTssIdent() = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT orgnr
+            FROM virksomhet_v1
+            WHERE orgnr NOT IN (SELECT orgnr FROM tssident_v1)
+            ORDER BY orgnr ASC
+        """.trimIndent()
+
+        it.queryList(sql, emptyMap()) { row ->
+            row.string("orgnr")
+        }.toSet().toList()
     }
 }
