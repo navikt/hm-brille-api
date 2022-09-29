@@ -33,6 +33,11 @@ object HentPersonExtensions {
         return Period.between(fodselsdato, LocalDate.now()).years
     }
 
+    fun Person.alderPåDato(dato: LocalDate): Int? {
+        val fodselsdato = fodselsdato() ?: return null
+        return Period.between(fodselsdato, dato).years
+    }
+
     fun Person.navn(): String {
         val navn = navn.firstOrDefault(Navn("", "", ""))
         return listOfNotNull(navn.fornavn, navn.mellomnavn, navn.etternavn)

@@ -5,7 +5,7 @@ import kotliquery.Row
 import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
-import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alderPåDato
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.pgObjectOf
@@ -130,7 +130,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 orgnr = row.string("orgnr"),
                 barnsNavn = person.navn(),
                 barnsFnr = row.string("fnr_barn"),
-                barnsAlder = person.alder() ?: -1,
+                barnsAlder = person.alderPåDato(row.localDate("bestillingsdato")) ?: -1,
                 høyreSfære = row.double("høyreSfære"),
                 høyreSylinder = row.double("høyreSylinder"),
                 venstreSfære = row.double("venstreSfære"),
@@ -212,7 +212,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     orgnr = row.string("orgnr"),
                     barnsNavn = person.navn(),
                     barnsFnr = row.string("fnr_barn"),
-                    barnsAlder = person.alder() ?: -1,
+                    barnsAlder = person.alderPåDato(row.localDate("bestillingsdato")) ?: -1,
                     høyreSfære = row.double("høyreSfære"),
                     høyreSylinder = row.double("høyreSylinder"),
                     venstreSfære = row.double("venstreSfære"),
