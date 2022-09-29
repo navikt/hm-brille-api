@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille.vedtak
 
-import io.ktor.http.HttpStatusCode
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.db.DatabaseContext
@@ -11,6 +10,11 @@ import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 
 private val log = KotlinLogging.logger {}
 
+class SlettVedtakNotAuthorizedException() : RuntimeException("Ikke autorisert")
+class SlettVedtakConflictException() : RuntimeException("vedtaket er utbetalt")
+class SlettVedtakInternalServerErrorException() : RuntimeException("har ikke joarkref for krav")
+class SlettVedtakNotFoundException() : RuntimeException("ikke funnet")
+
 class SlettVedtakService(
     private val vedtakService: VedtakService,
     private val auditService: AuditService,
@@ -20,7 +24,7 @@ class SlettVedtakService(
     private val databaseContext: DatabaseContext,
 ) {
 
-    suspend fun slettVedtak(fnrInnsender: String, vedtakId: Long, erAdmin: Boolean): Pair<HttpStatusCode, String> {
+    suspend fun slettVedtak(fnrInnsender: String, vedtakId: Long, erAdmin: Boolean) {
         val vedtak = vedtakService.hentVedtak(vedtakId)
         if (vedtak != null) {
             auditService.lagreOppslag(
@@ -29,12 +33,13 @@ class SlettVedtakService(
                 oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
             )
             if (!erAdmin && fnrInnsender != vedtak.fnrInnsender) {
-                return Pair(HttpStatusCode.Unauthorized, "Ikke autorisert")
+                throw SlettVedtakNotAuthorizedException()
             } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
-                return Pair(HttpStatusCode.Conflict, "vedtaket er utbetalt")
+                throw SlettVedtakConflictException()
             } else {
                 val joarkRef = joarkrefService.hentJoarkRef(vedtakId)
-                    ?: return Pair(HttpStatusCode.InternalServerError, "har ikke joarkref for krav")
+                    ?: throw SlettVedtakInternalServerErrorException()
+
                 log.info("JoarkRef funnet: $joarkRef")
 
                 transaction(databaseContext) { ctx ->
@@ -43,9 +48,8 @@ class SlettVedtakService(
                 }
 
                 kafkaService.feilregistrerBarnebrillerIJoark(vedtakId, joarkRef)
-
-                return Pair(HttpStatusCode.OK, "{}")
+                return
             }
-        } else return Pair(HttpStatusCode.NotFound, "ikke funnet")
+        } else throw SlettVedtakNotFoundException()
     }
 }

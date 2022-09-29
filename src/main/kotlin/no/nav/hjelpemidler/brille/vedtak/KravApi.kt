@@ -38,10 +38,20 @@ internal fun Route.kravApi(
         }
 
         delete("/{id}") {
-            val vedtakId = call.parameters["id"]!!.toLong()
             val fnrInnsender = call.extractFnr()
-            val result = slettVedtakService.slettVedtak(fnrInnsender, vedtakId, false)
-            call.respond(result.first, result.second)
+            val vedtakId = call.parameters["id"]!!.toLong()
+            try {
+                slettVedtakService.slettVedtak(fnrInnsender, vedtakId, false)
+                call.respond(HttpStatusCode.OK, "{}")
+            } catch (e: SlettVedtakNotAuthorizedException) {
+                call.respond(HttpStatusCode.Unauthorized, e.message!!)
+            } catch (e: SlettVedtakConflictException) {
+                call.respond(HttpStatusCode.Conflict, e.message!!)
+            } catch (e: SlettVedtakInternalServerErrorException) {
+                call.respond(HttpStatusCode.InternalServerError, e.message!!)
+            } catch (e: SlettVedtakNotFoundException) {
+                call.respond(HttpStatusCode.NotFound, e.message!!)
+            }
         }
     }
 }

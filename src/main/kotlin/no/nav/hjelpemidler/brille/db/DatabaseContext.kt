@@ -2,6 +2,8 @@ package no.nav.hjelpemidler.brille.db
 
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.DatabaseConfiguration
+import no.nav.hjelpemidler.brille.admin.AdminStore
+import no.nav.hjelpemidler.brille.admin.AdminStorePostgres
 import no.nav.hjelpemidler.brille.audit.AuditStore
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
 import no.nav.hjelpemidler.brille.innsender.InnsenderStore
@@ -44,6 +46,7 @@ interface DatabaseSessionContext {
     val tssIdentStore: TssIdentStore
     val joarkrefStore: JoarkrefStore
     val vedtakSlettetStore: VedtakSlettetStore
+    val adminStore: AdminStore
 }
 
 class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSessionContext {
@@ -56,4 +59,5 @@ class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSe
     override val tssIdentStore: TssIdentStore = TssIdentStorePostgres(sessionFactory)
     override val joarkrefStore: JoarkrefStore = JoarkrefStorePostgres(sessionFactory)
     override val vedtakSlettetStore: VedtakSlettetStore = VedtakSlettetStorePostgres(sessionFactory)
+    override val adminStore: AdminStore = AdminStorePostgres(sessionFactory)
 }

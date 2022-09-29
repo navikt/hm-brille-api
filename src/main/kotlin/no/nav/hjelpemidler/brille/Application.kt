@@ -25,6 +25,8 @@ import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
+import no.nav.hjelpemidler.brille.admin.AdminService
+import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
@@ -157,6 +159,7 @@ fun Application.setupRoutes() {
     val slettVedtakService = SlettVedtakService(vedtakService, auditService, utbetalingService, joarkrefService, kafkaService, databaseContext)
     val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
+    val adminService = AdminService(databaseContext)
     val leaderElection = LeaderElection(Configuration.electorPath)
 
     val metrics = MetricsConfig(
@@ -201,6 +204,7 @@ fun Application.setupRoutes() {
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)
+                if (Configuration.dev) adminApi(adminService, slettVedtakService, enhetsregisteretService)
             }
 
             // Admin apis
