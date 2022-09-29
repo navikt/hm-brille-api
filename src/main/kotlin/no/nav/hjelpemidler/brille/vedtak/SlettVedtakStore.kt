@@ -14,12 +14,12 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-interface VedtakSlettetStore : Store {
+interface SlettVedtakStore : Store {
     fun hentVedtakSlettet(vedtakId: Long): VedtakSlettet?
     fun slettVedtak(vedtakId: Long): Int?
 }
 
-class VedtakSlettetStorePostgres(private val sessionFactory: () -> Session) : VedtakSlettetStore,
+class SlettVedtakStorePostgres(private val sessionFactory: () -> Session) : SlettVedtakStore,
     TransactionalStore(sessionFactory) {
     override fun hentVedtakSlettet(vedtakId: Long): VedtakSlettet? = session {
         @Language("PostgreSQL")

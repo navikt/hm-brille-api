@@ -43,7 +43,7 @@ class SlettVedtakService(
                 log.info("JoarkRef funnet: $joarkRef")
 
                 transaction(databaseContext) { ctx ->
-                    ctx.vedtakSlettetStore.slettVedtak(vedtakId)
+                    ctx.slettVedtakStore.slettVedtak(vedtakId)
                     kafkaService.vedtakSlettet(vedtakId)
                 }
 
