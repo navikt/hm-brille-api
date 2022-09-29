@@ -41,9 +41,7 @@ internal class KravApiTest {
     private val dagensDatoFactory = mockk<() -> LocalDate>()
     private val auditService = mockk<AuditService>(relaxed = true)
     private val utbetalingService = mockk<UtbetalingService>(relaxed = true)
-    private val vedtakSlettetService = mockk<VedtakSlettetService>(relaxed = true)
-    private val joarkrefService = mockk<JoarkrefService>(relaxed = true)
-    private val kafkaService = mockk<KafkaService>(relaxed = true)
+    private val slettVedtakService = mockk<SlettVedtakService>(relaxed = true)
 
     val sessionContext = createDatabaseSessionContextWithMocks()
     val databaseContext = createDatabaseContext(sessionContext)
@@ -60,7 +58,7 @@ internal class KravApiTest {
 
     private val routing = TestRouting {
         authenticate("test") {
-            kravApi(vedtakService, auditService, utbetalingService, vedtakSlettetService, joarkrefService, kafkaService)
+            kravApi(vedtakService, auditService, slettVedtakService)
         }
     }
 

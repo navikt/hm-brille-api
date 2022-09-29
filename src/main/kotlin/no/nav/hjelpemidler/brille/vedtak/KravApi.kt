@@ -11,19 +11,13 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
-import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
-import no.nav.hjelpemidler.brille.kafka.KafkaService
-import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 
 private val log = KotlinLogging.logger {}
 
 internal fun Route.kravApi(
     vedtakService: VedtakService,
     auditService: AuditService,
-    utbetalingService: UtbetalingService,
-    vedtakSlettetService: VedtakSlettetService,
-    joarkrefService: JoarkrefService,
-    kafkaService: KafkaService,
+    slettVedtakService: SlettVedtakService,
 ) {
     route("/krav") {
         post {
@@ -46,28 +40,8 @@ internal fun Route.kravApi(
         delete("/{id}") {
             val vedtakId = call.parameters["id"]!!.toLong()
             val fnrInnsender = call.extractFnr()
-            val vedtak = vedtakService.hentVedtak(vedtakId)
-            if (vedtak != null) {
-                auditService.lagreOppslag(
-                    fnrInnlogget = fnrInnsender,
-                    fnrOppslag = vedtak.fnrBarn,
-                    oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
-                )
-                if (fnrInnsender != vedtak.fnrInnsender) {
-                    call.respond(HttpStatusCode.Unauthorized, "Ikke autorisert")
-                } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
-                    call.respond(HttpStatusCode.Conflict, "vedtaket er utbetalt")
-                } else {
-                    val joarkRef = joarkrefService.hentJoarkRef(vedtakId)
-                        ?: return@delete call.respond(HttpStatusCode.InternalServerError, "har ikke joarkref for krav")
-                    log.info("JoarkRef funnet: $joarkRef")
-
-                    vedtakSlettetService.slettVedtak(vedtakId)
-                    kafkaService.feilregistrerBarnebrillerIJoark(vedtakId, joarkRef)
-
-                    call.respond(HttpStatusCode.OK, "{}")
-                }
-            } else call.respond(HttpStatusCode.NotFound, "ikke funnet")
+            val result = slettVedtakService.slettVedtak(fnrInnsender, vedtakId, false)
+            call.respond(result.first, result.second)
         }
     }
 }
