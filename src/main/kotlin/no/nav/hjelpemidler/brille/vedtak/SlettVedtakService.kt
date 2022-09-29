@@ -43,7 +43,7 @@ class SlettVedtakService(
                 log.info("JoarkRef funnet: $joarkRef")
 
                 transaction(databaseContext) { ctx ->
-                    ctx.slettVedtakStore.slettVedtak(vedtakId)
+                    ctx.slettVedtakStore.slettVedtak(vedtakId, fnrInnsender, if (erAdmin) SlettetAvType.NAV_ADMIN else SlettetAvType.INNSENDER)
                     kafkaService.vedtakSlettet(vedtakId)
                 }
 

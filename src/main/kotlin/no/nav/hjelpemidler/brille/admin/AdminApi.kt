@@ -16,6 +16,7 @@ import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakNotAuthorizedException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakNotFoundException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
+import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import java.time.LocalDateTime
 
 fun Route.adminApi(
@@ -60,7 +61,7 @@ fun Route.adminApi(
                 val opprettet: LocalDateTime,
                 val utbetalt: LocalDateTime?,
                 val slettet: LocalDateTime?,
-                val slettetAvType: String?,
+                val slettetAvType: SlettetAvType?,
             )
 
             call.respond(

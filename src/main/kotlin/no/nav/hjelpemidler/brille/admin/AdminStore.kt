@@ -5,6 +5,7 @@ import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
+import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
@@ -73,7 +74,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 bestillingsreferanse = row.string("bestillingsreferanse"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
                 slettet = row.localDateTimeOrNull("slettet"),
-                slettetAvType = row.stringOrNull("slettet_av_type"),
+                slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
             )
         }
     }
@@ -92,5 +93,5 @@ data class Vedtak(
     val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
     val slettet: LocalDateTime?,
-    val slettetAvType: String?,
+    val slettetAvType: SlettetAvType?,
 )
