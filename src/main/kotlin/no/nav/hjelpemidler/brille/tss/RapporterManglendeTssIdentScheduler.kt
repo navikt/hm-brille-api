@@ -53,7 +53,7 @@ class RapporterManglendeTssIdentScheduler(
         }
 
         Slack.post(
-            "RapporterManglendeTssIdentScheduler: Fant $count virksomheter med avtale som ikke har TSS-ident. Orgnre: $resultString"
+            "RapporterManglendeTssIdentScheduler: Fant $count virksomheter med avtale som ikke har TSS-ident. Orgnr: $resultString."
         )
     }
 }
