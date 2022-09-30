@@ -47,7 +47,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 sakId = row.long("id"),
                 barnsNavn = person.navn(),
                 opprettet = row.localDateTime("opprettet"),
-                utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
+                utbetalt = row.localDateTimeOrNull("utbetalingsdato"),
                 slettet = row.localDateTimeOrNull("slettet"),
             )
         }
