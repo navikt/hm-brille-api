@@ -96,7 +96,7 @@ data class VedtakListe(
     val sakId: Long,
     val barnsNavn: String,
     val opprettet: LocalDateTime,
-    val utbetalingsdato: LocalDateTime?,
+    val utbetalt: LocalDateTime?,
     val slettet: LocalDateTime?,
 )
 
