@@ -1,6 +1,10 @@
 package no.nav.hjelpemidler.brille.admin
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.Session
+import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
+import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
@@ -22,6 +26,8 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         val sql = """
             SELECT
                 COALESCE(v.id, vs.id) AS id,
+                COALESCE(v.opprettet, vs.opprettet) AS opprettet,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
                 vs.slettet
             FROM vedtak_v1 v
@@ -36,8 +42,11 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             sql,
             mapOf("fnr" to fnr)
         ) { row ->
+            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
             VedtakListe(
                 sakId = row.long("id"),
+                barnsNavn = person.navn(),
+                opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
                 slettet = row.localDateTimeOrNull("slettet"),
             )
@@ -52,6 +61,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.orgnr, vs.orgnr) AS orgnr,
                 COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
                 vs.slettet,
                 vs.slettet_av_type
@@ -67,9 +77,11 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             sql,
             mapOf("vedtakId" to vedtakId)
         ) { row ->
+            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
             Vedtak(
                 sakId = row.long("id"),
                 orgnr = row.string("orgnr"),
+                barnsNavn = person.navn(),
                 opprettet = row.localDateTime("opprettet"),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
@@ -82,6 +94,8 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
 
 data class VedtakListe(
     val sakId: Long,
+    val barnsNavn: String,
+    val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
     val slettet: LocalDateTime?,
 )
@@ -89,6 +103,7 @@ data class VedtakListe(
 data class Vedtak(
     val sakId: Long,
     val orgnr: String,
+    val barnsNavn: String,
     val bestillingsreferanse: String,
     val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
