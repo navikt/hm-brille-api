@@ -14,14 +14,15 @@ object Slack {
     private val username = "hm-brille-api"
     private val environment = Configuration.slackProperties.environment
     private val hookUrl = Configuration.slackProperties.slackHook
-    private val channel = "#digihot-barnebriller-alerts"
+    private val channelProd = "#digihot-barnebriller-alerts"
+    private val channelDev = "#digihot-alerts-dev"
 
     fun post(message: String) {
         try {
             val slackMessage = "${environment.uppercase()} - $message"
             val values = mapOf(
                 "text" to slackMessage,
-                "channel" to channel,
+                "channel" to if (Configuration.prod) channelProd else channelDev,
                 "username" to username,
             )
 
