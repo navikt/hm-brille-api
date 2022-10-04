@@ -38,26 +38,28 @@ fun Route.adminApi(
 
             if (query.count() == 11) {
                 // Fnr
-                val saker = adminService.hentVedtakListe(query)
-                call.respond(HttpStatusCode.OK, saker)
+                val krav = adminService.hentVedtakListe(query)
+                call.respond(HttpStatusCode.OK, krav)
             } else {
-                // Saknr oppslag
+                // vedtakId oppslag
                 val vedtak = adminService.hentVedtak(query.toLong())
-                    ?: return@post call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke saken"}""")
+                    ?: return@post call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
 
-                call.respond(HttpStatusCode.OK, """{"sakId": "${vedtak.sakId}"}""")
+                call.respond(HttpStatusCode.OK, """{"vedtakId": "${vedtak.vedtakId}"}""")
             }
         }
 
-        get("/detaljer/{sakId}") {
-            val sakId = call.parameters["sakId"]!!.toLong()
-            val vedtak = adminService.hentVedtak(sakId)
-                ?: return@get call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke saken"}""")
+        get("/detaljer/{vedtakId}") {
+            val vedtakId = call.parameters["vedtakId"]!!.toLong()
+            val vedtak = adminService.hentVedtak(vedtakId)
+                ?: return@get call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
 
             data class Response(
-                val id: Long,
+                val vedtakId: Long,
                 val orgnr: String,
                 val orgNavn: String,
+                val barnsNavn: String,
+                val bestillingsreferanse: String,
                 val opprettet: LocalDateTime,
                 val utbetalt: LocalDateTime?,
                 val slettet: LocalDateTime?,
@@ -66,9 +68,11 @@ fun Route.adminApi(
 
             call.respond(
                 Response(
-                    id = vedtak.sakId,
+                    vedtakId = vedtak.vedtakId,
                     orgnr = vedtak.orgnr,
                     orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>",
+                    barnsNavn = vedtak.barnsNavn,
+                    bestillingsreferanse = vedtak.bestillingsreferanse,
                     opprettet = vedtak.opprettet,
                     utbetalt = vedtak.utbetalingsdato,
                     slettet = vedtak.slettet,
@@ -77,14 +81,14 @@ fun Route.adminApi(
             )
         }
 
-        delete("/detaljer/{sakId}") {
+        delete("/detaljer/{vedtakId}") {
             val fnrInnsender = call.extractFnr()
-            val sakId = call.parameters["sakId"]!!.toLong()
-            val vedtak = adminService.hentVedtak(sakId)
-                ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke saken"}""")
+            val vedtakId = call.parameters["vedtakId"]!!.toLong()
+            val vedtak = adminService.hentVedtak(vedtakId)
+                ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
 
             try {
-                slettVedtakService.slettVedtak(fnrInnsender, vedtak.sakId, true)
+                slettVedtakService.slettVedtak(fnrInnsender, vedtak.vedtakId, true)
                 call.respond(HttpStatusCode.OK, "{}")
             } catch (e: SlettVedtakNotAuthorizedException) {
                 call.respond(HttpStatusCode.Unauthorized, e.message!!)

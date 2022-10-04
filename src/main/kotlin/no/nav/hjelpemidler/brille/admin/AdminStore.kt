@@ -44,7 +44,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         ) { row ->
             val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
             VedtakListe(
-                sakId = row.long("id"),
+                vedtakId = row.long("id"),
                 barnsNavn = person.navn(),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalt = row.localDateTimeOrNull("utbetalingsdato"),
@@ -79,11 +79,11 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         ) { row ->
             val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
             Vedtak(
-                sakId = row.long("id"),
+                vedtakId = row.long("id"),
                 orgnr = row.string("orgnr"),
                 barnsNavn = person.navn(),
-                opprettet = row.localDateTime("opprettet"),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
+                opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
                 slettet = row.localDateTimeOrNull("slettet"),
                 slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
@@ -93,7 +93,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
 }
 
 data class VedtakListe(
-    val sakId: Long,
+    val vedtakId: Long,
     val barnsNavn: String,
     val opprettet: LocalDateTime,
     val utbetalt: LocalDateTime?,
@@ -101,7 +101,7 @@ data class VedtakListe(
 )
 
 data class Vedtak(
-    val sakId: Long,
+    val vedtakId: Long,
     val orgnr: String,
     val barnsNavn: String,
     val bestillingsreferanse: String,
