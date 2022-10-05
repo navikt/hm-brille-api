@@ -25,10 +25,10 @@ import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
-import no.nav.hjelpemidler.brille.admin.AdminService
-import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.aareg.AaRegClient
 import no.nav.hjelpemidler.brille.aareg.hentArbeidsforhold
+import no.nav.hjelpemidler.brille.admin.AdminService
+import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
@@ -222,7 +222,6 @@ fun Application.setupRoutes() {
             if (!Configuration.prod) {
                 hentArbeidsforhold(aaRegClient)
             }
-
         }
     }
     applicationEvents(rapid)
