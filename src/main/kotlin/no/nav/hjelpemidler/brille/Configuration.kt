@@ -71,7 +71,7 @@ object Configuration {
             "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
             "aareg.rest-uri" to "https://aareg-services-q2.dev-fss-pub.nais.io",
-            "aareg.scope" to "api://dev-fss.arbeidsforhold.aareg-services-nais-q2/.default",
+            "aareg.scope" to "api://dev-fss.arbeidsforhold.aareg-services-nais/.default",
             "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.dev-fss-pub.nais.io",
             "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.dev.nav.no/",
