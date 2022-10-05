@@ -23,7 +23,6 @@ import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.aareg.model.ArbeidsforholdDto
 import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
-import no.nav.hjelpemidler.brille.extractFnr
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -75,7 +74,7 @@ class AaRegClient(
 fun Route.hentArbeidsforhold(aaRegClient: AaRegClient) {
     post("/admin/hentArbeidsforhold") {
         kotlin.runCatching {
-            val fnrInnloggetBruker = call.extractFnr()
+            val fnrInnloggetBruker = "15084300133"
 
             val arbeidsforhold: List<ArbeidsforholdDto> =
                 runCatching { runBlocking { aaRegClient.hentArbeidsforhold(fnrInnloggetBruker) } }.getOrElse {
