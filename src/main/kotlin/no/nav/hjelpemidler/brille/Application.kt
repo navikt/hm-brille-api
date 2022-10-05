@@ -27,6 +27,8 @@ import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
+import no.nav.hjelpemidler.brille.aareg.AaRegClient
+import no.nav.hjelpemidler.brille.aareg.hentArbeidsforhold
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
@@ -140,6 +142,7 @@ fun Application.setupRoutes() {
     val redisClient = RedisClient()
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
+    val aaRegClient = AaRegClient(Configuration.aaRegProperties)
     val pdlClient = PdlClient(Configuration.pdlProperties)
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
 
@@ -174,7 +177,12 @@ fun Application.setupRoutes() {
     VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
-    if (Configuration.prod) RapporterManglendeTssIdentScheduler(tssIdentService, enhetsregisteretService, leaderElection, metrics)
+    if (Configuration.prod) RapporterManglendeTssIdentScheduler(
+        tssIdentService,
+        enhetsregisteretService,
+        leaderElection,
+        metrics
+    )
 
     UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
     TssIdentRiver(rapid, tssIdentService)
@@ -210,6 +218,11 @@ fun Application.setupRoutes() {
             // Admin apis
             // rapportApiAdmin(rapportService)
             sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
+
+            if (!Configuration.prod) {
+                hentArbeidsforhold(aaRegClient)
+            }
+
         }
     }
     applicationEvents(rapid)

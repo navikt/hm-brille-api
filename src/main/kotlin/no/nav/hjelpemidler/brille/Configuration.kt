@@ -42,6 +42,8 @@ object Configuration {
             "pdfgen.rest-uri" to "http://host.docker.internal:8088",
             "pdl.graphql-uri" to "http://host.docker.internal:8089/pdl",
             "pdl.apiScope" to "api://dev-gcp.pdl.pdl-api/.default",
+            "aareg.rest-uri" to "http://host.docker.internal:8089/aareg",
+            "aareg.scope" to "api://dev-fss.arbeidsforhold.aareg-services-nais-q2/.default",
             "syfohelsenettproxy.rest-uri" to "http://host.docker.internal:8089/syfohelsenettproxy",
             "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "http://host.docker.internal:8089/medlemskapoppslag",
@@ -68,6 +70,8 @@ object Configuration {
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
+            "aareg.rest-uri" to "https://aareg-services.dev-fss-pub.nais.io",
+            "aareg.scope" to "api://dev-fss.arbeidsforhold.aareg-services-nais/.default",
             "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.dev-fss-pub.nais.io",
             "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.dev.nav.no/",
@@ -150,6 +154,7 @@ object Configuration {
     val utbetalingProperties = UtbetalingProperties()
     val slackProperties = SlackProperties()
     val electorPath = get("ELECTOR_PATH")
+    val aaRegProperties = AaRegProperties()
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
@@ -205,6 +210,11 @@ object Configuration {
     data class SyfohelsenettproxyProperties(
         val baseUrl: String = this["syfohelsenettproxy.rest-uri"],
         val scope: String = this["syfohelsenettproxy.scope"],
+    )
+
+    data class AaRegProperties(
+        val baseUrl: String = this["aareg.rest-uri"],
+        val scope: String = this["aareg.scope"],
     )
 
     data class MedlemskapOppslagProperties(
