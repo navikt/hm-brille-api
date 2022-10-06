@@ -11,6 +11,7 @@ import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import org.intellij.lang.annotations.Language
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 interface AdminStore : Store {
@@ -60,6 +61,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.id, vs.id) AS id,
                 COALESCE(v.orgnr, vs.orgnr) AS orgnr,
                 COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
+                COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
@@ -83,6 +85,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 orgnr = row.string("orgnr"),
                 barnsNavn = person.navn(),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
+                bestillingsdato = row.localDate("bestillingsdato"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
                 slettet = row.localDateTimeOrNull("slettet"),
@@ -105,6 +108,7 @@ data class Vedtak(
     val orgnr: String,
     val barnsNavn: String,
     val bestillingsreferanse: String,
+    val bestillingsdato: LocalDate,
     val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
     val slettet: LocalDateTime?,
