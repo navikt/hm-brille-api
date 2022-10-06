@@ -73,7 +73,7 @@ fun Application.installAuthentication(httpClient: HttpClient) {
             }
         }
         jwt(AZURE_AD_AUTH) {
-            verifier(jwkProviderAzureAd, tokenXConfig.metadata.issuer)
+            verifier(jwkProviderAzureAd, azureAdConfig.metadata.issuer)
             validate { credentials ->
                 requireNotNull(credentials.payload.audience) {
                     "Auth: Missing audience in token"
