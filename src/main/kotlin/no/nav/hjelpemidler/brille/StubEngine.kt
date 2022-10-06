@@ -13,7 +13,6 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.aareg.model.ArbeidsforholdDto
 import no.nav.hjelpemidler.brille.azuread.Token
 import no.nav.hjelpemidler.brille.scheduler.Elector
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
@@ -101,14 +100,6 @@ object StubEngine {
                     mellomnavn = null,
                     etternavn = null
                 )
-            )
-        }
-    }
-
-    fun aareg(): HttpClientEngine = mockEngine {
-        get("/api/v2/arbeidsforhold") {
-            respond(
-                emptyList<ArbeidsforholdDto>()
             )
         }
     }

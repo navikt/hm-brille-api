@@ -25,8 +25,6 @@ import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
-import no.nav.hjelpemidler.brille.aareg.AaRegClient
-import no.nav.hjelpemidler.brille.aareg.hentArbeidsforhold
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
@@ -142,7 +140,6 @@ fun Application.setupRoutes() {
     val redisClient = RedisClient()
     val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
-    val aaRegClient = AaRegClient(Configuration.aaRegProperties)
     val pdlClient = PdlClient(Configuration.pdlProperties)
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
 
@@ -218,10 +215,6 @@ fun Application.setupRoutes() {
             // Admin apis
             // rapportApiAdmin(rapportService)
             sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
-
-            if (!Configuration.prod) {
-                hentArbeidsforhold(aaRegClient)
-            }
         }
     }
     applicationEvents(rapid)
