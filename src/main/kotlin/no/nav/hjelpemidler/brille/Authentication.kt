@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import java.net.URL
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 const val TOKEN_X_AUTH = "tokenX"
@@ -81,12 +82,16 @@ fun Application.installAuthentication(httpClient: HttpClient) {
                 require(credentials.payload.audience.contains(azureAdConfig.clientId)) {
                     "Auth: Valid audience not found in claims"
                 }
-                UserPrincipalAdmin(credentials.payload.getClaim("preferred_username").asString(), credentials.payload.getClaim("name").asString())
+                UserPrincipalAdmin(
+                    credentials.payload.getClaim("oid").asString()?.let { oid -> kotlin.runCatching { UUID.fromString(oid) }.getOrNull() },
+                    credentials.payload.getClaim("preferred_username").asString(),
+                    credentials.payload.getClaim("name").asString()
+                )
             }
         }
         provider("local_azuread") {
             authenticate { context ->
-                context.principal(UserPrincipalAdmin("example@example.com", "Example some some"))
+                context.principal(UserPrincipalAdmin(UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"), "example@example.com", "Example some some"))
             }
         }
     }
@@ -114,9 +119,16 @@ fun ApplicationCall.extractFnr(): String {
     return fnrFromClaims
 }
 
-internal class UserPrincipalAdmin(private val email: String?, private val name: String?) : Principal {
+internal class UserPrincipalAdmin(private val oid: UUID?, private val email: String?, private val name: String?) : Principal {
+    fun getUUID() = oid
     fun getEmail() = email
     fun getName() = name
+}
+
+fun ApplicationCall.extractUUID(): UUID {
+    val uuidFromClaims = this.principal<UserPrincipalAdmin>()?.getUUID()
+        ?: throw RuntimeException("Fant ikke oid i token")
+    return uuidFromClaims
 }
 
 fun ApplicationCall.extractEmail(): String {

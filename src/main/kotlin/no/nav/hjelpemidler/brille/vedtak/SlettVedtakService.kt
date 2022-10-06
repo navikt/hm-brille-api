@@ -27,16 +27,21 @@ class SlettVedtakService(
     suspend fun slettVedtak(fnrInnsender: String, vedtakId: Long, erAdmin: Boolean) {
         val vedtak = vedtakService.hentVedtak(vedtakId)
         if (vedtak != null) {
-            auditService.lagreOppslag(
-                fnrInnlogget = fnrInnsender,
-                fnrOppslag = vedtak.fnrBarn,
-                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
-            )
             if (!erAdmin && fnrInnsender != vedtak.fnrInnsender) {
                 throw SlettVedtakNotAuthorizedException()
             } else if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
                 throw SlettVedtakConflictException()
             } else {
+                if (!erAdmin) {
+                    auditService.lagreOppslag(
+                        fnrInnlogget = fnrInnsender,
+                        fnrOppslag = vedtak.fnrBarn,
+                        oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
+                    )
+                } else {
+                    log.info("Sletter vedtak med vedtakId=$vedtakId og adminId=$fnrInnsender")
+                }
+
                 val joarkRef = joarkrefService.hentJoarkRef(vedtakId)
                     ?: throw SlettVedtakInternalServerErrorException()
 

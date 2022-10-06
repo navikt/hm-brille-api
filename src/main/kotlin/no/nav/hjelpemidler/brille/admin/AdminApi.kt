@@ -10,7 +10,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
-import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.extractUUID
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakConflictException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakNotAuthorizedException
@@ -83,13 +83,16 @@ fun Route.adminApi(
             }
 
             delete("/detaljer/{vedtakId}") {
-                val fnrInnsender = call.extractFnr()
+                val admin = call.extractUUID()
+                // val email = call.extractEmail()
+                // val name = call.extractName()
+
                 val vedtakId = call.parameters["vedtakId"]!!.toLong()
                 val vedtak = adminService.hentVedtak(vedtakId)
                     ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
 
                 try {
-                    slettVedtakService.slettVedtak(fnrInnsender, vedtak.vedtakId, true)
+                    slettVedtakService.slettVedtak(admin.toString(), vedtak.vedtakId, true)
                     call.respond(HttpStatusCode.OK, "{}")
                 } catch (e: SlettVedtakNotAuthorizedException) {
                     call.respond(HttpStatusCode.Unauthorized, e.message!!)
