@@ -29,7 +29,7 @@ val AdminAuthPlugin = createRouteScopedPlugin(
 ) {
     data class Payload(
         val preferred_username: String?,
-        val NAVident: String?,
+        val name: String?,
     )
 
     fun decodePayload(call: ApplicationCall): Payload {
@@ -52,7 +52,7 @@ val AdminAuthPlugin = createRouteScopedPlugin(
 
     fun sjekkErAdmin(call: ApplicationCall): Boolean {
         val payload = decodePayload(call)
-        return !payload.preferred_username.isNullOrEmpty() && !payload.NAVident.isNullOrEmpty()
+        return !payload.preferred_username.isNullOrEmpty()
     }
 
     on(AuthenticationChecked) { call ->
