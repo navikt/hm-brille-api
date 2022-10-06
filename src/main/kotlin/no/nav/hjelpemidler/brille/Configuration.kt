@@ -50,6 +50,7 @@ object Configuration {
             "AZURE_APP_TENANT_ID" to "123",
             "AZURE_APP_CLIENT_ID" to "321",
             "AZURE_APP_CLIENT_SECRET" to "dummy",
+            "AZURE_APP_WELL_KNOWN_URL" to "dummy",
             "KAFKA_BROKERS" to "localhost:9092",
             "TOKEN_X_WELL_KNOWN_URL" to "http://host.docker.internal:8080/default/.well-known/openid-configuration",
             "TOKEN_X_CLIENT_ID" to "local",
@@ -163,6 +164,7 @@ object Configuration {
         val tenantId: String = this["AZURE_APP_TENANT_ID"],
         val clientId: String = this["AZURE_APP_CLIENT_ID"],
         val clientSecret: String = this["AZURE_APP_CLIENT_SECRET"],
+        val wellKnownUrl: String = this["AZURE_APP_WELL_KNOWN_URL"],
     )
 
     data class DatabaseProperties(

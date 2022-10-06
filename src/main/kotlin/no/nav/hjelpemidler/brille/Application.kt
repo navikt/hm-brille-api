@@ -209,6 +209,9 @@ fun Application.setupRoutes() {
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)
+            }
+
+            authenticate(if (Configuration.local) "local_azuread" else AZURE_AD_AUTH) {
                 if (Configuration.dev) adminApi(adminService, slettVedtakService, enhetsregisteretService)
             }
 
