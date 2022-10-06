@@ -24,80 +24,82 @@ fun Route.adminApi(
     slettVedtakService: SlettVedtakService,
     enhetsregisteretService: EnhetsregisteretService
 ) {
-    route("/admin") {
-        post("/sok") {
-            data class Request(
-                val query: String,
-            )
-
-            val query = call.receive<Request>().query.trim()
-
-            if (!Regex("\\d+").matches(query)) {
-                return@post call.respond(HttpStatusCode.BadRequest, """{"error": "Ugyldig format: bare tall"}""")
-            }
-
-            if (query.count() == 11) {
-                // Fnr
-                val krav = adminService.hentVedtakListe(query)
-                call.respond(HttpStatusCode.OK, krav)
-            } else {
-                // vedtakId oppslag
-                val vedtak = adminService.hentVedtak(query.toLong())
-                    ?: return@post call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
-
-                call.respond(HttpStatusCode.OK, """{"vedtakId": "${vedtak.vedtakId}"}""")
-            }
-        }
-
-        get("/detaljer/{vedtakId}") {
-            val vedtakId = call.parameters["vedtakId"]!!.toLong()
-            val vedtak = adminService.hentVedtak(vedtakId)
-                ?: return@get call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
-
-            data class Response(
-                val vedtakId: Long,
-                val orgnr: String,
-                val orgNavn: String,
-                val barnsNavn: String,
-                val bestillingsreferanse: String,
-                val opprettet: LocalDateTime,
-                val utbetalt: LocalDateTime?,
-                val slettet: LocalDateTime?,
-                val slettetAvType: SlettetAvType?,
-            )
-
-            call.respond(
-                Response(
-                    vedtakId = vedtak.vedtakId,
-                    orgnr = vedtak.orgnr,
-                    orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>",
-                    barnsNavn = vedtak.barnsNavn,
-                    bestillingsreferanse = vedtak.bestillingsreferanse,
-                    opprettet = vedtak.opprettet,
-                    utbetalt = vedtak.utbetalingsdato,
-                    slettet = vedtak.slettet,
-                    slettetAvType = vedtak.slettetAvType,
+    authenticateAdminUser {
+        route("/admin") {
+            post("/sok") {
+                data class Request(
+                    val query: String,
                 )
-            )
-        }
 
-        delete("/detaljer/{vedtakId}") {
-            val fnrInnsender = call.extractFnr()
-            val vedtakId = call.parameters["vedtakId"]!!.toLong()
-            val vedtak = adminService.hentVedtak(vedtakId)
-                ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
+                val query = call.receive<Request>().query.trim()
 
-            try {
-                slettVedtakService.slettVedtak(fnrInnsender, vedtak.vedtakId, true)
-                call.respond(HttpStatusCode.OK, "{}")
-            } catch (e: SlettVedtakNotAuthorizedException) {
-                call.respond(HttpStatusCode.Unauthorized, e.message!!)
-            } catch (e: SlettVedtakConflictException) {
-                call.respond(HttpStatusCode.Conflict, e.message!!)
-            } catch (e: SlettVedtakInternalServerErrorException) {
-                call.respond(HttpStatusCode.InternalServerError, e.message!!)
-            } catch (e: SlettVedtakNotFoundException) {
-                call.respond(HttpStatusCode.NotFound, e.message!!)
+                if (!Regex("\\d+").matches(query)) {
+                    return@post call.respond(HttpStatusCode.BadRequest, """{"error": "Ugyldig format: bare tall"}""")
+                }
+
+                if (query.count() == 11) {
+                    // Fnr
+                    val krav = adminService.hentVedtakListe(query)
+                    call.respond(HttpStatusCode.OK, krav)
+                } else {
+                    // vedtakId oppslag
+                    val vedtak = adminService.hentVedtak(query.toLong())
+                        ?: return@post call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
+
+                    call.respond(HttpStatusCode.OK, """{"vedtakId": "${vedtak.vedtakId}"}""")
+                }
+            }
+
+            get("/detaljer/{vedtakId}") {
+                val vedtakId = call.parameters["vedtakId"]!!.toLong()
+                val vedtak = adminService.hentVedtak(vedtakId)
+                    ?: return@get call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
+
+                data class Response(
+                    val vedtakId: Long,
+                    val orgnr: String,
+                    val orgNavn: String,
+                    val barnsNavn: String,
+                    val bestillingsreferanse: String,
+                    val opprettet: LocalDateTime,
+                    val utbetalt: LocalDateTime?,
+                    val slettet: LocalDateTime?,
+                    val slettetAvType: SlettetAvType?,
+                )
+
+                call.respond(
+                    Response(
+                        vedtakId = vedtak.vedtakId,
+                        orgnr = vedtak.orgnr,
+                        orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>",
+                        barnsNavn = vedtak.barnsNavn,
+                        bestillingsreferanse = vedtak.bestillingsreferanse,
+                        opprettet = vedtak.opprettet,
+                        utbetalt = vedtak.utbetalingsdato,
+                        slettet = vedtak.slettet,
+                        slettetAvType = vedtak.slettetAvType,
+                    )
+                )
+            }
+
+            delete("/detaljer/{vedtakId}") {
+                val fnrInnsender = call.extractFnr()
+                val vedtakId = call.parameters["vedtakId"]!!.toLong()
+                val vedtak = adminService.hentVedtak(vedtakId)
+                    ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
+
+                try {
+                    slettVedtakService.slettVedtak(fnrInnsender, vedtak.vedtakId, true)
+                    call.respond(HttpStatusCode.OK, "{}")
+                } catch (e: SlettVedtakNotAuthorizedException) {
+                    call.respond(HttpStatusCode.Unauthorized, e.message!!)
+                } catch (e: SlettVedtakConflictException) {
+                    call.respond(HttpStatusCode.Conflict, e.message!!)
+                } catch (e: SlettVedtakInternalServerErrorException) {
+                    call.respond(HttpStatusCode.InternalServerError, e.message!!)
+                } catch (e: SlettVedtakNotFoundException) {
+                    call.respond(HttpStatusCode.NotFound, e.message!!)
+                }
             }
         }
     }
