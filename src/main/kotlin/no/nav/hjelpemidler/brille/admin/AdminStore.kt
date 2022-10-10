@@ -36,6 +36,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE
                 (v.fnr_barn = :fnr OR vs.fnr_barn = :fnr)
+            ORDER BY opprettet DESC
             ;
         """.trimIndent()
 
