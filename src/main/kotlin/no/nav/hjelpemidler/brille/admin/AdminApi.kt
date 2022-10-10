@@ -9,15 +9,17 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
+import no.nav.hjelpemidler.brille.extractEmail
 import no.nav.hjelpemidler.brille.extractUUID
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakConflictException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
-import no.nav.hjelpemidler.brille.vedtak.SlettVedtakNotAuthorizedException
-import no.nav.hjelpemidler.brille.vedtak.SlettVedtakNotFoundException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import java.time.LocalDateTime
+
+private val log = KotlinLogging.logger {}
 
 fun Route.adminApi(
     adminService: AdminService,
@@ -83,25 +85,22 @@ fun Route.adminApi(
             }
 
             delete("/detaljer/{vedtakId}") {
-                val admin = call.extractUUID()
-                // val email = call.extractEmail()
-                // val name = call.extractName()
+                val adminUid = call.extractUUID()
+                val email = call.extractEmail()
 
                 val vedtakId = call.parameters["vedtakId"]!!.toLong()
                 val vedtak = adminService.hentVedtak(vedtakId)
                     ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
 
+                log.info("Sletter vedtak med vedtakId=$vedtakId og adminEpost=$email ($adminUid)")
+
                 try {
-                    slettVedtakService.slettVedtak(admin.toString(), vedtak.vedtakId, true)
+                    slettVedtakService.slettVedtak(vedtak.vedtakId, email, SlettetAvType.NAV_ADMIN)
                     call.respond(HttpStatusCode.OK, "{}")
-                } catch (e: SlettVedtakNotAuthorizedException) {
-                    call.respond(HttpStatusCode.Unauthorized, e.message!!)
                 } catch (e: SlettVedtakConflictException) {
                     call.respond(HttpStatusCode.Conflict, e.message!!)
                 } catch (e: SlettVedtakInternalServerErrorException) {
                     call.respond(HttpStatusCode.InternalServerError, e.message!!)
-                } catch (e: SlettVedtakNotFoundException) {
-                    call.respond(HttpStatusCode.NotFound, e.message!!)
                 }
             }
         }

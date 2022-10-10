@@ -156,7 +156,7 @@ fun Application.setupRoutes() {
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val joarkrefService = JoarkrefService(databaseContext)
-    val slettVedtakService = SlettVedtakService(vedtakService, auditService, utbetalingService, joarkrefService, kafkaService, databaseContext)
+    val slettVedtakService = SlettVedtakService(utbetalingService, joarkrefService, kafkaService, databaseContext)
     val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)

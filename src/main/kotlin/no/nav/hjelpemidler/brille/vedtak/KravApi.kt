@@ -40,17 +40,26 @@ internal fun Route.kravApi(
         delete("/{id}") {
             val fnrInnsender = call.extractFnr()
             val vedtakId = call.parameters["id"]!!.toLong()
+            val vedtak = vedtakService.hentVedtak(vedtakId)
+                ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
+
+            if (fnrInnsender != vedtak.fnrInnsender) {
+                return@delete call.respond(HttpStatusCode.Unauthorized, """{"error": "Krav kan ikke slettes av deg"}""")
+            }
+
+            auditService.lagreOppslag(
+                fnrInnlogget = fnrInnsender,
+                fnrOppslag = vedtak.fnrBarn,
+                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
+            )
+
             try {
-                slettVedtakService.slettVedtak(fnrInnsender, vedtakId, false)
+                slettVedtakService.slettVedtak(vedtak.id, fnrInnsender, SlettetAvType.INNSENDER)
                 call.respond(HttpStatusCode.OK, "{}")
-            } catch (e: SlettVedtakNotAuthorizedException) {
-                call.respond(HttpStatusCode.Unauthorized, e.message!!)
             } catch (e: SlettVedtakConflictException) {
                 call.respond(HttpStatusCode.Conflict, e.message!!)
             } catch (e: SlettVedtakInternalServerErrorException) {
                 call.respond(HttpStatusCode.InternalServerError, e.message!!)
-            } catch (e: SlettVedtakNotFoundException) {
-                call.respond(HttpStatusCode.NotFound, e.message!!)
             }
         }
     }
