@@ -66,6 +66,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
+                u.batch_id,
                 vs.slettet,
                 vs.slettet_av,
                 vs.slettet_av_type
@@ -90,6 +91,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 bestillingsdato = row.localDate("bestillingsdato"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
+                batchId = row.stringOrNull("batch_id"),
                 slettet = row.localDateTimeOrNull("slettet"),
                 slettetAv = row.stringOrNull("slettet_av_type")?.let {
                     val slettetAvType = SlettetAvType.valueOf(it)
@@ -121,6 +123,7 @@ data class Vedtak(
     val bestillingsdato: LocalDate,
     val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
+    val batchId: String?,
     val slettet: LocalDateTime?,
     val slettetAv: String?,
     val slettetAvType: SlettetAvType?,
