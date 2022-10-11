@@ -63,11 +63,11 @@ import no.nav.hjelpemidler.brille.tss.RapporterManglendeTssIdentScheduler
 import no.nav.hjelpemidler.brille.tss.TssIdentRiver
 import no.nav.hjelpemidler.brille.tss.TssIdentService
 import no.nav.hjelpemidler.brille.utbetaling.RekjorUtbetalingerScheduler
+import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
-import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
@@ -170,8 +170,8 @@ fun Application.setupRoutes() {
 
     setupMetrics(metrics)
 
-    VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
-    //SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
+    // VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
+    SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     if (Configuration.prod) RapporterManglendeTssIdentScheduler(
         tssIdentService,

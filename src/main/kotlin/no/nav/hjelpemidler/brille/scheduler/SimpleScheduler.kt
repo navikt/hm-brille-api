@@ -81,8 +81,8 @@ abstract class SimpleScheduler(
 }
 
 fun LocalDateTime.isWorkingHours(): Boolean {
-    return !isWeekend() && isBetweenEightToFour()
+    return !isWeekend() && isBetweenEightToFive()
 }
 
-fun LocalDateTime.isBetweenEightToFour(): Boolean = toLocalTime() in LocalTime.of(8, 0)..LocalTime.of(16, 0)
+fun LocalDateTime.isBetweenEightToFive(): Boolean = toLocalTime() in LocalTime.of(8, 0)..LocalTime.of(17, 0)
 fun LocalDateTime.isWeekend(): Boolean = dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY
