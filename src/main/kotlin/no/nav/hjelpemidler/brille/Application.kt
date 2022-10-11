@@ -25,6 +25,8 @@ import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
+import no.nav.hjelpemidler.brille.admin.AdminService
+import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
@@ -64,8 +66,8 @@ import no.nav.hjelpemidler.brille.utbetaling.RekjorUtbetalingerScheduler
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
+import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
-import no.nav.hjelpemidler.brille.vedtak.VedtakSlettetService
 import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
@@ -152,11 +154,12 @@ fun Application.setupRoutes() {
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
-    val vedtakSlettetService = VedtakSlettetService(databaseContext, kafkaService)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val joarkrefService = JoarkrefService(databaseContext)
+    val slettVedtakService = SlettVedtakService(utbetalingService, joarkrefService, kafkaService, databaseContext)
     val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
+    val adminService = AdminService(databaseContext)
     val leaderElection = LeaderElection(Configuration.electorPath)
 
     val metrics = MetricsConfig(
@@ -202,17 +205,14 @@ fun Application.setupRoutes() {
                     oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, auditService, kafkaService)
-                    kravApi(
-                        vedtakService,
-                        auditService,
-                        utbetalingService,
-                        vedtakSlettetService,
-                        joarkrefService,
-                        kafkaService
-                    )
+                    kravApi(vedtakService, auditService, slettVedtakService)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)
+            }
+
+            authenticate(if (Configuration.local) "local_azuread" else AZURE_AD_AUTH) {
+                adminApi(adminService, slettVedtakService, enhetsregisteretService)
             }
 
             // Admin apis

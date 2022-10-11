@@ -2,6 +2,8 @@ package no.nav.hjelpemidler.brille.db
 
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.DatabaseConfiguration
+import no.nav.hjelpemidler.brille.admin.AdminStore
+import no.nav.hjelpemidler.brille.admin.AdminStorePostgres
 import no.nav.hjelpemidler.brille.audit.AuditStore
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
 import no.nav.hjelpemidler.brille.innsender.InnsenderStore
@@ -14,8 +16,8 @@ import no.nav.hjelpemidler.brille.tss.TssIdentStore
 import no.nav.hjelpemidler.brille.tss.TssIdentStorePostgres
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStore
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStorePostgres
-import no.nav.hjelpemidler.brille.vedtak.VedtakSlettetStore
-import no.nav.hjelpemidler.brille.vedtak.VedtakSlettetStorePostgres
+import no.nav.hjelpemidler.brille.vedtak.SlettVedtakStore
+import no.nav.hjelpemidler.brille.vedtak.SlettVedtakStorePostgres
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
@@ -43,7 +45,8 @@ interface DatabaseSessionContext {
     val utbetalingStore: UtbetalingStore
     val tssIdentStore: TssIdentStore
     val joarkrefStore: JoarkrefStore
-    val vedtakSlettetStore: VedtakSlettetStore
+    val slettVedtakStore: SlettVedtakStore
+    val adminStore: AdminStore
 }
 
 class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSessionContext {
@@ -55,5 +58,6 @@ class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSe
     override val utbetalingStore: UtbetalingStore = UtbetalingStorePostgres(sessionFactory)
     override val tssIdentStore: TssIdentStore = TssIdentStorePostgres(sessionFactory)
     override val joarkrefStore: JoarkrefStore = JoarkrefStorePostgres(sessionFactory)
-    override val vedtakSlettetStore: VedtakSlettetStore = VedtakSlettetStorePostgres(sessionFactory)
+    override val slettVedtakStore: SlettVedtakStore = SlettVedtakStorePostgres(sessionFactory)
+    override val adminStore: AdminStore = AdminStorePostgres(sessionFactory)
 }

@@ -15,9 +15,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import java.net.URL
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 const val TOKEN_X_AUTH = "tokenX"
+const val AZURE_AD_AUTH = "azureAd"
 
 private val log = KotlinLogging.logger {}
 
@@ -31,6 +33,21 @@ fun Application.installAuthentication(httpClient: HttpClient) {
     }
 
     val jwkProviderTokenx = JwkProviderBuilder(URL(tokenXConfig.metadata.jwksUri))
+        // cache up to 1000 JWKs for 24 hours
+        .cached(1000, 24, TimeUnit.HOURS)
+        // if not cached, only allow max 100 different keys per minute to be fetched from external provider
+        .rateLimited(100, 1, TimeUnit.MINUTES)
+        .build()
+
+    var azureAdConfig: AuthenticationConfiguration
+    runBlocking(Dispatchers.IO) {
+        azureAdConfig = AuthenticationConfiguration(
+            metadata = httpClient.get(Configuration.azureAdProperties.wellKnownUrl).body(),
+            clientId = Configuration.azureAdProperties.clientId,
+        )
+    }
+
+    val jwkProviderAzureAd = JwkProviderBuilder(URL(azureAdConfig.metadata.jwksUri))
         // cache up to 1000 JWKs for 24 hours
         .cached(1000, 24, TimeUnit.HOURS)
         // if not cached, only allow max 100 different keys per minute to be fetched from external provider
@@ -56,6 +73,27 @@ fun Application.installAuthentication(httpClient: HttpClient) {
                 context.principal(UserPrincipal("15084300133"))
             }
         }
+        jwt(AZURE_AD_AUTH) {
+            verifier(jwkProviderAzureAd, azureAdConfig.metadata.issuer)
+            validate { credentials ->
+                requireNotNull(credentials.payload.audience) {
+                    "Auth: Missing audience in token"
+                }
+                require(credentials.payload.audience.contains(azureAdConfig.clientId)) {
+                    "Auth: Valid audience not found in claims"
+                }
+                UserPrincipalAdmin(
+                    credentials.payload.getClaim("oid").asString()?.let { oid -> kotlin.runCatching { UUID.fromString(oid) }.getOrNull() },
+                    credentials.payload.getClaim("preferred_username").asString(),
+                    credentials.payload.getClaim("name").asString()
+                )
+            }
+        }
+        provider("local_azuread") {
+            authenticate { context ->
+                context.principal(UserPrincipalAdmin(UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"), "example@example.com", "Example some some"))
+            }
+        }
     }
 }
 
@@ -79,4 +117,32 @@ fun ApplicationCall.extractFnr(): String {
         throw RuntimeException("Fant ikke FNR i token")
     }
     return fnrFromClaims
+}
+
+internal class UserPrincipalAdmin(private val oid: UUID?, private val email: String?, private val name: String?) : Principal {
+    fun getUUID() = oid
+    fun getEmail() = email
+    fun getName() = name
+}
+
+fun ApplicationCall.extractUUID(): UUID {
+    val uuidFromClaims = this.principal<UserPrincipalAdmin>()?.getUUID()
+        ?: throw RuntimeException("Fant ikke oid i token")
+    return uuidFromClaims
+}
+
+fun ApplicationCall.extractEmail(): String {
+    val emailFromClaims = this.principal<UserPrincipalAdmin>()?.getEmail()
+    if (emailFromClaims == null || emailFromClaims.trim().isEmpty()) {
+        throw RuntimeException("Fant ikke email i token")
+    }
+    return emailFromClaims
+}
+
+fun ApplicationCall.extractName(): String {
+    val nameFromClaims = this.principal<UserPrincipalAdmin>()?.getName()
+    if (nameFromClaims == null || nameFromClaims.trim().isEmpty()) {
+        throw RuntimeException("Fant ikke navn i token")
+    }
+    return nameFromClaims
 }

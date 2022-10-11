@@ -54,9 +54,9 @@ class VedtakSlettetStorePostgresTest {
                 this.lagreVedtakIKø(lagretVedtak.id, lagretVedtak.opprettet)
                 vedtakId = lagretVedtak.id
             }
-            with(VedtakSlettetStorePostgres(PostgresTestHelper.sessionFactory)) {
+            with(SlettVedtakStorePostgres(PostgresTestHelper.sessionFactory)) {
                 hentVedtakSlettet(vedtakId).shouldBeNull()
-                slettVedtak(vedtakId)
+                slettVedtak(vedtakId, "", SlettetAvType.INNSENDER)
                 hentVedtakSlettet(vedtakId).shouldNotBeNull()
             }
         }

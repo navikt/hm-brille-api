@@ -14,12 +14,12 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-interface VedtakSlettetStore : Store {
+interface SlettVedtakStore : Store {
     fun hentVedtakSlettet(vedtakId: Long): VedtakSlettet?
-    fun slettVedtak(vedtakId: Long): Int?
+    fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType = SlettetAvType.INNSENDER): Int?
 }
 
-class VedtakSlettetStorePostgres(private val sessionFactory: () -> Session) : VedtakSlettetStore,
+class SlettVedtakStorePostgres(private val sessionFactory: () -> Session) : SlettVedtakStore,
     TransactionalStore(sessionFactory) {
     override fun hentVedtakSlettet(vedtakId: Long): VedtakSlettet? = session {
         @Language("PostgreSQL")
@@ -47,7 +47,7 @@ class VedtakSlettetStorePostgres(private val sessionFactory: () -> Session) : Ve
         }
     }
 
-    override fun slettVedtak(vedtakId: Long) = session {
+    override fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType) = session {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO vedtak_slettet_v1
@@ -69,7 +69,24 @@ class VedtakSlettetStorePostgres(private val sessionFactory: () -> Session) : Ve
             WHERE id =:id;
             DELETE FROM vedtak_v1 where id =:id;
         """.trimIndent()
+
         sessionFactory().update(sql, mapOf("id" to vedtakId)).rowCount
+            ?: return@session null
+
+        val sql2 = """
+            UPDATE vedtak_slettet_v1
+            SET slettet_av = :slettetAv, slettet_av_type = :slettetAvType
+            WHERE id = :id
+            ;
+        """.trimIndent()
+        sessionFactory().update(
+            sql2,
+            mapOf(
+                "id" to vedtakId,
+                "slettetAv" to slettetAv,
+                "slettetAvType" to slettetAvType.toString(),
+            )
+        ).rowCount
     }
 
     private fun mapVedtakSlettet(row: Row) = VedtakSlettet(
@@ -89,6 +106,11 @@ class VedtakSlettetStorePostgres(private val sessionFactory: () -> Session) : Ve
         opprettet = row.localDateTime("opprettet"),
         slettet = row.localDateTime("slettet")
     )
+}
+
+enum class SlettetAvType {
+    INNSENDER,
+    NAV_ADMIN,
 }
 
 data class VedtakSlettet(
