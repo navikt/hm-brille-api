@@ -67,6 +67,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
                 vs.slettet,
+                vs.slettet_av,
                 vs.slettet_av_type
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
@@ -90,6 +91,14 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
                 slettet = row.localDateTimeOrNull("slettet"),
+                slettetAv = row.stringOrNull("slettet_av_type")?.let {
+                    val slettetAvType = SlettetAvType.valueOf(it)
+                    if (slettetAvType == SlettetAvType.INNSENDER) {
+                        null
+                    } else {
+                        row.string("slettet_av")
+                    }
+                },
                 slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
             )
         }
@@ -113,5 +122,6 @@ data class Vedtak(
     val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
     val slettet: LocalDateTime?,
+    val slettetAv: String?,
     val slettetAvType: SlettetAvType?,
 )
