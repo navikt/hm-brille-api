@@ -10,6 +10,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.extractEmail
 import no.nav.hjelpemidler.brille.extractUUID
@@ -84,23 +85,25 @@ fun Route.adminApi(
                 )
             }
 
-            delete("/detaljer/{vedtakId}") {
-                val adminUid = call.extractUUID()
-                val email = call.extractEmail()
+            if (Configuration.dev) {
+                delete("/detaljer/{vedtakId}") {
+                    val adminUid = call.extractUUID()
+                    val email = call.extractEmail()
 
-                val vedtakId = call.parameters["vedtakId"]!!.toLong()
-                val vedtak = adminService.hentVedtak(vedtakId)
-                    ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
+                    val vedtakId = call.parameters["vedtakId"]!!.toLong()
+                    val vedtak = adminService.hentVedtak(vedtakId)
+                        ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
 
-                log.info("Sletter vedtak med vedtakId=$vedtakId og adminEpost=$email ($adminUid)")
+                    log.info("Sletter vedtak med vedtakId=$vedtakId og adminEpost=$email ($adminUid)")
 
-                try {
-                    slettVedtakService.slettVedtak(vedtak.vedtakId, email, SlettetAvType.NAV_ADMIN)
-                    call.respond(HttpStatusCode.OK, "{}")
-                } catch (e: SlettVedtakConflictException) {
-                    call.respond(HttpStatusCode.Conflict, e.message!!)
-                } catch (e: SlettVedtakInternalServerErrorException) {
-                    call.respond(HttpStatusCode.InternalServerError, e.message!!)
+                    try {
+                        slettVedtakService.slettVedtak(vedtak.vedtakId, email, SlettetAvType.NAV_ADMIN)
+                        call.respond(HttpStatusCode.OK, "{}")
+                    } catch (e: SlettVedtakConflictException) {
+                        call.respond(HttpStatusCode.Conflict, e.message!!)
+                    } catch (e: SlettVedtakInternalServerErrorException) {
+                        call.respond(HttpStatusCode.InternalServerError, e.message!!)
+                    }
                 }
             }
         }
