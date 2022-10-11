@@ -111,6 +111,10 @@ fun Route.adminApi(
                 val vedtak = adminService.hentVedtak(vedtakId)
                     ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
 
+                if (vedtak.slettet != null) {
+                    return@delete call.respond(HttpStatusCode.BadRequest, """{"error": "Kravet er allerede slettet"}""")
+                }
+
                 call.adminAuditLogging(
                     "slett vedtak",
                     mapOf(
