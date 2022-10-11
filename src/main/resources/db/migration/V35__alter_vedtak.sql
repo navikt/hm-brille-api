@@ -1,2 +1,1 @@
-alter table utbetaling_v1
-alter column referanse type VARCHAR(100);
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO cloudsqliamuser;
