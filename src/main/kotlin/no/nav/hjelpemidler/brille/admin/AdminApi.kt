@@ -1,8 +1,11 @@
 package no.nav.hjelpemidler.brille.admin
 
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
+import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receive
+import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
@@ -13,7 +16,9 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.extractEmail
+import no.nav.hjelpemidler.brille.extractName
 import no.nav.hjelpemidler.brille.extractUUID
+import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakConflictException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
@@ -21,6 +26,7 @@ import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 fun Route.adminApi(
     adminService: AdminService,
@@ -35,6 +41,13 @@ fun Route.adminApi(
                 )
 
                 val query = call.receive<Request>().query.trim()
+
+                call.adminAuditLogging(
+                    "søk",
+                    mapOf(
+                        "query" to query,
+                    )
+                )
 
                 if (!Regex("\\d+").matches(query)) {
                     return@post call.respond(HttpStatusCode.BadRequest, """{"error": "Ugyldig format: bare tall"}""")
@@ -57,6 +70,13 @@ fun Route.adminApi(
                 val vedtakId = call.parameters["vedtakId"]!!.toLong()
                 val vedtak = adminService.hentVedtak(vedtakId)
                     ?: return@get call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
+
+                call.adminAuditLogging(
+                    "detaljer vedtak",
+                    mapOf(
+                        "vedtakId" to vedtakId.toString(),
+                    )
+                )
 
                 data class Response(
                     val vedtakId: Long,
@@ -87,14 +107,18 @@ fun Route.adminApi(
 
             if (Configuration.dev) {
                 delete("/detaljer/{vedtakId}") {
-                    val adminUid = call.extractUUID()
                     val email = call.extractEmail()
 
                     val vedtakId = call.parameters["vedtakId"]!!.toLong()
                     val vedtak = adminService.hentVedtak(vedtakId)
                         ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
 
-                    log.info("Sletter vedtak med vedtakId=$vedtakId og adminEpost=$email ($adminUid)")
+                    call.adminAuditLogging(
+                        "slett vedtak",
+                        mapOf(
+                            "vedtakId" to vedtakId.toString(),
+                        )
+                    )
 
                     try {
                         slettVedtakService.slettVedtak(vedtak.vedtakId, email, SlettetAvType.NAV_ADMIN)
@@ -108,4 +132,17 @@ fun Route.adminApi(
             }
         }
     }
+}
+
+fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String>) {
+    val defaultParams = mapOf(
+        "uri" to request.uri.toString(),
+        "method" to request.httpMethod.value,
+        "oid" to extractUUID(),
+        "email" to extractEmail(),
+        "name" to extractName(),
+    )
+    val allParams = defaultParams.toMutableMap().putAll(params)
+    var logMessage = "Admin api audit: $tag: ${jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allParams)}"
+    sikkerlogg.info(logMessage)
 }
