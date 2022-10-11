@@ -86,6 +86,7 @@ fun Route.adminApi(
                     val opprettet: LocalDateTime,
                     val utbetalt: LocalDateTime?,
                     val slettet: LocalDateTime?,
+                    val slettetAv: String?,
                     val slettetAvType: SlettetAvType?,
                 )
 
@@ -99,6 +100,7 @@ fun Route.adminApi(
                         opprettet = vedtak.opprettet,
                         utbetalt = vedtak.utbetalingsdato,
                         slettet = vedtak.slettet,
+                        slettetAv = vedtak.slettetAv,
                         slettetAvType = vedtak.slettetAvType,
                     )
                 )
@@ -143,7 +145,10 @@ fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String>) 
         "email" to extractEmail(),
         "name" to extractName(),
     )
-    val allParams = defaultParams.toMutableMap().putAll(params)
-    var logMessage = "Admin api audit: $tag: ${jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allParams)}"
+
+    val allParams = defaultParams.toMutableMap()
+    allParams.putAll(params)
+
+    val logMessage = "Admin api audit: $tag: ${jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allParams)}"
     sikkerlogg.info(logMessage)
 }
