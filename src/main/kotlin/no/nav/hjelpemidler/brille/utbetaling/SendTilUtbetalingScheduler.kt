@@ -9,7 +9,6 @@ import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
 import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 class SendTilUtbetalingScheduler(
@@ -17,7 +16,7 @@ class SendTilUtbetalingScheduler(
     private val databaseContext: DatabaseContext,
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
-    delay: Duration = 2.hours,
+    delay: Duration = 5.minutes,
     private val dager: Long = 8,
     onlyWorkHours: Boolean = true
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
