@@ -122,6 +122,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE u.batch_id = :utbetalingsRef
+            ORDER BY id
             ;
         """.trimIndent()
 
