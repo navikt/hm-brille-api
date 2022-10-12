@@ -11,6 +11,7 @@ import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import org.intellij.lang.annotations.Language
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -63,6 +64,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.orgnr, vs.orgnr) AS orgnr,
                 COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
                 COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
+                COALESCE(v.belop, vs.belop) AS belop,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
@@ -89,6 +91,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 barnsNavn = person.navn(),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
                 bestillingsdato = row.localDate("bestillingsdato"),
+                belop = row.bigDecimal("belop"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
                 batchId = row.stringOrNull("batch_id"),
@@ -121,6 +124,7 @@ data class Vedtak(
     val barnsNavn: String,
     val bestillingsreferanse: String,
     val bestillingsdato: LocalDate,
+    val belop: BigDecimal,
     val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
     val batchId: String?,

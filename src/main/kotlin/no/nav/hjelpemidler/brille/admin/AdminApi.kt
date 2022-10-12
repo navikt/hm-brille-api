@@ -22,6 +22,7 @@ import no.nav.hjelpemidler.brille.vedtak.SlettVedtakConflictException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
@@ -83,6 +84,7 @@ fun Route.adminApi(
                     val orgNavn: String,
                     val barnsNavn: String,
                     val bestillingsreferanse: String,
+                    val belop: BigDecimal,
                     val opprettet: LocalDateTime,
                     val utbetalt: LocalDateTime?,
                     val utbetalingsreferanse: String?,
@@ -98,6 +100,7 @@ fun Route.adminApi(
                         orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>",
                         barnsNavn = vedtak.barnsNavn,
                         bestillingsreferanse = vedtak.bestillingsreferanse,
+                        belop = vedtak.belop,
                         opprettet = vedtak.opprettet,
                         utbetalt = vedtak.utbetalingsdato,
                         utbetalingsreferanse = vedtak.batchId,
