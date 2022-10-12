@@ -26,4 +26,10 @@ class AdminService(
             ctx.adminStore.hentVedtak(vedtakId)
         }
     }
+
+    suspend fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling> {
+        return transaction(databaseContext) { ctx ->
+            ctx.adminStore.hentUtbetalinger(utbetalingsRef)
+        }
+    }
 }
