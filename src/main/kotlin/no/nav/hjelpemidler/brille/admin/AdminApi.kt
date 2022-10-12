@@ -49,14 +49,23 @@ fun Route.adminApi(
                     )
                 )
 
-                if (!Regex("\\d+").matches(query)) {
-                    return@post call.respond(HttpStatusCode.BadRequest, """{"error": "Ugyldig format: bare tall"}""")
+                if (!Regex("[0-9-]+").matches(query)) {
+                    return@post call.respond(HttpStatusCode.BadRequest, """{"error": "Ugyldig format: bare tall og bindestrek er tillatt"}""")
                 }
 
                 if (query.count() == 11) {
                     // Fnr
                     val krav = adminService.hentVedtakListe(query)
                     call.respond(HttpStatusCode.OK, krav)
+                } else if (Regex("[0-9]{9}-[0-9]{8}").matches(query)) {
+                    val utbetaling = adminService.hentUtbetalinger(query).isNotEmpty()
+                    if(!utbetaling){
+                        return@post call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke utbetaling"}""")
+                    }
+                    data class Response(
+                        val utbetalingsreferanse: String,
+                    )
+                    call.respond(Response(query))
                 } else {
                     // vedtakId oppslag
                     val vedtak = adminService.hentVedtak(query.toLong())
