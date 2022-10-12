@@ -105,7 +105,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
-                vs.slettet
+                vs.slettet,
+                vs.slettet_av_type
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
@@ -146,6 +147,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                 opprettet = row.localDateTime("opprettet"),
                 slettet = row.localDateTimeOrNull("slettet"),
+                slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
             )
         }
     }
@@ -176,7 +178,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                     u.utbetalingsdato,
-                    vs.slettet
+                    vs.slettet,
+                    vs.slettet_av_type
                 FROM vedtak_v1 v
                 FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
                 LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
@@ -228,6 +231,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                     opprettet = row.localDateTime("opprettet"),
                     slettet = row.localDateTimeOrNull("slettet"),
+                    slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
                 )
             }
 

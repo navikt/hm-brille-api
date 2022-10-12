@@ -61,6 +61,7 @@ data class OversiktVedtak(
     val utbetalingsdato: LocalDate?,
     val opprettet: LocalDateTime,
     val slettet: LocalDateTime?,
+    val slettetAvType: SlettetAvType?,
 )
 
 data class Kravlinje(
