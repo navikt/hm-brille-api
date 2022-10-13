@@ -22,6 +22,7 @@ import no.nav.hjelpemidler.brille.vedtak.SlettVedtakConflictException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
@@ -48,14 +49,23 @@ fun Route.adminApi(
                     )
                 )
 
-                if (!Regex("\\d+").matches(query)) {
-                    return@post call.respond(HttpStatusCode.BadRequest, """{"error": "Ugyldig format: bare tall"}""")
+                if (!Regex("[0-9-]+").matches(query)) {
+                    return@post call.respond(HttpStatusCode.BadRequest, """{"error": "Ugyldig format: bare tall og bindestrek er tillatt"}""")
                 }
 
                 if (query.count() == 11) {
                     // Fnr
                     val krav = adminService.hentVedtakListe(query)
                     call.respond(HttpStatusCode.OK, krav)
+                } else if (Regex("[0-9]{9}-[0-9]{8}").matches(query)) {
+                    val utbetaling = adminService.hentUtbetalinger(query).isNotEmpty()
+                    if(!utbetaling){
+                        return@post call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke utbetaling"}""")
+                    }
+                    data class Response(
+                        val utbetalingsreferanse: String,
+                    )
+                    call.respond(Response(query))
                 } else {
                     // vedtakId oppslag
                     val vedtak = adminService.hentVedtak(query.toLong())
@@ -83,6 +93,7 @@ fun Route.adminApi(
                     val orgNavn: String,
                     val barnsNavn: String,
                     val bestillingsreferanse: String,
+                    val beløp: BigDecimal,
                     val opprettet: LocalDateTime,
                     val utbetalt: LocalDateTime?,
                     val utbetalingsreferanse: String?,
@@ -98,6 +109,7 @@ fun Route.adminApi(
                         orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>",
                         barnsNavn = vedtak.barnsNavn,
                         bestillingsreferanse = vedtak.bestillingsreferanse,
+                        beløp = vedtak.beløp,
                         opprettet = vedtak.opprettet,
                         utbetalt = vedtak.utbetalingsdato,
                         utbetalingsreferanse = vedtak.batchId,
@@ -134,6 +146,47 @@ fun Route.adminApi(
                 } catch (e: SlettVedtakInternalServerErrorException) {
                     call.respond(HttpStatusCode.InternalServerError, e.message!!)
                 }
+            }
+
+            get("/utbetaling/{utbetalingsRef}") {
+                val utbetalingsRef = call.parameters["utbetalingsRef"]!!
+                val utbetalinger = adminService.hentUtbetalinger(utbetalingsRef)
+
+                if (utbetalinger.isEmpty()) {
+                    return@get call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke utbetalingen"}""")
+                }
+
+                data class ResponseUtbetaling(
+                    val vedtakId: Long,
+                    val bestillingsreferanse: String,
+                    val barnsNavn: String,
+                    val beløp: BigDecimal,
+                )
+
+                data class Response(
+                    val utbetalingsreferanse: String,
+                    val orgnr: String,
+                    val orgNavn: String,
+                    val totalBeløp: BigDecimal,
+                    val utbetalinger: List<ResponseUtbetaling>,
+                )
+
+                call.respond(
+                    Response(
+                        utbetalingsreferanse = utbetalingsRef,
+                        orgnr = utbetalinger.first().orgnr,
+                        orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(utbetalinger.first().orgnr)?.navn ?: "<Ukjent>",
+                        totalBeløp = utbetalinger.sumOf { it.beløp },
+                        utbetalinger = utbetalinger.map {
+                            ResponseUtbetaling(
+                                vedtakId = it.vedtakId,
+                                bestillingsreferanse = it.bestillingsreferanse,
+                                barnsNavn = it.barnsNavn,
+                                beløp = it.beløp,
+                            )
+                        }
+                    )
+                )
             }
         }
     }

@@ -61,9 +61,8 @@ fun Route.virksomhetApi(
 
             val virksomhet =
                 transaction(databaseContext) { ctx -> ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr) }
-            log.info { "Søker etter $orgnr fant $virksomhet" }
             val harAktivNavAvtale = virksomhet?.aktiv ?: false
-
+            log.info ( "Søker etter $orgnr har aktiv NavAvtale: $harAktivNavAvtale")
             val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
 

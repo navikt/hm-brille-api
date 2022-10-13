@@ -11,12 +11,14 @@ import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import org.intellij.lang.annotations.Language
+import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 interface AdminStore : Store {
     fun hentVedtakListe(fnr: String): List<VedtakListe>
     fun hentVedtak(vedtakId: Long): Vedtak?
+    fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling>
 }
 
 class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore,
@@ -63,6 +65,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.orgnr, vs.orgnr) AS orgnr,
                 COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
                 COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
+                COALESCE(v.belop, vs.belop) AS belop,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 u.utbetalingsdato,
@@ -89,6 +92,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 barnsNavn = person.navn(),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
                 bestillingsdato = row.localDate("bestillingsdato"),
+                beløp = row.bigDecimal("belop"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
                 batchId = row.stringOrNull("batch_id"),
@@ -102,6 +106,37 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                     }
                 },
                 slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
+            )
+        }
+    }
+    override fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling> = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT
+                COALESCE(v.orgnr, vs.orgnr) AS orgnr,
+                COALESCE(v.id, vs.id) AS id,
+                COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
+                COALESCE(v.belop, vs.belop) AS belop
+            FROM vedtak_v1 v
+            FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
+            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
+            WHERE u.batch_id = :utbetalingsRef
+            ORDER BY id
+            ;
+        """.trimIndent()
+
+        sessionFactory().queryList(
+            sql,
+            mapOf("utbetalingsRef" to utbetalingsRef)
+        ) { row ->
+            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+            Utbetaling(
+                orgnr = row.string("orgnr"),
+                vedtakId = row.long("id"),
+                bestillingsreferanse = row.string("bestillingsreferanse"),
+                barnsNavn = person.navn(),
+                beløp = row.bigDecimal("belop"),
             )
         }
     }
@@ -121,10 +156,19 @@ data class Vedtak(
     val barnsNavn: String,
     val bestillingsreferanse: String,
     val bestillingsdato: LocalDate,
+    val beløp: BigDecimal,
     val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
     val batchId: String?,
     val slettet: LocalDateTime?,
     val slettetAv: String?,
     val slettetAvType: SlettetAvType?,
+)
+
+data class Utbetaling(
+    val orgnr: String,
+    val vedtakId: Long,
+    val bestillingsreferanse: String,
+    val barnsNavn: String,
+    val beløp: BigDecimal,
 )
