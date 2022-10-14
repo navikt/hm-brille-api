@@ -54,7 +54,6 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.rapportering.RapportService
 import no.nav.hjelpemidler.brille.rapportering.rapportApi
-import no.nav.hjelpemidler.brille.rapportering.rapportApiAdmin
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
@@ -211,11 +210,10 @@ fun Application.setupRoutes() {
             }
 
             authenticate(if (Configuration.local) "local_azuread" else AZURE_AD_AUTH) {
-                adminApi(adminService, slettVedtakService, enhetsregisteretService)
+                adminApi(adminService, slettVedtakService, enhetsregisteretService, rapportService)
             }
 
             // Admin apis
-            rapportApiAdmin(rapportService)
             sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
         }
     }
