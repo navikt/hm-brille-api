@@ -54,6 +54,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.rapportering.RapportService
 import no.nav.hjelpemidler.brille.rapportering.rapportApi
+import no.nav.hjelpemidler.brille.rapportering.rapportApiAdmin
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
@@ -214,7 +215,7 @@ fun Application.setupRoutes() {
             }
 
             // Admin apis
-            // rapportApiAdmin(rapportService)
+            rapportApiAdmin(rapportService)
             sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
         }
     }
