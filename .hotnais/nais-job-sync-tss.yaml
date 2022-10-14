@@ -21,6 +21,7 @@ spec:
   envFrom:
     - secret: redis-password
     - secret: hm-soknad-api-secret
+    - secret: hm-slack-hook
     - secret: google-sql-hm-brille-api-brilleapidb-naisjob-0cb211b2
     # - secret: hm-brille-api-naisjob-db
   azure:
