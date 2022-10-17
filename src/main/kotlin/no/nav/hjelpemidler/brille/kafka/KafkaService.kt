@@ -13,6 +13,7 @@ import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
+import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
@@ -160,11 +161,12 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
     }
 
-    fun vedtakSlettet(vedtakId: Long) {
+    fun vedtakSlettet(vedtakId: Long, slettetAvType: SlettetAvType) {
         sendTilBigQuery(
             null,
             SlettedeVedtakStatistikk(
                 vedtakId = vedtakId,
+                slettetAvType = slettetAvType,
             ),
         )
     }
@@ -324,6 +326,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     @BigQueryHendelse(schemaId = "slettede_vedtak_v1")
     internal data class SlettedeVedtakStatistikk(
         val vedtakId: Long,
+        val slettetAvType: SlettetAvType,
         val opprettet: LocalDateTime = LocalDateTime.now(),
     )
 
