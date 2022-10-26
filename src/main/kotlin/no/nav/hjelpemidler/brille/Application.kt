@@ -210,11 +210,10 @@ fun Application.setupRoutes() {
             }
 
             authenticate(if (Configuration.local) "local_azuread" else AZURE_AD_AUTH) {
-                adminApi(adminService, slettVedtakService, enhetsregisteretService)
+                adminApi(adminService, slettVedtakService, enhetsregisteretService, rapportService)
             }
 
             // Admin apis
-            // rapportApiAdmin(rapportService)
             sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
         }
     }

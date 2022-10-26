@@ -30,7 +30,7 @@ class SlettVedtakService(
 
             transaction(databaseContext) { ctx ->
                 ctx.slettVedtakStore.slettVedtak(vedtakId, slettetAv, slettetAvType)
-                kafkaService.vedtakSlettet(vedtakId)
+                kafkaService.vedtakSlettet(vedtakId, slettetAvType)
                 kafkaService.feilregistrerBarnebrillerIJoark(vedtakId, joarkRef)
             }
         }
