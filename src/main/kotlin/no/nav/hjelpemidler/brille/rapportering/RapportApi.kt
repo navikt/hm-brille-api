@@ -143,7 +143,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
             (
                 "${it.id}; " +
                     "${it.bestillingsreferanse}; " +
-                    "${it.beløp}; ${it.bestillingsdato}; " +
+                    "${it.beløp.toInt()}; ${it.bestillingsdato}; " +
                     "${if (it.utbetalingsdato == null) "Nei" else "Ja"}; " +
                     "${it.utbetalingsdato} ;  " +
                     "${it.batchId} "
