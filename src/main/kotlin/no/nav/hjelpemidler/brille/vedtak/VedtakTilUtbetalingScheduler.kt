@@ -9,7 +9,7 @@ import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
 import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
+import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -20,7 +20,7 @@ class VedtakTilUtbetalingScheduler(
     private val enhetsregisteretService: EnhetsregisteretService,
     private val metricsConfig: MetricsConfig,
     delay: Duration = 30.minutes,
-    private val dager: Long = 7,
+    private val dager: Long = 14,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig) {
 
     private var vedtakKo: Double = 0.0
@@ -37,7 +37,7 @@ class VedtakTilUtbetalingScheduler(
     override suspend fun action() {
         vedtakKo = vedtakService.hentAntallVedtakIKø().toDouble()
 
-        val vedtakList = vedtakService.hentVedtakForUtbetaling(opprettet = LocalDateTime.now().minusDays(dager))
+        val vedtakList = vedtakService.hentVedtakForUtbetaling(opprettet = LocalDate.now().minusDays(dager).atStartOfDay())
         LOG.info("fant ${vedtakList.size} vedtak for utbetaling")
 
         val enhetsregisterCache = mutableMapOf<String, Boolean>()
