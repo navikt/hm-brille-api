@@ -30,7 +30,7 @@ fun kravlinjeQuery(
             """
              AND (CAST(v.id AS TEXT) LIKE :referanseFilter
               OR v.bestillingsreferanse LIKE :referanseFilter
-              OR v.batch_id LIKE :referanseFilter)
+              OR u.batch_id LIKE :referanseFilter)
             """.trimIndent()
         )
     }
