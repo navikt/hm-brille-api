@@ -17,7 +17,8 @@ interface RapportStore : Store {
         orgNr: String,
         kravFilter: KravFilter?,
         fraDato: LocalDate?,
-        tilDato: LocalDate?
+        tilDato: LocalDate?,
+        referanseFilter: String?,
     ): List<Kravlinje>
 
     fun hentPagedKravlinjerForOrgNummer(
@@ -25,6 +26,7 @@ interface RapportStore : Store {
         kravFilter: KravFilter?,
         fraDato: LocalDate?,
         tilDato: LocalDate?,
+        referanseFilter: String?,
         limit: Int = 20,
         offset: Int = 0,
     ): Page<Kravlinje>
@@ -36,16 +38,18 @@ internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStor
         orgNr: String,
         kravFilter: KravFilter?,
         fraDato: LocalDate?,
-        tilDato: LocalDate?
+        tilDato: LocalDate?,
+        referanseFilter: String?,
     ): List<Kravlinje> = session {
         @Language("PostgreSQL")
-        val sql = kravlinjeQuery(kravFilter, tilDato)
+        val sql = kravlinjeQuery(kravFilter, tilDato, referanseFilter)
         it.queryList(
             sql,
             mapOf(
                 "orgNr" to orgNr,
                 "fraDato" to fraDato,
-                "tilDato" to tilDato
+                "tilDato" to tilDato,
+                "referanseFilter" to "%$referanseFilter%",
             )
         ) { row ->
             Kravlinje.fromRow(row)
@@ -57,11 +61,12 @@ internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStor
         kravFilter: KravFilter?,
         fraDato: LocalDate?,
         tilDato: LocalDate?,
+        referanseFilter: String?,
         limit: Int,
         offset: Int,
     ): Page<Kravlinje> = session {
         @Language("PostgreSQL")
-        val sql = kravlinjeQuery(kravFilter, tilDato)
+        val sql = kravlinjeQuery(kravFilter, tilDato, referanseFilter)
         it.queryPagedList(
             sql,
             mapOf(
@@ -69,7 +74,8 @@ internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStor
                 "limit" to limit,
                 "offset" to offset,
                 "fraDato" to fraDato,
-                "tilDato" to tilDato
+                "tilDato" to tilDato,
+                "referanseFilter" to "%$referanseFilter%",
             ),
             limit,
             offset

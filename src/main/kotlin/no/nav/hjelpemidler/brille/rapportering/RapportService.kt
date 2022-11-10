@@ -13,14 +13,16 @@ class RapportService(
         orgNr: String,
         kravFilter: KravFilter? = null,
         fraDato: LocalDate? = null,
-        tilDato: LocalDate? = null
+        tilDato: LocalDate? = null,
+        referanseFilter: String? = "",
     ): List<Kravlinje> {
         val kravlinjer = transaction(databaseContext) { ctx ->
             ctx.rapportStore.hentKravlinjerForOrgNummer(
                 orgNr = orgNr,
                 kravFilter = kravFilter,
                 fraDato = fraDato,
-                tilDato = tilDato
+                tilDato = tilDato,
+                referanseFilter = referanseFilter,
             )
         }
         return kravlinjer
@@ -31,6 +33,7 @@ class RapportService(
         kravFilter: KravFilter? = null,
         fraDato: LocalDate? = null,
         tilDato: LocalDate? = null,
+        referanseFilter: String? = "",
         limit: Int = 20,
         offset: Int = 0,
     ): Page<Kravlinje> {
@@ -40,6 +43,7 @@ class RapportService(
                 kravFilter = kravFilter,
                 fraDato = fraDato,
                 tilDato = tilDato,
+                referanseFilter = referanseFilter,
                 limit = limit,
                 offset = offset
             )

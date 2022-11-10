@@ -40,11 +40,14 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             val fraDato = call.request.queryParameters["fraDato"]?.toLocalDate()
             val tilDato = call.request.queryParameters["tilDato"]?.toLocalDate()?.plusDays(1)
 
+            val referanseFilter = call.request.queryParameters["referanseFilter"] ?: ""
+
             val kravlinjer = rapportService.hentPagedKravlinjer(
                 orgNr = orgnr,
                 kravFilter = kravFilter,
                 fraDato = fraDato,
                 tilDato = tilDato,
+                referanseFilter = referanseFilter,
                 limit = limit,
                 offset = (page - 1) * limit,
             )
@@ -75,11 +78,14 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             val fraDato = call.request.queryParameters["fraDato"]?.toLocalDate()
             val tilDato = call.request.queryParameters["tilDato"]?.toLocalDate()?.plusDays(1)
 
+            val referanseFilter = call.request.queryParameters["referanseFilter"] ?: ""
+
             val kravlinjer = rapportService.hentKravlinjer(
                 orgNr = orgnr,
                 kravFilter = kravFilter,
                 fraDato = fraDato,
-                tilDato = tilDato
+                tilDato = tilDato,
+                referanseFilter = referanseFilter,
             )
 
             call.response.header(
