@@ -6,7 +6,8 @@ import java.time.LocalDate
 
 fun kravlinjeQuery(
     kravFilter: KravFilter?,
-    tilDato: LocalDate?
+    tilDato: LocalDate?,
+    referanseFilter: String?,
 ): String {
     var sql = """
                 SELECT v.id, v.bestillingsdato, v.behandlingsresultat, v.opprettet, v.belop, v.bestillingsreferanse, u.utbetalingsdato, u.batch_id, count(v.*) over() AS $COLUMN_LABEL_TOTAL
@@ -22,6 +23,16 @@ fun kravlinjeQuery(
         sql = sql.plus(" AND date_part('year', v.opprettet) = date_part('year', CURRENT_DATE)")
     } else if (kravFilter?.equals(KravFilter.SISTE3MND) == true) {
         sql = sql.plus(" AND v.opprettet >  CURRENT_DATE - INTERVAL '3 months'")
+    }
+
+    if (!referanseFilter.isNullOrBlank()) {
+        sql = sql.plus(
+            """
+             AND (CAST(v.id AS TEXT) LIKE :referanseFilter
+              OR v.bestillingsreferanse LIKE :referanseFilter
+              OR u.batch_id LIKE :referanseFilter)
+            """.trimIndent()
+        )
     }
 
     //language=PostgreSQL
