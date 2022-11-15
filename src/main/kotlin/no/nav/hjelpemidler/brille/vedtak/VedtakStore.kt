@@ -250,7 +250,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             FROM vedtak_v1
             WHERE
                 fnr_innsender = :fnr_innsender
-                AND aktiv
+                AND orgnr IN (SELECT orgnr FROM virksomhet_v1 WHERE aktiv)
             ORDER BY opprettet DESC
         """.trimIndent()
         it.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
