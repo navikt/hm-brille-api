@@ -248,7 +248,9 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         val sql = """
             SELECT orgnr
             FROM vedtak_v1
-            WHERE fnr_innsender = :fnr_innsender
+            WHERE
+                fnr_innsender = :fnr_innsender
+                AND aktiv
             ORDER BY opprettet DESC
         """.trimIndent()
         it.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
