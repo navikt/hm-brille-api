@@ -62,7 +62,7 @@ class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIden
         val sql = """
             SELECT orgnr
             FROM virksomhet_v1
-            WHERE orgnr NOT IN (SELECT orgnr FROM tssident_v1)
+            WHERE orgnr NOT IN (SELECT orgnr FROM tssident_v1) AND aktiv
             ORDER BY orgnr ASC
         """.trimIndent()
 
