@@ -13,6 +13,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
+private val log = KotlinLogging.logger {}
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class VedtakService(
@@ -41,7 +42,7 @@ class VedtakService(
         val satsBeløp = sats.beløp
         val brillepris = vilkårsgrunnlag.brillepris
 
-        return transaction(databaseContext) { ctx ->
+        val vedtak = transaction(databaseContext) { ctx ->
             val vedtak = ctx.vedtakStore.lagreVedtak(
                 Vedtak(
                     fnrBarn = vilkårsgrunnlag.fnrBarn,
@@ -60,13 +61,21 @@ class VedtakService(
             )
             ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
             kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)
+            vedtak
+        }
+
+        kotlin.runCatching {
             if (vilkårsvurdering.grunnlag.medlemskapResultat.medlemskapBevist) {
                 kafkaService.medlemskapFolketrygdenBevist(vilkårsgrunnlag.fnrBarn, vedtak.id)
             } else if (vilkårsvurdering.grunnlag.medlemskapResultat.uavklartMedlemskap) {
                 kafkaService.medlemskapFolketrygdenAntatt(vilkårsgrunnlag.fnrBarn, vedtak.id)
             }
-            vedtak
+        }.getOrElse { cause ->
+            // Statistikk, ikke viktig nok til å kaste akkurat her siden vedtaket er opprettet
+            log.error(cause) { "Kunne ikke opprette statistikk, kafka kastet exception" }
         }
+
+        return vedtak
     }
 
     suspend fun hentVedtakForUtbetaling(opprettet: LocalDateTime): List<Vedtak<Vilkårsgrunnlag>> {
