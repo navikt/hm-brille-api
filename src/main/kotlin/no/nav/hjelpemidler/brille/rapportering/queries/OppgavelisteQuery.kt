@@ -43,9 +43,12 @@ fun kravlinjeQuery(
     if (!referanseFilter.isNullOrBlank()) {
         sql = sql.plus(
             """
-             AND (CAST(v.id AS TEXT) LIKE :referanseFilter
-              OR v.bestillingsreferanse LIKE :referanseFilter
-              OR u.batch_id LIKE :referanseFilter)
+             AND (
+                CAST(v.id AS TEXT) LIKE :referanseFilter
+                OR v.bestillingsreferanse LIKE :referanseFilter
+                OR u1.batch_id LIKE :referanseFilter
+                OR u2.batch_id LIKE :referanseFilter
+              )
             """.trimIndent()
         )
     }
