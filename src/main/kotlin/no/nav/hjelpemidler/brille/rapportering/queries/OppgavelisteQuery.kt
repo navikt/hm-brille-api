@@ -10,11 +10,26 @@ fun kravlinjeQuery(
     referanseFilter: String?,
 ): String {
     var sql = """
-                SELECT v.id, v.bestillingsdato, v.behandlingsresultat, v.opprettet, v.belop, v.bestillingsreferanse, u.utbetalingsdato, u.batch_id, count(v.*) over() AS $COLUMN_LABEL_TOTAL
-            FROM vedtak_v1 v 
-            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
-            WHERE v.orgnr = :orgNr 
-                       """
+        SELECT
+            COALESCE(v.id, vs.id) AS id,
+            COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
+            COALESCE(v.behandlingsresultat, vs.behandlingsresultat) AS behandlingsresultat,
+            COALESCE(v.opprettet, vs.opprettet) AS opprettet,
+            COALESCE(v.belop, vs.belop) AS belop,
+            COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
+            COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+            COALESCE(u1.batch_id, u2.batch_id) AS batch_id,
+            count(*) over() AS $COLUMN_LABEL_TOTAL
+        FROM vedtak_v1 v
+        FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
+        LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
+        LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
+        WHERE
+            v.orgnr = :orgNr
+            -- Bare inkluder resultater fra slettet-vedtak tabellen som ble utbetalt før de ble slettet:
+            AND (vs.id IS NULL OR u2.utbetalingsdato IS NOT NULL)
+    """
+
     if (tilDato != null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
         sql = sql.plus(" AND v.opprettet >= :fraDato AND v.opprettet <= :tilDato ")
     } else if (tilDato == null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {

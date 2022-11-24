@@ -20,19 +20,20 @@ class SlettVedtakService(
 ) {
 
     suspend fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType) {
-        if (utbetalingService.hentUtbetalingForVedtak(vedtakId) != null) {
+        /* val utbetaling = utbetalingService.hentUtbetalingForVedtak(vedtakId)
+        if (utbetaling != null) {
             throw SlettVedtakConflictException()
-        } else {
-            val joarkRef = joarkrefService.hentJoarkRef(vedtakId)
-                ?: throw SlettVedtakInternalServerErrorException()
+        } else { */
+        val joarkRef = joarkrefService.hentJoarkRef(vedtakId)
+            ?: throw SlettVedtakInternalServerErrorException()
 
-            log.info("JoarkRef funnet: $joarkRef")
+        log.info("JoarkRef funnet: $joarkRef")
 
-            transaction(databaseContext) { ctx ->
-                ctx.slettVedtakStore.slettVedtak(vedtakId, slettetAv, slettetAvType)
-                kafkaService.vedtakSlettet(vedtakId, slettetAvType)
-                kafkaService.feilregistrerBarnebrillerIJoark(vedtakId, joarkRef)
-            }
+        transaction(databaseContext) { ctx ->
+            ctx.slettVedtakStore.slettVedtak(vedtakId, slettetAv, slettetAvType)
+            kafkaService.vedtakSlettet(vedtakId, slettetAvType)
+            kafkaService.feilregistrerBarnebrillerIJoark(vedtakId, joarkRef)
         }
+        // }
     }
 }
