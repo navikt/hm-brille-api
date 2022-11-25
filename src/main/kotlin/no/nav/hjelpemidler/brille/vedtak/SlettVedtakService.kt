@@ -20,13 +20,8 @@ class SlettVedtakService(
 ) {
 
     suspend fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType) {
-        /* val utbetaling = utbetalingService.hentUtbetalingForVedtak(vedtakId)
-        if (utbetaling != null) {
-            throw SlettVedtakConflictException()
-        } else { */
         val joarkRef = joarkrefService.hentJoarkRef(vedtakId)
             ?: throw SlettVedtakInternalServerErrorException()
-
         log.info("JoarkRef funnet: $joarkRef")
 
         transaction(databaseContext) { ctx ->
@@ -34,6 +29,5 @@ class SlettVedtakService(
             kafkaService.vedtakSlettet(vedtakId, slettetAvType)
             kafkaService.feilregistrerBarnebrillerIJoark(vedtakId, joarkRef)
         }
-        // }
     }
 }
