@@ -68,6 +68,9 @@ fun kravlinjeQuery(
                 CAST(v.id AS TEXT) LIKE :referanseFilter
                 OR v.bestillingsreferanse LIKE :referanseFilter
                 OR u1.batch_id LIKE :referanseFilter
+                
+                OR CAST(vs.id AS TEXT) LIKE :referanseFilter
+                OR vs.bestillingsreferanse LIKE :referanseFilter
                 OR u2.batch_id LIKE :referanseFilter
               )
             """.trimIndent()
