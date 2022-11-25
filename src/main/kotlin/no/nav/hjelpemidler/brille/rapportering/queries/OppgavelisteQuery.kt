@@ -19,6 +19,7 @@ fun kravlinjeQuery(
             COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
             COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
             COALESCE(u1.batch_id, u2.batch_id) AS batch_id,
+            vs.slettet,
             count(*) over() AS $COLUMN_LABEL_TOTAL
         FROM vedtak_v1 v
         FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id

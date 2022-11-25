@@ -72,7 +72,8 @@ data class Kravlinje(
     val beløp: BigDecimal,
     val bestillingsreferanse: String,
     val utbetalingsdato: LocalDate?,
-    val batchId: String?
+    val batchId: String?,
+    val slettet: LocalDateTime?,
 ) {
 
     companion object {
@@ -84,7 +85,8 @@ data class Kravlinje(
             beløp = row.bigDecimal("belop"),
             bestillingsreferanse = row.string("bestillingsreferanse"),
             utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-            batchId = row.stringOrNull("batch_id")
+            batchId = row.stringOrNull("batch_id"),
+            slettet = row.localDateTimeOrNull("slettet"),
         )
     }
 }
