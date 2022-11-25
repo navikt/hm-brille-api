@@ -119,7 +119,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
                     "${if (it.utbetalingsdato == null) "Nei" else "Ja"}; " +
                     "${it.utbetalingsdato} ;  " +
                     "${it.batchId} ; " +
-                    if (it.slettet != null) "Merk: kravet ble slettet av NAV etter henvendelse fra virksomheten." else ""
+                    if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else ""
                 ).toByteArray()
         )
         write("\n".toByteArray())
