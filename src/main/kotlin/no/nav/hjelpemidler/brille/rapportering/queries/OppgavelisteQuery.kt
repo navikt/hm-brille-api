@@ -77,6 +77,12 @@ fun kravlinjeQuery(
         )
     }
 
+    sql = sql.plus(
+        """
+            ORDER BY opprettet DESC
+        """.trimIndent()
+    )
+
     //language=PostgreSQL
     return sql.trimIndent()
 }
