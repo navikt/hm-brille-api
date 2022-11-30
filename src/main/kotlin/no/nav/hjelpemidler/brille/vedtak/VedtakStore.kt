@@ -104,16 +104,18 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSfære,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
-                u.utbetalingsdato,
+                COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
                 vs.slettet,
                 vs.slettet_av_type
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
-            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
+            LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
+            LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
             WHERE
                 (v.id = :vedtak_id OR vs.id = :vedtak_id) AND
                 (v.fnr_innsender = :fnr_innsender OR vs.fnr_innsender = :fnr_innsender) AND
-                (u.utbetalingsdato IS NULL OR (u.utbetalingsdato > NOW() - '28 days'::interval)) AND
+                (u1.utbetalingsdato IS NULL OR (u1.utbetalingsdato > NOW() - '28 days'::interval)) AND
+                (u2.utbetalingsdato IS NULL OR (u2.utbetalingsdato > NOW() - '28 days'::interval)) AND
                 (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::interval))
         """.trimIndent()
         it.query(
@@ -177,15 +179,17 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSfære,
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
-                    u.utbetalingsdato,
+                    COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
                     vs.slettet,
                     vs.slettet_av_type
                 FROM vedtak_v1 v
                 FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
-                LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
+                LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
+                LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
                 WHERE
                     (v.fnr_innsender = :fnr_innsender OR vs.fnr_innsender = :fnr_innsender) AND
-                    (u.utbetalingsdato IS NULL OR (u.utbetalingsdato > NOW() - '28 days'::interval)) AND
+                    (u1.utbetalingsdato IS NULL OR (u1.utbetalingsdato > NOW() - '28 days'::interval)) AND
+                    (u2.utbetalingsdato IS NULL OR (u2.utbetalingsdato > NOW() - '28 days'::interval)) AND
                     (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::interval))
                 ORDER BY opprettet DESC
             """.trimIndent()

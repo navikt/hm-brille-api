@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - vedtak-slettet
+      - utbetalte-krav-kan-slettes
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest

@@ -172,6 +172,7 @@ fun Route.adminApi(
                     val bestillingsreferanse: String,
                     val barnsNavn: String,
                     val beløp: BigDecimal,
+                    val slettet: LocalDateTime?,
                 )
 
                 data class Response(
@@ -194,6 +195,7 @@ fun Route.adminApi(
                                 bestillingsreferanse = it.bestillingsreferanse,
                                 barnsNavn = it.barnsNavn,
                                 beløp = it.beløp,
+                                slettet = it.slettet,
                             )
                         }
                     )

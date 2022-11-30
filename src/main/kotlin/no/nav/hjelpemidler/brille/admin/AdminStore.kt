@@ -31,11 +31,12 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.id, vs.id) AS id,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
-                u.utbetalingsdato,
+                COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
                 vs.slettet
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
-            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
+            LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
+            LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
             WHERE
                 (v.fnr_barn = :fnr OR vs.fnr_barn = :fnr)
             ORDER BY opprettet DESC
@@ -68,14 +69,15 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.belop, vs.belop) AS belop,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
-                u.utbetalingsdato,
-                u.batch_id,
+                COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                COALESCE(u1.batch_id, u2.batch_id) AS batch_id,
                 vs.slettet,
                 vs.slettet_av,
                 vs.slettet_av_type
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
-            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
+            LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
+            LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
             WHERE
                 (v.id = :vedtakId OR vs.id = :vedtakId)
             ;
@@ -117,11 +119,13 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.id, vs.id) AS id,
                 COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
-                COALESCE(v.belop, vs.belop) AS belop
+                COALESCE(v.belop, vs.belop) AS belop,
+                vs.slettet
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
-            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
-            WHERE u.batch_id = :utbetalingsRef
+            LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
+            LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
+            WHERE u1.batch_id = :utbetalingsRef OR u2.batch_id = :utbetalingsRef
             ORDER BY id
             ;
         """.trimIndent()
@@ -137,6 +141,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 bestillingsreferanse = row.string("bestillingsreferanse"),
                 barnsNavn = person.navn(),
                 beløp = row.bigDecimal("belop"),
+                slettet = row.localDateTimeOrNull("slettet"),
             )
         }
     }
@@ -171,4 +176,5 @@ data class Utbetaling(
     val bestillingsreferanse: String,
     val barnsNavn: String,
     val beløp: BigDecimal,
+    val slettet: LocalDateTime?,
 )
