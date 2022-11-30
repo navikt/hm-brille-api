@@ -239,9 +239,11 @@ fun cronjobSyncTss() {
 
     runBlocking {
         val virksomheter = transaction(databaseContext) { ctx ->
-            ctx.virksomhetStore.hentAlleVirksomheterMedKontonr().map {
-                Pair(it.orgnr, it.kontonr)
-            }
+            ctx.virksomhetStore.hentAlleVirksomheterMedKontonr()
+                .filter { it.aktiv } // Ignorer alle deaktiverte avtaler
+                .map {
+                    Pair(it.orgnr, it.kontonr)
+                }
         }
 
         virksomheter.forEach {
