@@ -32,6 +32,7 @@ import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Date
 
@@ -104,6 +105,7 @@ fun Route.adminApi(
                     val orgNavn: String,
                     val barnsNavn: String,
                     val bestillingsreferanse: String,
+                    val bestillingsdato: LocalDate,
                     val beløp: BigDecimal,
                     val opprettet: LocalDateTime,
                     val utbetalt: LocalDateTime?,
@@ -120,6 +122,7 @@ fun Route.adminApi(
                         orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>",
                         barnsNavn = vedtak.barnsNavn,
                         bestillingsreferanse = vedtak.bestillingsreferanse,
+                        bestillingsdato = vedtak.bestillingsdato,
                         beløp = vedtak.beløp,
                         opprettet = vedtak.opprettet,
                         utbetalt = vedtak.utbetalingsdato,
