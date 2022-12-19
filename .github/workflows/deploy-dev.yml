@@ -43,6 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG_LATEST=`echo ${ghcr_image} | cut -d':' -f 1`":latest"
+          echo "IMAGE=${ghcr_image}" >> $GITHUB_ENV
           docker build . --pull -t ${ghcr_image} -t $TAG_LATEST
           docker login ghcr.io -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
           docker push ${ghcr_image}
@@ -54,7 +55,7 @@ jobs:
           CLUSTER: dev-gcp
           RESOURCE: .hotnais/nais-deploy.yaml
           VARS: .hotnais/dev/config.json
-          VAR: commit=${{ github.sha }} image=${{ env.ghcr_image }}
+          VAR: commit=${{ github.sha }}
       - name: post-deploy
         if: github.ref == 'refs/heads/main'
         uses: navikt/digihot-deploy/actions/post-deploy@v2

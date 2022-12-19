@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       imageVersion:
-        description: 'Image version (eg. 22.245.120000)'
+        description: 'Image version (sha, eg. e49c9d6637b40113ee8d86737915ae8cec49dca3)'
         required: true
         default: 'latest'
         type: string
