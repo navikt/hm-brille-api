@@ -9,6 +9,8 @@ on:
     branches:
       - main
       - utbetalte-krav-kan-slettes
+env:
+  ghcr_image: ghcr.io/${{ github.repository }}/hm-brille-api:${{ github.sha }}
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -40,10 +42,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_LATEST=`echo $IMAGE | cut -d':' -f 1`":latest"
-          docker build . --pull -t $IMAGE -t $TAG_LATEST
+          TAG_LATEST=`echo ${ghcr_image} | cut -d':' -f 1`":latest"
+          docker build . --pull -t ${ghcr_image} -t $TAG_LATEST
           docker login ghcr.io -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
-          docker push $IMAGE
+          docker push ${ghcr_image}
           docker push $TAG_LATEST
       - name: deploy to dev-gcp
         uses: nais/deploy/actions/deploy@v1
