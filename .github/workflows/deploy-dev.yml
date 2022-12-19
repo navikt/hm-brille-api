@@ -42,7 +42,7 @@ jobs:
         run: |
           TAG_LATEST=`echo $IMAGE | cut -d':' -f 1`":latest"
           docker build . --pull -t $IMAGE -t $TAG_LATEST
-          echo "$GITHUB_TOKEN" | docker login --username "$GITHUB_REPOSITORY" --password-stdin docker.pkg.github.com
+          echo "$GITHUB_TOKEN" | docker login --username "$GITHUB_REPOSITORY" --password-stdin ghcr.io
           docker push $IMAGE
           docker push $TAG_LATEST
       - name: deploy to dev-gcp
