@@ -32,33 +32,41 @@ fun kravlinjeQuery(
     """
 
     if (tilDato != null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
-        sql = sql.plus("""
+        sql = sql.plus(
+            """
             AND (
                 (v.id IS NULL OR (v.opprettet >= :fraDato AND v.opprettet <= :tilDato))
                 AND (vs.id IS NULL OR (vs.opprettet >= :fraDato AND vs.opprettet <= :tilDato))
             )
-        """.trimMargin())
+            """.trimMargin()
+        )
     } else if (tilDato == null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
-        sql = sql.plus("""
+        sql = sql.plus(
+            """
             AND (
                 (v.id IS NULL OR (v.opprettet >= :fraDato))
                 AND (vs.id IS NULL OR (vs.opprettet >= :fraDato))
             )
-        """.trimIndent())
+            """.trimIndent()
+        )
     } else if (kravFilter?.equals(KravFilter.HITTILAR) == true) {
-        sql = sql.plus("""
+        sql = sql.plus(
+            """
             AND (
                 (v.id IS NULL OR (date_part('year', v.opprettet) = date_part('year', CURRENT_DATE)))
                 AND (vs.id IS NULL OR (date_part('year', vs.opprettet) = date_part('year', CURRENT_DATE)))
             )
-        """.trimIndent())
+            """.trimIndent()
+        )
     } else if (kravFilter?.equals(KravFilter.SISTE3MND) == true) {
-        sql = sql.plus("""
+        sql = sql.plus(
+            """
             AND (
                 (v.id IS NULL OR (v.opprettet >  CURRENT_DATE - INTERVAL '3 months'))
                 AND (vs.id IS NULL OR (vs.opprettet >  CURRENT_DATE - INTERVAL '3 months'))
             )
-        """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     if (!referanseFilter.isNullOrBlank()) {

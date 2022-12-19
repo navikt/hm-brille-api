@@ -119,7 +119,7 @@ fun Route.adminApi(
                     Response(
                         vedtakId = vedtak.vedtakId,
                         orgnr = vedtak.orgnr,
-                        orgNavn = enhe1tsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>",
+                        orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>",
                         barnsNavn = vedtak.barnsNavn,
                         bestillingsreferanse = vedtak.bestillingsreferanse,
                         bestillingsdato = vedtak.bestillingsdato,
