@@ -13,7 +13,7 @@ jobs:
           VERSION_TAG: ${{ github.event.release.tag_name }}
         run: |
           APPLICATION=$(echo $GITHUB_REPOSITORY | cut -d "/" -f 2)
-          IMAGE=ghcr.io/$GITHUB_REPOSITORY/$APPLICATION:$VERSION_TAG
+          IMAGE=ghcr.io/$GITHUB_REPOSITORY/$APPLICATION:$GITHUB_SHA
           echo "IMAGE=${IMAGE}" >> $GITHUB_ENV
           echo $IMAGE
       - uses: nais/deploy/actions/deploy@v1
