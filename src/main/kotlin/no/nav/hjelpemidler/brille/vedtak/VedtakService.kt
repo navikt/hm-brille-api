@@ -19,16 +19,19 @@ private val sikkerLog = KotlinLogging.logger("tjenestekall")
 class VedtakService(
     val databaseContext: DatabaseContext,
     private val vilkårsvurderingService: VilkårsvurderingService,
-    private val kafkaService: KafkaService,
+    private val kafkaService: KafkaService
 ) {
     companion object {
         private val LOG = LoggerFactory.getLogger(VedtakService::class.java)
     }
 
     suspend fun lagVedtak(fnrInnsender: String, krav: KravDto): Vedtak<Vilkårsgrunnlag> {
-
         val vilkårsgrunnlag = krav.vilkårsgrunnlag
-        val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(vilkårsgrunnlag)
+        val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
+            vilkårsgrunnlag.fnrBarn,
+            vilkårsgrunnlag.brilleseddel,
+            vilkårsgrunnlag.bestillingsdato
+        )
 
         if (vilkårsvurdering.utfall != Resultat.JA) {
             sikkerLog.info {
@@ -56,7 +59,7 @@ class VedtakService(
                     sats = sats,
                     satsBeløp = satsBeløp,
                     satsBeskrivelse = sats.beskrivelse,
-                    beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
+                    beløp = minOf(satsBeløp.toBigDecimal(), brillepris)
                 )
             )
             ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
@@ -105,8 +108,7 @@ class VedtakService(
     }
 
     suspend fun hentAntallVedtakIKø(): Int {
-        return transaction(databaseContext) {
-                ctx ->
+        return transaction(databaseContext) { ctx ->
             ctx.vedtakStore.hentAntallVedtakIKø()
         }
     }

@@ -216,7 +216,7 @@ fun Application.setupRoutes() {
 
             authenticate(if (Configuration.local) "local_azuread" else AZURE_AD_AUTH) {
                 adminApi(adminService, slettVedtakService, enhetsregisteretService, rapportService)
-                vilkårAdApi(vilkårsvurderingService, kafkaService)
+                vilkårAdApi(vilkårsvurderingService)
             }
 
             // Admin apis

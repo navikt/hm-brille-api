@@ -30,7 +30,11 @@ fun Route.vilkårApi(
                 fnrOppslag = vilkårsgrunnlag.fnrBarn,
                 oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om barn og bestilling oppfyller vilkår for støtte"
             )
-            val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(vilkårsgrunnlag)
+            val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(
+                vilkårsgrunnlag.fnrBarn,
+                vilkårsgrunnlag.brilleseddel,
+                vilkårsgrunnlag.bestillingsdato
+            )
             val sats = when (vilkarsvurdering.utfall) {
                 Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
                 else -> SatsType.INGEN

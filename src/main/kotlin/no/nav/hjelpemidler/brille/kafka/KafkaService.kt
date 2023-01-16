@@ -41,26 +41,31 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             AvtaleStatistikk(
                 orgnr = avtale.orgnr,
                 navn = avtale.navn,
-                opprettet = requireNotNull(avtale.opprettet),
+                opprettet = requireNotNull(avtale.opprettet)
             )
         )
 
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
-        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
+        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
+            ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
     }
 
     fun avtaleOppdatert(avtale: Avtale) {
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
-        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) } ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
+        avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
+            ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
     }
 
     fun vilkårVurdert() {
         // todo -> send til bq-sink
     }
 
-    suspend fun vilkårIkkeOppfylt(vilkårsgrunnlag: VilkårsgrunnlagDto, vilkårsvurdering: Vilkårsvurdering<Vilkårsgrunnlag>) {
+    suspend fun vilkårIkkeOppfylt(
+        vilkårsgrunnlag: VilkårsgrunnlagDto,
+        vilkårsvurdering: Vilkårsvurdering<Vilkårsgrunnlag>
+    ) {
         fun Vilkårsvurdering<Vilkårsgrunnlag>.harResultatJaForVilkår(identifikator: String) =
             this.evaluering.barn.find { it.identifikator == identifikator }!!.resultat == Resultat.JA
 
@@ -127,7 +132,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 satsBeløp = vedtak.satsBeløp,
                 satsBeskrivelse = vedtak.satsBeskrivelse,
                 beløp = vedtak.beløp,
-                bestillingsreferanse = vedtak.bestillingsreferanse,
+                bestillingsreferanse = vedtak.bestillingsreferanse
             )
         )
     }
@@ -137,8 +142,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             fnrBarn,
             MedlemskapFolketrygdenStatistikk(
                 vedtakId = vedtakId,
-                bevist = true,
-            ),
+                bevist = true
+            )
         )
     }
 
@@ -147,8 +152,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             fnrBarn,
             MedlemskapFolketrygdenStatistikk(
                 vedtakId = vedtakId,
-                antatt = true,
-            ),
+                antatt = true
+            )
         )
     }
 
@@ -156,8 +161,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         sendTilBigQuery(
             fnrBarn,
             MedlemskapFolketrygdenStatistikk(
-                avvist = true,
-            ),
+                avvist = true
+            )
         )
     }
 
@@ -166,8 +171,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             null,
             SlettedeVedtakStatistikk(
                 vedtakId = vedtakId,
-                slettetAvType = slettetAvType,
-            ),
+                slettetAvType = slettetAvType
+            )
         )
     }
 
@@ -205,7 +210,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 "eventName" to "hm-utbetaling-tss-optiker",
                 "orgnr" to orgnr,
                 "kontonr" to kontonr,
-                "opprettet" to LocalDateTime.now(),
+                "opprettet" to LocalDateTime.now()
             )
         )
     }
@@ -218,7 +223,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 "eventName" to "hm-barnebriller-feilregistrer-journalpost",
                 "sakId" to sakId.toString(),
                 "joarkRef" to joarkRef.toString(),
-                "opprettet" to LocalDateTime.now(),
+                "opprettet" to LocalDateTime.now()
             )
         )
     }
@@ -244,7 +249,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val bestillingsreferanse: String,
         val satsBeløp: Int,
         val satsBeskrivelse: String,
-        val beløp: BigDecimal,
+        val beløp: BigDecimal
     )
 
     /**
@@ -264,7 +269,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     @JsonNaming(BigQueryStrategy::class)
     internal annotation class BigQueryHendelse(
         val eventName: String = "hm-bigquery-sink-hendelse",
-        val schemaId: String,
+        val schemaId: String
     )
 
     @JsonNaming(BigQueryStrategy::class)
@@ -272,7 +277,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     data class AvtaleStatistikk(
         val orgnr: String,
         val navn: String,
-        val opprettet: LocalDateTime,
+        val opprettet: LocalDateTime
     )
 
     @JsonNaming(BigQueryStrategy::class)
@@ -294,7 +299,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val satsBeløp: Int,
         val satsBeskrivelse: String,
         val beløp: BigDecimal,
-        val bestillingsreferanse: String,
+        val bestillingsreferanse: String
     )
 
     @JsonNaming(BigQueryStrategy::class)
@@ -319,7 +324,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val bevist: Boolean = false,
         val antatt: Boolean = false,
         val avvist: Boolean = false,
-        val opprettet: LocalDateTime = LocalDateTime.now(),
+        val opprettet: LocalDateTime = LocalDateTime.now()
     )
 
     @JsonNaming(BigQueryStrategy::class)
@@ -327,7 +332,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     internal data class SlettedeVedtakStatistikk(
         val vedtakId: Long,
         val slettetAvType: SlettetAvType,
-        val opprettet: LocalDateTime = LocalDateTime.now(),
+        val opprettet: LocalDateTime = LocalDateTime.now()
     )
 
     class KafkaException(message: String, cause: Throwable?) : RuntimeException(message, cause)
