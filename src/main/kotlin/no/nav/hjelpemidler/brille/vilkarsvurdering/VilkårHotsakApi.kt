@@ -16,11 +16,11 @@ import no.nav.hjelpemidler.brille.sats.SatsType
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 private val log = KotlinLogging.logger { }
-fun Route.vilkårHotsakApi(
+fun Route.vilkårAdApi(
     vilkårsvurderingService: VilkårsvurderingService,
     kafkaService: KafkaService
 ) {
-    post("/vilkarsgrunnlag") {
+    post("/ad/vilkarsgrunnlag") {
         try {
             val vilkårsgrunnlag = call.receive<VilkårsgrunnlagDto>()
             call.adminAuditLogging(

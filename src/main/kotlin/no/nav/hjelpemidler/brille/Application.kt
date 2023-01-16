@@ -71,8 +71,8 @@ import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
+import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårAdApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
-import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårHotsakApi
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import org.slf4j.event.Level
 import java.net.InetAddress
@@ -216,7 +216,7 @@ fun Application.setupRoutes() {
 
             authenticate(if (Configuration.local) "local_azuread" else AZURE_AD_AUTH) {
                 adminApi(adminService, slettVedtakService, enhetsregisteretService, rapportService)
-                vilkårHotsakApi(vilkårsvurderingService, kafkaService)
+                vilkårAdApi(vilkårsvurderingService, kafkaService)
             }
 
             // Admin apis
