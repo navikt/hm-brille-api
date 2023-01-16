@@ -5,7 +5,8 @@
     "hm-brilleavtale-frontend",
     "hm-brillerapport",
     "hm-brillekalkulator",
-    "hm-brille-admin"
+    "hm-brille-admin",
+    "hm-saksbehandling"
   ],
   "port": 9090,
   "db_tier": "db-custom-1-3840",
