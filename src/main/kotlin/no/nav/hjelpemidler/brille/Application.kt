@@ -72,6 +72,7 @@ import no.nav.hjelpemidler.brille.vedtak.VedtakTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.vedtak.kravApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
+import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårHotsakApi
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import org.slf4j.event.Level
 import java.net.InetAddress
@@ -88,7 +89,6 @@ fun main(args: Array<String>) {
 }
 
 fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
-
     fun onStopPreparing() {
         log.info("Application is shutting down, stopping rapid app aswell!")
         kafkaRapid.stop()
@@ -164,8 +164,11 @@ fun Application.setupRoutes() {
 
     val metrics = MetricsConfig(
         meterbinders = listOf(
-            JvmMemoryMetrics(), JvmGcMetrics(), ProcessorMetrics(),
-            JvmThreadMetrics(), LogbackMetrics()
+            JvmMemoryMetrics(),
+            JvmGcMetrics(),
+            ProcessorMetrics(),
+            JvmThreadMetrics(),
+            LogbackMetrics()
         ) + rapid.getMetrics()
     )
 
@@ -213,6 +216,7 @@ fun Application.setupRoutes() {
 
             authenticate(if (Configuration.local) "local_azuread" else AZURE_AD_AUTH) {
                 adminApi(adminService, slettVedtakService, enhetsregisteretService, rapportService)
+                vilkårHotsakApi(vilkårsvurderingService, kafkaService)
             }
 
             // Admin apis
@@ -250,7 +254,7 @@ fun cronjobSyncTss() {
             log.info("cronjob sync-tss: Oppdaterer tss med=$it")
             kafkaService.oppdaterTSS(
                 orgnr = it.first,
-                kontonr = it.second,
+                kontonr = it.second
             )
         }
 
@@ -260,7 +264,7 @@ fun cronjobSyncTss() {
 
 private fun kafkaConfig(
     kafkaProps: Configuration.KafkaProperties,
-    instanceId: String?,
+    instanceId: String?
 ) = KafkaConfig(
     bootstrapServers = kafkaProps.bootstrapServers,
     consumerGroupId = kafkaProps.clientId,

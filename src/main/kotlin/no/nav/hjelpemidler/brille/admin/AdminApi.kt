@@ -4,11 +4,8 @@ import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
-import io.ktor.server.request.httpMethod
 import io.ktor.server.request.receive
-import io.ktor.server.request.uri
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondOutputStream
@@ -18,11 +15,9 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.adminAuditLogging
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.extractEmail
-import no.nav.hjelpemidler.brille.extractName
-import no.nav.hjelpemidler.brille.extractUUID
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.rapportering.KravFilter
 import no.nav.hjelpemidler.brille.rapportering.RapportService
 import no.nav.hjelpemidler.brille.rapportering.producer
@@ -37,19 +32,18 @@ import java.time.LocalDateTime
 import java.util.Date
 
 private val log = KotlinLogging.logger {}
-private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 fun Route.adminApi(
     adminService: AdminService,
     slettVedtakService: SlettVedtakService,
     enhetsregisteretService: EnhetsregisteretService,
-    rapportService: RapportService,
+    rapportService: RapportService
 ) {
     authenticateAdminUser {
         route("/admin") {
             post("/sok") {
                 data class Request(
-                    val query: String,
+                    val query: String
                 )
 
                 val query = call.receive<Request>().query.trim()
@@ -57,12 +51,15 @@ fun Route.adminApi(
                 call.adminAuditLogging(
                     "søk",
                     mapOf(
-                        "query" to query,
+                        "query" to query
                     )
                 )
 
                 if (!Regex("[0-9-]+").matches(query)) {
-                    return@post call.respond(HttpStatusCode.BadRequest, """{"error": "Ugyldig format: bare tall og bindestrek er tillatt"}""")
+                    return@post call.respond(
+                        HttpStatusCode.BadRequest,
+                        """{"error": "Ugyldig format: bare tall og bindestrek er tillatt"}"""
+                    )
                 }
 
                 if (query.count() == 11) {
@@ -75,7 +72,7 @@ fun Route.adminApi(
                         return@post call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke utbetaling"}""")
                     }
                     data class Response(
-                        val utbetalingsreferanse: String,
+                        val utbetalingsreferanse: String
                     )
                     call.respond(Response(query))
                 } else {
@@ -95,7 +92,7 @@ fun Route.adminApi(
                 call.adminAuditLogging(
                     "detaljer vedtak",
                     mapOf(
-                        "vedtakId" to vedtakId.toString(),
+                        "vedtakId" to vedtakId.toString()
                     )
                 )
 
@@ -112,7 +109,7 @@ fun Route.adminApi(
                     val utbetalingsreferanse: String?,
                     val slettet: LocalDateTime?,
                     val slettetAv: String?,
-                    val slettetAvType: SlettetAvType?,
+                    val slettetAvType: SlettetAvType?
                 )
 
                 call.respond(
@@ -129,7 +126,7 @@ fun Route.adminApi(
                         utbetalingsreferanse = vedtak.batchId,
                         slettet = vedtak.slettet,
                         slettetAv = vedtak.slettetAv,
-                        slettetAvType = vedtak.slettetAvType,
+                        slettetAvType = vedtak.slettetAvType
                     )
                 )
             }
@@ -148,7 +145,7 @@ fun Route.adminApi(
                 call.adminAuditLogging(
                     "slett vedtak",
                     mapOf(
-                        "vedtakId" to vedtakId.toString(),
+                        "vedtakId" to vedtakId.toString()
                     )
                 )
 
@@ -175,7 +172,7 @@ fun Route.adminApi(
                     val bestillingsreferanse: String,
                     val barnsNavn: String,
                     val beløp: BigDecimal,
-                    val slettet: LocalDateTime?,
+                    val slettet: LocalDateTime?
                 )
 
                 data class Response(
@@ -183,14 +180,15 @@ fun Route.adminApi(
                     val orgnr: String,
                     val orgNavn: String,
                     val totalBeløp: BigDecimal,
-                    val utbetalinger: List<ResponseUtbetaling>,
+                    val utbetalinger: List<ResponseUtbetaling>
                 )
 
                 call.respond(
                     Response(
                         utbetalingsreferanse = utbetalingsRef,
                         orgnr = utbetalinger.first().orgnr,
-                        orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(utbetalinger.first().orgnr)?.navn ?: "<Ukjent>",
+                        orgNavn = enhetsregisteretService.hentOrganisasjonsenhet(utbetalinger.first().orgnr)?.navn
+                            ?: "<Ukjent>",
                         totalBeløp = utbetalinger.sumOf { it.beløp },
                         utbetalinger = utbetalinger.map {
                             ResponseUtbetaling(
@@ -198,7 +196,7 @@ fun Route.adminApi(
                                 bestillingsreferanse = it.bestillingsreferanse,
                                 barnsNavn = it.barnsNavn,
                                 beløp = it.beløp,
-                                slettet = it.slettet,
+                                slettet = it.slettet
                             )
                         }
                     )
@@ -219,7 +217,7 @@ fun Route.adminApi(
                         "orgnr" to orgnr,
                         "kravFilter" to kravFilter?.toString(),
                         "fraDato" to fraDato?.toString(),
-                        "tilDato" to tilDato?.toString(),
+                        "tilDato" to tilDato?.toString()
                     )
                 )
 
@@ -247,20 +245,4 @@ fun Route.adminApi(
             }
         }
     }
-}
-
-fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>) {
-    val defaultParams: Map<String, String?> = mapOf(
-        "uri" to request.uri,
-        "method" to request.httpMethod.value.toString(),
-        "oid" to extractUUID().toString(),
-        "email" to extractEmail(),
-        "name" to extractName(),
-    )
-
-    val allParams = defaultParams.toMutableMap()
-    allParams.putAll(params)
-
-    val logMessage = "Admin api audit: $tag: ${jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allParams)}"
-    sikkerlogg.info(logMessage)
 }
