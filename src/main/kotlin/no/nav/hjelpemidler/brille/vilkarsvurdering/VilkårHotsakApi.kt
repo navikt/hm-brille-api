@@ -7,7 +7,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.adminAuditLogging
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
@@ -20,10 +19,6 @@ fun Route.vilkårHotsakApi(
     post("/ad/vilkarsgrunnlag") {
         try {
             val vilkårsgrunnlagInput = call.receive<VilkårsgrunnlagAdDto>()
-            call.adminAuditLogging(
-                "vilkarsvurdering",
-                emptyMap()
-            )
             val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(
                 vilkårsgrunnlagInput.fnrBarn,
                 vilkårsgrunnlagInput.brilleseddel,
