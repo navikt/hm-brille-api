@@ -38,7 +38,8 @@ fun Route.vilkårHotsakApi(
                     satsBeskrivelse = sats.beskrivelse,
                     satsBeløp = sats.beløp,
                     beløp = beløp,
-                    vilkårsgrunnlag = jsonMapper.valueToTree(vilkarsvurdering)
+                    vilkårsgrunnlag = jsonMapper.valueToTree(vilkarsvurdering),
+                    evaluering = vilkarsvurdering.evaluering
                 )
             )
         } catch (e: Exception) {
