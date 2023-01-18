@@ -8,6 +8,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.adminAuditLogging
+import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
@@ -42,7 +43,7 @@ fun Route.vilkårHotsakApi(
                     satsBeskrivelse = sats.beskrivelse,
                     satsBeløp = sats.beløp,
                     beløp = beløp,
-                    vilkårsgrunnlag = vilkarsvurdering
+                    vilkårsgrunnlag = jsonMapper.valueToTree(vilkarsvurdering)
                 )
             )
         } catch (e: Exception) {

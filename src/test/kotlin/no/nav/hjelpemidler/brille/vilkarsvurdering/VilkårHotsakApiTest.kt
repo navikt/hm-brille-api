@@ -186,7 +186,7 @@ internal class VilkårHotsakApiTest {
             }
 
             response.status shouldBe HttpStatusCode.OK
-            val vilkårsvurdering = response.body<VilkårsvurderingDto>()
+            val vilkårsvurdering = response.body<VilkårsvurderingHotsakDto>()
             vilkårsvurdering.resultat shouldBe forventetResultat
 
             when (vilkårsvurdering.resultat) {
