@@ -13,35 +13,36 @@ import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 
 private val log = KotlinLogging.logger { }
-fun Route.vilkårAdApi(
+fun Route.vilkårHotsakApi(
     vilkårsvurderingService: VilkårsvurderingService
 ) {
     post("/ad/vilkarsgrunnlag") {
         try {
-            val vilkårsgrunnlag = call.receive<VilkårsgrunnlagAdDto>()
+            val vilkårsgrunnlagInput = call.receive<VilkårsgrunnlagAdDto>()
             call.adminAuditLogging(
                 "vilkarsvurdering",
                 emptyMap()
             )
             val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(
-                vilkårsgrunnlag.fnrBarn,
-                vilkårsgrunnlag.brilleseddel,
-                vilkårsgrunnlag.bestillingsdato
+                vilkårsgrunnlagInput.fnrBarn,
+                vilkårsgrunnlagInput.brilleseddel,
+                vilkårsgrunnlagInput.bestillingsdato
             )
             val sats = when (vilkarsvurdering.utfall) {
-                Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
+                Resultat.JA -> SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
                 else -> SatsType.INGEN
             }
 
-            val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlag.brillepris)
+            val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlagInput.brillepris)
 
             call.respond(
-                VilkårsvurderingDto(
+                VilkårsvurderingHotsakDto(
                     resultat = vilkarsvurdering.utfall,
                     sats = sats,
                     satsBeskrivelse = sats.beskrivelse,
                     satsBeløp = sats.beløp,
-                    beløp = beløp
+                    beløp = beløp,
+                    vilkårsgrunnlag = vilkarsvurdering
                 )
             )
         } catch (e: Exception) {

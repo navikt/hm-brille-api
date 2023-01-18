@@ -16,7 +16,9 @@ import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplication
 import no.nav.hjelpemidler.brille.UserPrincipal
+import no.nav.hjelpemidler.brille.UserPrincipalAdmin
 import no.nav.hjelpemidler.brille.configure
+import java.util.UUID
 
 class TestRouting(configuration: Routing.() -> Unit) {
     private val application = TestApplication {
@@ -31,7 +33,19 @@ class TestRouting(configuration: Routing.() -> Unit) {
                         context.principal(principal)
                     }
                 }
+                provider("test_azuread") {
+                    authenticate { context ->
+                        context.principal(
+                            UserPrincipalAdmin(
+                                UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"),
+                                "example@example.com",
+                                "Example some some"
+                            )
+                        )
+                    }
+                }
             }
+
             routing(configuration)
         }
     }
