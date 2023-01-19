@@ -54,7 +54,7 @@ fun Route.vilkårApi(
                     vilkarsvurdering.grunnlag.vedtakBarn.firstOrNull {
                         it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year
                     }
-                        ?.behandlingsresultat
+                        ?.bestillingsreferanse
                 } else {
                     null
                 }
