@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
+import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.fodselsdato
 import no.nav.hjelpemidler.brille.pdl.PdlOppslag
 import no.nav.hjelpemidler.brille.pdl.Person
@@ -23,3 +24,6 @@ data class Vilkårsgrunnlag(
     val barnetsFødselsdato: LocalDate? get() = pdlOppslagBarn.data?.fodselsdato()
     val barnetsAlderPåBestillingsdato: Int? get() = barnetsFødselsdato?.until(bestillingsdato)?.years
 }
+
+fun Vilkårsvurdering<Vilkårsgrunnlag>.harResultatJaForVilkår(identifikator: String) =
+    this.evaluering.barn.find { it.identifikator == identifikator }!!.resultat == Resultat.JA

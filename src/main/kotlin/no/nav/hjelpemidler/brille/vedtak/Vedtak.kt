@@ -27,6 +27,7 @@ data class Vedtak<T>(
 data class EksisterendeVedtak(
     val id: Long,
     val fnrBarn: String,
+    val fnrInnsender: String,
     val bestillingsdato: LocalDate,
     val behandlingsresultat: String,
     val opprettet: LocalDateTime,

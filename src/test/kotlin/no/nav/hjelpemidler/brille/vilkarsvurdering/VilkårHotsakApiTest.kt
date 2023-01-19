@@ -219,7 +219,8 @@ internal class VilkårHotsakApiTest {
             fnrBarn = "12345678910",
             bestillingsdato = bestillingsdato,
             behandlingsresultat = "",
-            opprettet = bestillingsdato.atStartOfDay()
+            opprettet = bestillingsdato.atStartOfDay(),
+            fnrInnsender = "23456789101"
         )
 
     private fun defaulVilkårMedBrilleseddel(

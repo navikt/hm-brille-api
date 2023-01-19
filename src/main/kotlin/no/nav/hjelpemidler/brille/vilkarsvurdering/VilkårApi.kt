@@ -49,13 +49,17 @@ fun Route.vilkårApi(
 
             val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlag.brillepris)
 
+            val kravFraFørFraInnsender = !vilkarsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret v1") &&
+                vilkarsvurdering.grunnlag.vedtakBarn.any { it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year }
+
             call.respond(
                 VilkårsvurderingDto(
                     resultat = vilkarsvurdering.utfall,
                     sats = sats,
                     satsBeskrivelse = sats.beskrivelse,
                     satsBeløp = sats.beløp,
-                    beløp = beløp
+                    beløp = beløp,
+                    kravFraFørFraInnsender = kravFraFørFraInnsender
                 )
             )
         } catch (e: Exception) {

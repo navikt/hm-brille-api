@@ -63,6 +63,12 @@ internal class VilkårApiTest {
     )
 
     @Test
+    internal fun `har vedtak i kalenderåret samme innsender`() = kjørTest(
+        vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET, "15084300133")),
+        forventetResultat = Resultat.NEI
+    )
+
+    @Test
     internal fun `har vedtak i annet år`() = kjørTest(
         vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET.minusYears(1))),
         forventetResultat = Resultat.JA
@@ -162,7 +168,7 @@ internal class VilkårApiTest {
             saksgrunnlag = emptyList()
         ),
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
-        forventetResultat: Resultat,
+        forventetResultat: Resultat
     ) {
         every {
             dagensDatoFactory()
@@ -193,6 +199,7 @@ internal class VilkårApiTest {
                 Resultat.NEI -> {
                     vilkårsvurdering.sats shouldBe SatsType.INGEN
                 }
+
                 else -> {
                     vilkårsvurdering.sats shouldNotBe SatsType.INGEN
                     vilkårsvurdering.beløp shouldNotBe BigDecimal.ZERO
@@ -212,20 +219,21 @@ internal class VilkårApiTest {
         return PdlOppslag(pdlPersonResponse.data?.hentPerson, jsonMapper.nullNode())
     }
 
-    private fun lagEksisterendeVedtak(bestillingsdato: LocalDate) =
+    private fun lagEksisterendeVedtak(bestillingsdato: LocalDate, fnrInnsender: String = "23456789101") =
         EksisterendeVedtak(
             id = 1,
             fnrBarn = "12345678910",
             bestillingsdato = bestillingsdato,
             behandlingsresultat = "",
-            opprettet = bestillingsdato.atStartOfDay()
+            opprettet = bestillingsdato.atStartOfDay(),
+            fnrInnsender = fnrInnsender
         )
 
     private fun defaulVilkårMedBrilleseddel(
         høyreSfære: Double = 0.00,
         høyreSylinder: Double = 0.00,
         venstreSfære: Double = 0.00,
-        venstreSylinder: Double = 0.00,
+        venstreSylinder: Double = 0.00
     ) =
         defaultVilkårsgrunnlag.copy(
             brilleseddel = Brilleseddel(
@@ -243,7 +251,7 @@ internal class VilkårApiTest {
             høyreSfære = 1.00,
             høyreSylinder = 0.00,
             venstreSfære = 0.00,
-            venstreSylinder = 0.00,
+            venstreSylinder = 0.00
         ),
         bestillingsdato = DATO_ORDNINGEN_STARTET,
         brillepris = "1500".toBigDecimal(),

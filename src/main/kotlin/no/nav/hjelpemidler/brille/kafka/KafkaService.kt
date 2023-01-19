@@ -9,7 +9,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.Avtale
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
@@ -18,6 +17,7 @@ import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
+import no.nav.hjelpemidler.brille.vilkarsvurdering.harResultatJaForVilkår
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -66,8 +66,6 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         vilkårsgrunnlag: VilkårsgrunnlagDto,
         vilkårsvurdering: Vilkårsvurdering<Vilkårsgrunnlag>
     ) {
-        fun Vilkårsvurdering<Vilkårsgrunnlag>.harResultatJaForVilkår(identifikator: String) =
-            this.evaluering.barn.find { it.identifikator == identifikator }!!.resultat == Resultat.JA
 
         try {
             sendTilBigQuery(
