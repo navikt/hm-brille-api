@@ -226,7 +226,8 @@ internal class VilkårApiTest {
             bestillingsdato = bestillingsdato,
             behandlingsresultat = "",
             opprettet = bestillingsdato.atStartOfDay(),
-            fnrInnsender = fnrInnsender
+            fnrInnsender = fnrInnsender,
+            bestillingsreferanse = "1213e"
         )
 
     private fun defaulVilkårMedBrilleseddel(

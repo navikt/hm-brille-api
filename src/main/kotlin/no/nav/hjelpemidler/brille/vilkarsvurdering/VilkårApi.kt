@@ -49,8 +49,15 @@ fun Route.vilkårApi(
 
             val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlag.brillepris)
 
-            val kravFraFørFraInnsender = !vilkarsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret v1") &&
-                vilkarsvurdering.grunnlag.vedtakBarn.any { it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year }
+            val refInnsendersTidligereKrav =
+                if (!vilkarsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret v1")) {
+                    vilkarsvurdering.grunnlag.vedtakBarn.firstOrNull {
+                        it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year
+                    }
+                        ?.behandlingsresultat
+                } else {
+                    null
+                }
 
             call.respond(
                 VilkårsvurderingDto(
@@ -59,7 +66,7 @@ fun Route.vilkårApi(
                     satsBeskrivelse = sats.beskrivelse,
                     satsBeløp = sats.beløp,
                     beløp = beløp,
-                    kravFraFørFraInnsender = kravFraFørFraInnsender
+                    kravFraFørFraInnsender = refInnsendersTidligereKrav
                 )
             )
         } catch (e: Exception) {

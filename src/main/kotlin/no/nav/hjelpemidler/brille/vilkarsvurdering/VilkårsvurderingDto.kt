@@ -10,5 +10,6 @@ data class VilkårsvurderingDto(
     val satsBeskrivelse: String,
     val satsBeløp: Int,
     val beløp: BigDecimal,
-    val kravFraFørFraInnsender: Boolean
+    val kravFraFørFraInnsender: String?
+
 )

@@ -30,6 +30,7 @@ data class EksisterendeVedtak(
     val fnrInnsender: String,
     val bestillingsdato: LocalDate,
     val behandlingsresultat: String,
+    val bestillingsreferanse: String,
     val opprettet: LocalDateTime,
 )
 

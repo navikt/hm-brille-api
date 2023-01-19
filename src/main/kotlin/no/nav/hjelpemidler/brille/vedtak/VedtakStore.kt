@@ -69,7 +69,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
     override fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak> = session {
         @Language("PostgreSQL")
         val sql = """
-            SELECT id, fnr_barn, fnr_innsender, bestillingsdato, behandlingsresultat, opprettet
+            SELECT id, fnr_barn, fnr_innsender, bestillingsdato, bestillingsreferanse, behandlingsresultat, opprettet
             FROM vedtak_v1
             WHERE fnr_barn = :fnr_barn 
         """.trimIndent()
@@ -80,6 +80,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 fnrInnsender = row.string("fnr_innsender"),
                 bestillingsdato = row.localDate("bestillingsdato"),
                 behandlingsresultat = row.string("behandlingsresultat"),
+                bestillingsreferanse = row.string("bestillingsreferanse"),
                 opprettet = row.localDateTime("opprettet")
             )
         }
