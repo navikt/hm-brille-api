@@ -9,7 +9,7 @@ import no.nav.hjelpemidler.brille.writePrettyString
 
 data class Vilkårsvurdering<T>(
     val grunnlag: T,
-    val evaluering: Evaluering,
+    val evaluering: Evaluering
 ) {
     val utfall: Resultat get() = evaluering.resultat
     val programvareVersjon: String get() = Configuration.gitCommit

@@ -12,7 +12,9 @@ val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 object Vilkårene {
     val HarIkkeVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Har barnet allerede vedtak om brille i kalenderåret?",
-        identifikator = "HarIkkeVedtakIKalenderåret v1"
+        identifikator = "HarIkkeVedtakIKalenderåret v1",
+        lovReferanse = "", // todo
+        lovdataLenke = ""
     ) { grunnlag ->
         val harIkkeVedtakIKalenderåret = grunnlag.vedtakBarn.none { vedtak ->
             vedtak.bestillingsdato.year == grunnlag.bestillingsdato.year
@@ -25,7 +27,9 @@ object Vilkårene {
 
     val Under18ÅrPåBestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Var barnet under 18 år på bestillingsdato?",
-        identifikator = "Under18ÅrPåBestillingsdato v1"
+        identifikator = "Under18ÅrPåBestillingsdato v1",
+        lovReferanse = "", // todo
+        lovdataLenke = ""
     ) { grunnlag ->
         val barnetsAlder = grunnlag.barnetsAlderPåBestillingsdato
         when {
@@ -37,7 +41,9 @@ object Vilkårene {
 
     val MedlemAvFolketrygden = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Er barnet medlem av folketrygden?",
-        identifikator = "MedlemAvFolketrygden v1"
+        identifikator = "MedlemAvFolketrygden v1",
+        lovReferanse = "", // todo
+        lovdataLenke = ""
     ) { grunnlag ->
         val medlemskapResultat = grunnlag.medlemskapResultat
         when {
@@ -49,7 +55,9 @@ object Vilkårene {
 
     val Brillestyrke = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Er brillestyrken innenfor de fastsatte rammene?",
-        identifikator = "Brillestyrke v1"
+        identifikator = "Brillestyrke v1",
+        lovReferanse = "", // todo
+        lovdataLenke = ""
     ) { grunnlag ->
         val brilleseddel = grunnlag.brilleseddel
         val minsteSfære = grunnlag.minsteSfære
@@ -65,7 +73,9 @@ object Vilkårene {
 
     val Bestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Er bestillingsdato ${DATO_ORDNINGEN_STARTET.formatert()} eller senere?",
-        identifikator = "Bestillingsdato v1"
+        identifikator = "Bestillingsdato v1",
+        lovReferanse = "", // todo
+        lovdataLenke = ""
     ) { grunnlag ->
         val datoOrdningenStartet = grunnlag.datoOrdningenStartet
         when {
@@ -77,7 +87,9 @@ object Vilkårene {
 
     val BestillingsdatoTilbakeITid = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Er bestillingsdato innenfor siste 6 måneder fra dagens dato?",
-        identifikator = "BestillingsdatoTilbakeITid v1"
+        identifikator = "BestillingsdatoTilbakeITid v1",
+        lovReferanse = "", // todo
+        lovdataLenke = ""
     ) { grunnlag ->
         val seksMånederSiden = grunnlag.seksMånederSiden
         when {

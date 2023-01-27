@@ -5,8 +5,10 @@ data class Evaluering(
     val begrunnelse: String,
     val beskrivelse: String = "",
     val identifikator: String = "",
+    val lovReferanse: String = "",
+    val lovdataLenke: String = "",
     val operator: Operator = Operator.INGEN,
-    var barn: List<Evaluering> = emptyList(),
+    var barn: List<Evaluering> = emptyList()
 ) {
     infix fun og(annen: Evaluering) = Evaluering(
         resultat = resultat og annen.resultat,

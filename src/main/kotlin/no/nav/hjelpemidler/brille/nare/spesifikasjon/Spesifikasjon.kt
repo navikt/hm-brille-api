@@ -6,13 +6,17 @@ import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 data class Spesifikasjon<T>(
     val beskrivelse: String,
     val identifikator: String = "",
+    val lovReferanse: String = "",
+    val lovdataLenke: String = "",
     val barn: List<Spesifikasjon<T>> = emptyList(),
-    val implementasjon: Evalueringer.(T) -> Evaluering,
+    val implementasjon: Evalueringer.(T) -> Evaluering
 ) {
     fun evaluer(t: T): Evaluering = Evalueringer().run {
         evaluer(
             beskrivelse = beskrivelse,
             identifikator = identifikator,
+            lovReferanse = lovReferanse,
+            lovdataLenke = lovdataLenke,
             evaluering = implementasjon(this, t)
         )
     }

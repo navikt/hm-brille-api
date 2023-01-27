@@ -7,6 +7,17 @@ class Evalueringer {
 
     fun kanskje(begrunnelse: String) = Evaluering(Resultat.KANSKJE, begrunnelse)
 
-    fun evaluer(identifikator: String, beskrivelse: String, evaluering: Evaluering) =
-        evaluering.copy(identifikator = identifikator, beskrivelse = beskrivelse)
+    fun evaluer(
+        identifikator: String,
+        beskrivelse: String,
+        lovReferanse: String,
+        lovdataLenke: String,
+        evaluering: Evaluering
+    ) =
+        evaluering.copy(
+            identifikator = identifikator,
+            beskrivelse = beskrivelse,
+            lovReferanse = lovReferanse,
+            lovdataLenke = lovdataLenke
+        )
 }
