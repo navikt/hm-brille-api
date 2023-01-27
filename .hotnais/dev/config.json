@@ -6,7 +6,8 @@
     "hm-brillerapport",
     "hm-brillekalkulator",
     "hm-brille-admin",
-    "hm-saksbehandling"
+    "hm-saksbehandling",
+    "hotsak-frontend"
   ],
   "port": 9090,
   "db_tier": "db-f1-micro",
