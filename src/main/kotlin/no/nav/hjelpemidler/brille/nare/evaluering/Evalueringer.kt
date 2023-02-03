@@ -1,9 +1,11 @@
 package no.nav.hjelpemidler.brille.nare.evaluering
 
 class Evalueringer {
-    fun ja(begrunnelse: String) = Evaluering(Resultat.JA, begrunnelse)
+    fun ja(begrunnelse: String, grunnlag: Map<String, String>? = emptyMap()) =
+        Evaluering(Resultat.JA, begrunnelse, grunnlag = grunnlag)
 
-    fun nei(begrunnelse: String) = Evaluering(Resultat.NEI, begrunnelse)
+    fun nei(begrunnelse: String, grunnlag: Map<String, String>? = emptyMap()) =
+        Evaluering(Resultat.NEI, begrunnelse, grunnlag = grunnlag)
 
     fun kanskje(begrunnelse: String) = Evaluering(Resultat.KANSKJE, begrunnelse)
 

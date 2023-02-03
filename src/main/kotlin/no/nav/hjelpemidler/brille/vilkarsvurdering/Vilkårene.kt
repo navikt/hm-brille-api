@@ -10,18 +10,36 @@ import java.util.Locale
 val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 
 object Vilkårene {
+
     val HarIkkeVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Har barnet allerede vedtak om brille i kalenderåret?",
         identifikator = "HarIkkeVedtakIKalenderåret v1",
         lovReferanse = "§3",
-        lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§3"
+        lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§3",
     ) { grunnlag ->
         val harIkkeVedtakIKalenderåret = grunnlag.vedtakBarn.none { vedtak ->
             vedtak.bestillingsdato.year == grunnlag.bestillingsdato.year
         }
+
+        val eksisterendeVedtakDato = grunnlag.vedtakBarn.find { vedtak ->
+            vedtak.bestillingsdato.year == grunnlag.bestillingsdato.year
+        }?.bestillingsdato.toString()
+
         when (harIkkeVedtakIKalenderåret) {
-            true -> ja("Barnet har ikke vedtak om brille i kalenderåret")
-            false -> nei("Barnet har allerede vedtak om brille i kalenderåret")
+            true -> {
+                ja(
+                    "Barnet har ikke vedtak om brille i kalenderåret",
+                    mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString())
+                )
+            }
+
+            false -> nei(
+                "Barnet har allerede vedtak om brille i kalenderåret",
+                mapOf(
+                    "eksisterendeVedtakDato" to eksisterendeVedtakDato,
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString()
+                ),
+            )
         }
     }
 
@@ -33,9 +51,26 @@ object Vilkårene {
     ) { grunnlag ->
         val barnetsAlder = grunnlag.barnetsAlderPåBestillingsdato
         when {
-            barnetsAlder == null -> nei("Barnets fødselsdato er ukjent")
-            barnetsAlder < 18 -> ja("Barnet var under 18 år på bestillingsdato")
-            else -> nei("Barnet var 18 år eller eldre på bestillingsdato")
+            barnetsAlder == null -> nei(
+                "Barnets fødselsdato er ukjent",
+                mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString(), "barnetsAlder" to "ukjent")
+            )
+
+            barnetsAlder < 18 -> ja(
+                "Barnet var under 18 år på bestillingsdato",
+                mapOf(
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString(),
+                    "barnetsAlder" to barnetsAlder.toString()
+                )
+            )
+
+            else -> nei(
+                "Barnet var 18 år eller eldre på bestillingsdato",
+                mapOf(
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString(),
+                    "barnetsAlder" to barnetsAlder.toString()
+                )
+            )
         }
     }
 
@@ -47,9 +82,20 @@ object Vilkårene {
     ) { grunnlag ->
         val medlemskapResultat = grunnlag.medlemskapResultat
         when {
-            medlemskapResultat.medlemskapBevist -> ja("Barnet er medlem i folketrygden")
-            medlemskapResultat.uavklartMedlemskap -> ja("Barnet er antatt medlem i folketrygden basert på folkeregistrert adresse i Norge")
-            else -> nei("Barnet er antatt ikke medlem i folketrygden fordi vi ikke har klart å påvise folkeregistrert adresse i Norge")
+            medlemskapResultat.medlemskapBevist -> ja(
+                "Barnet er medlem i folketrygden",
+                mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString())
+            )
+
+            medlemskapResultat.uavklartMedlemskap -> ja(
+                "Barnet er antatt medlem i folketrygden basert på folkeregistrert adresse i Norge",
+                mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString())
+            )
+
+            else -> nei(
+                "Barnet er antatt ikke medlem i folketrygden fordi vi ikke har klart å påvise folkeregistrert adresse i Norge",
+                mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString())
+            )
         }
     }
 
@@ -79,9 +125,29 @@ object Vilkårene {
     ) { grunnlag ->
         val datoOrdningenStartet = grunnlag.datoOrdningenStartet
         when {
-            grunnlag.bestillingsdato.isAfter(grunnlag.dagensDato) -> nei("Bestillingsdato kan ikke være i fremtiden (etter ${grunnlag.dagensDato.formatert()})")
-            grunnlag.bestillingsdato.isBefore(datoOrdningenStartet) -> nei("Bestillingsdato kan ikke være før ${datoOrdningenStartet.formatert()}")
-            else -> ja("Bestillingsdato er ${datoOrdningenStartet.formatert()} eller senere")
+            grunnlag.bestillingsdato.isAfter(grunnlag.dagensDato) -> nei(
+                "Bestillingsdato kan ikke være i fremtiden (etter ${grunnlag.dagensDato.formatert()})",
+                mapOf(
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString(),
+                    "datoOrdningenStartet" to datoOrdningenStartet.toString()
+                )
+            )
+
+            grunnlag.bestillingsdato.isBefore(datoOrdningenStartet) -> nei(
+                "Bestillingsdato kan ikke være før ${datoOrdningenStartet.formatert()}",
+                mapOf(
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString(),
+                    "datoOrdningenStartet" to datoOrdningenStartet.toString()
+                )
+            )
+
+            else -> ja(
+                "Bestillingsdato er ${datoOrdningenStartet.formatert()} eller senere",
+                mapOf(
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString(),
+                    "datoOrdningenStartet" to datoOrdningenStartet.toString()
+                )
+            )
         }
     }
 
@@ -93,8 +159,21 @@ object Vilkårene {
     ) { grunnlag ->
         val seksMånederSiden = grunnlag.seksMånederSiden
         when {
-            grunnlag.bestillingsdato.isBefore(seksMånederSiden) -> nei("Bestillingsdato kan ikke være før ${seksMånederSiden.formatert()}")
-            else -> ja("Bestillingsdato er ${seksMånederSiden.formatert()} eller senere")
+            grunnlag.bestillingsdato.isBefore(seksMånederSiden) -> nei(
+                "Bestillingsdato kan ikke være før ${seksMånederSiden.formatert()}",
+                mapOf(
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString(),
+                    "seksMånederSiden" to grunnlag.seksMånederSiden.toString()
+                )
+            )
+
+            else -> ja(
+                "Bestillingsdato er ${seksMånederSiden.formatert()} eller senere",
+                mapOf(
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString(),
+                    "seksMånederSiden" to grunnlag.seksMånederSiden.toString()
+                )
+            )
         }
     }
 
