@@ -8,9 +8,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.jsonMapper
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
-import no.nav.hjelpemidler.brille.sats.SatsType
 
 private val log = KotlinLogging.logger { }
 fun Route.vilkårHotsakApi(
@@ -24,10 +22,7 @@ fun Route.vilkårHotsakApi(
                 vilkårsgrunnlagInput.brilleseddel,
                 vilkårsgrunnlagInput.bestillingsdato
             )
-            val sats = when (vilkarsvurdering.utfall) {
-                Resultat.JA -> SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
-                else -> SatsType.INGEN
-            }
+            val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
 
             val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlagInput.brillepris)
 
