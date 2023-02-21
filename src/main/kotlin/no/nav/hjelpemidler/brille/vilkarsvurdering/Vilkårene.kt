@@ -107,8 +107,8 @@ object Vilkårene {
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§4"
     ) { grunnlag ->
         val brillestyrkeGrunnlag = mapOf<String, String>(
-            "vensteSfære" to grunnlag.brilleseddel.venstreSfære.toString(),
-            "vensteSylinder" to grunnlag.brilleseddel.venstreSylinder.toString(),
+            "venstreSfære" to grunnlag.brilleseddel.venstreSfære.toString(),
+            "venstreSylinder" to grunnlag.brilleseddel.venstreSylinder.toString(),
             "høyreSfære" to grunnlag.brilleseddel.høyreSfære.toString(),
             "høyreSylinder" to grunnlag.brilleseddel.høyreSylinder.toString()
         )
