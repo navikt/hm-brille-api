@@ -99,21 +99,44 @@ object Vilkårene {
         }
     }
 
+
     val Brillestyrke = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Er brillestyrken innenfor de fastsatte rammene?",
         identifikator = "Brillestyrke v1",
         lovReferanse = "§4",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§4"
     ) { grunnlag ->
+        val brillestyrkeGrunnlag = mapOf<String, String>(
+            "vensteSfære" to grunnlag.brilleseddel.venstreSfære.toString(),
+            "vensteSylinder" to grunnlag.brilleseddel.venstreSylinder.toString(),
+            "høyreSfære" to grunnlag.brilleseddel.høyreSfære.toString(),
+            "høyreSylinder" to grunnlag.brilleseddel.høyreSylinder.toString()
+        )
         val brilleseddel = grunnlag.brilleseddel
         val minsteSfære = grunnlag.minsteSfære
         val minsteSylinder = grunnlag.minsteSylinder
         when {
-            brilleseddel.høyreSfære >= minsteSfære -> ja("Høyre sfære oppfyller vilkår om brillestyrke ≥ $minsteSfære")
-            brilleseddel.høyreSylinder >= minsteSylinder -> ja("Høyre sylinder oppfyller vilkår om sylinderstyrke ≥ $minsteSylinder")
-            brilleseddel.venstreSfære >= minsteSfære -> ja("Venstre sfære oppfyller vilkår om brillestyrke ≥ $minsteSfære")
-            brilleseddel.venstreSylinder >= minsteSylinder -> ja("Venstre sylinder oppfyller vilkår om sylinderstyrke ≥ $minsteSylinder")
-            else -> nei("Vilkår om brillestyrke og/eller sylinderstyrke er ikke oppfylt")
+            brilleseddel.høyreSfære >= minsteSfære -> ja(
+                "Høyre sfære oppfyller vilkår om brillestyrke ≥ $minsteSfære",
+                brillestyrkeGrunnlag
+            )
+
+            brilleseddel.høyreSylinder >= minsteSylinder -> ja(
+                "Høyre sylinder oppfyller vilkår om sylinderstyrke ≥ $minsteSylinder",
+                brillestyrkeGrunnlag
+            )
+
+            brilleseddel.venstreSfære >= minsteSfære -> ja(
+                "Venstre sfære oppfyller vilkår om brillestyrke ≥ $minsteSfære",
+                brillestyrkeGrunnlag
+            )
+
+            brilleseddel.venstreSylinder >= minsteSylinder -> ja(
+                "Venstre sylinder oppfyller vilkår om sylinderstyrke ≥ $minsteSylinder",
+                brillestyrkeGrunnlag
+            )
+
+            else -> nei("Vilkår om brillestyrke og/eller sylinderstyrke er ikke oppfylt", brillestyrkeGrunnlag)
         }
     }
 
@@ -178,13 +201,13 @@ object Vilkårene {
     }
 
     val Brille = (
-        HarIkkeVedtakIKalenderåret og
-            Under18ÅrPåBestillingsdato og
-            MedlemAvFolketrygden og
-            Brillestyrke og
-            Bestillingsdato og
-            BestillingsdatoTilbakeITid
-        ).med("Brille_v1", "Personen oppfyller vilkår for krav om barnebriller")
+            HarIkkeVedtakIKalenderåret og
+                    Under18ÅrPåBestillingsdato og
+                    MedlemAvFolketrygden og
+                    Brillestyrke og
+                    Bestillingsdato og
+                    BestillingsdatoTilbakeITid
+            ).med("Brille_v1", "Personen oppfyller vilkår for krav om barnebriller")
 
     private fun LocalDate.formatert(): String =
         this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))
