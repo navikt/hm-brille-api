@@ -12,7 +12,7 @@ val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 object Vilkårene {
 
     val HarIkkeVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Har barnet allerede vedtak om brille i kalenderåret?",
+        beskrivelse = "Ikke fått støtte til barnebriller tidligere i år",
         identifikator = "HarIkkeVedtakIKalenderåret v1",
         lovReferanse = "§3",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§3",
@@ -44,7 +44,7 @@ object Vilkårene {
     }
 
     val Under18ÅrPåBestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Var barnet under 18 år på bestillingsdato?",
+        beskrivelse = "Barnet må være under 18 år på bestillingsdato",
         identifikator = "Under18ÅrPåBestillingsdato v1",
         lovReferanse = "§2",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§2"
@@ -75,7 +75,7 @@ object Vilkårene {
     }
 
     val MedlemAvFolketrygden = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Er barnet medlem av folketrygden?",
+        beskrivelse = "Medlem av folketrygden",
         identifikator = "MedlemAvFolketrygden v1",
         lovReferanse = "§2",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§2"
@@ -101,7 +101,7 @@ object Vilkårene {
 
 
     val Brillestyrke = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Er brillestyrken innenfor de fastsatte rammene?",
+        beskrivelse = "Brillestyrken er innenfor fastsatte styrker",
         identifikator = "Brillestyrke v1",
         lovReferanse = "§4",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§4"
@@ -141,7 +141,7 @@ object Vilkårene {
     }
 
     val Bestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Er bestillingsdato ${DATO_ORDNINGEN_STARTET.formatert()} eller senere?",
+        beskrivelse = "Bestillingen er gjort etter at loven trådte i kraft",
         identifikator = "Bestillingsdato v1",
         lovReferanse = "§13",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§13"
@@ -175,7 +175,7 @@ object Vilkårene {
     }
 
     val BestillingsdatoTilbakeITid = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Er bestillingsdato innenfor siste 6 måneder fra dagens dato?",
+        beskrivelse = "Bestillingsdato innenfor 6 siste mnd",
         identifikator = "BestillingsdatoTilbakeITid v1",
         lovReferanse = "§6",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§6"
