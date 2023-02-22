@@ -69,7 +69,7 @@ object Configuration {
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
-            "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.dev-fss-pub.nais.io",
+            "syfohelsenettproxy.rest-uri" to "http://hm-mocks",
             "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.dev.nav.no/",
             "medlemskap.oppslag.scope" to "api://dev-gcp.medlemskap.medlemskap-oppslag/.default",
