@@ -2,13 +2,16 @@ package no.nav.hjelpemidler.brille.admin
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.Session
+import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.Person
+import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
+import no.nav.hjelpemidler.brille.store.update
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
@@ -18,6 +21,8 @@ import java.time.LocalDateTime
 interface AdminStore : Store {
     fun hentVedtakListe(fnr: String): List<VedtakListe>
     fun hentVedtak(vedtakId: Long): Vedtak?
+    fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?): Avvisning?
+    fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>)
     fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling>
 }
 
@@ -111,6 +116,48 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             )
         }
     }
+
+    override fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?) = session {
+        val AND_WHERE = if (etterVedtak != null) "AND opprettet > :vedtakOpprettet" else ""
+
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT orgnr, begrunnelser, opprettet FROM avviste_krav_v1 WHERE fnrBarn = :fnrBarn $AND_WHERE LIMIT 1
+        """.trimIndent()
+
+        sessionFactory().query(
+            sql,
+            mapOf(
+                "fnrBarn" to fnrBarn,
+                "vedtakOpprettet" to etterVedtak?.opprettet,
+            )
+        ) { row ->
+            Avvisning(
+                orgnr = row.string("orgnr"),
+                orgNavn = "",
+                årsaker = row.json("begrunnelser"),
+                opprettet = row.localDateTime("opprettet"),
+            )
+        }
+    }
+
+    override fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>) = session {
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO avviste_krav_v1 (fnrBarn, fnrInnsender, orgnr, begrunnelser, opprettet) VALUES (:fnrBarn, :fnrInnsender, :orgnr, :begrunnelser, NOW())
+        """.trimIndent()
+
+        it.update(
+            sql,
+            mapOf(
+                "fnrBarn" to fnrBarn,
+                "fnrInnsender" to fnrInnsender,
+                "orgnr" to orgnr,
+                "begrunnelser" to pgObjectOf(årsaker),
+            )
+        ).validate()
+    }
+
     override fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling> = session {
         @Language("PostgreSQL")
         val sql = """
@@ -168,6 +215,13 @@ data class Vedtak(
     val slettet: LocalDateTime?,
     val slettetAv: String?,
     val slettetAvType: SlettetAvType?,
+)
+
+data class Avvisning(
+    val orgnr: String,
+    val orgNavn: String,
+    val årsaker: List<String>,
+    val opprettet: LocalDateTime,
 )
 
 data class Utbetaling(

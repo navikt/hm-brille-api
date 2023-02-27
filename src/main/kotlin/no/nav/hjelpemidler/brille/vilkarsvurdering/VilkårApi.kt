@@ -7,6 +7,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -19,6 +20,7 @@ private val sikkerLog = KotlinLogging.logger("tjenestekall")
 private val log = KotlinLogging.logger { }
 fun Route.vilkårApi(
     vilkårsvurderingService: VilkårsvurderingService,
+    adminService: AdminService,
     auditService: AuditService,
     kafkaService: KafkaService
 ) {
@@ -45,6 +47,11 @@ fun Route.vilkårApi(
                     "Vilkårsvurderingen ga negativt resultat:\n${vilkarsvurdering.toJson()}"
                 }
                 kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkarsvurdering)
+                // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
+                val årsaker = vilkarsvurdering.evaluering.barn
+                    .filter { vilkar -> vilkar.resultat != Resultat.JA }
+                    .map { vilkar -> vilkar.begrunnelse }
+                adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, call.extractFnr(), vilkårsgrunnlag.orgnr, årsaker)
             }
 
             val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlag.brillepris)

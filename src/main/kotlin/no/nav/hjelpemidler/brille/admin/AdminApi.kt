@@ -64,8 +64,21 @@ fun Route.adminApi(
 
                 if (query.count() == 11) {
                     // Fnr
+                    data class ResponseFnr(
+                        val vedtak: List<VedtakListe>,
+                        val avvisning: Avvisning?,
+                    )
                     val krav = adminService.hentVedtakListe(query)
-                    call.respond(HttpStatusCode.OK, krav)
+                    val avvisning = adminService.hentAvvisning(query, krav.firstOrNull())
+                    call.respond(
+                        HttpStatusCode.OK,
+                        ResponseFnr(
+                            krav,
+                            avvisning?.copy(
+                                orgNavn = avvisning.orgnr.let { orgnr -> enhetsregisteretService.hentOrganisasjonsenhet(orgnr)?.navn } ?: "<Ukjent>",
+                            )
+                        )
+                    )
                 } else if (Regex("[0-9]{9}-[0-9]{8}").matches(query)) {
                     val utbetaling = adminService.hentUtbetalinger(query).isNotEmpty()
                     if (!utbetaling) {
