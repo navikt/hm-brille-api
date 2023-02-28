@@ -21,8 +21,8 @@ import java.time.LocalDateTime
 interface AdminStore : Store {
     fun hentVedtakListe(fnr: String): List<VedtakListe>
     fun hentVedtak(vedtakId: Long): Vedtak?
-    fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?): Avvisning?
     fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>)
+    fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?): Avvisning?
     fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling>
 }
 
@@ -117,12 +117,29 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         }
     }
 
+    override fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>) = session {
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO avviste_krav_v1 (fnrBarn, fnrInnsender, orgnr, begrunnelser, opprettet) VALUES (:fnrBarn, :fnrInnsender, :orgnr, :begrunnelser, NOW())
+        """.trimIndent()
+
+        it.update(
+            sql,
+            mapOf(
+                "fnrBarn" to fnrBarn,
+                "fnrInnsender" to fnrInnsender,
+                "orgnr" to orgnr,
+                "begrunnelser" to pgObjectOf(årsaker),
+            )
+        ).validate()
+    }
+
     override fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?) = session {
         val AND_WHERE = if (etterVedtak != null) "AND opprettet > :vedtakOpprettet" else ""
 
         @Language("PostgreSQL")
         val sql = """
-            SELECT orgnr, begrunnelser, opprettet FROM avviste_krav_v1 WHERE fnrBarn = :fnrBarn $AND_WHERE LIMIT 1
+            SELECT orgnr, begrunnelser, opprettet FROM avviste_krav_v1 WHERE fnrBarn = :fnrBarn $AND_WHERE ORDER BY opprettet DESC LIMIT 1
         """.trimIndent()
 
         sessionFactory().query(
@@ -139,23 +156,6 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 opprettet = row.localDateTime("opprettet"),
             )
         }
-    }
-
-    override fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>) = session {
-        @Language("PostgreSQL")
-        val sql = """
-            INSERT INTO avviste_krav_v1 (fnrBarn, fnrInnsender, orgnr, begrunnelser, opprettet) VALUES (:fnrBarn, :fnrInnsender, :orgnr, :begrunnelser, NOW())
-        """.trimIndent()
-
-        it.update(
-            sql,
-            mapOf(
-                "fnrBarn" to fnrBarn,
-                "fnrInnsender" to fnrInnsender,
-                "orgnr" to orgnr,
-                "begrunnelser" to pgObjectOf(årsaker),
-            )
-        ).validate()
     }
 
     override fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling> = session {

@@ -27,15 +27,15 @@ class AdminService(
         }
     }
 
-    suspend fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?): Avvisning? {
-        return transaction(databaseContext) { ctx ->
-            ctx.adminStore.hentAvvisning(fnrBarn, etterVedtak)
-        }
-    }
-
     suspend fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>) {
         return transaction(databaseContext) { ctx ->
             ctx.adminStore.lagreAvvisning(fnrBarn, fnrInnsender, orgnr, årsaker)
+        }
+    }
+
+    suspend fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?): Avvisning? {
+        return transaction(databaseContext) { ctx ->
+            ctx.adminStore.hentAvvisning(fnrBarn, etterVedtak)
         }
     }
 
