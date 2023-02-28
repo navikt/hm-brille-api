@@ -49,7 +49,7 @@ internal class VilkårApiTest {
 
     private val routing = TestRouting {
         authenticate("test") {
-            vilkårApi(vilkårsvurderingService, mockk(relaxed = true), mockk(relaxed = true))
+            vilkårApi(vilkårsvurderingService, mockk(relaxed = true), mockk(relaxed = true), mockk(relaxed = true))
         }
     }
 

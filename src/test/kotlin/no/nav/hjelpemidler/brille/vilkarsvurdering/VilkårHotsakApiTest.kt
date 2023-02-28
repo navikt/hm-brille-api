@@ -184,7 +184,6 @@ internal class VilkårHotsakApiTest {
         }
     }
 
-
     private fun lagEksisterendeVedtak(bestillingsdato: LocalDate) =
         EksisterendeVedtak(
             id = 1,

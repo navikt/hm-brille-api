@@ -9,6 +9,10 @@
     "hm-saksbehandling",
     "hotsak-frontend"
   ],
+  "azure-group-ids": [
+    "2f632b40-4730-4692-9c7c-fb744e2d33e1",
+    "d6f989d6-59a9-4d18-9cd1-f1372dcccfe5"
+  ],
   "port": 9090,
   "db_tier": "db-custom-1-3840",
   "db_high_availability": true,
