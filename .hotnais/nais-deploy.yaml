@@ -46,6 +46,14 @@ spec:
   azure:
     application:
       enabled: true
+      allowAllUsers: false
+      claims:
+        extra:
+          - "NAVident"
+        groups:
+        {{#each azure-group-ids}}
+          - id: {{ this }}
+        {{/each}}
   accessPolicy:
     inbound:
       rules:
