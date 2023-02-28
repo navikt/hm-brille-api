@@ -34,6 +34,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         val sql = """
             SELECT
                 COALESCE(v.id, vs.id) AS id,
+                COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
@@ -56,6 +57,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             VedtakListe(
                 vedtakId = row.long("id"),
                 barnsNavn = person.navn(),
+                bestillingsdato = row.localDate("bestillingsdato"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalt = row.localDateTimeOrNull("utbetalingsdato"),
                 slettet = row.localDateTimeOrNull("slettet"),
@@ -197,6 +199,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
 data class VedtakListe(
     val vedtakId: Long,
     val barnsNavn: String,
+    val bestillingsdato: LocalDate,
     val opprettet: LocalDateTime,
     val utbetalt: LocalDateTime?,
     val slettet: LocalDateTime?,
