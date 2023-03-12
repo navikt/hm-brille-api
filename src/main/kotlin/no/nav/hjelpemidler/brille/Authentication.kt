@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille
 
 import com.auth0.jwk.JwkProviderBuilder
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.Principal
@@ -37,15 +36,11 @@ fun Application.installAuthentication() {
 
     authentication {
         jwt(TOKEN_X_AUTH) {
-            verifier(jwkProviderTokenx, TokenXEnvironmentVariable.TOKEN_X_ISSUER)
+            verifier(jwkProviderTokenx, TokenXEnvironmentVariable.TOKEN_X_ISSUER) {
+                withAudience(TokenXEnvironmentVariable.TOKEN_X_CLIENT_ID)
+                withClaim("acr", "Level4")
+            }
             validate { credentials ->
-                requireNotNull(credentials.payload.audience) {
-                    "Auth: Missing audience in token"
-                }
-                require(credentials.payload.audience.contains(TokenXEnvironmentVariable.TOKEN_X_CLIENT_ID)) {
-                    "Auth: Valid audience not found in claims"
-                }
-                require(credentials.payload.getClaim("acr").asString() == ("Level4")) { "Auth: Level4 required" }
                 UserPrincipal(credentials.payload.getClaim(Configuration.tokenXProperties.userclaim).asString())
             }
         }
@@ -55,14 +50,10 @@ fun Application.installAuthentication() {
             }
         }
         jwt(AZURE_AD_AUTH) {
-            verifier(jwkProviderAzureAd, AzureADEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER)
+            verifier(jwkProviderAzureAd, AzureADEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER) {
+                withAudience(AzureADEnvironmentVariable.AZURE_APP_CLIENT_ID)
+            }
             validate { credentials ->
-                requireNotNull(credentials.payload.audience) {
-                    "Auth: Missing audience in token"
-                }
-                require(credentials.payload.audience.contains(AzureADEnvironmentVariable.AZURE_APP_CLIENT_ID)) {
-                    "Auth: Valid audience not found in claims"
-                }
                 UserPrincipalAdmin(
                     credentials.payload.getClaim("oid").asString()
                         ?.let { oid -> kotlin.runCatching { UUID.fromString(oid) }.getOrNull() },
@@ -83,16 +74,6 @@ fun Application.installAuthentication() {
             }
         }
     }
-}
-
-private data class AuthenticationConfiguration(
-    val metadata: Metadata,
-    val clientId: String,
-) {
-    data class Metadata(
-        @JsonProperty("issuer") val issuer: String,
-        @JsonProperty("jwks_uri") val jwksUri: String,
-    )
 }
 
 internal class UserPrincipal(private val fnr: String) : Principal {
