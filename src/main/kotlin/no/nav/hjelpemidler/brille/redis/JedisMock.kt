@@ -18,6 +18,10 @@ class JedisMock : StringCommands {
         return store[key]
     }
 
+    override fun setGet(key: String?, value: String?, params: SetParams?): String {
+        TODO("Not yet implemented")
+    }
+
     override fun setex(key: String, seconds: Long, value: String): String? {
         store[key] = value
         return "OK"

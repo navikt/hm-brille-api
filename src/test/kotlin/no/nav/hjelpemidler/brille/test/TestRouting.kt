@@ -1,15 +1,10 @@
 package no.nav.hjelpemidler.brille.test
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.kotest.common.runBlocking
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.accept
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import io.ktor.serialization.jackson.jackson
 import io.ktor.server.auth.authentication
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.routing.Routing
@@ -18,6 +13,7 @@ import io.ktor.server.testing.TestApplication
 import no.nav.hjelpemidler.brille.UserPrincipal
 import no.nav.hjelpemidler.brille.UserPrincipalAdmin
 import no.nav.hjelpemidler.brille.configure
+import no.nav.hjelpemidler.http.jackson
 import java.util.UUID
 
 class TestRouting(configuration: Routing.() -> Unit) {
@@ -53,13 +49,7 @@ class TestRouting(configuration: Routing.() -> Unit) {
     internal val principal = UserPrincipal("15084300133")
 
     internal val client = application.createClient {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
+        jackson()
         defaultRequest {
             accept(ContentType.Application.Json)
             contentType(ContentType.Application.Json)

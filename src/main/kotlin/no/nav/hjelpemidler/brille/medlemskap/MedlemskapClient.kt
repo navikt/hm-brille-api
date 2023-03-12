@@ -1,15 +1,9 @@
 package no.nav.hjelpemidler.brille.medlemskap
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -17,14 +11,15 @@ import io.ktor.client.statement.request
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StatusCodeException
-import no.nav.hjelpemidler.brille.azuread.azureAd
+import no.nav.hjelpemidler.http.createHttpClient
+import no.nav.hjelpemidler.http.openid.azureAD
 import java.time.LocalDate
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
 
@@ -33,22 +28,18 @@ class MedlemskapClient(
     engine: HttpClientEngine = CIO.create(),
 ) {
     private val baseUrl = props.baseUrl
-    private val scope = props.scope
-    private val client = HttpClient(engine) {
+    private val client = createHttpClient(engine) {
         expectSuccess = false
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
-        install(Auth) {
-            azureAd(scope)
+        azureAD(scope = props.scope) {
+            cache(leeway = 10.seconds)
         }
     }
 
-    fun slåOppMedlemskap(fnr: String, bestillingsDato: LocalDate, correlationId: String = UUID.randomUUID().toString()): JsonNode = runBlocking {
+    fun slåOppMedlemskap(
+        fnr: String,
+        bestillingsDato: LocalDate,
+        correlationId: String = UUID.randomUUID().toString(),
+    ): JsonNode = runBlocking {
         val response = client.post(baseUrl) {
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
