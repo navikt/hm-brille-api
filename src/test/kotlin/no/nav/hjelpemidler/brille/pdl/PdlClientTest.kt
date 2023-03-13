@@ -6,11 +6,14 @@ import io.kotest.common.runBlocking
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.http.headersOf
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
+import no.nav.hjelpemidler.http.openid.TokenSet
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
+import kotlin.time.Duration.Companion.hours
 
 internal class PdlClientTest {
     @Test
@@ -43,11 +46,18 @@ internal class PdlClientTest {
     private fun test(name: String, block: (PdlClient) -> Unit) {
         block(
             PdlClient(
-                Configuration.PdlProperties("http://localhost:1234", ""),
-                javaClass.getResourceAsStream(name).use {
+                props = Configuration.PdlProperties("http://localhost:1234", "test"),
+                engine = javaClass.getResourceAsStream(name).use {
                     val response = requireNotNull(it).bufferedReader().readText()
                     MockEngine {
-                        respond(response)
+                        when {
+                            it.url.toString().endsWith("/token") -> respond(
+                                jsonMapper.writeValueAsString(TokenSet.bearer(1.hours, "")),
+                                headers = headersOf("Content-Type", "application/json")
+                            )
+
+                            else -> respond(response)
+                        }
                     }
                 }
             )

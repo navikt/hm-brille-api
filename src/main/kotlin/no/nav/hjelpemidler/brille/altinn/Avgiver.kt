@@ -19,7 +19,8 @@ data class Avgiver(
         /**
          * "Utbetalingsrapport - brillestøtte"
          */
-        UTBETALINGSRAPPORT(kode = "5850", versjon = 1);
+        UTBETALINGSRAPPORT(kode = "5850", versjon = 1),
+        ;
 
         override fun toString(): String = "[$kode,$versjon]"
 

@@ -13,12 +13,13 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.azuread.Token
 import no.nav.hjelpemidler.brille.scheduler.Elector
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Godkjenning
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Kode
+import no.nav.hjelpemidler.http.openid.TokenSet
 import java.net.InetAddress
+import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger { }
 
@@ -70,7 +71,7 @@ object StubEngine {
 
     fun azureAd(): HttpClientEngine = mockEngine {
         post("/default/token") {
-            respond(Token(120, ""))
+            respond(TokenSet.bearer(1.hours, ""))
         }
     }
 
@@ -113,7 +114,7 @@ object StubEngine {
             )
         }
         post("/default/token") {
-            respond(Token(120, ""))
+            respond(TokenSet.bearer(1.hours, ""))
         }
     }
 

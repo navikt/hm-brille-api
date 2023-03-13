@@ -99,7 +99,6 @@ object Vilkårene {
         }
     }
 
-
     val Brillestyrke = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Brillestyrken er innenfor fastsatte styrker",
         identifikator = "Brillestyrke v1",
@@ -201,13 +200,13 @@ object Vilkårene {
     }
 
     val Brille = (
-            HarIkkeVedtakIKalenderåret og
-                    Under18ÅrPåBestillingsdato og
-                    MedlemAvFolketrygden og
-                    Brillestyrke og
-                    Bestillingsdato og
-                    BestillingsdatoTilbakeITid
-            ).med("Brille_v1", "Personen oppfyller vilkår for krav om barnebriller")
+        HarIkkeVedtakIKalenderåret og
+            Under18ÅrPåBestillingsdato og
+            MedlemAvFolketrygden og
+            Brillestyrke og
+            Bestillingsdato og
+            BestillingsdatoTilbakeITid
+        ).med("Brille_v1", "Personen oppfyller vilkår for krav om barnebriller")
 
     private fun LocalDate.formatert(): String =
         this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))

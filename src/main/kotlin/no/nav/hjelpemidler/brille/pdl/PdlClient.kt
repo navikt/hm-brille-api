@@ -10,14 +10,15 @@ import io.ktor.client.request.header
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
-import no.nav.hjelpemidler.brille.azuread.AzureAdClient
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentVergeEllerForelder
+import no.nav.hjelpemidler.http.openid.azureAD
 import java.net.URL
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
 
@@ -26,19 +27,15 @@ class PdlClient(
     engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
 ) {
     private val baseUrl = props.baseUrl
-    private val scope = props.scope
     private val client = GraphQLKtorClient(
         url = URL(baseUrl),
         httpClient = HttpClient(engine) {
-            // Manuell håndtering av Azure Ad nødvendig her, da Auth-plugin'en bare fornyer tokens hvis den mottar
-            // 401 fra serveren. PDL svarer bare 200-OK med en payload som har unauthenticated-code i error-feltet.
-            /* install(Auth) {
-                azureAd(scope)
-            } */
+            azureAD(scope = props.scope) {
+                cache(leeway = 10.seconds)
+            }
         },
         serializer = GraphQLClientJacksonSerializer(),
     )
-    private val azureAdClient: AzureAdClient = AzureAdClient(Configuration.azureAdProperties)
 
     private fun List<GraphQLClientError>.inneholderKode(kode: String) = this
         .map { it.extensions ?: emptyMap() }
@@ -49,11 +46,9 @@ class PdlClient(
         request: GraphQLClientRequest<T>,
         block: (T) -> PersonMedAdressebeskyttelse<R>,
     ): PdlOppslag<R?> {
-        val token = azureAdClient.getTokenCached(scope).accessToken
         val response = client.execute(request) {
             header("Tema", "HJE")
             header("X-Correlation-ID", UUID.randomUUID().toString())
-            header("Authorization", "Bearer $token")
         }
         return when {
             response.errors != null -> {
@@ -65,12 +60,14 @@ class PdlClient(
                     else -> throw PdlClientException(errors)
                 }
             }
+
             response.data != null -> {
                 val data = response.data!!
                 val personMedAdressebeskyttelse = block(data)
                 if (personMedAdressebeskyttelse.harAdressebeskyttelse()) throw PdlHarAdressebeskyttelseException()
                 PdlOppslag(personMedAdressebeskyttelse.person, jsonMapper.valueToTree(response.data))
             }
+
             else -> throw PdlClientException("Svar fra PDL mangler både data og errors")
         }
     }

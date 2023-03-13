@@ -7,8 +7,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
@@ -21,8 +19,10 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.StubEngine
-import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
+import no.nav.hjelpemidler.http.createHttpClient
+import no.nav.hjelpemidler.http.openid.azureAD
+import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -32,18 +32,10 @@ class SyfohelsenettproxyClient(
     engine: HttpClientEngine = engineFactory { StubEngine.syfohelsenettproxy() },
 ) {
     private val baseUrl = props.baseUrl
-    private val scope = props.scope
-    private val client = HttpClient(engine) {
+    private val client = createHttpClient(engine) {
         expectSuccess = true
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            }
-        }
-        install(Auth) {
-            azureAd(scope)
+        azureAD(scope = props.scope) {
+            cache(leeway = 10.seconds)
         }
     }
 

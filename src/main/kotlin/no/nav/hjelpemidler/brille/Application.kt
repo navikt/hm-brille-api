@@ -24,7 +24,6 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
-import no.nav.hjelpemidler.brille.HttpClientConfig.httpClient
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
@@ -192,7 +191,7 @@ fun Application.setupRoutes() {
         rapid.start()
     }
 
-    installAuthentication(httpClient(engineFactory { StubEngine.tokenX() }))
+    installAuthentication()
 
     routing {
         internalRoutes(kafkaService)
@@ -207,7 +206,7 @@ fun Application.setupRoutes() {
                     virksomhetApi(databaseContext, enhetsregisteretService)
                     oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
-                    vilkårApi(vilkårsvurderingService, auditService, kafkaService)
+                    vilkårApi(vilkårsvurderingService, adminService, auditService, kafkaService)
                     kravApi(vedtakService, auditService, slettVedtakService)
                 }
                 avtaleApi(avtaleService)
