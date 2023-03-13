@@ -11,7 +11,6 @@ import io.ktor.client.statement.request
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StatusCodeException
@@ -35,11 +34,11 @@ class MedlemskapClient(
         }
     }
 
-    fun slåOppMedlemskap(
+    suspend fun slåOppMedlemskap(
         fnr: String,
         bestillingsDato: LocalDate,
         correlationId: String = UUID.randomUUID().toString(),
-    ): JsonNode = runBlocking {
+    ): JsonNode {
         val response = client.post(baseUrl) {
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
@@ -54,7 +53,7 @@ class MedlemskapClient(
             )
         }
         if (response.status == HttpStatusCode.OK) {
-            response.body()
+            return response.body()
         } else {
             val message = runCatching { response.body<String>() }.getOrElse {
                 log.warn(it) { "Klarte ikke å hente response body som string" }

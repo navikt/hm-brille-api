@@ -37,7 +37,7 @@ internal class AvtaleApiTest {
         }
     }
 
-    private val fnrInnsender = routing.principal.getFnr()
+    private val fnrInnsender = routing.principal.fnr
     private val avgiver = Avgiver(
         navn = "Brillesjø AS",
         orgnr = "456313701",

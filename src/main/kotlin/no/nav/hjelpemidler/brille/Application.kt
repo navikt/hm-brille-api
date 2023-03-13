@@ -263,7 +263,7 @@ fun cronjobSyncTss() {
 
 private fun kafkaConfig(
     kafkaProps: Configuration.KafkaProperties,
-    instanceId: String?
+    instanceId: String?,
 ) = KafkaConfig(
     bootstrapServers = kafkaProps.bootstrapServers,
     consumerGroupId = kafkaProps.clientId,

@@ -3,11 +3,13 @@ package no.nav.hjelpemidler.brille
 import com.auth0.jwk.JwkProviderBuilder
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.Principal
 import io.ktor.server.auth.authentication
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.tilgang.AzureAdGroup
+import no.nav.hjelpemidler.brille.tilgang.UserPrincipal
 import no.nav.hjelpemidler.http.openid.AzureADEnvironmentVariable
 import no.nav.hjelpemidler.http.openid.TokenXEnvironmentVariable
 import java.net.URL
@@ -40,35 +42,48 @@ fun Application.installAuthentication() {
                 withAudience(TokenXEnvironmentVariable.TOKEN_X_CLIENT_ID)
                 withClaim("acr", "Level4")
             }
-            validate { credentials ->
-                UserPrincipal(credentials.payload.getClaim(Configuration.tokenXProperties.userclaim).asString())
+            validate { credential ->
+                val principal = JWTPrincipal(credential.payload)
+                val fnr = principal.mustGet(Configuration.tokenXProperties.userclaim)
+                UserPrincipal.TokenX.Bruker(fnr = fnr)
             }
         }
         provider("local") {
             authenticate { context ->
-                context.principal(UserPrincipal("15084300133"))
+                context.principal(UserPrincipal.TokenX.Bruker("15084300133"))
             }
         }
         jwt(AZURE_AD_AUTH) {
             verifier(jwkProviderAzureAd, AzureADEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER) {
                 withAudience(AzureADEnvironmentVariable.AZURE_APP_CLIENT_ID)
             }
-            validate { credentials ->
-                UserPrincipalAdmin(
-                    credentials.payload.getClaim("oid").asString()
-                        ?.let { oid -> kotlin.runCatching { UUID.fromString(oid) }.getOrNull() },
-                    credentials.payload.getClaim("preferred_username").asString(),
-                    credentials.payload.getClaim("name").asString()
-                )
+            validate { credential ->
+                val principal = JWTPrincipal(credential.payload)
+                val objectId = principal.mustGet("oid").let(UUID::fromString)
+                val roles = principal.getListClaim("roles", String::class).toSet()
+                val groups = AzureAdGroup.fra(principal)
+                when {
+                    "access_as_application" in roles -> UserPrincipal.AzureAd.Systembruker(
+                        objectId = objectId,
+                    )
+
+                    AzureAdGroup.BRILLEADMIN_BRUKERE in groups -> UserPrincipal.AzureAd.Administrator(
+                        objectId = objectId,
+                        email = principal.mustGet("preferred_username"),
+                        name = principal.mustGet("name"),
+                    )
+
+                    else -> null
+                }
             }
         }
         provider("local_azuread") {
             authenticate { context ->
                 context.principal(
-                    UserPrincipalAdmin(
-                        UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"),
-                        "example@example.com",
-                        "Example some some"
+                    UserPrincipal.AzureAd.Administrator(
+                        objectId = UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"),
+                        email = "example@example.com",
+                        name = "E. X. Ample"
                     )
                 )
             }
@@ -76,43 +91,34 @@ fun Application.installAuthentication() {
     }
 }
 
-internal class UserPrincipal(private val fnr: String) : Principal {
-    fun getFnr() = fnr
-}
+private fun JWTPrincipal.mustGet(name: String): String =
+    checkNotNull(this[name]) {
+        "'$name' mangler i token"
+    }
 
 fun ApplicationCall.extractFnr(): String {
-    val fnrFromClaims = this.principal<UserPrincipal>()?.getFnr()
+    val fnrFromClaims = this.principal<UserPrincipal.TokenX.Bruker>()?.fnr
     if (fnrFromClaims == null || fnrFromClaims.trim().isEmpty()) {
         throw RuntimeException("Fant ikke FNR i token")
     }
     return fnrFromClaims
 }
 
-internal class UserPrincipalAdmin(private val oid: UUID?, private val email: String?, private val name: String?) :
-    Principal {
-    fun getUUID() = oid
-    fun getEmail() = email
-    fun getName() = name
-}
-
-fun ApplicationCall.extractUUID(): UUID {
-    val uuidFromClaims = this.principal<UserPrincipalAdmin>()?.getUUID()
-        ?: throw RuntimeException("Fant ikke oid i token")
-    return uuidFromClaims
-}
+fun ApplicationCall.extractUUID(): UUID =
+    principal<UserPrincipal.AzureAd>()?.objectId ?: error("Fant ikke oid i token")
 
 fun ApplicationCall.extractEmail(): String {
-    val emailFromClaims = this.principal<UserPrincipalAdmin>()?.getEmail()
+    val emailFromClaims = this.principal<UserPrincipal.AzureAd.Administrator>()?.email
     if (emailFromClaims == null || emailFromClaims.trim().isEmpty()) {
-        throw RuntimeException("Fant ikke email i token")
+        error("Fant ikke email i token")
     }
     return emailFromClaims
 }
 
 fun ApplicationCall.extractName(): String {
-    val nameFromClaims = this.principal<UserPrincipalAdmin>()?.getName()
+    val nameFromClaims = this.principal<UserPrincipal.AzureAd.Administrator>()?.name
     if (nameFromClaims == null || nameFromClaims.trim().isEmpty()) {
-        throw RuntimeException("Fant ikke navn i token")
+        error("Fant ikke navn i token")
     }
     return nameFromClaims
 }

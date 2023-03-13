@@ -17,8 +17,6 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
     </appender>
 
-    <logger name="io.ktor.auth" level="TRACE" />
-
     <logger name="tjenestekall" level="DEBUG" additivity="false">
         <appender-ref ref="secureLog" />
     </logger>
@@ -26,6 +24,8 @@
     <logger name="no.nav.hjelpemidler.brille.medlemskap" level="DEBUG" />
 
     <logger name="no.nav.hjelpemidler.brille.syfohelsenettproxy" level="DEBUG" />
+
+    <logger level="DEBUG" name="no.nav.hjelpemidler.http.openid" />
 
     <root level="INFO">
         <appender-ref ref="STDOUT_JSON" />
