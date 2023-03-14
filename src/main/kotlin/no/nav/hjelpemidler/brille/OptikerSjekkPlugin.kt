@@ -6,7 +6,6 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.AuthenticationChecked
 import io.ktor.server.auth.AuthenticationRouteSelector
 import io.ktor.server.routing.Route
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
@@ -34,7 +33,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
     val syfohelsenettproxyClient = this.pluginConfig.syfohelsenettproxyClient!!
     val redisClient: RedisClient = this.pluginConfig.redisClient!!
 
-    fun sjekkErOptiker(fnrOptiker: String): Boolean {
+    suspend fun sjekkErOptiker(fnrOptiker: String): Boolean {
         val cachedErOptiker = redisClient.erOptiker(fnrOptiker)
 
         if (cachedErOptiker != null) {
@@ -42,7 +41,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
         }
 
         val behandler =
-            runCatching { runBlocking { syfohelsenettproxyClient.hentBehandler(fnrOptiker) } }.getOrElse {
+            runCatching { syfohelsenettproxyClient.hentBehandler(fnrOptiker) }.getOrElse {
                 log.error("Feil oppstod ved kall mot HPR", it)
                 throw SjekkOptikerPluginException(
                     HttpStatusCode.InternalServerError,

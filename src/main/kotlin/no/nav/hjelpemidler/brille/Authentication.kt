@@ -1,148 +1,77 @@
 package no.nav.hjelpemidler.brille
 
-import com.auth0.jwk.JwkProviderBuilder
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.auth.Principal
 import io.ktor.server.auth.authentication
-import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
-import java.net.URL
+import no.nav.hjelpemidler.brille.tilgang.AzureAdGroup
+import no.nav.hjelpemidler.brille.tilgang.AzureAdRole
+import no.nav.hjelpemidler.brille.tilgang.UserPrincipal
+import no.nav.hjelpemidler.brille.tilgang.azureAdProvider
+import no.nav.hjelpemidler.brille.tilgang.tokenXProvider
+import no.nav.hjelpemidler.brille.tilgang.withGroupClaim
+import no.nav.hjelpemidler.brille.tilgang.withRoleClaim
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
-const val TOKEN_X_AUTH = "tokenX"
-const val AZURE_AD_AUTH = "azureAd"
+object AuthenticationProvider {
+    const val TOKEN_X = "TOKEN_X"
+    const val TOKEN_X_LOCAL = "TOKEN_X_LOCAL"
+    const val AZURE_AD_BRILLEADMIN_BRUKERE = "AZURE_AD_BRILLEADMIN_BRUKERE"
+    const val AZURE_AD_BRILLEADMIN_BRUKERE_LOCAL = "AZURE_AD_BRILLEADMIN_BRUKERE_LOCAL"
+    const val AZURE_AD_SYSTEMBRUKER = "AZURE_AD_SYSTEMBRUKER"
+}
 
-private val log = KotlinLogging.logger {}
-
-fun Application.installAuthentication(httpClient: HttpClient) {
-    var tokenXConfig: AuthenticationConfiguration
-    runBlocking(Dispatchers.IO) {
-        tokenXConfig = AuthenticationConfiguration(
-            metadata = httpClient.get(Configuration.tokenXProperties.wellKnownUrl).body(),
-            clientId = Configuration.tokenXProperties.clientId,
-        )
-    }
-
-    val jwkProviderTokenx = JwkProviderBuilder(URL(tokenXConfig.metadata.jwksUri))
-        // cache up to 1000 JWKs for 24 hours
-        .cached(1000, 24, TimeUnit.HOURS)
-        // if not cached, only allow max 100 different keys per minute to be fetched from external provider
-        .rateLimited(100, 1, TimeUnit.MINUTES)
-        .build()
-
-    var azureAdConfig: AuthenticationConfiguration
-    runBlocking(Dispatchers.IO) {
-        azureAdConfig = AuthenticationConfiguration(
-            metadata = httpClient.get(Configuration.azureAdProperties.wellKnownUrl).body(),
-            clientId = Configuration.azureAdProperties.clientId,
-        )
-    }
-
-    val jwkProviderAzureAd = JwkProviderBuilder(URL(azureAdConfig.metadata.jwksUri))
-        // cache up to 1000 JWKs for 24 hours
-        .cached(1000, 24, TimeUnit.HOURS)
-        // if not cached, only allow max 100 different keys per minute to be fetched from external provider
-        .rateLimited(100, 1, TimeUnit.MINUTES)
-        .build()
-
+fun Application.installAuthentication() {
     authentication {
-        jwt(TOKEN_X_AUTH) {
-            verifier(jwkProviderTokenx, tokenXConfig.metadata.issuer)
-            validate { credentials ->
-                requireNotNull(credentials.payload.audience) {
-                    "Auth: Missing audience in token"
-                }
-                require(credentials.payload.audience.contains(tokenXConfig.clientId)) {
-                    "Auth: Valid audience not found in claims"
-                }
-                require(credentials.payload.getClaim("acr").asString() == ("Level4")) { "Auth: Level4 required" }
-                UserPrincipal(credentials.payload.getClaim(Configuration.tokenXProperties.userclaim).asString())
-            }
+        tokenXProvider(AuthenticationProvider.TOKEN_X)
+        azureAdProvider(AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE) {
+            withGroupClaim(AzureAdGroup.BRILLEADMIN_BRUKERE)
         }
-        provider("local") {
+        azureAdProvider(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER) {
+            withRoleClaim(AzureAdRole.SYSTEMBRUKER)
+        }
+        provider(AuthenticationProvider.TOKEN_X_LOCAL) {
             authenticate { context ->
-                context.principal(UserPrincipal("15084300133"))
+                context.principal(UserPrincipal.TokenX.Bruker("15084300133"))
             }
         }
-        jwt(AZURE_AD_AUTH) {
-            verifier(jwkProviderAzureAd, azureAdConfig.metadata.issuer)
-            validate { credentials ->
-                requireNotNull(credentials.payload.audience) {
-                    "Auth: Missing audience in token"
-                }
-                require(credentials.payload.audience.contains(azureAdConfig.clientId)) {
-                    "Auth: Valid audience not found in claims"
-                }
-                UserPrincipalAdmin(
-                    credentials.payload.getClaim("oid").asString()?.let { oid -> kotlin.runCatching { UUID.fromString(oid) }.getOrNull() },
-                    credentials.payload.getClaim("preferred_username").asString(),
-                    credentials.payload.getClaim("name").asString()
+        provider(AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE_LOCAL) {
+            authenticate { context ->
+                context.principal(
+                    UserPrincipal.AzureAd.Administrator(
+                        objectId = UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"),
+                        email = "example@example.com",
+                        name = "E. X. Ample"
+                    )
                 )
             }
         }
-        provider("local_azuread") {
-            authenticate { context ->
-                context.principal(UserPrincipalAdmin(UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"), "example@example.com", "Example some some"))
-            }
-        }
     }
 }
 
-private data class AuthenticationConfiguration(
-    val metadata: Metadata,
-    val clientId: String,
-) {
-    data class Metadata(
-        @JsonProperty("issuer") val issuer: String,
-        @JsonProperty("jwks_uri") val jwksUri: String,
-    )
-}
-
-internal class UserPrincipal(private val fnr: String) : Principal {
-    fun getFnr() = fnr
-}
-
 fun ApplicationCall.extractFnr(): String {
-    val fnrFromClaims = this.principal<UserPrincipal>()?.getFnr()
+    val fnrFromClaims = this.principal<UserPrincipal.TokenX.Bruker>()?.fnr
     if (fnrFromClaims == null || fnrFromClaims.trim().isEmpty()) {
         throw RuntimeException("Fant ikke FNR i token")
     }
     return fnrFromClaims
 }
 
-internal class UserPrincipalAdmin(private val oid: UUID?, private val email: String?, private val name: String?) : Principal {
-    fun getUUID() = oid
-    fun getEmail() = email
-    fun getName() = name
-}
-
-fun ApplicationCall.extractUUID(): UUID {
-    val uuidFromClaims = this.principal<UserPrincipalAdmin>()?.getUUID()
-        ?: throw RuntimeException("Fant ikke oid i token")
-    return uuidFromClaims
-}
+fun ApplicationCall.extractUUID(): UUID =
+    principal<UserPrincipal.AzureAd>()?.objectId ?: error("Fant ikke oid i token")
 
 fun ApplicationCall.extractEmail(): String {
-    val emailFromClaims = this.principal<UserPrincipalAdmin>()?.getEmail()
+    val emailFromClaims = this.principal<UserPrincipal.AzureAd.Administrator>()?.email
     if (emailFromClaims == null || emailFromClaims.trim().isEmpty()) {
-        throw RuntimeException("Fant ikke email i token")
+        error("Fant ikke email i token")
     }
     return emailFromClaims
 }
 
 fun ApplicationCall.extractName(): String {
-    val nameFromClaims = this.principal<UserPrincipalAdmin>()?.getName()
+    val nameFromClaims = this.principal<UserPrincipal.AzureAd.Administrator>()?.name
     if (nameFromClaims == null || nameFromClaims.trim().isEmpty()) {
-        throw RuntimeException("Fant ikke navn i token")
+        error("Fant ikke navn i token")
     }
     return nameFromClaims
 }

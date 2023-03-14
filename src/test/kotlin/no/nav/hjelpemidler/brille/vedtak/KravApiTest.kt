@@ -101,6 +101,7 @@ internal class KravApiTest {
         satsBeskrivelse = SatsType.SATS_1.beskrivelse,
         beløp = SatsType.SATS_1.beløp.toBigDecimal()
     )
+
     private fun kjørTest(
         krav: KravDto,
         vedtakForBruker: List<EksisterendeVedtak> = emptyList(),
@@ -134,7 +135,7 @@ internal class KravApiTest {
             pdlClient.hentPerson(krav.vilkårsgrunnlag.fnrBarn)
         } returns lagMockPdlOppslag(fødselsdato)
 
-        every {
+        coEvery {
             medlemskapBarn.sjekkMedlemskapBarn(krav.vilkårsgrunnlag.fnrBarn, krav.vilkårsgrunnlag.bestillingsdato)
         } returns medlemskapResultat
 

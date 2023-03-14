@@ -9,19 +9,22 @@ import io.ktor.server.routing.post
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
+import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 
 private val log = KotlinLogging.logger { }
 fun Route.vilkårHotsakApi(
-    vilkårsvurderingService: VilkårsvurderingService
+    vilkårsvurderingService: VilkårsvurderingService,
 ) {
     post("/ad/vilkarsgrunnlag") {
         try {
             val vilkårsgrunnlagInput = call.receive<VilkårsgrunnlagAdDto>()
-            val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(
-                vilkårsgrunnlagInput.fnrBarn,
-                vilkårsgrunnlagInput.brilleseddel,
-                vilkårsgrunnlagInput.bestillingsdato
-            )
+            val vilkarsvurdering = withTilgangContext(call) {
+                vilkårsvurderingService.vurderVilkår(
+                    vilkårsgrunnlagInput.fnrBarn,
+                    vilkårsgrunnlagInput.brilleseddel,
+                    vilkårsgrunnlagInput.bestillingsdato
+                )
+            }
             val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
 
             val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlagInput.brillepris)

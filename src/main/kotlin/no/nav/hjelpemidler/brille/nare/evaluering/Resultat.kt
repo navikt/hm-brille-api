@@ -25,7 +25,8 @@ enum class Resultat {
         }
 
         override fun ikke(): Resultat = KANSKJE
-    };
+    },
+    ;
 
     abstract infix fun og(annen: Resultat): Resultat
     abstract infix fun eller(annen: Resultat): Resultat

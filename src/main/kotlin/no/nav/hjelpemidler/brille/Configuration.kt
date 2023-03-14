@@ -6,6 +6,7 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import no.nav.hjelpemidler.configuration.EnvironmentVariable
 import java.time.Duration
 import java.util.Locale
 
@@ -138,7 +139,6 @@ object Configuration {
 
     val locale = Locale("nb")
 
-    val azureAdProperties = AzureAdProperties()
     val dbProperties = DatabaseProperties()
     val kafkaProperties = KafkaProperties()
     val pdlProperties = PdlProperties()
@@ -148,24 +148,11 @@ object Configuration {
     val medlemskapOppslagProperties = MedlemskapOppslagProperties()
     val redisProperties = RedisProperties()
     val altinnProperties = AltinnProperties()
-    val utbetalingProperties = UtbetalingProperties()
     val slackProperties = SlackProperties()
     val electorPath = get("ELECTOR_PATH")
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
-
-    data class AllowlistProperties(
-        val restUri: String = this["allowlist-api.rest-uri"],
-    )
-
-    data class AzureAdProperties(
-        val openidConfigTokenEndpoint: String = this["AZURE_OPENID_CONFIG_TOKEN_ENDPOINT"],
-        val tenantId: String = this["AZURE_APP_TENANT_ID"],
-        val clientId: String = this["AZURE_APP_CLIENT_ID"],
-        val clientSecret: String = this["AZURE_APP_CLIENT_SECRET"],
-        val wellKnownUrl: String = this["AZURE_APP_WELL_KNOWN_URL"],
-    )
 
     data class DatabaseProperties(
         val databaseNavn: String = this["DB_DATABASE"],
@@ -195,8 +182,6 @@ object Configuration {
     )
 
     data class TokenXProperties(
-        val clientId: String = this["TOKEN_X_CLIENT_ID"],
-        val wellKnownUrl: String = this["TOKEN_X_WELL_KNOWN_URL"],
         val userclaim: String = this["userclaim"],
     )
 
@@ -230,10 +215,6 @@ object Configuration {
         val apiGWKey: String = this["ALTINN_APIGW_APIKEY"],
     )
 
-    data class UtbetalingProperties(
-        val enabledUtbetaling: Boolean = "true" == this["UTBETALING_ENABLED"],
-    )
-
     data class SlackProperties(
         val slackHook: String = this["SLACK_HOOK"],
         val environment: String = profile.toString(),
@@ -246,4 +227,7 @@ object Configuration {
     enum class Cluster {
         `PROD-GCP`, `DEV-GCP`, `LOCAL`
     }
+
+    val GRUPPE_TEAMDIGIHOT by EnvironmentVariable
+    val GRUPPE_BRILLEADMIN_BRUKERE by EnvironmentVariable
 }

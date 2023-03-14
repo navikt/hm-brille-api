@@ -1,28 +1,22 @@
 package no.nav.hjelpemidler.brille.syfohelsenettproxy
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.StubEngine
-import no.nav.hjelpemidler.brille.azuread.azureAd
 import no.nav.hjelpemidler.brille.engineFactory
+import no.nav.hjelpemidler.http.createHttpClient
+import no.nav.hjelpemidler.http.openid.azureAD
+import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -32,18 +26,10 @@ class SyfohelsenettproxyClient(
     engine: HttpClientEngine = engineFactory { StubEngine.syfohelsenettproxy() },
 ) {
     private val baseUrl = props.baseUrl
-    private val scope = props.scope
-    private val client = HttpClient(engine) {
+    private val client = createHttpClient(engine) {
         expectSuccess = true
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            }
-        }
-        install(Auth) {
-            azureAd(scope)
+        azureAD(scope = props.scope) {
+            cache(leeway = 10.seconds)
         }
     }
 
@@ -93,7 +79,7 @@ fun Route.sjekkErOptikerMedHprnr(syfohelsenettproxyClient: SyfohelsenettproxyCli
             val hprnr = call.parameters["hprnr"] ?: error("Mangler hprnr i url")
 
             val behandler =
-                runCatching { runBlocking { syfohelsenettproxyClient.hentBehandlerMedHprNummer(hprnr) } }.getOrElse {
+                runCatching { syfohelsenettproxyClient.hentBehandlerMedHprNummer(hprnr) }.getOrElse {
                     log.error(it) { "Feil oppstod ved kall mot HPR" }
                     throw SjekkOptikerPluginException(
                         HttpStatusCode.InternalServerError,

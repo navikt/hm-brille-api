@@ -1,34 +1,20 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.ResponseException
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.http.createHttpClient
 
 private val log = KotlinLogging.logger { }
 
 class EnhetsregisteretClient(props: Configuration.EnhetsregisteretProperties) {
     private val baseUrl = props.baseUrl
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            jackson {
-                registerModule(JavaTimeModule())
-                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            }
-        }
-    }
+    private val client = createHttpClient()
 
     suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet? =
         hentEnhetHelper("$baseUrl/enheter/$orgnr")

@@ -168,7 +168,7 @@ internal class VilkårApiTest {
             saksgrunnlag = emptyList()
         ),
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
-        forventetResultat: Resultat
+        forventetResultat: Resultat,
     ) {
         every {
             dagensDatoFactory()
@@ -182,7 +182,7 @@ internal class VilkårApiTest {
             pdlClient.hentPerson(vilkårsgrunnlag.fnrBarn)
         } returns lagMockPdlOppslag(fødselsdato)
 
-        every {
+        coEvery {
             medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBarn, vilkårsgrunnlag.bestillingsdato)
         } returns medlemskapResultat
 
@@ -234,7 +234,7 @@ internal class VilkårApiTest {
         høyreSfære: Double = 0.00,
         høyreSylinder: Double = 0.00,
         venstreSfære: Double = 0.00,
-        venstreSylinder: Double = 0.00
+        venstreSylinder: Double = 0.00,
     ) =
         defaultVilkårsgrunnlag.copy(
             brilleseddel = Brilleseddel(
