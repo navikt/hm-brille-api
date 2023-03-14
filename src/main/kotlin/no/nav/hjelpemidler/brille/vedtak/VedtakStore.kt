@@ -15,6 +15,7 @@ import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
@@ -108,6 +109,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                COALESCE(u1.status, u2.status) AS utbetalingsstatus,
                 vs.slettet,
                 vs.slettet_av_type
             FROM vedtak_v1 v
@@ -150,6 +152,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 satsBeskrivelse = row.string("sats_beskrivelse"),
                 behandlingsresultat = row.string("behandlingsresultat"),
                 utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                 opprettet = row.localDateTime("opprettet"),
                 slettet = row.localDateTimeOrNull("slettet"),
                 slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) }
@@ -183,6 +186,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                     COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                    COALESCE(u1.status, u2.status) AS utbetalingsstatus,
                     vs.slettet,
                     vs.slettet_av_type
                 FROM vedtak_v1 v
@@ -236,6 +240,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     satsBeskrivelse = row.string("sats_beskrivelse"),
                     behandlingsresultat = row.string("behandlingsresultat"),
                     utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                    utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                     opprettet = row.localDateTime("opprettet"),
                     slettet = row.localDateTimeOrNull("slettet"),
                     slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) }

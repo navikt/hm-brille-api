@@ -12,6 +12,7 @@ import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
@@ -38,6 +39,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                COALESCE(u1.status, u2.status) AS utbetalingsstatus,
                 vs.slettet
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
@@ -60,6 +62,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 bestillingsdato = row.localDate("bestillingsdato"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalt = row.localDateTimeOrNull("utbetalingsdato"),
+                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                 slettet = row.localDateTimeOrNull("slettet"),
             )
         }
@@ -77,6 +80,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                COALESCE(u1.status, u2.status) AS utbetalingsstatus,
                 COALESCE(u1.batch_id, u2.batch_id) AS batch_id,
                 vs.slettet,
                 vs.slettet_av,
@@ -104,6 +108,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 beløp = row.bigDecimal("belop"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
+                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                 batchId = row.stringOrNull("batch_id"),
                 slettet = row.localDateTimeOrNull("slettet"),
                 slettetAv = row.stringOrNull("slettet_av_type")?.let {
@@ -202,6 +207,7 @@ data class VedtakListe(
     val bestillingsdato: LocalDate,
     val opprettet: LocalDateTime,
     val utbetalt: LocalDateTime?,
+    val utbetalingsstatus: UtbetalingStatus?,
     val slettet: LocalDateTime?,
 )
 
@@ -214,6 +220,7 @@ data class Vedtak(
     val beløp: BigDecimal,
     val opprettet: LocalDateTime,
     val utbetalingsdato: LocalDateTime?,
+    val utbetalingsstatus: UtbetalingStatus?,
     val batchId: String?,
     val slettet: LocalDateTime?,
     val slettetAv: String?,
