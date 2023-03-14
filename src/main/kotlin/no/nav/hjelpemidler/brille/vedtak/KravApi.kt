@@ -11,6 +11,7 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 
 private val log = KotlinLogging.logger {}
 
@@ -18,6 +19,7 @@ internal fun Route.kravApi(
     vedtakService: VedtakService,
     auditService: AuditService,
     slettVedtakService: SlettVedtakService,
+    utbetalingService: UtbetalingService,
 ) {
     route("/krav") {
         post {
@@ -45,6 +47,11 @@ internal fun Route.kravApi(
 
             if (fnrInnsender != vedtak.fnrInnsender) {
                 return@delete call.respond(HttpStatusCode.Unauthorized, """{"error": "Krav kan ikke slettes av deg"}""")
+            }
+
+            val utbetaling = utbetalingService.hentUtbetalingForVedtak(vedtakId)
+            if (utbetaling != null) {
+                return@delete call.respond(HttpStatusCode.Unauthorized, """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}""")
             }
 
             auditService.lagreOppslag(
