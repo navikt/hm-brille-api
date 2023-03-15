@@ -11,7 +11,7 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.tilgang.TilgangContextElement
-import no.nav.hjelpemidler.brille.tilgang.UserPrincipal
+import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.http.openid.TokenSet
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -50,7 +50,7 @@ internal class PdlClientTest {
 
     @Test
     fun `skal kunne hente person med adressebeskyttelse hvis azure ad systembruker`() =
-        test("/mock/pdl_har_adressebeskyttelse.json", UserPrincipal.AzureAd.Systembruker(UUID.randomUUID())) { client ->
+        test("/mock/pdl_har_adressebeskyttelse.json", InnloggetBruker.AzureAd.Systembruker(UUID.randomUUID())) { client ->
             assertDoesNotThrow {
                 client.hentPerson("07121410995")
             }
@@ -58,7 +58,7 @@ internal class PdlClientTest {
 
     private fun test(
         name: String,
-        currentUser: UserPrincipal = UserPrincipal.Ingen,
+        currentUser: InnloggetBruker = InnloggetBruker.Ingen,
         block: suspend (PdlClient) -> Unit,
     ) {
         runBlocking {
