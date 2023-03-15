@@ -22,6 +22,7 @@ import no.nav.hjelpemidler.brille.rapportering.KravFilter
 import no.nav.hjelpemidler.brille.rapportering.RapportService
 import no.nav.hjelpemidler.brille.rapportering.producer
 import no.nav.hjelpemidler.brille.rapportering.toLocalDate
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakConflictException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
@@ -123,6 +124,7 @@ fun Route.adminApi(
                 val beløp: BigDecimal,
                 val opprettet: LocalDateTime,
                 val utbetalt: LocalDateTime?,
+                val utbetalingsstatus: UtbetalingStatus?,
                 val utbetalingsreferanse: String?,
                 val slettet: LocalDateTime?,
                 val slettetAv: String?,
@@ -140,6 +142,7 @@ fun Route.adminApi(
                     beløp = vedtak.beløp,
                     opprettet = vedtak.opprettet,
                     utbetalt = vedtak.utbetalingsdato,
+                    utbetalingsstatus = vedtak.utbetalingsstatus,
                     utbetalingsreferanse = vedtak.batchId,
                     slettet = vedtak.slettet,
                     slettetAv = vedtak.slettetAv,
