@@ -8,7 +8,7 @@ import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 
 class TilgangContextElement(
-    val currentUser: UserPrincipal,
+    val innloggetBruker: InnloggetBruker,
 ) : AbstractCoroutineContextElement(TilgangContextElement) {
     companion object Key : CoroutineContext.Key<TilgangContextElement>
 }
@@ -23,13 +23,13 @@ suspend fun <T> withTilgangContext(
     call: ApplicationCall,
     block: suspend CoroutineScope.() -> T,
 ): T =
-    withTilgangContext(TilgangContextElement(call.currentUser()), block)
+    withTilgangContext(TilgangContextElement(call.innloggetBruker()), block)
 
 fun CoroutineContext.tilgangContext(): TilgangContextElement =
-    this[TilgangContextElement.Key] ?: TilgangContextElement(UserPrincipal.Ingen)
+    this[TilgangContextElement.Key] ?: TilgangContextElement(InnloggetBruker.Ingen)
 
 suspend fun tilgangContext(): TilgangContextElement =
     currentCoroutineContext().tilgangContext()
 
-suspend fun currentUser(): UserPrincipal =
-    tilgangContext().currentUser
+suspend fun innloggetBruker(): InnloggetBruker =
+    tilgangContext().innloggetBruker

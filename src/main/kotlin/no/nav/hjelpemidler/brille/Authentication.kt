@@ -4,12 +4,12 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authentication
 import io.ktor.server.auth.principal
-import no.nav.hjelpemidler.brille.tilgang.AzureAdGroup
-import no.nav.hjelpemidler.brille.tilgang.AzureAdRole
-import no.nav.hjelpemidler.brille.tilgang.UserPrincipal
+import no.nav.hjelpemidler.brille.tilgang.AzureAdGruppe
+import no.nav.hjelpemidler.brille.tilgang.AzureAdRolle
+import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
 import no.nav.hjelpemidler.brille.tilgang.azureAdProvider
 import no.nav.hjelpemidler.brille.tilgang.tokenXProvider
-import no.nav.hjelpemidler.brille.tilgang.withGroupClaim
+import no.nav.hjelpemidler.brille.tilgang.withAnyGroupClaim
 import no.nav.hjelpemidler.brille.tilgang.withRoleClaim
 import java.util.UUID
 
@@ -24,21 +24,27 @@ object AuthenticationProvider {
 fun Application.installAuthentication() {
     authentication {
         tokenXProvider(AuthenticationProvider.TOKEN_X)
-        azureAdProvider(AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE) {
-            withGroupClaim(AzureAdGroup.BRILLEADMIN_BRUKERE)
+        azureAdProvider(
+            name = AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE,
+            grupperSomKreves = setOf(
+                AzureAdGruppe.TEAMDIGIHOT,
+                AzureAdGruppe.BRILLEADMIN_BRUKERE
+            )
+        ) {
+            withAnyGroupClaim(AzureAdGruppe.TEAMDIGIHOT, AzureAdGruppe.BRILLEADMIN_BRUKERE)
         }
         azureAdProvider(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER) {
-            withRoleClaim(AzureAdRole.SYSTEMBRUKER)
+            withRoleClaim(AzureAdRolle.SYSTEMBRUKER)
         }
         provider(AuthenticationProvider.TOKEN_X_LOCAL) {
             authenticate { context ->
-                context.principal(UserPrincipal.TokenX.Bruker("15084300133"))
+                context.principal(InnloggetBruker.TokenX.Bruker("15084300133"))
             }
         }
         provider(AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE_LOCAL) {
             authenticate { context ->
                 context.principal(
-                    UserPrincipal.AzureAd.Administrator(
+                    InnloggetBruker.AzureAd.Administrator(
                         objectId = UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"),
                         email = "example@example.com",
                         name = "E. X. Ample"
@@ -50,7 +56,7 @@ fun Application.installAuthentication() {
 }
 
 fun ApplicationCall.extractFnr(): String {
-    val fnrFromClaims = this.principal<UserPrincipal.TokenX.Bruker>()?.fnr
+    val fnrFromClaims = this.principal<InnloggetBruker.TokenX.Bruker>()?.fnr
     if (fnrFromClaims == null || fnrFromClaims.trim().isEmpty()) {
         throw RuntimeException("Fant ikke FNR i token")
     }
@@ -58,10 +64,10 @@ fun ApplicationCall.extractFnr(): String {
 }
 
 fun ApplicationCall.extractUUID(): UUID =
-    principal<UserPrincipal.AzureAd>()?.objectId ?: error("Fant ikke oid i token")
+    principal<InnloggetBruker.AzureAd>()?.objectId ?: error("Fant ikke oid i token")
 
 fun ApplicationCall.extractEmail(): String {
-    val emailFromClaims = this.principal<UserPrincipal.AzureAd.Administrator>()?.email
+    val emailFromClaims = this.principal<InnloggetBruker.AzureAd.Administrator>()?.email
     if (emailFromClaims == null || emailFromClaims.trim().isEmpty()) {
         error("Fant ikke email i token")
     }
@@ -69,7 +75,7 @@ fun ApplicationCall.extractEmail(): String {
 }
 
 fun ApplicationCall.extractName(): String {
-    val nameFromClaims = this.principal<UserPrincipal.AzureAd.Administrator>()?.name
+    val nameFromClaims = this.principal<InnloggetBruker.AzureAd.Administrator>()?.name
     if (nameFromClaims == null || nameFromClaims.trim().isEmpty()) {
         error("Fant ikke navn i token")
     }

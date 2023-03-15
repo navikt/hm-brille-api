@@ -5,7 +5,7 @@ import no.nav.hjelpemidler.brille.Configuration
 import java.util.EnumSet
 import java.util.UUID
 
-enum class AzureAdGroup(val objectId: UUID) {
+enum class AzureAdGruppe(val objectId: UUID) {
     /**
      * AD: teamdigihot
      */
@@ -22,8 +22,8 @@ enum class AzureAdGroup(val objectId: UUID) {
     override fun toString(): String = objectId.toString()
 
     companion object {
-        fun fra(principal: JWTPrincipal): Set<AzureAdGroup> {
-            val alle = EnumSet.allOf(AzureAdGroup::class.java)
+        fun fra(principal: JWTPrincipal): Set<AzureAdGruppe> {
+            val alle = EnumSet.allOf(AzureAdGruppe::class.java)
             return principal.getListClaim("groups", UUID::class)
                 .mapNotNull { id ->
                     alle.find {

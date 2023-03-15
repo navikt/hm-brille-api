@@ -3,24 +3,23 @@ package no.nav.hjelpemidler.brille.tilgang
 import io.ktor.server.auth.Principal
 import java.util.UUID
 
-sealed interface UserPrincipal : Principal {
-    fun kanBehandleKode6Og7(): Boolean = when {
-        this is AzureAd.Systembruker -> true
-        else -> false
-    }
+sealed interface InnloggetBruker : Principal {
+    fun kanBehandlePersonerMedAdressebeskyttelse(): Boolean = false
 
-    sealed interface TokenX : UserPrincipal {
+    sealed interface TokenX : InnloggetBruker {
         data class Bruker(
             val fnr: String,
         ) : TokenX
     }
 
-    sealed interface AzureAd : UserPrincipal {
+    sealed interface AzureAd : InnloggetBruker {
         val objectId: UUID
 
         data class Systembruker(
             override val objectId: UUID,
-        ) : AzureAd
+        ) : AzureAd {
+            override fun kanBehandlePersonerMedAdressebeskyttelse(): Boolean = true
+        }
 
         data class Administrator(
             override val objectId: UUID,
@@ -29,5 +28,5 @@ sealed interface UserPrincipal : Principal {
         ) : AzureAd
     }
 
-    object Ingen : UserPrincipal
+    object Ingen : InnloggetBruker
 }

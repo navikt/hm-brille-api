@@ -39,7 +39,7 @@ dependencies {
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // HTTP
-    implementation("no.nav.hjelpemidler.http:hm-http:v0.0.20")
+    implementation("no.nav.hjelpemidler.http:hm-http:v0.0.21")
 
     // Unleash
     implementation("io.getunleash:unleash-client-java:7.1.0")

@@ -15,7 +15,7 @@ import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentVergeEllerForelder
-import no.nav.hjelpemidler.brille.tilgang.currentUser
+import no.nav.hjelpemidler.brille.tilgang.innloggetBruker
 import no.nav.hjelpemidler.http.openid.azureAD
 import java.net.URL
 import java.util.UUID
@@ -65,7 +65,7 @@ class PdlClient(
             response.data != null -> {
                 val data = response.data!!
                 val personMedAdressebeskyttelse = block(data)
-                if (personMedAdressebeskyttelse.harAdressebeskyttelse() && !currentUser().kanBehandleKode6Og7()) {
+                if (personMedAdressebeskyttelse.harAdressebeskyttelse() && !innloggetBruker().kanBehandlePersonerMedAdressebeskyttelse()) {
                     throw PdlHarAdressebeskyttelseException()
                 }
                 PdlOppslag(personMedAdressebeskyttelse.person, jsonMapper.valueToTree(response.data))
