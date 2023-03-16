@@ -11,10 +11,11 @@ data class Behandler(
     val etternavn: String?,
 ) {
     fun navn(): String {
-        if (mellomnavn != null) {
-            return "$fornavn $mellomnavn $etternavn"
+        val parts = listOfNotNull(fornavn, mellomnavn, etternavn)
+        if (parts.isEmpty()) {
+            return "<Ukjent>"
         }
-        return "$fornavn $etternavn"
+        return parts.joinToString { it }
     }
 }
 
