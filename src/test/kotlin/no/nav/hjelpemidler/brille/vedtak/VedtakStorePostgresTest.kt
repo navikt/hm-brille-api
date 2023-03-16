@@ -42,6 +42,7 @@ internal class VedtakStorePostgresTest {
                         Vedtak(
                             fnrBarn = "12121320922",
                             fnrInnsender = "11080642360",
+                            navnInnsender = "Kronjuvel Sedat",
                             orgnr = virksomhet.orgnr,
                             bestillingsdato = LocalDate.now(),
                             brillepris = sats.beløp.toBigDecimal(),
@@ -69,6 +70,7 @@ internal class VedtakStorePostgresTest {
                         Vedtak(
                             fnrBarn = "12121314156",
                             fnrInnsender = "11080642360",
+                            navnInnsender = "Kronjuvel Sedat",
                             orgnr = virksomhet.orgnr,
                             bestillingsdato = LocalDate.now(),
                             brillepris = sats.beløp.toBigDecimal(),

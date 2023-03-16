@@ -46,6 +46,7 @@ internal class UtbetalingStorePostgresTest {
                             Vedtak(
                                 fnrBarn = "12121320922",
                                 fnrInnsender = "11080642360",
+                                navnInnsender = "Kronjuvel Sedat",
                                 orgnr = virksomhet.orgnr,
                                 bestillingsdato = LocalDate.now(),
                                 brillepris = sats.beløp.toBigDecimal(),
@@ -63,6 +64,7 @@ internal class UtbetalingStorePostgresTest {
                             Vedtak(
                                 fnrBarn = "12121320923",
                                 fnrInnsender = "11080642360",
+                                navnInnsender = "Kronjuvel Sedat",
                                 orgnr = virksomhet.orgnr,
                                 bestillingsdato = LocalDate.now(),
                                 brillepris = sats.beløp.toBigDecimal(),

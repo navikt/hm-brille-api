@@ -12,6 +12,7 @@ data class Vedtak<T>(
     val id: Long = -1,
     val fnrBarn: String,
     val fnrInnsender: String,
+    val navnInnsender: String,
     val orgnr: String,
     val bestillingsdato: LocalDate,
     val brillepris: BigDecimal,

@@ -25,7 +25,7 @@ class VedtakService(
         private val LOG = LoggerFactory.getLogger(VedtakService::class.java)
     }
 
-    suspend fun lagVedtak(fnrInnsender: String, krav: KravDto): Vedtak<Vilkårsgrunnlag> {
+    suspend fun lagVedtak(fnrInnsender: String, navnInnsender: String, krav: KravDto): Vedtak<Vilkårsgrunnlag> {
         val vilkårsgrunnlag = krav.vilkårsgrunnlag
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
             vilkårsgrunnlag.fnrBarn,
@@ -50,6 +50,7 @@ class VedtakService(
                 Vedtak(
                     fnrBarn = vilkårsgrunnlag.fnrBarn,
                     fnrInnsender = fnrInnsender,
+                    navnInnsender = navnInnsender,
                     orgnr = vilkårsgrunnlag.orgnr,
                     bestillingsdato = vilkårsgrunnlag.bestillingsdato,
                     brillepris = brillepris,
