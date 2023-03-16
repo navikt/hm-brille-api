@@ -39,6 +39,7 @@ class VedtakSlettetStorePostgresTest {
                     Vedtak(
                         fnrBarn = "12121320922",
                         fnrInnsender = "27121346262",
+                        navnInnsender = "Kronjuvel Sedat",
                         orgnr = virksomhet.orgnr,
                         bestillingsdato = LocalDate.now(),
                         brillepris = sats.beløp.toBigDecimal(),

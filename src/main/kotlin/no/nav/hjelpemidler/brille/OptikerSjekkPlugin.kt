@@ -55,7 +55,10 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
             it.helsepersonellkategori?.aktiv == true && it.helsepersonellkategori.verdi == "OP"
         } ?: false
 
+        val optikerNavn = behandler?.navn() ?: "<Ukjent>"
+
         redisClient.setErOptiker(fnrOptiker, erOptiker)
+        redisClient.setOptikerNavn(fnrOptiker, optikerNavn)
 
         return erOptiker
     }

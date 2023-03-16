@@ -9,7 +9,14 @@ data class Behandler(
     val fornavn: String?,
     val mellomnavn: String?,
     val etternavn: String?,
-)
+) {
+    fun navn(): String {
+        if (mellomnavn != null) {
+            return "$fornavn $mellomnavn $etternavn"
+        }
+        return "$fornavn $etternavn"
+    }
+}
 
 data class Godkjenning(
     val helsepersonellkategori: Kode? = null,

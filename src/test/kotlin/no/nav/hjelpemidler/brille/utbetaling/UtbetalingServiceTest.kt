@@ -41,6 +41,7 @@ class UtbetalingServiceTest {
                 id = 123456,
                 fnrBarn = "12121320922",
                 fnrInnsender = "11080642360",
+                navnInnsender = "Kronjuvel Sedat",
                 orgnr = "127627791",
                 bestillingsdato = LocalDate.now(),
                 brillepris = sats.beløp.toBigDecimal(),

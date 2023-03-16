@@ -214,7 +214,7 @@ fun Application.setupRoutes() {
                     oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, adminService, auditService, kafkaService)
-                    kravApi(vedtakService, auditService, slettVedtakService, utbetalingService)
+                    kravApi(vedtakService, auditService, slettVedtakService, utbetalingService, redisClient)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)

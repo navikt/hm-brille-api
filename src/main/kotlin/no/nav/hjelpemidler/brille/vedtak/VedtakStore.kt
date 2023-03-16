@@ -276,6 +276,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             INSERT INTO vedtak_v1 (
                 fnr_barn,
                 fnr_innsender,
+                navn_innsender,
                 orgnr,
                 bestillingsdato,
                 brillepris,
@@ -291,6 +292,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             VALUES (
                 :fnr_barn,
                 :fnr_innsender,
+                :navn_innsender,
                 :orgnr,
                 :bestillingsdato,
                 :brillepris,
@@ -310,6 +312,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             mapOf(
                 "fnr_barn" to vedtak.fnrBarn,
                 "fnr_innsender" to vedtak.fnrInnsender,
+                "navn_innsender" to vedtak.navnInnsender,
                 "orgnr" to vedtak.orgnr,
                 "bestillingsdato" to vedtak.bestillingsdato,
                 "brillepris" to vedtak.brillepris,
@@ -339,6 +342,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 v.id,
                 v.fnr_barn,
                 v.fnr_innsender,
+                v.navn_innsender,
                 v.orgnr,
                 v.bestillingsdato,
                 v.brillepris,
@@ -373,6 +377,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         id = row.long("id"),
         fnrBarn = row.string("fnr_barn"),
         fnrInnsender = row.string("fnr_innsender"),
+        navnInnsender = row.string("navn_innsender"),
         orgnr = row.string("orgnr"),
         bestillingsdato = row.localDate("bestillingsdato"),
         brillepris = row.bigDecimal("brillepris"),
@@ -401,6 +406,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 id,
                 fnr_barn,
                 fnr_innsender,
+                navn_innsender,
                 orgnr,
                 bestillingsdato,
                 brillepris,

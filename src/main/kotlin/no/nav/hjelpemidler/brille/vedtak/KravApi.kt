@@ -11,6 +11,7 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 
 private val log = KotlinLogging.logger {}
@@ -20,11 +21,13 @@ internal fun Route.kravApi(
     auditService: AuditService,
     slettVedtakService: SlettVedtakService,
     utbetalingService: UtbetalingService,
+    redisClient: RedisClient,
 ) {
     route("/krav") {
         post {
             val kravDto = call.receive<KravDto>()
             val fnrInnsender = call.extractFnr()
+            val navnInnsender = redisClient.optikerNavn(fnrInnsender) ?: "<Ukjent>"
 
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnsender,
@@ -32,7 +35,7 @@ internal fun Route.kravApi(
                 oppslagBeskrivelse = "[POST] /krav - Innsending av krav"
             )
 
-            val vedtak = vedtakService.lagVedtak(fnrInnsender, kravDto)
+            val vedtak = vedtakService.lagVedtak(fnrInnsender, navnInnsender, kravDto)
             call.respond(
                 HttpStatusCode.OK,
                 vedtak.toDto()
