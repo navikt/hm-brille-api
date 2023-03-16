@@ -56,6 +56,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
         } ?: false
 
         val optikerNavn = behandler?.navn() ?: "<Ukjent>"
+        log.info("DEBUG: optikerNavn: $optikerNavn")
 
         redisClient.setErOptiker(fnrOptiker, erOptiker)
         redisClient.setOptikerNavn(fnrOptiker, optikerNavn)
