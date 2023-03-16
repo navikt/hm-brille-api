@@ -28,7 +28,7 @@ internal fun Route.kravApi(
             val kravDto = call.receive<KravDto>()
             val fnrInnsender = call.extractFnr()
             val navnInnsender = redisClient.optikerNavn(fnrInnsender) ?: "<Ukjent>"
-            log.info("DEBUG: navnInnsender=$navnInnsender, redis=${redisClient.optikerNavn(fnrInnsender)}")
+            log.info("DEBUG: navnInnsender=$navnInnsender")
 
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnsender,
