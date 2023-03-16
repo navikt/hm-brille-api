@@ -15,7 +15,7 @@ data class Behandler(
         if (parts.isEmpty()) {
             return "<Ukjent>"
         }
-        return parts.joinToString(separator = " "){ it }
+        return parts.joinToString(separator = " ") { it }
     }
 }
 
