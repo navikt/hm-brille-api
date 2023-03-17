@@ -35,7 +35,7 @@
   "medlemskap_cluster": "dev-gcp",
   "env": {
     "REDIS_HOST": "brille-redis.teamdigihot.svc.cluster.local",
-    "GRUPPE_TEAMDIGIHOT": "00000000-0000-0000-0000-000000000000",
+    "GRUPPE_TEAMDIGIHOT": "b9340050-ccb5-4de7-9d96-0fb2d9fb38eb",
     "GRUPPE_BRILLEADMIN_BRUKERE": "1aa0caef-04cc-4446-8ed3-bbb78d59681c"
   }
 }
