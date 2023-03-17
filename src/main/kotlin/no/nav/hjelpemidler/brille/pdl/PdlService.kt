@@ -10,6 +10,9 @@ class PdlService(private val pdlClient: PdlClient) {
     suspend fun hentPerson(fnr: String): Person? {
         try {
             val pdlOppslag = pdlClient.hentPerson(fnr)
+            if (pdlOppslag.harAdressebeskyttelse()) {
+                throw PdlHarAdressebeskyttelseException()
+            }
             if (Configuration.dev) {
                 log.info {
                     "DEBUG: PDL raw result: ${jsonMapper.writeValueAsString(pdlOppslag)}"

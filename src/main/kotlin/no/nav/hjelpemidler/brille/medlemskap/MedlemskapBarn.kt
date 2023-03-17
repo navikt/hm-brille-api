@@ -78,6 +78,18 @@ class MedlemskapBarn(
 
         // Slå opp pdl informasjon om barnet
         val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
+        if (pdlResponse.harAdressebeskyttelse()) {
+            sikkerLog.info {
+                "Barn har adressebeskyttelse, returnerer positivt medlemskapsresultat"
+            }
+            val medlemskapResultat = MedlemskapResultat(
+                medlemskapBevist = true,
+                uavklartMedlemskap = false,
+                saksgrunnlag = emptyList(), // vi regner foreløpig med at vi ikke trenger noe saksgrunnlag hvis adressebeskyttelse
+            )
+            redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
+            return medlemskapResultat
+        }
         val pdlBarn = pdlResponse.data
 
         saksgrunnlag.add(
@@ -125,6 +137,11 @@ class MedlemskapBarn(
                 kotlin.runCatching {
                     // Slå opp verge / foreldre i PDL for å sammenligne folkeregistrerte adresse
                     val pdlResponseVerge = pdlClient.medlemskapHentVergeEllerForelder(fnrVergeEllerForelder)
+                    if (pdlResponseVerge.harAdressebeskyttelse()) {
+                        // vi tror ikke at dette kan skje, funksjonen skal allerede har returnert fordi barnet
+                        // alltid skal ha adressebeskyttelse hvis verge/forelder har det
+                        throw PdlHarAdressebeskyttelseException()
+                    }
                     val pdlVergeEllerForelder = pdlResponseVerge.data
 
                     saksgrunnlag.add(

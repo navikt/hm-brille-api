@@ -89,7 +89,7 @@ fun <T : Any> Set<T>.inneholderIngenAv(other: Set<T>): Boolean =
     other.isEmpty() || Sets.intersection(this, other).isEmpty()
 
 fun Verification.withAnyGroupClaim(vararg grupper: AzureAdGruppe) {
-    // fixme -> kan implementeres nåR ktor-server-auth-jwt bumper java-jwt til 4.*, da kan man lage egne verifikasjoner med predikater, foreløpig sjekker vi dette med egen kode
+    // fixme -> kan implementeres når ktor-server-auth-jwt bumper java-jwt til 4.*, da kan man lage egne verifikasjoner med predikater, foreløpig sjekker vi dette med egen kode
     // withArrayClaim("groups", group.toString())
 }
 

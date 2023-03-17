@@ -1,7 +1,5 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
-import com.expediagroup.graphql.client.jackson.types.JacksonGraphQLResponse
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -15,14 +13,10 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.PdlClient
-import no.nav.hjelpemidler.brille.pdl.PdlOppslag
-import no.nav.hjelpemidler.brille.pdl.Person
-import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
@@ -208,15 +202,6 @@ internal class VilkårApiTest {
 
             vilkårsvurdering.satsBeløp.shouldNotBeNull()
         }
-    }
-
-    private fun lagPdlOppslag(fødselsdato: String): PdlOppslag<Person?> {
-        val pdlPersonResponse = javaClass.getResourceAsStream("/mock/pdl.json").use {
-            val json = requireNotNull(it).bufferedReader().readText().replace("2014-08-15", fødselsdato)
-            jsonMapper.readValue<JacksonGraphQLResponse<HentPerson.Result?>>(json)
-        }
-
-        return PdlOppslag(pdlPersonResponse.data?.hentPerson, jsonMapper.nullNode())
     }
 
     private fun lagEksisterendeVedtak(bestillingsdato: LocalDate, fnrInnsender: String = "23456789101") =

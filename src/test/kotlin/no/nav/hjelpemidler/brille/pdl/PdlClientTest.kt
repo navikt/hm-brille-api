@@ -10,8 +10,8 @@ import io.ktor.http.headersOf
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
-import no.nav.hjelpemidler.brille.tilgang.TilgangContextElement
 import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
+import no.nav.hjelpemidler.brille.tilgang.TilgangContextElement
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.http.openid.TokenSet
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -50,7 +50,10 @@ internal class PdlClientTest {
 
     @Test
     fun `skal kunne hente person med adressebeskyttelse hvis azure ad systembruker`() =
-        test("/mock/pdl_har_adressebeskyttelse.json", InnloggetBruker.AzureAd.Systembruker(UUID.randomUUID())) { client ->
+        test(
+            "/mock/pdl_har_adressebeskyttelse.json",
+            InnloggetBruker.AzureAd.Systembruker(UUID.randomUUID())
+        ) { client ->
             assertDoesNotThrow {
                 client.hentPerson("07121410995")
             }
@@ -86,11 +89,10 @@ internal class PdlClientTest {
     }
 }
 
-fun lagMockPdlOppslag(fødselsdato: String): PdlOppslag<Person?> {
+fun lagMockPdlOppslag(fødselsdato: String): PdlOppslagPerson {
     val pdlPersonResponse = PdlClientTest::class.java.getResourceAsStream("/mock/pdl.json").use {
         val json = requireNotNull(it).bufferedReader().readText().replace("2014-08-15", fødselsdato)
         jsonMapper.readValue<JacksonGraphQLResponse<HentPerson.Result?>>(json)
     }
-
-    return PdlOppslag(pdlPersonResponse.data?.hentPerson, jsonMapper.nullNode())
+    return PdlOppslagPerson(pdlPersonResponse.data?.hentPerson, jsonMapper.nullNode())
 }
