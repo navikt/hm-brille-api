@@ -81,7 +81,12 @@ fun AuthenticationConfig.azureAdProvider(
                         name = principal.mustGet("name"),
                     )
 
-                else -> null
+                else -> {
+                    sikkerLog.warn {
+                        "Validering av Azure AD-bruker feilet, objectId: $objectId, roller: $roller, grupper: $grupper"
+                    }
+                    null
+                }
             }
         }
     }
