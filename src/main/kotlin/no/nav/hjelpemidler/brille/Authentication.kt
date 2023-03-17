@@ -24,13 +24,7 @@ object AuthenticationProvider {
 fun Application.installAuthentication() {
     authentication {
         tokenXProvider(AuthenticationProvider.TOKEN_X)
-        azureAdProvider(
-            name = AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE,
-            grupperSomKreves = setOf(
-                AzureAdGruppe.TEAMDIGIHOT,
-                AzureAdGruppe.BRILLEADMIN_BRUKERE
-            )
-        ) {
+        azureAdProvider(AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE) {
             withAnyGroupClaim(AzureAdGruppe.TEAMDIGIHOT, AzureAdGruppe.BRILLEADMIN_BRUKERE)
         }
         azureAdProvider(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER) {

@@ -2,18 +2,21 @@ package no.nav.hjelpemidler.brille.tilgang
 
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.interfaces.Verification
-import com.google.common.collect.Sets
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.http.openid.AzureADEnvironmentVariable
 import no.nav.hjelpemidler.http.openid.TokenXEnvironmentVariable
 import java.net.URL
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+
+private val log = KotlinLogging.logger { }
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 fun ApplicationCall.innloggetBruker(): InnloggetBruker =
     principal() ?: InnloggetBruker.Ingen
@@ -53,7 +56,6 @@ fun AuthenticationConfig.tokenXProvider(name: String) {
 
 fun AuthenticationConfig.azureAdProvider(
     name: String,
-    grupperSomKreves: Set<AzureAdGruppe> = emptySet(),
     block: Verification.() -> Unit = {},
 ) {
     jwt(name) {
@@ -67,26 +69,23 @@ fun AuthenticationConfig.azureAdProvider(
             val roller = AzureAdRolle.fra(principal)
             val grupper = AzureAdGruppe.fra(principal)
             when {
-                grupper.inneholderIngenAv(grupperSomKreves) -> null
+                AzureAdRolle.SYSTEMBRUKER in roller ->
+                    InnloggetBruker.AzureAd.Systembruker(
+                        objectId = objectId,
+                    )
 
-                AzureAdRolle.SYSTEMBRUKER in roller -> InnloggetBruker.AzureAd.Systembruker(
-                    objectId = objectId,
-                )
-
-                AzureAdGruppe.BRILLEADMIN_BRUKERE in grupper -> InnloggetBruker.AzureAd.Administrator(
-                    objectId = objectId,
-                    email = principal.mustGet("preferred_username"),
-                    name = principal.mustGet("name"),
-                )
+                AzureAdGruppe.TEAMDIGIHOT in grupper || AzureAdGruppe.BRILLEADMIN_BRUKERE in grupper ->
+                    InnloggetBruker.AzureAd.Administrator(
+                        objectId = objectId,
+                        email = principal.mustGet("preferred_username"),
+                        name = principal.mustGet("name"),
+                    )
 
                 else -> null
             }
         }
     }
 }
-
-fun <T : Any> Set<T>.inneholderIngenAv(other: Set<T>): Boolean =
-    other.isEmpty() || Sets.intersection(this, other).isEmpty()
 
 fun Verification.withAnyGroupClaim(vararg grupper: AzureAdGruppe) {
     // fixme -> kan implementeres når ktor-server-auth-jwt bumper java-jwt til 4.*, da kan man lage egne verifikasjoner med predikater, foreløpig sjekker vi dette med egen kode
