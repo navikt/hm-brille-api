@@ -97,9 +97,9 @@ object StubEngine {
                     ),
                     fnr = "15084300133",
                     hprNummer = null,
-                    fornavn = null,
+                    fornavn = "Sedat",
                     mellomnavn = null,
-                    etternavn = null
+                    etternavn = "Kronjuvel"
                 )
             )
         }

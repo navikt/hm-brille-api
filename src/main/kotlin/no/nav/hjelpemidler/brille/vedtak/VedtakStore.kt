@@ -15,6 +15,7 @@ import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
@@ -108,6 +109,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                 COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                 COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                COALESCE(u1.status, u2.status) AS utbetalingsstatus,
                 vs.slettet,
                 vs.slettet_av_type
             FROM vedtak_v1 v
@@ -150,6 +152,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 satsBeskrivelse = row.string("sats_beskrivelse"),
                 behandlingsresultat = row.string("behandlingsresultat"),
                 utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                 opprettet = row.localDateTime("opprettet"),
                 slettet = row.localDateTimeOrNull("slettet"),
                 slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) }
@@ -183,6 +186,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                     COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                    COALESCE(u1.status, u2.status) AS utbetalingsstatus,
                     vs.slettet,
                     vs.slettet_av_type
                 FROM vedtak_v1 v
@@ -236,6 +240,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     satsBeskrivelse = row.string("sats_beskrivelse"),
                     behandlingsresultat = row.string("behandlingsresultat"),
                     utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                    utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                     opprettet = row.localDateTime("opprettet"),
                     slettet = row.localDateTimeOrNull("slettet"),
                     slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) }
@@ -271,6 +276,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             INSERT INTO vedtak_v1 (
                 fnr_barn,
                 fnr_innsender,
+                navn_innsender,
                 orgnr,
                 bestillingsdato,
                 brillepris,
@@ -286,6 +292,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             VALUES (
                 :fnr_barn,
                 :fnr_innsender,
+                :navn_innsender,
                 :orgnr,
                 :bestillingsdato,
                 :brillepris,
@@ -305,6 +312,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             mapOf(
                 "fnr_barn" to vedtak.fnrBarn,
                 "fnr_innsender" to vedtak.fnrInnsender,
+                "navn_innsender" to vedtak.navnInnsender,
                 "orgnr" to vedtak.orgnr,
                 "bestillingsdato" to vedtak.bestillingsdato,
                 "brillepris" to vedtak.brillepris,
@@ -334,6 +342,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 v.id,
                 v.fnr_barn,
                 v.fnr_innsender,
+                v.navn_innsender,
                 v.orgnr,
                 v.bestillingsdato,
                 v.brillepris,
@@ -368,6 +377,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         id = row.long("id"),
         fnrBarn = row.string("fnr_barn"),
         fnrInnsender = row.string("fnr_innsender"),
+        navnInnsender = row.string("navn_innsender"),
         orgnr = row.string("orgnr"),
         bestillingsdato = row.localDate("bestillingsdato"),
         brillepris = row.bigDecimal("brillepris"),
@@ -396,6 +406,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 id,
                 fnr_barn,
                 fnr_innsender,
+                navn_innsender,
                 orgnr,
                 bestillingsdato,
                 brillepris,

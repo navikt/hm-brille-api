@@ -16,12 +16,12 @@ class VilkårsvurderingService(
     private val databaseContext: DatabaseContext,
     private val pdlClient: PdlClient,
     private val medlemskapBarn: MedlemskapBarn,
-    private val dagensDatoFactory: () -> LocalDate = { LocalDate.now() }
+    private val dagensDatoFactory: () -> LocalDate = { LocalDate.now() },
 ) {
     suspend fun vurderVilkår(
         fnrBarn: String,
         brilleseddel: Brilleseddel,
-        bestillingsdato: LocalDate
+        bestillingsdato: LocalDate,
     ): Vilkårsvurdering<Vilkårsgrunnlag> {
         val vedtakBarn =
             transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(fnrBarn) }

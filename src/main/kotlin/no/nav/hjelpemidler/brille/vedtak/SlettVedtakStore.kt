@@ -50,21 +50,39 @@ class SlettVedtakStorePostgres(private val sessionFactory: () -> Session) : Slet
     override fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType) = session {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO vedtak_slettet_v1
-            SELECT id,
-                   fnr_barn,
-                   fnr_innsender,
-                   orgnr,
-                   bestillingsdato,
-                   brillepris,
-                   bestillingsreferanse,
-                   vilkarsvurdering,
-                   behandlingsresultat,
-                   sats,
-                   sats_belop,
-                   sats_beskrivelse,
-                   belop,
-                   opprettet
+            INSERT INTO vedtak_slettet_v1 (
+                id,
+                fnr_barn,
+                fnr_innsender,
+                navn_innsender,
+                orgnr,
+                bestillingsdato,
+                brillepris,
+                bestillingsreferanse,
+                vilkarsvurdering,
+                behandlingsresultat,
+                sats,
+                sats_belop,
+                sats_beskrivelse,
+                belop,
+                opprettet
+            )
+            SELECT
+                id,
+                fnr_barn,
+                fnr_innsender,
+                navn_innsender,
+                orgnr,
+                bestillingsdato,
+                brillepris,
+                bestillingsreferanse,
+                vilkarsvurdering,
+                behandlingsresultat,
+                sats,
+                sats_belop,
+                sats_beskrivelse,
+                belop,
+                opprettet
             FROM vedtak_v1
             WHERE id =:id;
             DELETE FROM vedtak_v1 where id =:id;

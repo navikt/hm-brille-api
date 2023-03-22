@@ -9,7 +9,15 @@ data class Behandler(
     val fornavn: String?,
     val mellomnavn: String?,
     val etternavn: String?,
-)
+) {
+    fun navn(): String {
+        val parts = listOfNotNull(fornavn, mellomnavn, etternavn)
+        if (parts.isEmpty()) {
+            return "<Ukjent>"
+        }
+        return parts.joinToString(separator = " ") { it.lowercase().capitalize() }
+    }
+}
 
 data class Godkjenning(
     val helsepersonellkategori: Kode? = null,

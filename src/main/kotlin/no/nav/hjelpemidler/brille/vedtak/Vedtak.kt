@@ -2,6 +2,7 @@ package no.nav.hjelpemidler.brille.vedtak
 
 import kotliquery.Row
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -11,6 +12,7 @@ data class Vedtak<T>(
     val id: Long = -1,
     val fnrBarn: String,
     val fnrInnsender: String,
+    val navnInnsender: String,
     val orgnr: String,
     val bestillingsdato: LocalDate,
     val brillepris: BigDecimal,
@@ -61,6 +63,7 @@ data class OversiktVedtak(
     val satsBeskrivelse: String,
     val behandlingsresultat: String,
     val utbetalingsdato: LocalDate?,
+    val utbetalingsstatus: UtbetalingStatus?,
     val opprettet: LocalDateTime,
     val slettet: LocalDateTime?,
     val slettetAvType: SlettetAvType?,

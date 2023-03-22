@@ -73,6 +73,8 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårHotsakApi
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
+import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.configuration.LocalEnvironment
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
@@ -200,21 +202,34 @@ fun Application.setupRoutes() {
             satsApi()
             featureToggleApi(featureToggleService)
 
-            authenticate(if (Configuration.local) "local" else TOKEN_X_AUTH) {
+            authenticate(
+                when (Environment.current) {
+                    LocalEnvironment -> AuthenticationProvider.TOKEN_X_LOCAL
+                    else -> AuthenticationProvider.TOKEN_X
+                }
+            ) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
                     virksomhetApi(databaseContext, enhetsregisteretService)
                     oversiktApi(databaseContext, enhetsregisteretService)
                     innsenderApi(innsenderService)
                     vilkårApi(vilkårsvurderingService, adminService, auditService, kafkaService)
-                    kravApi(vedtakService, auditService, slettVedtakService)
+                    kravApi(vedtakService, auditService, slettVedtakService, utbetalingService, redisClient)
                 }
                 avtaleApi(avtaleService)
                 rapportApi(rapportService, altinnService)
             }
 
-            authenticate(if (Configuration.local) "local_azuread" else AZURE_AD_AUTH) {
+            authenticate(
+                when (Environment.current) {
+                    LocalEnvironment -> AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE_LOCAL
+                    else -> AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE
+                }
+            ) {
                 adminApi(adminService, slettVedtakService, enhetsregisteretService, rapportService)
+            }
+
+            authenticate(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER) {
                 vilkårHotsakApi(vilkårsvurderingService)
             }
 
@@ -263,7 +278,7 @@ fun cronjobSyncTss() {
 
 private fun kafkaConfig(
     kafkaProps: Configuration.KafkaProperties,
-    instanceId: String?
+    instanceId: String?,
 ) = KafkaConfig(
     bootstrapServers = kafkaProps.bootstrapServers,
     consumerGroupId = kafkaProps.clientId,

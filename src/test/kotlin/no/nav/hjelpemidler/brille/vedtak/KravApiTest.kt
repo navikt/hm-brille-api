@@ -19,6 +19,7 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
+import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.test.TestRouting
@@ -40,6 +41,7 @@ internal class KravApiTest {
     private val auditService = mockk<AuditService>(relaxed = true)
     private val utbetalingService = mockk<UtbetalingService>(relaxed = true)
     private val slettVedtakService = mockk<SlettVedtakService>(relaxed = true)
+    private val redisClient = mockk<RedisClient>(relaxed = true)
 
     val sessionContext = createDatabaseSessionContextWithMocks()
     val databaseContext = createDatabaseContext(sessionContext)
@@ -56,7 +58,7 @@ internal class KravApiTest {
 
     private val routing = TestRouting {
         authenticate("test") {
-            kravApi(vedtakService, auditService, slettVedtakService)
+            kravApi(vedtakService, auditService, slettVedtakService, utbetalingService, redisClient)
         }
     }
 
@@ -90,6 +92,7 @@ internal class KravApiTest {
     val mockedVedtak = Vedtak<Any>(
         fnrBarn = "12121314156",
         fnrInnsender = "15084300133",
+        navnInnsender = "Kronjuvel Sedat",
         orgnr = "123456789",
         bestillingsdato = LocalDate.now(),
         brillepris = SatsType.SATS_1.beløp.toBigDecimal(),
@@ -101,6 +104,7 @@ internal class KravApiTest {
         satsBeskrivelse = SatsType.SATS_1.beskrivelse,
         beløp = SatsType.SATS_1.beløp.toBigDecimal()
     )
+
     private fun kjørTest(
         krav: KravDto,
         vedtakForBruker: List<EksisterendeVedtak> = emptyList(),
@@ -134,7 +138,7 @@ internal class KravApiTest {
             pdlClient.hentPerson(krav.vilkårsgrunnlag.fnrBarn)
         } returns lagMockPdlOppslag(fødselsdato)
 
-        every {
+        coEvery {
             medlemskapBarn.sjekkMedlemskapBarn(krav.vilkårsgrunnlag.fnrBarn, krav.vilkårsgrunnlag.bestillingsdato)
         } returns medlemskapResultat
 

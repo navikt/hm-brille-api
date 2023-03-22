@@ -29,7 +29,7 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
     implementation("com.natpryce:konfig:1.6.10.0")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.9.3")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.10.4")
     implementation("com.github.navikt:hm-rapids-and-rivers-v2-core:202210121657")
 
     // Database
@@ -39,10 +39,10 @@ dependencies {
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // HTTP
-    implementation("no.nav.hjelpemidler.http:hm-http:v0.0.20")
+    implementation("no.nav.hjelpemidler.http:hm-http:v0.0.22")
 
     // Unleash
-    implementation("io.getunleash:unleash-client-java:6.0.1")
+    implementation("io.getunleash:unleash-client-java:7.1.0")
 
     // Ktor Shared
     val ktorVersion = "2.2.4"
@@ -74,14 +74,14 @@ dependencies {
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:3.0.5")
-    runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.2")
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.3")
     runtimeOnly("ch.qos.logback:logback-classic:1.4.5")
 
     // Redis
     implementation("redis.clients:jedis:4.3.1")
 
     // Postgres from naisjob
-    implementation("com.google.cloud.sql:postgres-socket-factory:1.6.3")
+    implementation("com.google.cloud.sql:postgres-socket-factory:1.11.0")
 
     // Testing
     testImplementation(kotlin("test"))
@@ -90,8 +90,8 @@ dependencies {
     val kotestVersion = "5.5.5"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.0")
-    testImplementation("org.testcontainers:postgresql:1.17.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
+    testImplementation("org.testcontainers:postgresql:1.17.6")
 }
 
 /*
@@ -113,10 +113,6 @@ tasks.withType<KotlinCompile> {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-}
-
-tasks.withType<Wrapper> {
-    gradleVersion = "7.4.2"
 }
 
 tasks.named("compileKotlin") {

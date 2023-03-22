@@ -27,6 +27,12 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
         jedis.setex(erOptikerKey(fnr), redisProps.hprExpirySeconds, erOptiker.toString())
     }
 
+    fun optikerNavn(fnr: String): String? = jedis.get(optikerNavnKey(fnr))
+
+    fun setOptikerNavn(fnr: String, optikerNavn: String) {
+        jedis.setex(optikerNavnKey(fnr), redisProps.hprExpirySeconds, optikerNavn)
+    }
+
     fun medlemskapBarn(fnr: String, bestillingsdato: LocalDate): MedlemskapResultat? =
         jedis.get(medlemskapBarnKey(fnr, bestillingsdato))?.let {
             jsonMapper.readValue(it, MedlemskapResultat::class.java)
@@ -54,6 +60,7 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
 }
 
 private fun erOptikerKey(fnr: String) = "fnr:$fnr:hpr:er.optiker"
+private fun optikerNavnKey(fnr: String) = "fnr:$fnr:hpr:optiker.navn"
 private fun medlemskapBarnKey(fnr: String, bestillingsdato: LocalDate) =
     "fnr:$fnr:bestillingsdato:$bestillingsdato:medlemskapbarn:resultat"
 

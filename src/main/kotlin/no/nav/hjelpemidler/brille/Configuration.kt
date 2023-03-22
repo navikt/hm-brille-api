@@ -6,6 +6,7 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import no.nav.hjelpemidler.configuration.EnvironmentVariable
 import java.time.Duration
 import java.util.Locale
 
@@ -226,4 +227,7 @@ object Configuration {
     enum class Cluster {
         `PROD-GCP`, `DEV-GCP`, `LOCAL`
     }
+
+    val GRUPPE_TEAMDIGIHOT by EnvironmentVariable
+    val GRUPPE_BRILLEADMIN_BRUKERE by EnvironmentVariable
 }

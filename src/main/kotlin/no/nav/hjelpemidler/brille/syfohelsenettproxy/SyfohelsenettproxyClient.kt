@@ -1,20 +1,14 @@
 package no.nav.hjelpemidler.brille.syfohelsenettproxy
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.SjekkOptikerPluginException
@@ -85,7 +79,7 @@ fun Route.sjekkErOptikerMedHprnr(syfohelsenettproxyClient: SyfohelsenettproxyCli
             val hprnr = call.parameters["hprnr"] ?: error("Mangler hprnr i url")
 
             val behandler =
-                runCatching { runBlocking { syfohelsenettproxyClient.hentBehandlerMedHprNummer(hprnr) } }.getOrElse {
+                runCatching { syfohelsenettproxyClient.hentBehandlerMedHprNummer(hprnr) }.getOrElse {
                     log.error(it) { "Feil oppstod ved kall mot HPR" }
                     throw SjekkOptikerPluginException(
                         HttpStatusCode.InternalServerError,

@@ -53,6 +53,7 @@ internal class KafkaServiceTest {
         val vedtak = Vedtak<Vilkårsgrunnlag>(
             fnrBarn = krav.vilkårsgrunnlag.fnrBarn,
             fnrInnsender = "28102525703",
+            navnInnsender = "Kronjuvel Sedat",
             orgnr = krav.vilkårsgrunnlag.orgnr,
             bestillingsdato = krav.vilkårsgrunnlag.bestillingsdato,
             brillepris = krav.vilkårsgrunnlag.brillepris,
