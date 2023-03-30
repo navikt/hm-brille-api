@@ -71,9 +71,9 @@ spec:
          - application: medlemskap-oppslag
            namespace: medlemskap
            cluster: {{ medlemskap_cluster }}
-        - application: medlemskap-barnebriller
-          namespace: medlemskap
-          cluster: {{ medlemskap_cluster }}
+         - application: medlemskap-barnebriller
+           namespace: medlemskap
+           cluster: {{ medlemskap_cluster }}
          - application: brille-redis
       external:
       {{#each external-hosts}}
