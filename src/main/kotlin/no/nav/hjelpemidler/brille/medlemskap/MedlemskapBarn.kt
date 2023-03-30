@@ -113,6 +113,7 @@ class MedlemskapBarn(
         // TODO: Kall LovMe
         val medlemskapResultLovMeJson = kotlin.runCatching { medlemskapClient.slåOppMedlemskapBarn(fnrBarn, bestillingsdato) }.getOrElse {
             // TODO: Some some
+            log.error(it) { "slåOppMedlemskapBarn feilet med exception" }
             throw it
         }
         saksgrunnlag.add(Saksgrunnlag(
