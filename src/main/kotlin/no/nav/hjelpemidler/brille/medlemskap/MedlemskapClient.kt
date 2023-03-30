@@ -46,6 +46,7 @@ class MedlemskapClient(
         bestillingsDato: LocalDate,
         correlationId: String = UUID.randomUUID().toString(),
     ): JsonNode {
+        log.info("DEBUG: MedlemskapClient::slåOppMedlemskapBarn correlationId=$correlationId")
         val response = client2.post(baseUrl2) {
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
@@ -57,6 +58,7 @@ class MedlemskapClient(
                 )
             )
         }
+        log.info("DEBUG: MedlemskapClient::slåOppMedlemskapBarn response=$response")
         if (response.status == HttpStatusCode.OK) {
             return response.body()
         } else {
