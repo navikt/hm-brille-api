@@ -59,12 +59,12 @@ class MedlemskapBarn(
         )
 
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
-        val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsdato)
+        /* val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsdato)
         if (medlemskapBarnCache != null) {
             log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
             sikkerLog.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
             return medlemskapBarnCache
-        }
+        } */
 
         // TODO: Sjekk med barnetrygd: hvis noen har mottatt barnetrygd for barnet så vet vi at det er medlem av
         // folketrygden og trenger trolig ikke sjekke noe annet.
