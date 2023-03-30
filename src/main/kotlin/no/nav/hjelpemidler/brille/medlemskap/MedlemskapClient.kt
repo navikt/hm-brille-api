@@ -27,10 +27,44 @@ class MedlemskapClient(
     engine: HttpClientEngine = CIO.create(),
 ) {
     private val baseUrl = props.baseUrl
+    private val baseUrl2 = props.baseUrl2
     private val client = createHttpClient(engine) {
         expectSuccess = false
         azureAD(scope = props.scope) {
             cache(leeway = 10.seconds)
+        }
+    }
+    private val client2 = createHttpClient(engine) {
+        expectSuccess = false
+        azureAD(scope = props.scope2) {
+            cache(leeway = 10.seconds)
+        }
+    }
+
+    suspend fun slåOppMedlemskapBarn(
+        fnr: String,
+        bestillingsDato: LocalDate,
+        correlationId: String = UUID.randomUUID().toString(),
+    ): JsonNode {
+        val response = client2.post(baseUrl2) {
+            header("Nav-Call-Id", correlationId)
+            header("X-Correlation-Id", correlationId)
+            contentType(Json)
+            setBody(
+                Request2(
+                    fnr = fnr,
+                    bestillingsDato = bestillingsDato,
+                )
+            )
+        }
+        if (response.status == HttpStatusCode.OK) {
+            return response.body()
+        } else {
+            val message = runCatching { response.body<String>() }.getOrElse {
+                log.warn(it) { "Klarte ikke å hente response body som string" }
+                "${response.request.method.value} ${response.request.url} ga status: ${response.status}"
+            }
+            throw StatusCodeException(HttpStatusCode.InternalServerError, "Feil i kall til medlemskap-barn: $message")
         }
     }
 
@@ -78,4 +112,9 @@ private data class RequestPeriode(
 
 private data class RequestBrukerinfo(
     val arbeidUtenforNorge: Boolean,
+)
+
+private data class Request2(
+    val fnr: String,
+    val bestillingsDato: LocalDate?,
 )

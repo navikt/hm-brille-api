@@ -3,24 +3,17 @@ package no.nav.hjelpemidler.brille.medlemskap
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import mu.KotlinLogging
-import mu.withLoggingContext
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.Barn
 import no.nav.hjelpemidler.brille.pdl.PdlClient
-import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
-import no.nav.hjelpemidler.brille.pdl.VergeEllerForelder
-import no.nav.hjelpemidler.brille.pdl.generated.enums.ForelderBarnRelasjonRolle
-import no.nav.hjelpemidler.brille.pdl.generated.enums.FullmaktsRolle
 import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Bostedsadresse
 import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.DeltBosted
-import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Folkeregistermetadata
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.writePrettyString
 import org.slf4j.MDC
 import java.time.LocalDate
-import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -116,6 +109,42 @@ class MedlemskapBarn(
             kafkaService.medlemskapFolketrygdenAvvist(fnrBarn)
             return medlemskapResultat
         }
+
+        // TODO: Kall LovMe
+        val medlemskapResultLovMeJson = kotlin.runCatching { medlemskapClient.slåOppMedlemskapBarn(fnrBarn, bestillingsdato) }.getOrElse {
+            // TODO: Some some
+            throw it
+        }
+        saksgrunnlag.add(Saksgrunnlag(
+            kilde = SaksgrunnlagKilde.LOV_ME,
+            saksgrunnlag = medlemskapResultLovMeJson,
+        ))
+
+        val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
+        log.info("Resultat mottatt fra LovMe: $medlemskapResultatLovMe")
+        if (medlemskapResultatLovMe.medlemskapBevist) {
+            redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultatLovMe)
+            if (medlemskapResultatLovMe.medlemskapBevist) kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
+            return medlemskapResultatLovMe.copy(
+                saksgrunnlag = saksgrunnlag.let { it.addAll(medlemskapResultatLovMe.saksgrunnlag); it },
+            )
+        }
+
+        // Hvis man kommer sålangt så har man sjekket alle fullmektige, verger og foreldre, og ingen både bor på samme
+        // folk.reg. adresse OG har et avklart medlemskap i folketrygden i følge LovMe-tjenesten. Vi svarer derfor at
+        // vi har antatt medlemskap bare basert på folkereg. adresse i Norge.
+        val medlemskapResultat =
+            MedlemskapResultat(
+                medlemskapBevist = false,
+                uavklartMedlemskap = true,
+                saksgrunnlag = saksgrunnlag
+            )
+        redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
+        kafkaService.medlemskapFolketrygdenAntatt(fnrBarn)
+        log.info("Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge")
+        return medlemskapResultat
+
+        /*
 
         // Vi har her det minimale vi trenger for å si "OK vi antar medlemskap". Resten av koden under forsøker å øke
         // sannsynligheten for at dette er korrekt ved å sjekk om fullmektige/verger/foreldre som bor på samme
@@ -241,6 +270,7 @@ class MedlemskapBarn(
         kafkaService.medlemskapFolketrygdenAntatt(fnrBarn)
         log.info("Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge")
         return medlemskapResultat
+        */
     }
 }
 
@@ -275,7 +305,7 @@ private fun sjekkFolkeregistrertAdresseINorge(
     return finnesFolkeregistrertAdresse
 }
 
-private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
+/* private fun prioriterFullmektigeVergerOgForeldreForSjekkMotMedlemskap(
     bestillingsdato: LocalDate,
     pdlBarn: Barn?,
 ): List<Pair<String, String>> {
@@ -426,6 +456,7 @@ private fun harSammeAdresse(
     log.info("harSammeAdresse: fant ikke noe overlappende adresse mellom barn og annen part")
     return false
 }
+*/
 
 private fun slåSammenAktiveBosteder(
     bestillingsdato: LocalDate,
@@ -461,6 +492,7 @@ private fun slåSammenAktiveBosteder(
     ).flatten()
 }
 
+/*
 private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(
     bestillingsdato: LocalDate,
     folkeregistermetadata: Folkeregistermetadata?,
@@ -476,6 +508,7 @@ private fun sjekkFolkeregistermetadataDatoerMotBestillingsdato(
                             folkeregistermetadata.gyldighetstidspunkt.toLocalDate().isBefore(bestillingsdato)
                     )
 }
+*/
 
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsdato: LocalDate, adresse: Bostedsadresse): Boolean {
     return (
@@ -490,6 +523,7 @@ private fun sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsdato: LocalDa
                     )
 }
 
+/*
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(
     bestillingsdato: LocalDate,
     adresse: no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentvergeellerforelder.Bostedsadresse,
@@ -530,3 +564,4 @@ private data class MedlemskapResultatÅrsaker(
     val svar: MedlemskapResponseResultatSvar,
     val begrunnelse: String,
 )
+*/
