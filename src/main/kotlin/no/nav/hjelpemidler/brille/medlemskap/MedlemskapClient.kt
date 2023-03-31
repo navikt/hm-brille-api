@@ -54,7 +54,7 @@ class MedlemskapClient(
             setBody(
                 Request2(
                     fnr = fnr,
-                    bestillingsDato = bestillingsDato,
+                    bestillingsdato = bestillingsDato,
                 )
             )
         }
