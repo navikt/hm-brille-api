@@ -64,9 +64,10 @@ class MedlemskapClient(
         } else {
             val message = runCatching { response.body<String>() }.getOrElse {
                 log.warn(it) { "Klarte ikke å hente response body som string" }
-                "${response.request.method.value} ${response.request.url} ga status: ${response.status}"
+                ""
             }
-            throw StatusCodeException(HttpStatusCode.InternalServerError, "Feil i kall til medlemskap-barn: $message")
+            log.error("${response.request.method.value} ${response.request.url} ga status: ${response.status}")
+            throw StatusCodeException(HttpStatusCode.InternalServerError, "Kall til medlemskap-barn ga status ${response.status}: $message")
         }
     }
 
