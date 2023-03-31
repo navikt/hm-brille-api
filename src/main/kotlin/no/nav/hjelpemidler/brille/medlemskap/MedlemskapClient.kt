@@ -118,5 +118,5 @@ private data class RequestBrukerinfo(
 
 private data class Request2(
     val fnr: String,
-    val bestillingsDato: LocalDate?,
+    val bestillingsdato: LocalDate?,
 )
