@@ -23,7 +23,8 @@
   "external-hosts": [
     "data.brreg.no",
     "pdl-api.dev-fss-pub.nais.io",
-    "hooks.slack.com"
+    "hooks.slack.com",
+    "api-gw-q1.oera.no"
   ],
   "outbound-applications": [
     "hm-mocks"
