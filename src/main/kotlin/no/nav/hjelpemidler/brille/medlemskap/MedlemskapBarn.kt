@@ -132,7 +132,7 @@ class MedlemskapBarn(
             kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
             log.info("Barnets medlemskap verifisert igjennom LovMe-tjenesten (verges-/forelders medlemskap og bolig på samme adresse)")
             return medlemskapResultatLovMe.copy(
-                saksgrunnlag = saksgrunnlag.let { it.addAll(medlemskapResultatLovMe.saksgrunnlag); it },
+                saksgrunnlag = saksgrunnlag, // Sakgrunnlaget vårt inneholder LovMe sitt grunnlag rekursivt, samt vårt egent
             )
         }
 
