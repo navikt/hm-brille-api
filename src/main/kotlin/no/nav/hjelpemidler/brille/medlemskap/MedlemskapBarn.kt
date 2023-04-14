@@ -19,10 +19,15 @@ private val log = KotlinLogging.logger {}
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 data class MedlemskapResultat(
-    val medlemskapBevist: Boolean,
-    val uavklartMedlemskap: Boolean,
+    val resultat: MedlemskapResultatResultat,
     val saksgrunnlag: List<Saksgrunnlag>,
 )
+
+enum class MedlemskapResultatResultat {
+    JA,
+    NEI,
+    UAVKLART,
+}
 
 data class Saksgrunnlag(
     val kilde: SaksgrunnlagKilde,
@@ -73,8 +78,7 @@ class MedlemskapBarn(
                 "Barn har adressebeskyttelse, returnerer positivt medlemskapsresultat"
             }
             val medlemskapResultat = MedlemskapResultat(
-                medlemskapBevist = true,
-                uavklartMedlemskap = false,
+                resultat = MedlemskapResultatResultat.JA,
                 saksgrunnlag = emptyList(), // vi regner foreløpig med at vi ikke trenger noe saksgrunnlag hvis adressebeskyttelse
             )
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
@@ -101,7 +105,7 @@ class MedlemskapBarn(
             // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
             // stopper vi opp behandling tidlig her!
             log.info("Barnet har ikke folkeregistrert adresse i Norge og vi antar derfor at hen ikke er medlem i folketrygden")
-            val medlemskapResultat = MedlemskapResultat(false, false, saksgrunnlag)
+            val medlemskapResultat = MedlemskapResultat(MedlemskapResultatResultat.NEI, saksgrunnlag)
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
             kafkaService.medlemskapFolketrygdenAvvist(fnrBarn)
             return medlemskapResultat
@@ -109,7 +113,7 @@ class MedlemskapBarn(
 
         // Kall LovMe
         val medlemskapResultLovMeJson = kotlin.runCatching {
-            medlemskapClient.slåOppMedlemskapBarn(fnrBarn, bestillingsdato)
+            medlemskapClient.slåOppMedlemskapBarn(fnrBarn, bestillingsdato, baseCorrelationId)
         }.getOrElse {
             // Logg feilmelding her og kast videre
             log.error(it) { "slåOppMedlemskapBarn feilet med exception" }
@@ -123,9 +127,9 @@ class MedlemskapBarn(
         val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
         // TODO: Remove debug logging
         log.info("DEBUG: Resultat mottatt fra LovMe: $medlemskapResultatLovMe")
-        if (medlemskapResultatLovMe.medlemskapBevist) {
+        if (medlemskapResultatLovMe.resultat == MedlemskapResultatResultat.JA) {
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultatLovMe)
-            if (medlemskapResultatLovMe.medlemskapBevist) kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
+            kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
             log.info("Barnets medlemskap verifisert igjennom LovMe-tjenesten (verges-/forelders medlemskap og bolig på samme adresse)")
             return medlemskapResultatLovMe.copy(
                 saksgrunnlag = saksgrunnlag.let { it.addAll(medlemskapResultatLovMe.saksgrunnlag); it },
@@ -137,8 +141,7 @@ class MedlemskapBarn(
         // vi har antatt medlemskap bare basert på folkereg. adresse i Norge.
         val medlemskapResultat =
             MedlemskapResultat(
-                medlemskapBevist = false,
-                uavklartMedlemskap = true,
+                resultat = MedlemskapResultatResultat.UAVKLART,
                 saksgrunnlag = saksgrunnlag
             )
         redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)

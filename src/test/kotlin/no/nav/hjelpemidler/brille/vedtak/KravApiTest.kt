@@ -16,6 +16,7 @@ import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
@@ -110,9 +111,8 @@ internal class KravApiTest {
         vedtakForBruker: List<EksisterendeVedtak> = emptyList(),
         fødselsdato: String = "2014-08-15",
         medlemskapResultat: MedlemskapResultat = MedlemskapResultat(
-            medlemskapBevist = true,
-            uavklartMedlemskap = false,
-            saksgrunnlag = emptyList()
+            resultat = MedlemskapResultatResultat.JA,
+            saksgrunnlag = emptyList(),
         ),
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
     ) {

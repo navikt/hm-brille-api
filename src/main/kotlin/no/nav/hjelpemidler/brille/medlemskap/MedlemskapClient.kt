@@ -17,7 +17,6 @@ import no.nav.hjelpemidler.brille.StatusCodeException
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.azureAD
 import java.time.LocalDate
-import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
@@ -37,7 +36,7 @@ class MedlemskapClient(
     suspend fun slåOppMedlemskapBarn(
         fnr: String,
         bestillingsDato: LocalDate,
-        correlationId: String = UUID.randomUUID().toString(),
+        correlationId: String,
     ): JsonNode {
         val response = client.post(baseUrl) {
             header("Nav-Call-Id", correlationId)
