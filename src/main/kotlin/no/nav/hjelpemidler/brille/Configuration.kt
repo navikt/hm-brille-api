@@ -46,9 +46,7 @@ object Configuration {
             "syfohelsenettproxy.rest-uri" to "http://host.docker.internal:8089/syfohelsenettproxy",
             "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "http://host.docker.internal:8089/medlemskapoppslag",
-            "medlemskap.oppslag.rest-uri-2" to "http://host.docker.internal:8089/medlemskapoppslag2",
-            "medlemskap.oppslag.scope" to "api://dev-gcp.medlemskap.medlemskap-oppslag/.default",
-            "medlemskap.oppslag.scope-2" to "api://dev-gcp.medlemskap.medlemskap-barnebriller/.default",
+            "medlemskap.oppslag.scope" to "api://dev-gcp.medlemskap.medlemskap-barnebriller/.default",
             "AZURE_OPENID_CONFIG_TOKEN_ENDPOINT" to "http://host.docker.internal:8080/default/token",
             "AZURE_APP_TENANT_ID" to "123",
             "AZURE_APP_CLIENT_ID" to "321",
@@ -74,10 +72,8 @@ object Configuration {
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
             "syfohelsenettproxy.rest-uri" to "http://hm-mocks",
             "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
-            "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.dev.nav.no/",
-            "medlemskap.oppslag.rest-uri-2" to "http://medlemskap-barnebriller.medlemskap.svc.cluster.local/barnebriller",
-            "medlemskap.oppslag.scope" to "api://dev-gcp.medlemskap.medlemskap-oppslag/.default",
-            "medlemskap.oppslag.scope-2" to "api://dev-gcp.medlemskap.medlemskap-barnebriller/.default",
+            "medlemskap.oppslag.rest-uri" to "http://medlemskap-barnebriller.medlemskap.svc.cluster.local/barnebriller",
+            "medlemskap.oppslag.scope" to "api://dev-gcp.medlemskap.medlemskap-barnebriller/.default",
             "enhetsregisteret_base_url" to "http://hm-mocks/brille/enhetsregisteret/api",
             "altinn.altinnUrl" to "https://api-gw-q1.oera.no/ekstern/altinn/api/serviceowner",
             "altinn.proxyConsumerId" to "hjelpemidlerdigitalsoknad-api-dev",
@@ -96,10 +92,8 @@ object Configuration {
             "pdl.apiScope" to "api://prod-fss.pdl.pdl-api/.default",
             "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.prod-fss-pub.nais.io",
             "syfohelsenettproxy.scope" to "api://prod-fss.teamsykmelding.syfohelsenettproxy/.default",
-            "medlemskap.oppslag.rest-uri" to "https://medlemskap-oppslag.intern.nav.no/",
-            "medlemskap.oppslag.rest-uri-2" to "http://medlemskap-barnebriller.medlemskap.svc.cluster.local/barnebriller",
-            "medlemskap.oppslag.scope" to "api://prod-gcp.medlemskap.medlemskap-oppslag/.default",
-            "medlemskap.oppslag.scope-2" to "api://prod-gcp.medlemskap.medlemskap-barnebriller/.default",
+            "medlemskap.oppslag.rest-uri" to "http://medlemskap-barnebriller.medlemskap.svc.cluster.local/barnebriller",
+            "medlemskap.oppslag.scope" to "api://prod-gcp.medlemskap.medlemskap-barnebriller/.default",
             "enhetsregisteret_base_url" to "https://data.brreg.no/enhetsregisteret/api",
             "altinn.altinnUrl" to "https://api-gw.oera.no/ekstern/altinn/api/serviceowner",
             "altinn.proxyConsumerId" to "hjelpemidlerdigitalsoknad-api-prod",
@@ -202,9 +196,7 @@ object Configuration {
 
     data class MedlemskapOppslagProperties(
         val baseUrl: String = this["medlemskap.oppslag.rest-uri"],
-        val baseUrl2: String = this["medlemskap.oppslag.rest-uri-2"],
         val scope: String = this["medlemskap.oppslag.scope"],
-        val scope2: String = this["medlemskap.oppslag.scope-2"],
     )
 
     data class RedisProperties(

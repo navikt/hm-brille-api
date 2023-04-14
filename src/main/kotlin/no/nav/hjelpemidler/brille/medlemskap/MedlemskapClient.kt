@@ -27,16 +27,9 @@ class MedlemskapClient(
     engine: HttpClientEngine = CIO.create(),
 ) {
     private val baseUrl = props.baseUrl
-    private val baseUrl2 = props.baseUrl2
     private val client = createHttpClient(engine) {
         expectSuccess = false
         azureAD(scope = props.scope) {
-            cache(leeway = 10.seconds)
-        }
-    }
-    private val client2 = createHttpClient(engine) {
-        expectSuccess = false
-        azureAD(scope = props.scope2) {
             cache(leeway = 10.seconds)
         }
     }
@@ -47,12 +40,12 @@ class MedlemskapClient(
         correlationId: String = UUID.randomUUID().toString(),
     ): JsonNode {
         log.info("DEBUG: MedlemskapClient::slåOppMedlemskapBarn correlationId=$correlationId")
-        val response = client2.post(baseUrl2) {
+        val response = client.post(baseUrl) {
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
             contentType(Json)
             setBody(
-                Request2(
+                Request(
                     fnr = fnr,
                     bestillingsdato = bestillingsDato,
                 )
@@ -70,54 +63,9 @@ class MedlemskapClient(
             throw StatusCodeException(HttpStatusCode.InternalServerError, "Kall til medlemskap-barn ga status ${response.status}: $message")
         }
     }
-
-    suspend fun slåOppMedlemskap(
-        fnr: String,
-        bestillingsDato: LocalDate,
-        correlationId: String = UUID.randomUUID().toString(),
-    ): JsonNode {
-        val response = client.post(baseUrl) {
-            header("Nav-Call-Id", correlationId)
-            header("X-Correlation-Id", correlationId)
-            contentType(Json)
-            setBody(
-                Request(
-                    fnr = fnr,
-                    førsteDagForYtelse = bestillingsDato,
-                    periode = RequestPeriode(bestillingsDato, bestillingsDato),
-                    brukerinput = RequestBrukerinfo(false),
-                )
-            )
-        }
-        if (response.status == HttpStatusCode.OK) {
-            return response.body()
-        } else {
-            val message = runCatching { response.body<String>() }.getOrElse {
-                log.warn(it) { "Klarte ikke å hente response body som string" }
-                "${response.request.method.value} ${response.request.url} ga status: ${response.status}"
-            }
-            throw StatusCodeException(HttpStatusCode.InternalServerError, "Feil i kall til medlemskap: $message")
-        }
-    }
 }
 
 private data class Request(
-    val fnr: String,
-    val førsteDagForYtelse: LocalDate,
-    val periode: RequestPeriode,
-    val brukerinput: RequestBrukerinfo,
-)
-
-private data class RequestPeriode(
-    val fom: LocalDate,
-    val tom: LocalDate,
-)
-
-private data class RequestBrukerinfo(
-    val arbeidUtenforNorge: Boolean,
-)
-
-private data class Request2(
     val fnr: String,
     val bestillingsdato: LocalDate?,
 )
