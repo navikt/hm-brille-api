@@ -107,9 +107,11 @@ class MedlemskapBarn(
             return medlemskapResultat
         }
 
-        // TODO: Kall LovMe
-        val medlemskapResultLovMeJson = kotlin.runCatching { medlemskapClient.slåOppMedlemskapBarn(fnrBarn, bestillingsdato) }.getOrElse {
-            // TODO: Some some
+        // Kall LovMe
+        val medlemskapResultLovMeJson = kotlin.runCatching {
+            medlemskapClient.slåOppMedlemskapBarn(fnrBarn, bestillingsdato)
+        }.getOrElse {
+            // Logg feilmelding her og kast videre
             log.error(it) { "slåOppMedlemskapBarn feilet med exception" }
             throw it
         }
@@ -119,10 +121,12 @@ class MedlemskapBarn(
         ))
 
         val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
-        log.info("Resultat mottatt fra LovMe: $medlemskapResultatLovMe")
+        // TODO: Remove debug logging
+        log.info("DEBUG: Resultat mottatt fra LovMe: $medlemskapResultatLovMe")
         if (medlemskapResultatLovMe.medlemskapBevist) {
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultatLovMe)
             if (medlemskapResultatLovMe.medlemskapBevist) kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
+            log.info("Barnets medlemskap verifisert igjennom LovMe-tjenesten (verges-/forelders medlemskap og bolig på samme adresse)")
             return medlemskapResultatLovMe.copy(
                 saksgrunnlag = saksgrunnlag.let { it.addAll(medlemskapResultatLovMe.saksgrunnlag); it },
             )
