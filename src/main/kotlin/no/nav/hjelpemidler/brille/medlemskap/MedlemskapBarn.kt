@@ -40,6 +40,16 @@ enum class SaksgrunnlagKilde {
     LOV_ME,
 }
 
+/**
+ * FEILSØKING PÅ TVERS AV TJENESTER:
+ *
+ * Vi lagrer hele saksgrunnlaget som genereres her og som svares ut på kall mot LovMe sin tjeneste "medlemskap-barn". På
+ * LovMe sin side lagrer de (per i dag) ikke alt av det som returneres, bare det som finner sted i en av
+ * undertjenesten (medlemskap-oppslag). For å kunne feilsøke på tvers av tjenestene må man sende LovMe correlation IDene
+ * fra saksgrunnlaget vi lagrer som er merket "correlation-id-subcall-medlemskap". Disse kan de slå opp på og undersøke
+ * hvorfor de svarte som de gjorde.
+ */
+
 class MedlemskapBarn(
     private val medlemskapClient: MedlemskapClient,
     private val pdlClient: PdlClient,
