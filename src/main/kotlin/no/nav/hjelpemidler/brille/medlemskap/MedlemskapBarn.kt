@@ -137,12 +137,13 @@ class MedlemskapBarn(
 
         val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
         if (medlemskapResultatLovMe.resultat == MedlemskapResultatResultat.JA) {
+            val medlemskapResultatLovMe = medlemskapResultatLovMe.copy(
+                saksgrunnlag = saksgrunnlag, // Sakgrunnlaget vårt inneholder LovMe sitt grunnlag rekursivt, samt vårt egent
+            )
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultatLovMe)
             kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
             log.info("Barnets medlemskap verifisert igjennom LovMe-tjenesten (verges-/forelders medlemskap og bolig på samme adresse)")
-            return medlemskapResultatLovMe.copy(
-                saksgrunnlag = saksgrunnlag, // Sakgrunnlaget vårt inneholder LovMe sitt grunnlag rekursivt, samt vårt egent
-            )
+            return medlemskapResultatLovMe
         }
 
         // Hvis man kommer sålangt så har man sjekket alle fullmektige, verger og foreldre, og ingen både bor på samme
