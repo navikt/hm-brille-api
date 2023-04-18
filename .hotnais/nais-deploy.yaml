@@ -71,7 +71,7 @@ spec:
          - application: medlemskap-oppslag
            namespace: medlemskap
            cluster: {{ medlemskap_cluster }}
-         - application: medlemskap-barnebriller
+         - application: medlemskap-barn
            namespace: medlemskap
            cluster: {{ medlemskap_cluster }}
          - application: brille-redis
