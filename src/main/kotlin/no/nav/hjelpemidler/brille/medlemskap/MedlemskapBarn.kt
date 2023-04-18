@@ -74,12 +74,12 @@ class MedlemskapBarn(
         )
 
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
-        /* val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsdato)
+        val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsdato)
         if (medlemskapBarnCache != null) {
             log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
             sikkerLog.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
             return medlemskapBarnCache
-        } */
+        }
 
         // Slå opp pdl informasjon om barnet
         val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
