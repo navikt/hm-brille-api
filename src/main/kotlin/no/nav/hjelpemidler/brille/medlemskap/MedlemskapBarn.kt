@@ -82,6 +82,7 @@ class MedlemskapBarn(
                 saksgrunnlag = emptyList(), // vi regner foreløpig med at vi ikke trenger noe saksgrunnlag hvis adressebeskyttelse
             )
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
+            kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
             return medlemskapResultat
         }
         val pdlBarn = pdlResponse.data
@@ -125,8 +126,6 @@ class MedlemskapBarn(
         ))
 
         val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
-        // TODO: Remove debug logging
-        log.info("DEBUG: Resultat mottatt fra LovMe: $medlemskapResultatLovMe")
         if (medlemskapResultatLovMe.resultat == MedlemskapResultatResultat.JA) {
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultatLovMe)
             kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
