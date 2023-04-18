@@ -110,8 +110,8 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
     write(
         listOf(
             "Avstemmingsreferanse",
-            "NAVs referanse",
             "Deres referanse",
+            "NAV sin referanse",
             "Kravbeløp",
             "Kravets dato",
             "Brillens bestillingsdato",
@@ -128,8 +128,8 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
         write(
             listOf(
                 it.batchId,
-                it.id,
                 it.bestillingsreferanse,
+                it.id,
                 beløp,
                 it.opprettet,
                 it.bestillingsdato,
