@@ -33,9 +33,5 @@ query ($ident: ID!) {
     adressebeskyttelse(historikk: false) {
       gradering
     }
-    foedsel {
-      foedselsaar
-      foedselsdato
-    }
   }
 }

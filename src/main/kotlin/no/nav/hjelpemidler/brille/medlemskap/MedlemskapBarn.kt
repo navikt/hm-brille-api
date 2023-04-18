@@ -170,9 +170,9 @@ private fun sjekkFolkeregistrertAdresseINorge(
     try {
         if (!finnesFolkeregistrertAdresse) {
             sikkerLog.info {
-                "Fant ingen folkeregistrert adresse for barn født: ${pdlBarn?.foedsel?.first()}, " +
-                " ${jsonMapper.writePrettyString(bostedsadresser)} " +
-                " ${jsonMapper.writePrettyString(deltBostedBarn)} "
+                "Fant ingen folkeregistrert adresse for barn:" +
+                " bostedsadresser=${jsonMapper.writePrettyString(bostedsadresser)} " +
+                " deltBostedBarn=${jsonMapper.writePrettyString(deltBostedBarn)} "
             }
         }
     } catch (e: Exception) {
