@@ -107,20 +107,38 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 }
 
 fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
-    write("NAV referanse; Deres referanse; Kravbeløp; Opprettet dato; Sendt til utbetaling; Dato - sendt til utbetaling; Avstemmingsreferanse; Kommentar".toByteArray())
+    write(
+        listOf(
+            "Avstemmingsreferanse",
+            "NAVs referanse",
+            "Deres referanse",
+            "Kravbeløp",
+            "Kravets dato",
+            "Brillens bestillingsdato",
+            "Sendt til utbetaling",
+            "Dato - sendt til utbetaling",
+            "Kommentar",
+        )
+            .joinToString(";")
+            .toByteArray()
+    )
     write("\n".toByteArray())
     kravlinjer.forEach {
         val beløp = "${it.beløp}".replace(".", ",")
         write(
-            (
-                "${it.id}; " +
-                    "${it.bestillingsreferanse}; " +
-                    "$beløp ; ${it.bestillingsdato}; " +
-                    "${if (it.utbetalingsdato == null) "Nei" else "Ja"}; " +
-                    "${it.utbetalingsdato} ;  " +
-                    "${it.batchId} ; " +
-                    if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else ""
-                ).toByteArray()
+            listOf(
+                it.batchId,
+                it.id,
+                it.bestillingsreferanse,
+                beløp,
+                it.opprettet,
+                it.bestillingsdato,
+                if (it.utbetalingsdato == null) "Nei" else "Ja",
+                it.utbetalingsdato,
+                if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else "",
+            )
+                .joinToString(";")
+                .toByteArray()
         )
         write("\n".toByteArray())
     }
