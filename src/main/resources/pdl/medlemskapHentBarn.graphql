@@ -37,47 +37,5 @@ query ($ident: ID!) {
       foedselsaar
       foedselsdato
     }
-    foreldreansvar(historikk: true) {
-      ansvar
-      ansvarlig
-      folkeregistermetadata {
-        gyldighetstidspunkt
-        opphoerstidspunkt
-      }
-    }
-    forelderBarnRelasjon {
-      relatertPersonsIdent
-      relatertPersonsRolle
-      minRolleForPerson
-      folkeregistermetadata {
-        gyldighetstidspunkt
-        opphoerstidspunkt
-      }
-    }
-    fullmakt(historikk: true) {
-      motpartsPersonident
-      motpartsRolle
-      omraader
-      gyldigFraOgMed
-      gyldigTilOgMed
-    }
-    vergemaalEllerFremtidsfullmakt(historikk: true) {
-      type
-      embete
-      vergeEllerFullmektig {
-        navn {
-          fornavn
-          mellomnavn
-          etternavn
-        }
-        motpartsPersonident
-        omfang
-        omfangetErInnenPersonligOmraade
-      }
-      folkeregistermetadata {
-        gyldighetstidspunkt
-        opphoerstidspunkt
-      }
-    }
   }
 }

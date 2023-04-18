@@ -15,7 +15,6 @@ import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
-import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentVergeEllerForelder
 import no.nav.hjelpemidler.brille.tilgang.innloggetBruker
 import no.nav.hjelpemidler.http.openid.azureAD
 import java.net.URL
@@ -86,10 +85,5 @@ class PdlClient(
     suspend fun medlemskapHentBarn(fnr: String): PdlOppslagBarn =
         execute(MedlemskapHentBarn(MedlemskapHentBarn.Variables(fnr))) {
             PdlOppslagBarn(it.hentPerson, jsonMapper.valueToTree(it))
-        }
-
-    suspend fun medlemskapHentVergeEllerForelder(fnr: String): PdlOppslagVergeEllerForelder =
-        execute(MedlemskapHentVergeEllerForelder(MedlemskapHentVergeEllerForelder.Variables(fnr))) {
-            PdlOppslagVergeEllerForelder(it.hentPerson, jsonMapper.valueToTree(it))
         }
 }
