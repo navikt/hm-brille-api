@@ -14,6 +14,7 @@ import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
@@ -80,8 +81,7 @@ internal class VilkårHotsakApiTest {
     @Test
     internal fun `barnet er bevist ikke medlem i folktrygden`() = kjørTest(
         medlemskapResultat = MedlemskapResultat(
-            medlemskapBevist = false,
-            uavklartMedlemskap = false,
+            resultat = MedlemskapResultatResultat.NEI,
             saksgrunnlag = emptyList()
         ),
         forventetResultat = Resultat.NEI
@@ -89,7 +89,7 @@ internal class VilkårHotsakApiTest {
 
     @Test
     internal fun `barnets medlemskap i folktrygden er uavklart`() = kjørTest(
-        medlemskapResultat = MedlemskapResultat(false, uavklartMedlemskap = true, saksgrunnlag = emptyList()),
+        medlemskapResultat = MedlemskapResultat(resultat = MedlemskapResultatResultat.UAVKLART, saksgrunnlag = emptyList()),
         forventetResultat = Resultat.JA
     )
 
@@ -148,9 +148,8 @@ internal class VilkårHotsakApiTest {
         vedtakForBruker: List<EksisterendeVedtak> = emptyList(),
         fødselsdato: String = "2014-08-15",
         medlemskapResultat: MedlemskapResultat = MedlemskapResultat(
-            medlemskapBevist = true,
-            uavklartMedlemskap = false,
-            saksgrunnlag = emptyList()
+            resultat = MedlemskapResultatResultat.JA,
+            saksgrunnlag = emptyList(),
         ),
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
         forventetResultat: Resultat,

@@ -126,7 +126,6 @@ graphql {
         queryFiles = listOf(
             file("${project.projectDir}/src/main/resources/pdl/hentPerson.graphql"),
             file("${project.projectDir}/src/main/resources/pdl/medlemskapHentBarn.graphql"),
-            file("${project.projectDir}/src/main/resources/pdl/medlemskapHentVergeEllerForelder.graphql"),
         )
         customScalars = listOf(
             GraphQLScalar("Long", "kotlin.Long", "no.nav.hjelpemidler.brille.pdl.LongConverter"),

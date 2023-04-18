@@ -10,7 +10,6 @@ sealed interface PdlOppslag<T> {
         when (this) {
             is PdlOppslagPerson -> data.harAdressebeskyttelse()
             is PdlOppslagBarn -> data.harAdressebeskyttelse()
-            is PdlOppslagVergeEllerForelder -> data.harAdressebeskyttelse()
         }
 }
 
@@ -23,8 +22,3 @@ data class PdlOppslagBarn(
     override val data: Barn?,
     override val rawData: JsonNode,
 ) : PdlOppslag<Barn?>
-
-data class PdlOppslagVergeEllerForelder(
-    override val data: VergeEllerForelder?,
-    override val rawData: JsonNode,
-) : PdlOppslag<VergeEllerForelder?>
