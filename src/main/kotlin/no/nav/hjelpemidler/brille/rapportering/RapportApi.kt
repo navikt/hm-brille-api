@@ -113,7 +113,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
             "Deres referanse",
             "NAV sin referanse",
             "Kravbeløp",
-            "Kravets dato",
+            "Dato - krav sendt inn",
             "Brillens bestillingsdato",
             "Sendt til utbetaling",
             "Dato - sendt til utbetaling",
