@@ -17,6 +17,7 @@ import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import java.io.OutputStream
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 
@@ -123,6 +124,8 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
             .toByteArray()
     )
     write("\n".toByteArray())
+
+    val formatterDatoTid = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     kravlinjer.forEach {
         val beløp = "${it.beløp}".replace(".", ",")
         write(
@@ -131,7 +134,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
                 it.bestillingsreferanse,
                 it.id,
                 beløp,
-                it.opprettet,
+                it.opprettet.format(formatterDatoTid),
                 it.bestillingsdato,
                 if (it.utbetalingsdato == null) "Nei" else "Ja",
                 it.utbetalingsdato,
