@@ -130,14 +130,14 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
         val beløp = "${it.beløp}".replace(".", ",")
         write(
             listOf(
-                it.batchId,
+                it.batchId ?: "",
                 it.bestillingsreferanse,
                 it.id,
                 beløp,
                 it.opprettet.format(formatterDatoTid),
                 it.bestillingsdato,
                 if (it.utbetalingsdato == null) "Nei" else "Ja",
-                it.utbetalingsdato,
+                it.utbetalingsdato ?: "",
                 if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else "",
             )
                 .joinToString(";")
