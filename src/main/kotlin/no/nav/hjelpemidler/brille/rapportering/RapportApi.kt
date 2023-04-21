@@ -125,7 +125,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
     )
     write("\n".toByteArray())
 
-    val formatterDatoTid = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    val formatterDatoTid = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     kravlinjer.forEach {
         val beløp = "${it.beløp}".replace(".", ",")
         write(
