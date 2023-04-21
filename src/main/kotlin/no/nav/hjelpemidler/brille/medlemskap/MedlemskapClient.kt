@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -31,6 +33,7 @@ class MedlemskapClient(
         azureAD(scope = props.scope) {
             cache(leeway = 10.seconds)
         }
+        install(HttpTimeout)
     }
 
     suspend fun slåOppMedlemskapBarn(
@@ -39,6 +42,9 @@ class MedlemskapClient(
         correlationId: String,
     ): JsonNode {
         val response = client.post(baseUrl) {
+            timeout {
+                requestTimeoutMillis = 30_000
+            }
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
             contentType(Json)
