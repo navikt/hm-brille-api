@@ -51,7 +51,7 @@ private fun adminAuditLog(method: String, uri: String, params: Map<String, Strin
             // Add all extra params
             this.putAll(params)
         }
-            .filterValues { value ->  value == null }
+            .filterValues { value ->  value != null }
             .map { (key, value) ->
                 "$key=${value.toString()}"
             }.joinToString(" ")
