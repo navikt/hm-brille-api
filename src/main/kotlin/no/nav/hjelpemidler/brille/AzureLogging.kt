@@ -44,23 +44,17 @@ private fun adminAuditLog(method: String, uri: String, params: Map<String, Strin
             "request" to uri.substring(
                 0,
                 uri.length.coerceAtMost(70)
-            )
+            ),
+            "suid" to navIdent,
+            "duid" to fnrDetGjelder,
         ).apply {
             // Add all extra params
             this.putAll(params)
-
-            // Add NAV Ident if it isn't null
-            navIdent?.let { navIdent -> this.putAll(mapOf(
-                "suid" to navIdent,
-            )) }
-
-            // Add fnrDetGjelder if it isn't null
-            fnrDetGjelder?.let { fnr -> this.putAll(mapOf(
-                "duid" to fnr,
-            )) }
-        }.map { (key, value) ->
-            "$key=${value.toString()}"
-        }.joinToString(" ")
+        }
+            .filterValues { value ->  value == null }
+            .map { (key, value) ->
+                "$key=${value.toString()}"
+            }.joinToString(" ")
     ).joinToString("|")
 
     if (Configuration.dev) {
