@@ -111,7 +111,7 @@ fun Route.adminApi(
                 "detaljer vedtak",
                 mapOf(
                     "vedtakId" to vedtakId.toString()
-                )
+                ),
             )
 
             data class Response(
@@ -168,7 +168,7 @@ fun Route.adminApi(
                 "slett vedtak",
                 mapOf(
                     "vedtakId" to vedtakId.toString()
-                )
+                ),
             )
 
             try {
@@ -240,7 +240,7 @@ fun Route.adminApi(
                     "kravFilter" to kravFilter?.toString(),
                     "fraDato" to fraDato?.toString(),
                     "tilDato" to tilDato?.toString()
-                )
+                ),
             )
 
             val kravlinjer = rapportService.hentKravlinjer(

@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - lovme-overtar-medlemskap-barn-sjekk
+      - arcsight-audit-logging-brilleadmin
 env:
   ghcr_image: ghcr.io/${{ github.repository }}/hm-brille-api:${{ github.sha }}
 jobs:
