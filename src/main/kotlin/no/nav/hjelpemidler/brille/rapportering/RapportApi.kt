@@ -100,7 +100,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
             call.respondOutputStream(
                 status = HttpStatusCode.OK,
-                contentType = ContentType.Text.CSV,
+                contentType = ContentType.Text.CSV.withParameter("charset", "utf-8"),
                 producer = producer(kravlinjer)
             )
         }

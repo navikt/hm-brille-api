@@ -270,7 +270,7 @@ fun Route.adminApi(
 
             call.respondOutputStream(
                 status = HttpStatusCode.OK,
-                contentType = ContentType.Text.CSV,
+                contentType = ContentType.Text.CSV.withParameter("charset", "utf-8"),
                 producer = producer(kravlinjer)
             )
         }
