@@ -100,7 +100,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
             call.respondOutputStream(
                 status = HttpStatusCode.OK,
-                contentType = ContentType.Text.CSV.withParameter("charset", "iso-8859-1"),
+                contentType = ContentType.Text.CSV,
                 producer = producer(kravlinjer)
             )
         }
@@ -108,6 +108,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 }
 
 fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
+    write("\uFEFF".toByteArray())
     write(
         listOf(
             "Avstemmingsreferanse",
@@ -121,9 +122,9 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
             "Kommentar",
         )
             .joinToString(";")
-            .toByteArray(Charsets.ISO_8859_1)
+            .toByteArray()
     )
-    write("\n".toByteArray(Charsets.ISO_8859_1))
+    write("\n".toByteArray())
 
     val formatterDatoTid = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     kravlinjer.forEach {
@@ -141,9 +142,9 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
                 if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else "",
             )
                 .joinToString(";")
-                .toByteArray(Charsets.ISO_8859_1)
+                .toByteArray()
         )
-        write("\n".toByteArray(Charsets.ISO_8859_1))
+        write("\n".toByteArray())
     }
 }
 
