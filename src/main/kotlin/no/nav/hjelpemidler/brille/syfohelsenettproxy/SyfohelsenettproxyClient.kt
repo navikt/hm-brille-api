@@ -115,6 +115,7 @@ fun Route.sjekkErOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
                 val fnr: String,
                 val behandler: Behandler?,
                 val erOptiker: Boolean?,
+                val navnFnrKombo: String,
             )
 
             data class Response (
@@ -138,6 +139,7 @@ fun Route.sjekkErOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
                     erOptiker = behandler?.godkjenninger?.any {
                         it.helsepersonellkategori?.aktiv == true && it.helsepersonellkategori.verdi == "OP"
                     },
+                    navnFnrKombo = "fnr=$fnr navn=${behandler?.navn()}",
                 )
             }
 
