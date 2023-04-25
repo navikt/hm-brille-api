@@ -25,6 +25,7 @@ sealed interface InnloggetBruker : Principal {
             override val objectId: UUID,
             val email: String,
             val name: String,
+            val navIdent: String,
         ) : AzureAd
     }
 
