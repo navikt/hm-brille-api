@@ -74,6 +74,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             SELECT
                 COALESCE(v.id, vs.id) AS id,
                 COALESCE(v.orgnr, vs.orgnr) AS orgnr,
+                COALESCE(v.fnr_innsender, vs.fnr_innsender) AS fnr_innsender,
                 COALESCE(v.navn_innsender, vs.navn_innsender) AS navn_innsender,
                 COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
                 COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
@@ -103,6 +104,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             Vedtak(
                 vedtakId = row.long("id"),
                 orgnr = row.string("orgnr"),
+                innsenderFnr = row.string("fnr_innsender"),
                 innsenderNavn = row.string("navn_innsender"),
                 barnsNavn = person.navn(),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
@@ -216,6 +218,7 @@ data class VedtakListe(
 data class Vedtak(
     val vedtakId: Long,
     val orgnr: String,
+    val innsenderFnr: String,
     val innsenderNavn: String,
     val barnsNavn: String,
     val bestillingsreferanse: String,

@@ -41,7 +41,8 @@ fun Application.installAuthentication() {
                     InnloggetBruker.AzureAd.Administrator(
                         objectId = UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"),
                         email = "example@example.com",
-                        name = "E. X. Ample"
+                        name = "E. X. Ample",
+                        navIdent = "X123456",
                     )
                 )
             }
@@ -74,4 +75,12 @@ fun ApplicationCall.extractName(): String {
         error("Fant ikke navn i token")
     }
     return nameFromClaims
+}
+
+fun ApplicationCall.extractNavIdent(): String {
+    val navIdentFromClaims = this.principal<InnloggetBruker.AzureAd.Administrator>()?.navIdent
+    if (navIdentFromClaims == null || navIdentFromClaims.trim().isEmpty()) {
+        error("Fant ikke navIdent i token")
+    }
+    return navIdentFromClaims
 }

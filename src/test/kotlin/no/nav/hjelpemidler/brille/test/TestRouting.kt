@@ -34,7 +34,8 @@ class TestRouting(configuration: Routing.() -> Unit) {
                             InnloggetBruker.AzureAd.Administrator(
                                 objectId = UUID.fromString("21547b88-65da-49bf-8117-075fb40e6682"),
                                 email = "example@example.com",
-                                name = "E. X. Ample"
+                                name = "E. X. Ample",
+                                navIdent = "X123456",
                             )
                         )
                     }

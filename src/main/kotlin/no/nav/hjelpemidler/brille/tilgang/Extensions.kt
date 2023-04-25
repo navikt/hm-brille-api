@@ -79,6 +79,7 @@ fun AuthenticationConfig.azureAdProvider(
                         objectId = objectId,
                         email = principal.mustGet("preferred_username"),
                         name = principal.mustGet("name"),
+                        navIdent = principal.mustGet("NAVident"),
                     )
 
                 else -> {
