@@ -170,6 +170,7 @@ fun Route.adminApi(
                 mapOf(
                     "vedtakId" to vedtakId.toString()
                 ),
+                vedtak.innsenderFnr,
             )
 
             try {
@@ -189,6 +190,13 @@ fun Route.adminApi(
             if (utbetalinger.isEmpty()) {
                 return@get call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke utbetalingen"}""")
             }
+
+            call.adminAuditLogging(
+                "detaljer utbetaling",
+                mapOf(
+                    "utbetalingsRef" to utbetalingsRef,
+                ),
+            )
 
             data class ResponseUtbetaling(
                 val vedtakId: Long,
