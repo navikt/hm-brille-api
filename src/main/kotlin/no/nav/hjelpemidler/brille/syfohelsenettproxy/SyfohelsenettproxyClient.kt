@@ -6,6 +6,7 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
@@ -73,7 +74,7 @@ class SyfohelsenettproxyClient(
     }.getOrElse { throw SyfohelsenettproxyClientException("Feil under henting av behandler data", it) }
 }
 
-fun Route.sjekkErOptikerMedHprnr(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
+fun Route.sjekkErOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
     post("/admin/sjekkErOptikerMedHprnr/{hprnr}") {
         kotlin.runCatching {
             val hprnr = call.parameters["hprnr"] ?: error("Mangler hprnr i url")
@@ -103,6 +104,50 @@ fun Route.sjekkErOptikerMedHprnr(syfohelsenettproxyClient: SyfohelsenettproxyCli
             )
         }.getOrElse {
             log.error(it) { "sjekkErOptikerMedHprnr feilet!" }
+            call.respond(HttpStatusCode.InternalServerError, it.stackTraceToString())
+        }
+    }
+    post("/admin/sjekkErOptikerMedFnre") {
+        kotlin.runCatching {
+            val fnre = call.receive<List<String>>().toSet().toList()
+
+            data class ResponseItem (
+                val fnr: String,
+                val behandler: Behandler?,
+                val erOptiker: Boolean?,
+            )
+
+            data class Response (
+                val items: List<ResponseItem>,
+            )
+
+            val responseItems = fnre.map { fnr ->
+                val behandler =
+                    runCatching { syfohelsenettproxyClient.hentBehandler(fnr) }.getOrElse {
+                        log.error(it) { "Feil oppstod ved kall mot HPR" }
+                        throw SjekkOptikerPluginException(
+                            HttpStatusCode.InternalServerError,
+                            "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
+                            it
+                        )
+                    }
+
+                ResponseItem (
+                    fnr = fnr,
+                    behandler = behandler,
+                    erOptiker = behandler?.godkjenninger?.any {
+                        it.helsepersonellkategori?.aktiv == true && it.helsepersonellkategori.verdi == "OP"
+                    },
+                )
+            }
+
+            call.respond(
+                Response(
+                    items = responseItems,
+                )
+            )
+        }.getOrElse {
+            log.error(it) { "sjekkErOptikerMedFnre feilet!" }
             call.respond(HttpStatusCode.InternalServerError, it.stackTraceToString())
         }
     }
