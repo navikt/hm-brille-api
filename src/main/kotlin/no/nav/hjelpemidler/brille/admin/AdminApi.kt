@@ -112,6 +112,7 @@ fun Route.adminApi(
                 mapOf(
                     "vedtakId" to vedtakId.toString()
                 ),
+                vedtak.innsenderFnr,
             )
 
             data class Response(
