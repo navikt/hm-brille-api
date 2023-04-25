@@ -58,7 +58,7 @@ private fun adminAuditLog(method: String, uri: String, params: Map<String, Strin
     ).joinToString("|")
 
     if (Configuration.dev) {
-        sikkerlogg.info("DEBUG: adminAuditLog log message: $message")
+        sikkerlogg.info("adminAuditLog log message: $message")
     }
 
     adminAuditLogger.info(message)
