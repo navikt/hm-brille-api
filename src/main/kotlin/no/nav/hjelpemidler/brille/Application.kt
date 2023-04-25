@@ -57,7 +57,7 @@ import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
-import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptiker
 import no.nav.hjelpemidler.brille.tss.RapporterManglendeTssIdentScheduler
 import no.nav.hjelpemidler.brille.tss.TssIdentRiver
 import no.nav.hjelpemidler.brille.tss.TssIdentService
@@ -234,7 +234,7 @@ fun Application.setupRoutes() {
             }
 
             // Admin apis
-            sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
+            sjekkErOptiker(syfohelsenettproxyClient)
         }
     }
     applicationEvents(rapid)
