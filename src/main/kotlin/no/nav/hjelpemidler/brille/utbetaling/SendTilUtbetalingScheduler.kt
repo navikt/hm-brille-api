@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
 import io.micrometer.core.instrument.Gauge
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
@@ -17,19 +18,21 @@ class SendTilUtbetalingScheduler(
     private val databaseContext: DatabaseContext,
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
-    delay: Duration = 1.hours,
+    delay: Duration = if (Configuration.dev) 3.minutes else 1.hours,
     private val dager: Long = 15,
     onlyWorkHours: Boolean = true
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
     private var maxUtbetalinger: Double = 0.0
     private var tilUtbetaling: Double = 0.0
+
     init {
         Gauge.builder("utbetalingslinjer_max", this) { this.maxUtbetalinger }
             .register(metricsConfig.registry)
         Gauge.builder("til_utbetaling_ko", this) { tilUtbetaling }
             .register(metricsConfig.registry)
     }
+
     companion object {
         private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)
     }

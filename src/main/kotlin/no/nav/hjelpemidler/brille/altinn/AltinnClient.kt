@@ -19,6 +19,8 @@ import no.nav.hjelpemidler.http.createHttpClient
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
+const val ALTINN_CLIENT_MAKS_ANTALL_RESULTATER = 1000
+
 class AltinnClient(props: Configuration.AltinnProperties) {
     private val client: HttpClient = createHttpClient {
         defaultRequest {
@@ -41,10 +43,10 @@ class AltinnClient(props: Configuration.AltinnProperties) {
                 parameters.append("serviceCode", tjeneste.kode)
                 parameters.append("serviceEdition", tjeneste.versjon.toString())
                 parameters.append("\$filter", "Type ne 'Person' and Status eq 'Active'")
-                parameters.append("\$top", "200")
+                parameters.append("\$top", ALTINN_CLIENT_MAKS_ANTALL_RESULTATER.toString()) // Default er mindre enn 200
             }
         }
-        sikkerLog.info { "Hentet avgivere med url: ${response.request.url}" }
+        sikkerLog.info { "Hentet avgivere med url: ${response.request.url} (status: ${response.status})" }
         if (response.status == HttpStatusCode.OK) {
             return response.body() ?: emptyList()
         }
