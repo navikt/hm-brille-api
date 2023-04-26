@@ -19,7 +19,7 @@ class VedtakTilUtbetalingScheduler(
     private val utbetalingService: UtbetalingService,
     private val enhetsregisteretService: EnhetsregisteretService,
     private val metricsConfig: MetricsConfig,
-    delay: Duration = 30.minutes,
+    delay: Duration = if (Configuration.dev) 2.minutes else 30.minutes,
     private val dager: Long = 14,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig) {
 
@@ -37,7 +37,8 @@ class VedtakTilUtbetalingScheduler(
     override suspend fun action() {
         vedtakKo = vedtakService.hentAntallVedtakIKø().toDouble()
 
-        val vedtakList = vedtakService.hentVedtakForUtbetaling(opprettet = LocalDate.now().minusDays(dager).atStartOfDay())
+        val vedtakList =
+            vedtakService.hentVedtakForUtbetaling(opprettet = LocalDate.now().minusDays(dager).atStartOfDay())
         LOG.info("fant ${vedtakList.size} vedtak for utbetaling")
 
         val enhetsregisterCache = mutableMapOf<String, Boolean>()
