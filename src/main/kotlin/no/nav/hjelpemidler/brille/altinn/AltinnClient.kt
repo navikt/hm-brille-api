@@ -41,7 +41,7 @@ class AltinnClient(props: Configuration.AltinnProperties) {
                 parameters.append("serviceCode", tjeneste.kode)
                 parameters.append("serviceEdition", tjeneste.versjon.toString())
                 parameters.append("\$filter", "Type ne 'Person' and Status eq 'Active'")
-                // parameters.append("\$top", "200") // Mistenker at denne skaper problemer for regnskapsførere med >200 avgivere
+                parameters.append("\$top", "1000") // Default er mindre enn 200
             }
         }
         sikkerLog.info { "Hentet avgivere med url: ${response.request.url} (status: ${response.status})" }
