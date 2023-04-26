@@ -247,60 +247,6 @@ fun Application.setupRoutes() {
 
             // Admin apis
             sjekkErOptiker(syfohelsenettproxyClient)
-
-            // FIXME: Remove again after test:
-            post("/test-api-givere") {
-                data class Request(val fnr: String)
-                data class Response(
-                    val avgivere: List<Avgiver>,
-                    val avgivereLen: Int,
-                    val avgivereFiltrert: List<Avgiver>,
-                    val avgivereFiltrertLen: Int,
-                )
-
-                val fnr = call.receive<Request>().fnr
-
-                val elapsed = measureTimeMillis {
-                    val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT)
-
-                    val deferredRequests = mutableListOf<Deferred<Organisasjonsenhet?>>()
-                    avgivere.forEach { avgiver ->
-                        val orgnr = avgiver.orgnr
-                        deferredRequests.add(async {
-                            enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
-                        })
-                    }
-
-                    val organisasjoner = deferredRequests
-                        .awaitAll()
-                        .filterNotNull()
-                        .associateBy { it.orgnr }
-
-                    val avgivereFiltrert = avgivere.filter { avgiver ->
-                        val orgnr = avgiver.orgnr
-                        val enhet = organisasjoner[orgnr]
-                        if (enhet == null) {
-                            false
-                        } else {
-                            log.info {
-                                "Hentet enhet med orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
-                            }
-                            setOf(
-                                Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER,
-                                Næringskode.BUTIKKHANDEL_MED_GULL_OG_SØLVVARER,
-                                Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
-                                Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
-                                Næringskode.ANDRE_HELSETJENESTER,
-                                Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
-                                Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE
-                            ).any { enhet.harNæringskode(it) }
-                        }
-                    }
-                    call.respond(HttpStatusCode.OK, Response(avgivere, avgivere.count(), avgivereFiltrert, avgivereFiltrert.count()))
-                }
-
-                log.info("DEBUG: avgivere henting tok ${elapsed}ms")
-            }
         }
     }
     applicationEvents(rapid)

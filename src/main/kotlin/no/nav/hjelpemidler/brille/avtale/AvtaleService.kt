@@ -6,6 +6,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.altinn.ALTINN_CLIENT_MAKS_ANTALL_RESULTATER
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.db.DatabaseContext
@@ -17,6 +18,7 @@ import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import java.time.LocalDateTime
+import java.util.UUID
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -34,6 +36,12 @@ class AvtaleService(
 
     suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avtale> {
         val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
+
+        if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {
+            val id = UUID.randomUUID()
+            sikkerLog.info("Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (fnr=$fnr, tjeneste=$tjeneste, id=$id)")
+            Slack.post("Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (se mer i sikkerlogg med id=$id)")
+        }
 
         val deferredRequests = mutableListOf<Deferred<Organisasjonsenhet?>>()
         coroutineScope {
