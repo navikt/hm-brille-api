@@ -41,10 +41,10 @@ class AltinnClient(props: Configuration.AltinnProperties) {
                 parameters.append("serviceCode", tjeneste.kode)
                 parameters.append("serviceEdition", tjeneste.versjon.toString())
                 parameters.append("\$filter", "Type ne 'Person' and Status eq 'Active'")
-                parameters.append("\$top", "200")
+                // parameters.append("\$top", "200") // Mistenker at denne skaper problemer for regnskapsførere med >200 avgivere
             }
         }
-        sikkerLog.info { "Hentet avgivere med url: ${response.request.url}" }
+        sikkerLog.info { "Hentet avgivere med url: ${response.request.url} (status: ${response.status})" }
         if (response.status == HttpStatusCode.OK) {
             return response.body() ?: emptyList()
         }
