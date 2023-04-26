@@ -25,6 +25,9 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -262,20 +265,19 @@ fun Application.setupRoutes() {
                 val elapsed = measureTimeMillis {
                     val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT)
 
-                    val organisasjoner: MutableMap<String, Organisasjonsenhet?> = mutableMapOf()
-                    runBlocking {
-                        coroutineScope {
-                            avgivere.forEach { avgiver ->
-                                launch {
-                                    val orgnr = avgiver.orgnr
-                                    val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
-                                    synchronized(organisasjoner) {
-                                        organisasjoner[orgnr] = enhet
-                                    }
-                                }
-                            }
-                        }
+                    val deferredRequests = mutableListOf<Deferred<Organisasjonsenhet?>>()
+                    avgivere.forEach { avgiver ->
+                        val orgnr = avgiver.orgnr
+                        deferredRequests.add(async {
+                            enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                        })
                     }
+
+                    val organisasjoner = deferredRequests
+                        .awaitAll()
+                        .filterNotNull()
+                        .groupBy { it.orgnr }
+                        .mapValues { it.value.firstOrNull() }
 
                     val avgivereFiltrert = avgivere.filter { avgiver ->
                         val orgnr = avgiver.orgnr
