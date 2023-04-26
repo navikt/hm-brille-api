@@ -108,7 +108,9 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 }
 
 fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
+    // Legg til en BOM-prefix i content (byte order mark) som indikerer til Microsoft Excel at filen er UTF-8
     write("\uFEFF".toByteArray())
+
     write(
         listOf(
             "Avstemmingsreferanse",
