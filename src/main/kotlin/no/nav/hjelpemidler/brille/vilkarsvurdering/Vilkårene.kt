@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
 import java.time.Month
@@ -82,12 +83,12 @@ object Vilkårene {
     ) { grunnlag ->
         val medlemskapResultat = grunnlag.medlemskapResultat
         when {
-            medlemskapResultat.medlemskapBevist -> ja(
+            medlemskapResultat.resultat == MedlemskapResultatResultat.JA -> ja(
                 "Barnet er medlem i folketrygden",
                 mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString())
             )
 
-            medlemskapResultat.uavklartMedlemskap -> ja(
+            medlemskapResultat.resultat == MedlemskapResultatResultat.UAVKLART -> ja(
                 "Barnet er antatt medlem i folketrygden basert på folkeregistrert adresse i Norge",
                 mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString())
             )

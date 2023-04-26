@@ -5,6 +5,7 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.kafka.KafkaService
+import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
@@ -69,9 +70,9 @@ class VedtakService(
         }
 
         kotlin.runCatching {
-            if (vilkårsvurdering.grunnlag.medlemskapResultat.medlemskapBevist) {
+            if (vilkårsvurdering.grunnlag.medlemskapResultat.resultat == MedlemskapResultatResultat.JA) {
                 kafkaService.medlemskapFolketrygdenBevist(vilkårsgrunnlag.fnrBarn, vedtak.id)
-            } else if (vilkårsvurdering.grunnlag.medlemskapResultat.uavklartMedlemskap) {
+            } else if (vilkårsvurdering.grunnlag.medlemskapResultat.resultat == MedlemskapResultatResultat.UAVKLART) {
                 kafkaService.medlemskapFolketrygdenAntatt(vilkårsgrunnlag.fnrBarn, vedtak.id)
             }
         }.getOrElse { cause ->

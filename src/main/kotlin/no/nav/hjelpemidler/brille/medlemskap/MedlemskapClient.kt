@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.timeout
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -17,7 +19,6 @@ import no.nav.hjelpemidler.brille.StatusCodeException
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.azureAD
 import java.time.LocalDate
-import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
@@ -32,23 +33,25 @@ class MedlemskapClient(
         azureAD(scope = props.scope) {
             cache(leeway = 10.seconds)
         }
+        install(HttpTimeout)
     }
 
-    suspend fun slåOppMedlemskap(
+    suspend fun slåOppMedlemskapBarn(
         fnr: String,
         bestillingsDato: LocalDate,
-        correlationId: String = UUID.randomUUID().toString(),
+        correlationId: String,
     ): JsonNode {
         val response = client.post(baseUrl) {
+            timeout {
+                requestTimeoutMillis = 30_000
+            }
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
             contentType(Json)
             setBody(
                 Request(
                     fnr = fnr,
-                    førsteDagForYtelse = bestillingsDato,
-                    periode = RequestPeriode(bestillingsDato, bestillingsDato),
-                    brukerinput = RequestBrukerinfo(false),
+                    bestillingsdato = bestillingsDato,
                 )
             )
         }
@@ -57,25 +60,15 @@ class MedlemskapClient(
         } else {
             val message = runCatching { response.body<String>() }.getOrElse {
                 log.warn(it) { "Klarte ikke å hente response body som string" }
-                "${response.request.method.value} ${response.request.url} ga status: ${response.status}"
+                ""
             }
-            throw StatusCodeException(HttpStatusCode.InternalServerError, "Feil i kall til medlemskap: $message")
+            log.error("${response.request.method.value} ${response.request.url} ga status: ${response.status}")
+            throw StatusCodeException(HttpStatusCode.InternalServerError, "Kall til medlemskap-barn ga status ${response.status}: $message")
         }
     }
 }
 
 private data class Request(
     val fnr: String,
-    val førsteDagForYtelse: LocalDate,
-    val periode: RequestPeriode,
-    val brukerinput: RequestBrukerinfo,
-)
-
-private data class RequestPeriode(
-    val fom: LocalDate,
-    val tom: LocalDate,
-)
-
-private data class RequestBrukerinfo(
-    val arbeidUtenforNorge: Boolean,
+    val bestillingsdato: LocalDate?,
 )

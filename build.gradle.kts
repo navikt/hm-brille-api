@@ -75,6 +75,7 @@ dependencies {
     // Logging
     implementation("io.github.microutils:kotlin-logging:3.0.5")
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.3")
+    runtimeOnly("com.papertrailapp:logback-syslog4j:1.0.0") // auditlog https://github.com/navikt/naudit
     runtimeOnly("ch.qos.logback:logback-classic:1.4.5")
 
     // Redis
@@ -126,7 +127,6 @@ graphql {
         queryFiles = listOf(
             file("${project.projectDir}/src/main/resources/pdl/hentPerson.graphql"),
             file("${project.projectDir}/src/main/resources/pdl/medlemskapHentBarn.graphql"),
-            file("${project.projectDir}/src/main/resources/pdl/medlemskapHentVergeEllerForelder.graphql"),
         )
         customScalars = listOf(
             GraphQLScalar("Long", "kotlin.Long", "no.nav.hjelpemidler.brille.pdl.LongConverter"),

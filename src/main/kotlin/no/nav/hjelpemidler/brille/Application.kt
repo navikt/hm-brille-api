@@ -3,16 +3,21 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
+import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
@@ -28,6 +33,7 @@ import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
+import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
@@ -35,6 +41,7 @@ import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
+import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
 import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
@@ -57,7 +64,7 @@ import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
-import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptikerMedHprnr
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptiker
 import no.nav.hjelpemidler.brille.tss.RapporterManglendeTssIdentScheduler
 import no.nav.hjelpemidler.brille.tss.TssIdentRiver
 import no.nav.hjelpemidler.brille.tss.TssIdentService
@@ -234,7 +241,43 @@ fun Application.setupRoutes() {
             }
 
             // Admin apis
-            sjekkErOptikerMedHprnr(syfohelsenettproxyClient)
+            sjekkErOptiker(syfohelsenettproxyClient)
+
+            // FIXME: Remove again after test:
+            post("/test-api-givere") {
+                data class Request(val fnr: String)
+                data class Response(
+                    val avgivere: List<Avgiver>,
+                    val avgivereLen: Int,
+                    val avgivereFiltrert: List<Avgiver>,
+                    val avgivereFiltrertLen: Int,
+                )
+
+                val fnr = call.receive<Request>().fnr
+
+                val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT)
+                val avgivereFiltrert = avgivere.filter { avgiver ->
+                        val orgnr = avgiver.orgnr
+                        val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                        if (enhet == null) {
+                            false
+                        } else {
+                            log.info {
+                                "Hentet enhet med orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
+                            }
+                            setOf(
+                                Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER,
+                                Næringskode.BUTIKKHANDEL_MED_GULL_OG_SØLVVARER,
+                                Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
+                                Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
+                                Næringskode.ANDRE_HELSETJENESTER,
+                                Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
+                                Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE
+                            ).any { enhet.harNæringskode(it) }
+                        }
+                    }
+                call.respond(HttpStatusCode.OK, Response(avgivere, avgivere.count(), avgivereFiltrert, avgivereFiltrert.count()))
+            }
         }
     }
     applicationEvents(rapid)

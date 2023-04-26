@@ -11,7 +11,6 @@ import java.util.EnumSet
 
 typealias Person = no.nav.hjelpemidler.brille.pdl.generated.hentperson.Person
 typealias Barn = no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Person
-typealias VergeEllerForelder = no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentvergeellerforelder.Person
 
 private fun <T> List<T>.firstOrDefault(default: T): T = firstOrNull() ?: default
 
@@ -31,12 +30,6 @@ fun Person?.harAdressebeskyttelse(): Boolean =
     }
 
 fun Barn?.harAdressebeskyttelse(): Boolean =
-    when {
-        this == null -> false
-        else -> adressebeskyttelse.map { it.gradering }.erFortrolig()
-    }
-
-fun VergeEllerForelder?.harAdressebeskyttelse(): Boolean =
     when {
         this == null -> false
         else -> adressebeskyttelse.map { it.gradering }.erFortrolig()
