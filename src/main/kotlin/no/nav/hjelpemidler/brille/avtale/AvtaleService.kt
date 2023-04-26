@@ -1,5 +1,9 @@
 package no.nav.hjelpemidler.brille.avtale
 
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.altinn.AltinnService
@@ -29,10 +33,27 @@ class AvtaleService(
         }
 
     suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avtale> {
+        val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
+
+        val deferredRequests = mutableListOf<Deferred<Organisasjonsenhet?>>()
+        coroutineScope {
+            avgivere.forEach { avgiver ->
+                val orgnr = avgiver.orgnr
+                deferredRequests.add(async {
+                    enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                })
+            }
+        }
+
+        val organisasjoner = deferredRequests
+            .awaitAll()
+            .filterNotNull()
+            .associateBy { it.orgnr }
+
         val avgivereFiltrert = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
             .filter { avgiver ->
                 val orgnr = avgiver.orgnr
-                val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                val enhet = organisasjoner[orgnr]
                 if (enhet == null) {
                     false
                 } else {

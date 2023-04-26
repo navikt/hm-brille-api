@@ -28,8 +28,6 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
@@ -276,8 +274,7 @@ fun Application.setupRoutes() {
                     val organisasjoner = deferredRequests
                         .awaitAll()
                         .filterNotNull()
-                        .groupBy { it.orgnr }
-                        .mapValues { it.value.firstOrNull() }
+                        .associateBy { it.orgnr }
 
                     val avgivereFiltrert = avgivere.filter { avgiver ->
                         val orgnr = avgiver.orgnr
