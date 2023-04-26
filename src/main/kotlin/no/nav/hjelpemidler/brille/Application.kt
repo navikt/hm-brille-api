@@ -25,6 +25,8 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
@@ -42,6 +44,7 @@ import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
+import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
 import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
@@ -86,6 +89,7 @@ import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
 import kotlin.concurrent.thread
+import kotlin.system.measureTimeMillis
 
 private val log = KotlinLogging.logger {}
 
@@ -255,10 +259,27 @@ fun Application.setupRoutes() {
 
                 val fnr = call.receive<Request>().fnr
 
-                val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT)
-                val avgivereFiltrert = avgivere.filter { avgiver ->
+                val elapsed = measureTimeMillis {
+                    val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT)
+
+                    val organisasjoner: MutableMap<String, Organisasjonsenhet?> = mutableMapOf()
+                    runBlocking {
+                        coroutineScope {
+                            avgivere.forEach { avgiver ->
+                                launch {
+                                    val orgnr = avgiver.orgnr
+                                    val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                                    synchronized(organisasjoner) {
+                                        organisasjoner[orgnr] = enhet
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    val avgivereFiltrert = avgivere.filter { avgiver ->
                         val orgnr = avgiver.orgnr
-                        val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                        val enhet = organisasjoner[orgnr]
                         if (enhet == null) {
                             false
                         } else {
@@ -276,7 +297,10 @@ fun Application.setupRoutes() {
                             ).any { enhet.harNæringskode(it) }
                         }
                     }
-                call.respond(HttpStatusCode.OK, Response(avgivere, avgivere.count(), avgivereFiltrert, avgivereFiltrert.count()))
+                    call.respond(HttpStatusCode.OK, Response(avgivere, avgivere.count(), avgivereFiltrert, avgivereFiltrert.count()))
+                }
+
+                log.info("DEBUG: avgivere henting tok ${elapsed}ms")
             }
         }
     }
