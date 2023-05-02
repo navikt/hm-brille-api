@@ -17,6 +17,7 @@ import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import java.io.OutputStream
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 
@@ -107,20 +108,43 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 }
 
 fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
-    write("NAV referanse; Deres referanse; Kravbeløp; Opprettet dato; Sendt til utbetaling; Dato - sendt til utbetaling; Avstemmingsreferanse; Kommentar".toByteArray())
+    // Legg til en BOM-prefix i content (byte order mark) som indikerer til Microsoft Excel at filen er UTF-8
+    write("\uFEFF".toByteArray())
+
+    write(
+        listOf(
+            "Avstemmingsreferanse",
+            "Deres referanse",
+            "NAV sin referanse",
+            "Kravbeløp",
+            "Dato - krav sendt inn",
+            "Brillens bestillingsdato",
+            "Sendt til utbetaling",
+            "Dato - sendt til utbetaling",
+            "Kommentar",
+        )
+            .joinToString(";")
+            .toByteArray()
+    )
     write("\n".toByteArray())
+
+    val formatterDatoTid = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     kravlinjer.forEach {
         val beløp = "${it.beløp}".replace(".", ",")
         write(
-            (
-                "${it.id}; " +
-                    "${it.bestillingsreferanse}; " +
-                    "$beløp ; ${it.bestillingsdato}; " +
-                    "${if (it.utbetalingsdato == null) "Nei" else "Ja"}; " +
-                    "${it.utbetalingsdato} ;  " +
-                    "${it.batchId} ; " +
-                    if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else ""
-                ).toByteArray()
+            listOf(
+                it.batchId ?: "",
+                it.bestillingsreferanse,
+                it.id,
+                beløp,
+                it.opprettet.format(formatterDatoTid),
+                it.bestillingsdato,
+                if (it.utbetalingsdato == null) "Nei" else "Ja",
+                it.utbetalingsdato ?: "",
+                if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else "",
+            )
+                .joinToString(";")
+                .toByteArray()
         )
         write("\n".toByteArray())
     }
