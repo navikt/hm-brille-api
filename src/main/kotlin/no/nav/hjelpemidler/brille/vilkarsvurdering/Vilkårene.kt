@@ -13,7 +13,7 @@ val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 object Vilkårene {
 
     val HarIkkeVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Ikke fått støtte til barnebriller tidligere i år",
+        beskrivelse = "Ikke fått støtte til barnebriller tidligere i bestillingsåret",
         identifikator = "HarIkkeVedtakIKalenderåret v1",
         lovReferanse = "§3",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§3",
@@ -175,7 +175,7 @@ object Vilkårene {
     }
 
     val BestillingsdatoTilbakeITid = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Bestillingsdato innenfor 6 siste mnd",
+        beskrivelse = "Bestillingsdato innenfor gyldig periode",
         identifikator = "BestillingsdatoTilbakeITid v1",
         lovReferanse = "§6",
         lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§6"
