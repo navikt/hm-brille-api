@@ -61,7 +61,7 @@ object Vilkårene {
                 "Barnet var under 18 år på bestillingsdato",
                 mapOf(
                     "bestillingsdato" to grunnlag.bestillingsdato.toString(),
-                    "barnetsAlder" to barnetsAlder.toString()
+                    "barnetsAlder" to "${grunnlag.barnetsFødselsdato} (${barnetsAlder} år)",
                 )
             )
 
@@ -69,7 +69,7 @@ object Vilkårene {
                 "Barnet var 18 år eller eldre på bestillingsdato",
                 mapOf(
                     "bestillingsdato" to grunnlag.bestillingsdato.toString(),
-                    "barnetsAlder" to barnetsAlder.toString()
+                    "barnetsAlder" to "${grunnlag.barnetsFødselsdato} (${barnetsAlder} år)",
                 )
             )
         }
