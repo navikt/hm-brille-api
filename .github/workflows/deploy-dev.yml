@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - csv-fil-fikser
+      - ikke-kast-hvis-lovme-feiler
 env:
   ghcr_image: ghcr.io/${{ github.repository }}/hm-brille-api:${{ github.sha }}
 jobs:
