@@ -125,25 +125,44 @@ class MedlemskapBarn(
         // Kall LovMe
         val medlemskapResultLovMeJson = kotlin.runCatching {
             medlemskapClient.slåOppMedlemskapBarn(fnrBarn, bestillingsdato, baseCorrelationId)
-        }.getOrElse {
-            // Logg feilmelding her og kast videre
-            log.error(it) { "slåOppMedlemskapBarn feilet med exception" }
-            throw it
-        }
-        saksgrunnlag.add(Saksgrunnlag(
-            kilde = SaksgrunnlagKilde.LOV_ME,
-            saksgrunnlag = medlemskapResultLovMeJson,
-        ))
+        }.getOrElse { e ->
+            // Logg feilmelding
+            log.error(e) { "slåOppMedlemskapBarn feilet med exception (ignorerer og antar medlemskap basert på folkereg. adresse)" }
 
-        val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
-        if (medlemskapResultatLovMe.resultat == MedlemskapResultatResultat.JA) {
-            val medlemskapResultatLovMe = medlemskapResultatLovMe.copy(
-                saksgrunnlag = saksgrunnlag, // Sakgrunnlaget vårt inneholder LovMe sitt grunnlag rekursivt, samt vårt egent
+            // Legg exception i saksgrunnlaget
+            saksgrunnlag.add(
+                Saksgrunnlag(
+                    kilde = SaksgrunnlagKilde.LOV_ME,
+                    saksgrunnlag = jsonMapper.valueToTree(
+                        mapOf(
+                            "note" to "failed to check relation membership",
+                            "exception" to e.stackTraceToString(),
+                            "correlation-id-subcall-medlemskap" to baseCorrelationId,
+                        )
+                    )
+                )
             )
-            redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultatLovMe)
-            kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
-            log.info("Barnets medlemskap verifisert igjennom LovMe-tjenesten (verges-/forelders medlemskap og bolig på samme adresse)")
-            return medlemskapResultatLovMe
+
+            // Pass-through til koden under
+            null
+        }
+
+        if (medlemskapResultLovMeJson != null) {
+            saksgrunnlag.add(Saksgrunnlag(
+                kilde = SaksgrunnlagKilde.LOV_ME,
+                saksgrunnlag = medlemskapResultLovMeJson,
+            ))
+
+            val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
+            if (medlemskapResultatLovMe.resultat == MedlemskapResultatResultat.JA) {
+                val medlemskapResultatLovMeMedRettSaksgrunnlag = medlemskapResultatLovMe.copy(
+                    saksgrunnlag = saksgrunnlag, // Sakgrunnlaget vårt inneholder LovMe sitt grunnlag rekursivt, samt vårt egent
+                )
+                redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultatLovMeMedRettSaksgrunnlag)
+                kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
+                log.info("Barnets medlemskap verifisert igjennom LovMe-tjenesten (verges-/forelders medlemskap og bolig på samme adresse)")
+                return medlemskapResultatLovMeMedRettSaksgrunnlag
+            }
         }
 
         // Hvis man kommer sålangt så har man sjekket alle fullmektige, verger og foreldre, og ingen både bor på samme
