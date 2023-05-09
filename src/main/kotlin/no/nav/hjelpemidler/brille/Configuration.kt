@@ -61,7 +61,7 @@ object Configuration {
             "REDIS_HOST" to "localhost",
             "REDIS_PASSWORD" to "",
             "SLACK_HOOK" to "http://dummy",
-            "hostak.apiUrl" to "http://host.docker.internal:8089/hotsak",
+            "hotsak.apiUrl" to "http://host.docker.internal:8089/hotsak",
             "hotsak.apiScope" to "api://dev-gcp.hotsak.hotsak-api/.default",
         )
     )
@@ -191,7 +191,7 @@ object Configuration {
     )
 
     data class HotsakApiProperties(
-        val baseUrl: String = this["hostak.apiUrl"],
+        val baseUrl: String = this["hotsak.apiUrl"],
         val scope: String = this["hotsak.apiScope"],
     )
 
