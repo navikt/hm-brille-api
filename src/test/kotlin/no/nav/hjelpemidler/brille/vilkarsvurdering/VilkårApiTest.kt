@@ -13,6 +13,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
+import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
@@ -29,6 +30,7 @@ import java.time.LocalDate
 
 internal class VilkårApiTest {
     private val pdlClient = mockk<PdlClient>()
+    private val hotsakClient = mockk<HotsakClient>()
     private val medlemskapBarn = mockk<MedlemskapBarn>()
     private val dagensDatoFactory = mockk<() -> LocalDate>()
 
@@ -38,6 +40,7 @@ internal class VilkårApiTest {
     private val vilkårsvurderingService = VilkårsvurderingService(
         databaseContext,
         pdlClient,
+        hotsakClient,
         medlemskapBarn,
         dagensDatoFactory
     )
@@ -98,7 +101,10 @@ internal class VilkårApiTest {
 
     @Test
     internal fun `barnets medlemskap i folktrygden er uavklart`() = kjørTest(
-        medlemskapResultat = MedlemskapResultat(resultat = MedlemskapResultatResultat.UAVKLART, saksgrunnlag = emptyList()),
+        medlemskapResultat = MedlemskapResultat(
+            resultat = MedlemskapResultatResultat.UAVKLART,
+            saksgrunnlag = emptyList()
+        ),
         forventetResultat = Resultat.JA
     )
 

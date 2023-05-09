@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
+import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PdlClient
@@ -15,6 +16,7 @@ private val log = KotlinLogging.logger {}
 class VilkårsvurderingService(
     private val databaseContext: DatabaseContext,
     private val pdlClient: PdlClient,
+    private val hotsakClient: HotsakClient,
     private val medlemskapBarn: MedlemskapBarn,
     private val dagensDatoFactory: () -> LocalDate = { LocalDate.now() },
 ) {
@@ -22,6 +24,7 @@ class VilkårsvurderingService(
         fnrBarn: String,
         brilleseddel: Brilleseddel,
         bestillingsdato: LocalDate,
+        sjekkHotsakVedtak: Boolean = false
     ): Vilkårsvurdering<Vilkårsgrunnlag> {
         val vedtakBarn =
             transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(fnrBarn) }
@@ -34,9 +37,14 @@ class VilkårsvurderingService(
             medlemskapResultat = medlemskapResultat,
             brilleseddel = brilleseddel,
             bestillingsdato = bestillingsdato,
-            dagensDato = dagensDatoFactory()
+            dagensDato = dagensDatoFactory(),
+            eksisterendeVedtakDatoHotsak = if (sjekkHotsakVedtak) hotsakClient.hentEksisterendeVedtaksDato(
+                fnrBarn,
+                bestillingsdato
+            ) else null
         )
-        val vilkårsvurdering = vurderVilkår(vilkårsgrunnlag, Vilkårene.Brille)
+        val vilkårsvurdering =
+            vurderVilkår(vilkårsgrunnlag, if (sjekkHotsakVedtak) Vilkårene.BrilleV2 else Vilkårene.Brille)
         if (!Configuration.prod) {
             log.info {
                 "Resultat av vilkårsvurdering: ${vilkårsvurdering.toJson()}"

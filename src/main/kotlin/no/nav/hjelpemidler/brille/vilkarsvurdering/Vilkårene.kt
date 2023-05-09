@@ -12,6 +12,7 @@ val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 
 object Vilkårene {
 
+
     val HarIkkeVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Ikke fått støtte til barnebriller tidligere i bestillingsåret",
         identifikator = "HarIkkeVedtakIKalenderåret v1",
@@ -38,6 +39,36 @@ object Vilkårene {
                 "Barnet har allerede vedtak om brille i kalenderåret",
                 mapOf(
                     "eksisterendeVedtakDato" to eksisterendeVedtakDato,
+                    "bestillingsdato" to grunnlag.bestillingsdato.toString()
+                ),
+            )
+        }
+    }
+
+    val HarIkkeHotsakVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
+        beskrivelse = "Ikke fått støtte til barnebriller gjennom manuell søknad tidligere i bestillingsåret",
+        identifikator = "HarIkkeManueltVedtakIKalenderåret v1",
+        lovReferanse = "§ 3",
+        lovdataLenke = "https://lovdata.no/LTI/forskrift/2022-07-19-1364/§3",
+    ) { grunnlag ->
+
+        val harIkkeVedtakIKalenderåret = when (grunnlag.eksisterendeVedtakDatoHotsak) {
+            null -> true
+            else -> false
+        }
+
+        when (harIkkeVedtakIKalenderåret) {
+            true -> {
+                ja(
+                    "Barnet har ikke vedtak om brille i kalenderåret",
+                    mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString())
+                )
+            }
+
+            false -> nei(
+                "Barnet har allerede vedtak om brille i kalenderåret",
+                mapOf(
+                    "eksisterendeVedtakDato" to grunnlag.eksisterendeVedtakDatoHotsak.toString(),
                     "bestillingsdato" to grunnlag.bestillingsdato.toString()
                 ),
             )
@@ -201,13 +232,23 @@ object Vilkårene {
     }
 
     val Brille = (
-        HarIkkeVedtakIKalenderåret og
-            Under18ÅrPåBestillingsdato og
-            MedlemAvFolketrygden og
-            Brillestyrke og
-            Bestillingsdato og
-            BestillingsdatoTilbakeITid
-        ).med("Brille_v1", "Personen oppfyller vilkår for krav om barnebriller")
+            HarIkkeVedtakIKalenderåret og
+                    Under18ÅrPåBestillingsdato og
+                    MedlemAvFolketrygden og
+                    Brillestyrke og
+                    Bestillingsdato og
+                    BestillingsdatoTilbakeITid
+            ).med("Brille_v1", "Personen oppfyller vilkår for krav om barnebriller")
+
+    val BrilleV2 = (
+            HarIkkeVedtakIKalenderåret og
+                    Under18ÅrPåBestillingsdato og
+                    MedlemAvFolketrygden og
+                    Brillestyrke og
+                    Bestillingsdato og
+                    BestillingsdatoTilbakeITid og
+                    HarIkkeHotsakVedtakIKalenderåret
+            ).med("Brille_v1", "Personen oppfyller vilkår for krav om barnebriller")
 
     private fun LocalDate.formatert(): String =
         this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))

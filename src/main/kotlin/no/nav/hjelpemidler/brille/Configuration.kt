@@ -28,6 +28,8 @@ object Configuration {
             "cronjob.gcp.project" to "",
             "cronjob.gcp.region" to "",
             "cronjob.gcp.dbinstance" to "",
+            "hotsak.apiUrl" to "http://host.docker.internal:8089/hotsak",
+            "hotsak.apiScope" to "api://dev-gcp.hotsak.hotsak-api/.default",
         )
     )
 
@@ -59,6 +61,8 @@ object Configuration {
             "REDIS_HOST" to "localhost",
             "REDIS_PASSWORD" to "",
             "SLACK_HOOK" to "http://dummy",
+            "hostak.apiUrl" to "http://host.docker.internal:8089/hotsak",
+            "hotsak.apiScope" to "api://dev-gcp.hotsak.hotsak-api/.default",
         )
     )
 
@@ -80,6 +84,8 @@ object Configuration {
             "cronjob.gcp.project" to "teamdigihot-dev-9705",
             "cronjob.gcp.region" to "europe-north1",
             "cronjob.gcp.dbinstance" to "hm-brille-api-db-dev",
+            "hotsak.apiUrl" to "http://hm-saksbehandling.teamdigihot.svc.cluster.local/api",
+            "hotsak.apiScope" to "api://dev-gcp.teamdigihot.hm-saksbehandling/.default",
         )
     )
 
@@ -100,6 +106,8 @@ object Configuration {
             "cronjob.gcp.project" to "teamdigihot-prod-6f0d",
             "cronjob.gcp.region" to "europe-north1",
             "cronjob.gcp.dbinstance" to "hm-brille-api-db-prod",
+            "hotsak.apiUrl" to "http://hm-saksbehandling.teamdigihot.svc.cluster.local/api",
+            "hotsak.apiScope" to "api://prod-gcp.teamdigihot.hm-saksbehandling/.default",
         )
     )
 
@@ -150,6 +158,7 @@ object Configuration {
     val altinnProperties = AltinnProperties()
     val slackProperties = SlackProperties()
     val electorPath = get("ELECTOR_PATH")
+    val hotsakApiProperties = HotsakApiProperties()
 
     operator fun get(key: String): String = config[Key(key, stringType)]
     fun getOrNull(key: String): String? = config.getOrNull(Key(key, stringType))
@@ -179,6 +188,11 @@ object Configuration {
     data class PdlProperties(
         val baseUrl: String = this["pdl.graphql-uri"],
         val scope: String = this["pdl.apiScope"],
+    )
+
+    data class HotsakApiProperties(
+        val baseUrl: String = this["hostak.apiUrl"],
+        val scope: String = this["hotsak.apiScope"],
     )
 
     data class TokenXProperties(

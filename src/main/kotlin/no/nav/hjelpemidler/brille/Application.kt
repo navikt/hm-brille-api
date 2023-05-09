@@ -48,6 +48,7 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
 import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
+import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
@@ -155,6 +156,7 @@ fun Application.setupRoutes() {
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
     val pdlClient = PdlClient(Configuration.pdlProperties)
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
+    val hotsakClient = HotsakClient(Configuration.hotsakApiProperties)
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
@@ -164,7 +166,7 @@ fun Application.setupRoutes() {
     val innsenderService = InnsenderService(databaseContext)
     val rapportService = RapportService(databaseContext)
     val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
-    val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, medlemskapBarn)
+    val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, hotsakClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
