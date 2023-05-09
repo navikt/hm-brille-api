@@ -13,6 +13,7 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.scheduler.Elector
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Godkjenning
@@ -100,6 +101,16 @@ object StubEngine {
                     fornavn = "Sedat",
                     mellomnavn = null,
                     etternavn = "Kronjuvel"
+                )
+            )
+        }
+    }
+
+    fun hotsak(): HttpClientEngine = mockEngine {
+        get("/hotsak/vilkårsvurdering/sjekk-vedtak") {
+            respond(
+                HotsakClient.VedtakIKalenderåretDto(
+                    vedtaksdato = null
                 )
             )
         }

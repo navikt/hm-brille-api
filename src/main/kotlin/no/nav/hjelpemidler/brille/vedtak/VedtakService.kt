@@ -31,7 +31,8 @@ class VedtakService(
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
             vilkårsgrunnlag.fnrBarn,
             vilkårsgrunnlag.brilleseddel,
-            vilkårsgrunnlag.bestillingsdato
+            vilkårsgrunnlag.bestillingsdato,
+            Configuration.dev
         )
 
         if (vilkårsvurdering.utfall != Resultat.JA) {

@@ -7,6 +7,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
@@ -35,7 +36,8 @@ fun Route.vilkårApi(
             val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(
                 vilkårsgrunnlag.fnrBarn,
                 vilkårsgrunnlag.brilleseddel,
-                vilkårsgrunnlag.bestillingsdato
+                vilkårsgrunnlag.bestillingsdato,
+                Configuration.dev
             )
             val sats = when (vilkarsvurdering.utfall) {
                 Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()

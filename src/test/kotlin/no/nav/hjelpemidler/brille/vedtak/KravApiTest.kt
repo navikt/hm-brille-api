@@ -14,6 +14,7 @@ import io.mockk.mockk
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
+import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
@@ -37,6 +38,7 @@ import java.time.LocalDate
 internal class KravApiTest {
 
     private val pdlClient = mockk<PdlClient>()
+    private val hotsakClient = mockk<HotsakClient>()
     private val medlemskapBarn = mockk<MedlemskapBarn>()
     private val dagensDatoFactory = mockk<() -> LocalDate>()
     private val auditService = mockk<AuditService>(relaxed = true)
@@ -50,6 +52,7 @@ internal class KravApiTest {
     private val vilkårsvurderingService = VilkårsvurderingService(
         databaseContext,
         pdlClient,
+        hotsakClient,
         medlemskapBarn,
         dagensDatoFactory
     )

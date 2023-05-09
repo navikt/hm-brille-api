@@ -11,6 +11,7 @@ import java.time.LocalDate
 
 data class Vilkårsgrunnlag(
     val vedtakBarn: List<EksisterendeVedtak>,
+    val eksisterendeVedtakDatoHotsak: LocalDate?,
     val pdlOppslagBarn: PdlOppslag<Person?>,
     val medlemskapResultat: MedlemskapResultat,
     val brilleseddel: Brilleseddel,
