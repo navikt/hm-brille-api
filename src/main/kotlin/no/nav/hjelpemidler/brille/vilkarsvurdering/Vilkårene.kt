@@ -87,17 +87,19 @@ object Vilkårene {
         when {
             medlemskapResultat.resultat == MedlemskapResultatResultat.JA -> ja(
                 "Barnet er medlem i folketrygden",
-                mapOf("bestillingsdato" to grunnlag.bestillingsdato.formatert())
+                mapOf("bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "forenkletSjekkResultat" to "Oppfylt")
             )
 
             medlemskapResultat.resultat == MedlemskapResultatResultat.UAVKLART -> ja(
                 "Barnet er antatt medlem i folketrygden basert på folkeregistrert adresse i Norge",
-                mapOf("bestillingsdato" to grunnlag.bestillingsdato.formatert())
+                mapOf("bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "forenkletSjekkResultat" to "Uavklart medlemskap - må utredes av saksbehandler")
             )
 
             else -> nei(
                 "Barnet er antatt ikke medlem i folketrygden fordi vi ikke har klart å påvise folkeregistrert adresse i Norge",
-                mapOf("bestillingsdato" to grunnlag.bestillingsdato.formatert())
+                mapOf("bestillingsdato" to grunnlag.bestillingsdato.formatert(), "forenkletSjekkResultat" to "Ikke oppfylt")
             )
         }
     }
