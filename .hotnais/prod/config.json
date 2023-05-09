@@ -27,6 +27,7 @@
     "api-gw.oera.no"
   ],
   "outbound-applications": [
+    "hm-saksbehandling"
   ],
   "kafka-cluster": "nav-prod",
   "min-replicas": 2,

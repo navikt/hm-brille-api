@@ -27,7 +27,8 @@
     "api-gw-q1.oera.no"
   ],
   "outbound-applications": [
-    "hm-mocks"
+    "hm-mocks",
+    "hm-saksbehandling"
   ],
   "kafka-cluster": "nav-dev",
   "min-replicas": 1,
