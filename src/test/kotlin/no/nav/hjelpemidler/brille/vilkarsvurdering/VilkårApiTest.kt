@@ -173,6 +173,10 @@ internal class VilkårApiTest {
             dagensDatoFactory()
         } returns dagensDato
 
+        coEvery {
+            hotsakClient.hentEksisterendeVedtaksDato(any(), any())
+        } returns null
+
         every {
             sessionContext.vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn)
         } returns vedtakForBruker
