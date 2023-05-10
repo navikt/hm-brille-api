@@ -124,6 +124,11 @@ internal class KravApiTest {
             sessionContext.vedtakStore.hentVedtakForBarn(krav.vilkårsgrunnlag.fnrBarn)
         } returns vedtakForBruker
 
+
+        coEvery {
+            hotsakClient.hentEksisterendeVedtaksDato(any(), any())
+        } returns null
+
         every {
             sessionContext.vedtakStore.hentVedtak<Any>(any())
         } returns mockedVedtak
