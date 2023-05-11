@@ -26,13 +26,12 @@ fun Route.integrasjonApi(vilkårsvurderingService: VilkårsvurderingService) {
                 val fnrBarn: String,
                 val brilleseddel: Brilleseddel,
                 val bestillingsdato: LocalDate,
-                val brillepris: BigDecimal
             )
 
             data class Response(
                 val resultat: Resultat,
                 val sats: SatsType,
-                val beløp: BigDecimal,
+                val satsBeløp: BigDecimal,
             )
 
             try {
@@ -46,13 +45,11 @@ fun Route.integrasjonApi(vilkårsvurderingService: VilkårsvurderingService) {
                 }
 
                 val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
-                val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlagInput.brillepris)
-
                 call.respond(
                     Response(
                         resultat = vilkarsvurdering.utfall,
                         sats = sats,
-                        beløp = beløp,
+                        satsBeløp = sats.beløp.toBigDecimal(),
                     )
                 )
             } catch (e: Exception) {
