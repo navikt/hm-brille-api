@@ -41,6 +41,7 @@ import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.innbygger.innbyggerApi
 import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
+import no.nav.hjelpemidler.brille.integrasjon.integrasjonApi
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
@@ -233,6 +234,10 @@ fun Application.setupRoutes() {
 
             authenticate(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER) {
                 vilkårHotsakApi(vilkårsvurderingService)
+
+                // FIXME: Integrasjon api skal ikke ha kanBehandlePersonerMedAdressebeskyttelse(): Boolean = true, det får
+                // den her pga. AuthenticationProvider.AZURE_AD_SYSTEMBRUKER
+                if (!Configuration.prod) integrasjonApi(vilkårsvurderingService)
             }
 
             // Admin apis
