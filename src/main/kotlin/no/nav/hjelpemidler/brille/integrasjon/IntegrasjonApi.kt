@@ -32,8 +32,6 @@ fun Route.integrasjonApi(vilkårsvurderingService: VilkårsvurderingService) {
             data class Response(
                 val resultat: Resultat,
                 val sats: SatsType,
-                val satsBeskrivelse: String,
-                val satsBeløp: Int,
                 val beløp: BigDecimal,
             )
 
@@ -54,8 +52,6 @@ fun Route.integrasjonApi(vilkårsvurderingService: VilkårsvurderingService) {
                     Response(
                         resultat = vilkarsvurdering.utfall,
                         sats = sats,
-                        satsBeskrivelse = sats.beskrivelse,
-                        satsBeløp = sats.beløp,
                         beløp = beløp,
                     )
                 )
