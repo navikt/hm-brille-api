@@ -3,21 +3,16 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
-import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
@@ -25,9 +20,6 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
@@ -36,7 +28,6 @@ import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
-import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
@@ -44,8 +35,6 @@ import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
-import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
-import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
 import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
@@ -91,7 +80,6 @@ import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
 import kotlin.concurrent.thread
-import kotlin.system.measureTimeMillis
 
 private val log = KotlinLogging.logger {}
 
