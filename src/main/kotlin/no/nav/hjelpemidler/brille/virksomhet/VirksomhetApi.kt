@@ -40,7 +40,7 @@ fun Route.virksomhetApi(
                     Organisasjon(
                         orgnr = enhet.orgnr,
                         navn = enhet.navn,
-                        adresse = adresseFor(enhet),
+                        adresse = enhetTilAdresseFor(enhet),
                         aktiv = true
 
                     )
@@ -70,7 +70,7 @@ fun Route.virksomhetApi(
                 orgnr = enhet.orgnr,
                 navn = enhet.navn,
                 aktiv = harAktivNavAvtale,
-                adresse = adresseFor(enhet),
+                adresse = enhetTilAdresseFor(enhet),
             )
 
             call.respond(response)
@@ -78,7 +78,7 @@ fun Route.virksomhetApi(
     }
 }
 
-private fun adresseFor(
+fun enhetTilAdresseFor(
     enhet: Organisasjonsenhet,
 ) = if (enhet.forretningsadresse != null) {
     "${enhet.forretningsadresse.adresse.firstOrNull() ?: ""}, ${enhet.forretningsadresse.postnummer} ${enhet.forretningsadresse.poststed}"

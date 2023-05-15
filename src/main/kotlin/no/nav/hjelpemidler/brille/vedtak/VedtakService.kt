@@ -32,7 +32,7 @@ class VedtakService(
             vilkårsgrunnlag.fnrBarn,
             vilkårsgrunnlag.brilleseddel,
             vilkårsgrunnlag.bestillingsdato,
-            true
+            true,
         )
 
         if (vilkårsvurdering.utfall != Resultat.JA) {
@@ -62,7 +62,7 @@ class VedtakService(
                     sats = sats,
                     satsBeløp = satsBeløp,
                     satsBeskrivelse = sats.beskrivelse,
-                    beløp = minOf(satsBeløp.toBigDecimal(), brillepris)
+                    beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
                 )
             )
             ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
