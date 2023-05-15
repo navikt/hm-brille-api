@@ -12,6 +12,8 @@ import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
+import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
@@ -35,6 +37,7 @@ fun Route.integrasjonApi(
     vedtakService: VedtakService,
     auditService: AuditService,
     enhetsregisteretService: EnhetsregisteretService,
+    pdlService: PdlService,
 ) {
     route("/integrasjon") {
         post("/vilkarsvurdering") {
@@ -95,14 +98,21 @@ fun Route.integrasjonApi(
             try {
                 val req = call.receive<Request>()
 
-                // TODO: HPR oppslag, sjekk autorisasjon, hent navn
+                // TODO: HPR oppslag, sjekk autorisasjon, hent optikers navn
                 val navnInnsender = /*redisClient.optikerNavn(fnrInnsender) ?:*/ "<Ukjent>"
 
                 // Slå opp orgnavn/-adresse fra enhetsregisteret
                 val enhet: Organisasjonsenhet = enhetsregisteretService.hentOrganisasjonsenhet(req.virksomhetOrgnr)
                     ?: return@post call.respond(
                         HttpStatusCode.InternalServerError,
-                        "Fant ikke organisasjonsenhet for orgnr: $it"
+                        "Fant ikke organisasjonsenhet for orgnr: ${req.virksomhetOrgnr}",
+                    )
+
+                // Slå opp barnets navn i PDL
+                val barnPdl = pdlService.hentPerson(req.fnrBarn)
+                    ?: return@post call.respond(
+                        HttpStatusCode.InternalServerError,
+                        "Fant ikke barnet i pdl",
                     )
 
                 // Audit logging
@@ -126,7 +136,7 @@ fun Route.integrasjonApi(
                         ),
                     ),
                     bestillingsreferanse = req.bestillingsreferanse,
-                    brukersNavn = "<Ukjent>",
+                    brukersNavn = barnPdl.navn(),
                     orgAdresse = enhetTilAdresseFor(enhet),
                     orgNavn = enhet.navn,
                 ))

@@ -237,7 +237,7 @@ fun Application.setupRoutes() {
 
                 // FIXME: Integrasjon api skal ikke ha kanBehandlePersonerMedAdressebeskyttelse(): Boolean = true, det får
                 // den her pga. AuthenticationProvider.AZURE_AD_SYSTEMBRUKER
-                if (!Configuration.prod) integrasjonApi(vilkårsvurderingService, vedtakService, auditService, enhetsregisteretService)
+                if (!Configuration.prod) integrasjonApi(vilkårsvurderingService, vedtakService, auditService, enhetsregisteretService, pdlService)
             }
 
             // Admin apis
