@@ -20,6 +20,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
@@ -32,7 +33,6 @@ import no.nav.hjelpemidler.brille.virksomhet.Organisasjon
 import no.nav.hjelpemidler.brille.virksomhet.enhetTilAdresseFor
 import java.math.BigDecimal
 import java.time.LocalDate
-import java.util.Random
 
 private val log = KotlinLogging.logger {}
 
@@ -42,9 +42,31 @@ fun Route.integrasjonApi(
     auditService: AuditService,
     enhetsregisteretService: EnhetsregisteretService,
     pdlService: PdlService,
-    databaseContext: DatabaseContext
+    databaseContext: DatabaseContext,
+    syfohelsenettproxyClient: SyfohelsenettproxyClient,
 ) {
     route("/integrasjon") {
+
+        post("/sjekk-optiker") {
+
+            data class Request(
+                val fnrInnsender: String
+            )
+
+            data class Response(
+                val erOptiker: Boolean
+            )
+
+            val request = call.receive<Request>()
+
+            val behandler = syfohelsenettproxyClient.hentBehandler(request.fnrInnsender)
+            val erOptiker = behandler?.godkjenninger?.any {
+                it.helsepersonellkategori?.aktiv == true && it.helsepersonellkategori.verdi == "OP"
+            } ?: false
+
+            val response = Response(erOptiker = erOptiker)
+            call.respond(response)
+        }
 
         get("/virksomhet/{orgnr}") {
             val orgnr =

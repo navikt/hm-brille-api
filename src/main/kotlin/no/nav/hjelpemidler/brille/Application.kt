@@ -243,7 +243,8 @@ fun Application.setupRoutes() {
                     auditService,
                     enhetsregisteretService,
                     pdlService,
-                    databaseContext
+                    databaseContext,
+                    syfohelsenettproxyClient
                 )
             }
 
