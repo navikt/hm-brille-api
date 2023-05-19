@@ -5,10 +5,13 @@ import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
@@ -25,6 +28,7 @@ import no.nav.hjelpemidler.brille.vedtak.toDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
+import no.nav.hjelpemidler.brille.virksomhet.Organisasjon
 import no.nav.hjelpemidler.brille.virksomhet.enhetTilAdresseFor
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -38,8 +42,31 @@ fun Route.integrasjonApi(
     auditService: AuditService,
     enhetsregisteretService: EnhetsregisteretService,
     pdlService: PdlService,
+    databaseContext: DatabaseContext
 ) {
     route("/integrasjon") {
+
+        get("/virksomhet/{orgnr}") {
+            val orgnr =
+                call.parameters["orgnr"] ?: error("Mangler orgnr i url")
+
+            val virksomhet =
+                transaction(databaseContext) { ctx -> ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr) }
+            val harAktivNavAvtale = virksomhet?.aktiv ?: false
+            log.info("Søker etter $orgnr har aktiv NavAvtale: $harAktivNavAvtale")
+            val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
+
+            val response = Organisasjon(
+                orgnr = enhet.orgnr,
+                navn = enhet.navn,
+                aktiv = harAktivNavAvtale,
+                adresse = enhetTilAdresseFor(enhet),
+            )
+
+            call.respond(response)
+        }
+
         post("/vilkarsvurdering") {
             data class Request(
                 val fnrBarn: String,
@@ -123,29 +150,35 @@ fun Route.integrasjonApi(
                 )
 
                 // Kjør vilkårsvurdering og opprett vedtak
-                val vedtak = vedtakService.lagVedtak(req.ansvarligOptikersFnr, navnInnsender, KravDto(
-                    vilkårsgrunnlag = VilkårsgrunnlagDto(
-                        orgnr = req.virksomhetOrgnr,
-                        fnrBarn = req.fnrBarn,
-                        brilleseddel = req.brilleseddel,
-                        bestillingsdato = req.bestillingsdato,
-                        brillepris = req.brillepris,
-                        extras = VilkårsgrunnlagExtrasDto(
-                            orgNavn = enhet.navn,
-                            bestillingsreferanse = req.bestillingsreferanse,
+                val vedtak = vedtakService.lagVedtak(
+                    req.ansvarligOptikersFnr, navnInnsender, KravDto(
+                        vilkårsgrunnlag = VilkårsgrunnlagDto(
+                            orgnr = req.virksomhetOrgnr,
+                            fnrBarn = req.fnrBarn,
+                            brilleseddel = req.brilleseddel,
+                            bestillingsdato = req.bestillingsdato,
+                            brillepris = req.brillepris,
+                            extras = VilkårsgrunnlagExtrasDto(
+                                orgNavn = enhet.navn,
+                                bestillingsreferanse = req.bestillingsreferanse,
+                            ),
                         ),
-                    ),
-                    bestillingsreferanse = req.bestillingsreferanse,
-                    brukersNavn = barnPdl.navn(),
-                    orgAdresse = enhetTilAdresseFor(enhet),
-                    orgNavn = enhet.navn,
-                ))
+                        bestillingsreferanse = req.bestillingsreferanse,
+                        brukersNavn = barnPdl.navn(),
+                        orgAdresse = enhetTilAdresseFor(enhet),
+                        orgNavn = enhet.navn,
+                    )
+                )
                 val vedtakDto = vedtak.toDto()
 
                 // Svar ut spørringen
                 call.respond(
                     Response(
-                        resultat = if (vedtakDto.behandlingsresultat == Behandlingsresultat.INNVILGET) { Resultat.JA } else { Resultat.NEI },
+                        resultat = if (vedtakDto.behandlingsresultat == Behandlingsresultat.INNVILGET) {
+                            Resultat.JA
+                        } else {
+                            Resultat.NEI
+                        },
                         sats = vedtakDto.sats,
                         satsBeløp = vedtakDto.beløp,
                         navReferanse = vedtakDto.id,
