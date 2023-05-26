@@ -107,7 +107,7 @@ object StubEngine {
     }
 
     fun hotsak(): HttpClientEngine = mockEngine {
-        get("/hotsak/vilkårsvurdering/sjekk-vedtak") {
+        get("/hotsak/vilkarsvurdering/sjekk-vedtak") {
             respond(
                 HotsakClient.VedtakIKalenderåretDto(
                     vedtaksdato = null

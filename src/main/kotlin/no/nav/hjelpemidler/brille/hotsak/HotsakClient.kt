@@ -34,7 +34,7 @@ class HotsakClient(
 
     suspend fun hentEksisterendeVedtaksDato(fnr: String, bestillingsdato: LocalDate): LocalDate? {
         try {
-            val url = "$baseUrl/vilkårsvurdering/sjekk-vedtak"
+            val url = "$baseUrl/vilkarsvurdering/sjekk-vedtak"
             log.info { "Henter vedtaksdato data med url: $url" }
             val response = client.post(url) {
                 contentType(ContentType.Application.Json)
