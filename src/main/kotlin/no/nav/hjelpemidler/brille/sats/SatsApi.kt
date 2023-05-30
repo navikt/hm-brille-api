@@ -10,8 +10,8 @@ import java.time.LocalDate
 fun Route.satsApi() {
     post("/brillesedler") {
         val brilleseddel = call.receive<Brilleseddel>()
-        val satsKalkulator = SatsKalkulator(brilleseddel, LocalDate.now())
+        val satsKalkulator = SatsKalkulator(brilleseddel)
         val satsType = satsKalkulator.kalkuler()
-        call.respond(BeregnetSatsDto(satsType, satsType.beskrivelse, satsType.beløp))
+        call.respond(BeregnetSatsDto(satsType, satsType.beskrivelse, satsType.beløp(LocalDate.now())))
     }
 }

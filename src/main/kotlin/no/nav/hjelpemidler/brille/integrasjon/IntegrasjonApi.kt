@@ -112,12 +112,12 @@ fun Route.integrasjonApi(
                     )
                 }
 
-                val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel, vilkårsgrunnlagInput.bestillingsdato).kalkuler()
+                val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
                 call.respond(
                     Response(
                         resultat = vilkarsvurdering.utfall,
                         sats = sats,
-                        satsBeløp = sats.beløp.toBigDecimal(),
+                        satsBeløp = sats.beløp(vilkårsgrunnlagInput.bestillingsdato).toBigDecimal(),
                     )
                 )
             } catch (e: Exception) {

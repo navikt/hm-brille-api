@@ -2,7 +2,7 @@ package no.nav.hjelpemidler.brille.sats
 
 import java.time.LocalDate
 
-class SatsKalkulator(private val brilleseddel: Brilleseddel, private val bestillingsdato: LocalDate) {
+class SatsKalkulator(private val brilleseddel: Brilleseddel) {
     fun kalkuler(): SatsType {
         val sfære = maxOf(brilleseddel.høyreSfære, brilleseddel.venstreSfære)
         val sylinder = maxOf(brilleseddel.høyreSylinder, brilleseddel.venstreSylinder)

@@ -43,8 +43,8 @@ class VedtakService(
                 throw VilkårsvurderingException("Vilkårsvurderingen ga uventet resultat")
             }
         }
-        val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel, vilkårsgrunnlag.bestillingsdato).kalkuler()
-        val satsBeløp = sats.beløp
+        val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
+        val satsBeløp = sats.beløp(vilkårsgrunnlag.bestillingsdato)
         val brillepris = vilkårsgrunnlag.brillepris
 
         val vedtak = transaction(databaseContext) { ctx ->
