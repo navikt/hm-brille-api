@@ -43,7 +43,7 @@ class VedtakService(
                 throw VilkårsvurderingException("Vilkårsvurderingen ga uventet resultat")
             }
         }
-        val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
+        val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel, vilkårsgrunnlag.bestillingsdato).kalkuler()
         val satsBeløp = sats.beløp
         val brillepris = vilkårsgrunnlag.brillepris
 

@@ -112,7 +112,7 @@ fun Route.integrasjonApi(
                     )
                 }
 
-                val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
+                val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel, vilkårsgrunnlagInput.bestillingsdato).kalkuler()
                 call.respond(
                     Response(
                         resultat = vilkarsvurdering.utfall,

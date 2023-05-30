@@ -39,7 +39,7 @@ fun Route.vilkårApi(
                 true
             )
             val sats = when (vilkarsvurdering.utfall) {
-                Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
+                Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel, vilkårsgrunnlag.bestillingsdato).kalkuler()
                 else -> SatsType.INGEN
             }
 

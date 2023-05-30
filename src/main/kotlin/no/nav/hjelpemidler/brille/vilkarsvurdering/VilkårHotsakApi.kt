@@ -25,7 +25,7 @@ fun Route.vilkårHotsakApi(
                     vilkårsgrunnlagInput.bestillingsdato
                 )
             }
-            val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
+            val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel, vilkårsgrunnlagInput.bestillingsdato).kalkuler()
 
             val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlagInput.brillepris)
 
