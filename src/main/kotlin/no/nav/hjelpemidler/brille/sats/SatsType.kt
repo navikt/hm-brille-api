@@ -60,7 +60,7 @@ enum class SatsType(
         beskrivelse = "INGEN",
     );
 
-    private val datoForNyeSatser = LocalDate.parse("2023-07-01")
+    private val datoForNyeSatser = if (Configuration.dev) { LocalDate.parse("2023-05-31") } else { LocalDate.parse("2023-07-01") }
     fun beløp(bestillingsdato: LocalDate) = when (bestillingsdato.isBefore(datoForNyeSatser)) {
         // Gamle satser
         true -> when (this) {
