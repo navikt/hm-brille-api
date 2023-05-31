@@ -43,20 +43,34 @@ internal class SatsApiTest {
 
     @Test
     fun `kalkulator skal utlede riktige satser beløp basert på dato`() {
-        // Gamle satser
-        assertEquals(750, SatsType.SATS_1.beløp(LocalDate.parse("2023-06-30")))
-        assertEquals(1950, SatsType.SATS_2.beløp(LocalDate.parse("2023-06-30")))
-        assertEquals(2650, SatsType.SATS_3.beløp(LocalDate.parse("2023-06-30")))
-        assertEquals(3150, SatsType.SATS_4.beløp(LocalDate.parse("2023-06-30")))
-        assertEquals(4850, SatsType.SATS_5.beløp(LocalDate.parse("2023-06-30")))
-        assertEquals(0, SatsType.INGEN.beløp(LocalDate.parse("2023-06-30")))
+        val datoForNyeSatser = LocalDate.parse("2023-07-01")
+        val tester = listOf(
+            Pair(datoForNyeSatser.minusDays(1), false),
+            Pair(datoForNyeSatser, true),
+            Pair(datoForNyeSatser.minusDays(30*6), false),
+            Pair(datoForNyeSatser.plusDays(30*6), true),
+        )
 
-        // Nye satser 1 juli 2023
-        assertEquals(791, SatsType.SATS_1.beløp(LocalDate.parse("2023-07-01")))
-        assertEquals(2055, SatsType.SATS_2.beløp(LocalDate.parse("2023-07-01")))
-        assertEquals(2793, SatsType.SATS_3.beløp(LocalDate.parse("2023-07-01")))
-        assertEquals(3320, SatsType.SATS_4.beløp(LocalDate.parse("2023-07-01")))
-        assertEquals(5112, SatsType.SATS_5.beløp(LocalDate.parse("2023-07-01")))
-        assertEquals(0, SatsType.INGEN.beløp(LocalDate.parse("2023-07-01")))
+        tester.forEach { (dato, nyeSatser) ->
+            // Gamle satser
+            if (!nyeSatser) {
+                assertEquals(750, SatsType.SATS_1.beløp(dato))
+                assertEquals(1950, SatsType.SATS_2.beløp(dato))
+                assertEquals(2650, SatsType.SATS_3.beløp(dato))
+                assertEquals(3150, SatsType.SATS_4.beløp(dato))
+                assertEquals(4850, SatsType.SATS_5.beløp(dato))
+                assertEquals(0, SatsType.INGEN.beløp(dato))
+            }
+
+            // Nye satser 1 juli 2023
+            if (nyeSatser) {
+                assertEquals(791, SatsType.SATS_1.beløp(dato))
+                assertEquals(2055, SatsType.SATS_2.beløp(dato))
+                assertEquals(2793, SatsType.SATS_3.beløp(dato))
+                assertEquals(3320, SatsType.SATS_4.beløp(dato))
+                assertEquals(5112, SatsType.SATS_5.beløp(dato))
+                assertEquals(0, SatsType.INGEN.beløp(dato))
+            }
+        }
     }
 }

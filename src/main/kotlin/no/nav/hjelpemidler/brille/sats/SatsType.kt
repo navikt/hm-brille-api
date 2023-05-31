@@ -60,25 +60,25 @@ enum class SatsType(
         beskrivelse = "INGEN",
     );
 
-    private val datoForNyeSatser = LocalDate.parse("2023-06-30")
-    fun beløp(bestillingsdato: LocalDate) = when (bestillingsdato.isAfter(datoForNyeSatser)) {
-        // Nye satser
-        true -> when (this) {
-            SATS_1 -> 791
-            SATS_2 -> 2055
-            SATS_3 -> 2793
-            SATS_4 -> 3320
-            SATS_5 -> 5112
-            INGEN -> 0
-        }
-
+    private val datoForNyeSatser = LocalDate.parse("2023-07-01")
+    fun beløp(bestillingsdato: LocalDate) = when (bestillingsdato.isBefore(datoForNyeSatser)) {
         // Gamle satser
-        false -> when (this) {
+        true -> when (this) {
             SATS_1 -> 750
             SATS_2 -> 1950
             SATS_3 -> 2650
             SATS_4 -> 3150
             SATS_5 -> 4850
+            INGEN -> 0
+        }
+
+        // Nye satser
+        false -> when (this) {
+            SATS_1 -> 791
+            SATS_2 -> 2055
+            SATS_3 -> 2793
+            SATS_4 -> 3320
+            SATS_5 -> 5112
             INGEN -> 0
         }
     }
