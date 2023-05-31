@@ -41,36 +41,26 @@ internal class SatsApiTest {
         response.body<BeregnetSatsDto>().sats shouldBe SatsType.valueOf(sats)
     }
 
-    @Test
-    fun `kalkulator skal utlede riktige satser beløp basert på dato`() {
-        val datoForNyeSatser = LocalDate.parse("2023-07-01")
-        val tester = listOf(
-            Pair(datoForNyeSatser.minusDays(1), false),
-            Pair(datoForNyeSatser, true),
-            Pair(datoForNyeSatser.minusDays(30*6), false),
-            Pair(datoForNyeSatser.plusDays(30*6), true),
-        )
-
-        tester.forEach { (dato, nyeSatser) ->
-            // Gamle satser
-            if (!nyeSatser) {
-                assertEquals(750, SatsType.SATS_1.beløp(dato))
-                assertEquals(1950, SatsType.SATS_2.beløp(dato))
-                assertEquals(2650, SatsType.SATS_3.beløp(dato))
-                assertEquals(3150, SatsType.SATS_4.beløp(dato))
-                assertEquals(4850, SatsType.SATS_5.beløp(dato))
-                assertEquals(0, SatsType.INGEN.beløp(dato))
-            }
-
-            // Nye satser 1 juli 2023
-            if (nyeSatser) {
-                assertEquals(791, SatsType.SATS_1.beløp(dato))
-                assertEquals(2055, SatsType.SATS_2.beløp(dato))
-                assertEquals(2793, SatsType.SATS_3.beløp(dato))
-                assertEquals(3320, SatsType.SATS_4.beløp(dato))
-                assertEquals(5112, SatsType.SATS_5.beløp(dato))
-                assertEquals(0, SatsType.INGEN.beløp(dato))
-            }
+    @ParameterizedTest
+    @CsvFileSource(resources = ["/SatsBeløpTest.csv"], useHeadersInDisplayName = true)
+    fun `kalkulator skal utlede riktige satser beløp basert på dato`(
+        dato: LocalDate,
+        nyeSatser: Boolean,
+    ) = routing.test {
+        if (!nyeSatser) {
+            SatsType.SATS_1.beløp(dato) shouldBe 750
+            SatsType.SATS_2.beløp(dato) shouldBe 1950
+            SatsType.SATS_3.beløp(dato) shouldBe 2650
+            SatsType.SATS_4.beløp(dato) shouldBe 3150
+            SatsType.SATS_5.beløp(dato) shouldBe 4850
+            SatsType.INGEN.beløp(dato) shouldBe 0
+        } else {
+            SatsType.SATS_1.beløp(dato) shouldBe 791
+            SatsType.SATS_2.beløp(dato) shouldBe 2055
+            SatsType.SATS_3.beløp(dato) shouldBe 2793
+            SatsType.SATS_4.beløp(dato) shouldBe 3320
+            SatsType.SATS_5.beløp(dato) shouldBe 5112
+            SatsType.INGEN.beløp(dato) shouldBe 0
         }
     }
 }
