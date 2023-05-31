@@ -6,11 +6,9 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
 import no.nav.hjelpemidler.brille.test.TestRouting
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvFileSource
 import java.time.LocalDate
-import kotlin.test.assertEquals
 
 internal class SatsApiTest {
     private val routing = TestRouting {
