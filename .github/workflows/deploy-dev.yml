@@ -8,7 +8,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - ikke-kast-hvis-lovme-feiler
+      - nye-satser-1-juli
 env:
   ghcr_image: ghcr.io/${{ github.repository }}/hm-brille-api:${{ github.sha }}
 jobs:
