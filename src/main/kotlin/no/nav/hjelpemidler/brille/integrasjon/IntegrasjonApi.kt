@@ -56,7 +56,6 @@ fun Route.integrasjonApi(
     route("/integrasjon") {
 
         post("/sjekk-optiker") {
-
             data class Request(
                 val fnrInnsender: String
             )
@@ -261,6 +260,4 @@ fun Route.integrasjonApi(
         }
 
     }
-
-
 }
