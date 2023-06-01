@@ -5,6 +5,7 @@ import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
@@ -22,8 +23,13 @@ import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
+import no.nav.hjelpemidler.brille.vedtak.SlettVedtakConflictException
+import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
+import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
+import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.toDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
@@ -44,6 +50,8 @@ fun Route.integrasjonApi(
     pdlService: PdlService,
     databaseContext: DatabaseContext,
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
+    utbetalingService: UtbetalingService,
+    slettVedtakService: SlettVedtakService,
 ) {
     route("/integrasjon") {
 
@@ -147,7 +155,7 @@ fun Route.integrasjonApi(
             try {
                 val req = call.receive<Request>()
 
-                // TODO: HPR oppslag, sjekk autorisasjon, hent optikers navn
+                // TODO: hent optikers navn
                 val navnInnsender = /*redisClient.optikerNavn(fnrInnsender) ?:*/ "<Ukjent>"
 
                 // Slå opp orgnavn/-adresse fra enhetsregisteret
@@ -211,5 +219,48 @@ fun Route.integrasjonApi(
                 call.respond(HttpStatusCode.InternalServerError, "Feil i krav oppretting")
             }
         }
+
+        delete("/krav/{id}") {
+
+            data class Request(
+                val fnrInnsender: String,
+            )
+
+            val vedtakId = call.parameters["id"]!!.toLong()
+            val vedtak = vedtakService.hentVedtak(vedtakId)
+                ?: return@delete call.respond(HttpStatusCode.NotFound, """{"error": "Fant ikke krav"}""")
+
+            val req = call.receive<Request>()
+
+            if (req.fnrInnsender != vedtak.fnrInnsender) {
+                return@delete call.respond(HttpStatusCode.Unauthorized, """{"error": "Krav kan ikke slettes av deg"}""")
+            }
+
+            val utbetaling = utbetalingService.hentUtbetalingForVedtak(vedtakId)
+            if (utbetaling != null) {
+                return@delete call.respond(
+                    HttpStatusCode.Unauthorized,
+                    """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}"""
+                )
+            }
+
+            auditService.lagreOppslag(
+                fnrInnlogget = req.fnrInnsender,
+                fnrOppslag = vedtak.fnrBarn,
+                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
+            )
+
+            try {
+                slettVedtakService.slettVedtak(vedtak.id, req.fnrInnsender, SlettetAvType.INNSENDER)
+                call.respond(HttpStatusCode.OK, "{}")
+            } catch (e: SlettVedtakConflictException) {
+                call.respond(HttpStatusCode.Conflict, e.message!!)
+            } catch (e: SlettVedtakInternalServerErrorException) {
+                call.respond(HttpStatusCode.InternalServerError, e.message!!)
+            }
+        }
+
     }
+
+
 }

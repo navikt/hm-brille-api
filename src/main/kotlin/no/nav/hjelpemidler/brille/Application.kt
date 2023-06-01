@@ -244,7 +244,9 @@ fun Application.setupRoutes() {
                     enhetsregisteretService,
                     pdlService,
                     databaseContext,
-                    syfohelsenettproxyClient
+                    syfohelsenettproxyClient,
+                    utbetalingService,
+                    slettVedtakService
                 )
             }
 
