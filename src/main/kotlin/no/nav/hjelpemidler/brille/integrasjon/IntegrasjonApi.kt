@@ -15,7 +15,6 @@ import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
-import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PdlService
@@ -224,8 +223,7 @@ fun Route.integrasjonApi(
         delete("/krav/{id}") {
 
             data class Request(
-                val virksomhetOrgnr: String,
-                val ansvarligOptikersFnr: String,
+                val fnrInnsender: String,
             )
 
             val vedtakId = call.parameters["id"]!!.toLong()
@@ -234,7 +232,7 @@ fun Route.integrasjonApi(
 
             val req = call.receive<Request>()
 
-            if (req.ansvarligOptikersFnr != vedtak.fnrInnsender) {
+            if (req.fnrInnsender != vedtak.fnrInnsender) {
                 return@delete call.respond(HttpStatusCode.Unauthorized, """{"error": "Krav kan ikke slettes av deg"}""")
             }
 
@@ -247,13 +245,13 @@ fun Route.integrasjonApi(
             }
 
             auditService.lagreOppslag(
-                fnrInnlogget = req.ansvarligOptikersFnr,
+                fnrInnlogget = req.fnrInnsender,
                 fnrOppslag = vedtak.fnrBarn,
                 oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
             )
 
             try {
-                slettVedtakService.slettVedtak(vedtak.id, req.ansvarligOptikersFnr, SlettetAvType.INNSENDER)
+                slettVedtakService.slettVedtak(vedtak.id, req.fnrInnsender, SlettetAvType.INNSENDER)
                 call.respond(HttpStatusCode.OK, "{}")
             } catch (e: SlettVedtakConflictException) {
                 call.respond(HttpStatusCode.Conflict, e.message!!)
