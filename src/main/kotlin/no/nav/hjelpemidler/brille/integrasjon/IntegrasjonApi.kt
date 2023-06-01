@@ -115,7 +115,8 @@ fun Route.integrasjonApi(
                     vilkårsvurderingService.vurderVilkår(
                         vilkårsgrunnlagInput.fnrBarn,
                         vilkårsgrunnlagInput.brilleseddel,
-                        vilkårsgrunnlagInput.bestillingsdato
+                        vilkårsgrunnlagInput.bestillingsdato,
+                        true,
                     )
                 }
 
