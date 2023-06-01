@@ -23,14 +23,14 @@ class UtbetalingsBatchTest {
             navnInnsender = "Kronjuvel Sedat",
             orgnr = "123456789",
             bestillingsdato = LocalDate.now(),
-            brillepris = sats.beløp.toBigDecimal(),
+            brillepris = sats.beløp(LocalDate.now()).toBigDecimal(),
             bestillingsreferanse = "test",
             vilkårsvurdering = Vilkårsvurdering("test", Evalueringer().ja("test")),
             behandlingsresultat = Behandlingsresultat.INNVILGET,
             sats = sats,
-            satsBeløp = sats.beløp,
+            satsBeløp = sats.beløp(LocalDate.now()),
             satsBeskrivelse = sats.beskrivelse,
-            beløp = sats.beløp.toBigDecimal(),
+            beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
         )
 
         val ut1 = Utbetaling(
@@ -47,14 +47,14 @@ class UtbetalingsBatchTest {
             navnInnsender = "Kronjuvel Sedat",
             orgnr = "123456789",
             bestillingsdato = LocalDate.now(),
-            brillepris = sats.beløp.toBigDecimal(),
+            brillepris = sats.beløp(LocalDate.now()).toBigDecimal(),
             bestillingsreferanse = "test",
             vilkårsvurdering = Vilkårsvurdering("test", Evalueringer().ja("test")),
             behandlingsresultat = Behandlingsresultat.INNVILGET,
             sats = sats,
-            satsBeløp = sats.beløp,
+            satsBeløp = sats.beløp(LocalDate.now()),
             satsBeskrivelse = sats.beskrivelse,
-            beløp = sats.beløp.toBigDecimal(),
+            beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
         )
 
         val ut2 = Utbetaling(
@@ -71,14 +71,14 @@ class UtbetalingsBatchTest {
             navnInnsender = "Kronjuvel Sedat",
             orgnr = "987654321",
             bestillingsdato = LocalDate.now(),
-            brillepris = sats.beløp.toBigDecimal(),
+            brillepris = sats.beløp(LocalDate.now()).toBigDecimal(),
             bestillingsreferanse = "test",
             vilkårsvurdering = Vilkårsvurdering("test", Evalueringer().ja("test")),
             behandlingsresultat = Behandlingsresultat.INNVILGET,
             sats = sats,
-            satsBeløp = sats.beløp,
+            satsBeløp = sats.beløp(LocalDate.now()),
             satsBeskrivelse = sats.beskrivelse,
-            beløp = sats.beløp.toBigDecimal(),
+            beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
         )
 
         val ut3 = Utbetaling(

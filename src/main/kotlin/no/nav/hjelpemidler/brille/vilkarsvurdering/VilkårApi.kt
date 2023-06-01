@@ -55,7 +55,7 @@ fun Route.vilkårApi(
                 adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, call.extractFnr(), vilkårsgrunnlag.orgnr, årsaker)
             }
 
-            val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlag.brillepris)
+            val beløp = minOf(sats.beløp(vilkårsgrunnlag.bestillingsdato).toBigDecimal(), vilkårsgrunnlag.brillepris)
 
             val refInnsendersTidligereKrav =
                 if (!vilkarsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret v1")) {
@@ -72,7 +72,7 @@ fun Route.vilkårApi(
                     resultat = vilkarsvurdering.utfall,
                     sats = sats,
                     satsBeskrivelse = sats.beskrivelse,
-                    satsBeløp = sats.beløp,
+                    satsBeløp = sats.beløp(vilkårsgrunnlag.bestillingsdato),
                     beløp = beløp,
                     kravFraFørFraInnsender = refInnsendersTidligereKrav
                 )

@@ -45,14 +45,14 @@ internal class VedtakStorePostgresTest {
                             navnInnsender = "Kronjuvel Sedat",
                             orgnr = virksomhet.orgnr,
                             bestillingsdato = LocalDate.now(),
-                            brillepris = sats.beløp.toBigDecimal(),
+                            brillepris = sats.beløp(LocalDate.now()).toBigDecimal(),
                             bestillingsreferanse = "test",
                             vilkårsvurdering = Vilkårsvurdering("test", Evalueringer().ja("test")),
                             behandlingsresultat = Behandlingsresultat.INNVILGET,
                             sats = sats,
-                            satsBeløp = sats.beløp,
+                            satsBeløp = sats.beløp(LocalDate.now()),
                             satsBeskrivelse = sats.beskrivelse,
-                            beløp = sats.beløp.toBigDecimal(),
+                            beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
                         )
                     )
 
@@ -73,14 +73,14 @@ internal class VedtakStorePostgresTest {
                             navnInnsender = "Kronjuvel Sedat",
                             orgnr = virksomhet.orgnr,
                             bestillingsdato = LocalDate.now(),
-                            brillepris = sats.beløp.toBigDecimal(),
+                            brillepris = sats.beløp(LocalDate.now()).toBigDecimal(),
                             bestillingsreferanse = "test 2",
                             vilkårsvurdering = Vilkårsvurdering("test 2 ", Evalueringer().ja("test 2")),
                             behandlingsresultat = Behandlingsresultat.INNVILGET,
                             sats = sats,
-                            satsBeløp = sats.beløp,
+                            satsBeløp = sats.beløp(LocalDate.now()),
                             satsBeskrivelse = sats.beskrivelse,
-                            beløp = sats.beløp.toBigDecimal(),
+                            beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
                         )
                     )
 

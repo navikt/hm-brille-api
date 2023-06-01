@@ -27,14 +27,14 @@ fun Route.vilkårHotsakApi(
             }
             val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
 
-            val beløp = minOf(sats.beløp.toBigDecimal(), vilkårsgrunnlagInput.brillepris)
+            val beløp = minOf(sats.beløp(vilkårsgrunnlagInput.bestillingsdato).toBigDecimal(), vilkårsgrunnlagInput.brillepris)
 
             call.respond(
                 VilkårsvurderingHotsakDto(
                     resultat = vilkarsvurdering.utfall,
                     sats = sats,
                     satsBeskrivelse = sats.beskrivelse,
-                    satsBeløp = sats.beløp,
+                    satsBeløp = sats.beløp(vilkårsgrunnlagInput.bestillingsdato),
                     beløp = beløp,
                     vilkårsgrunnlag = jsonMapper.valueToTree(vilkarsvurdering),
                     evaluering = vilkarsvurdering.evaluering

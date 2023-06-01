@@ -61,9 +61,9 @@ internal class KafkaServiceTest {
             vilkårsvurdering = Vilkårsvurdering(mockk(relaxed = true), Evalueringer().ja("test")),
             behandlingsresultat = Behandlingsresultat.INNVILGET,
             sats = sats,
-            satsBeløp = sats.beløp,
+            satsBeløp = sats.beløp(LocalDate.now()),
             satsBeskrivelse = sats.beskrivelse,
-            beløp = sats.beløp.toBigDecimal()
+            beløp = sats.beløp(LocalDate.now()).toBigDecimal()
         )
 
         assertDoesNotThrow {

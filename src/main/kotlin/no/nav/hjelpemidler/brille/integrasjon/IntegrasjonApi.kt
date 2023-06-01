@@ -125,7 +125,7 @@ fun Route.integrasjonApi(
                     Response(
                         resultat = vilkarsvurdering.utfall,
                         sats = sats,
-                        satsBeløp = sats.beløp.toBigDecimal(),
+                        satsBeløp = sats.beløp(vilkårsgrunnlagInput.bestillingsdato).toBigDecimal(),
                     )
                 )
             } catch (e: Exception) {

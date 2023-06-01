@@ -44,7 +44,7 @@ class VedtakService(
             }
         }
         val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
-        val satsBeløp = sats.beløp
+        val satsBeløp = sats.beløp(vilkårsgrunnlag.bestillingsdato)
         val brillepris = vilkårsgrunnlag.brillepris
 
         val vedtak = transaction(databaseContext) { ctx ->

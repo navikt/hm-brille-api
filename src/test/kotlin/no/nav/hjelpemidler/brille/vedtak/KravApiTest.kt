@@ -99,14 +99,14 @@ internal class KravApiTest {
         navnInnsender = "Kronjuvel Sedat",
         orgnr = "123456789",
         bestillingsdato = LocalDate.now(),
-        brillepris = SatsType.SATS_1.beløp.toBigDecimal(),
+        brillepris = SatsType.SATS_1.beløp(LocalDate.now()).toBigDecimal(),
         bestillingsreferanse = "test 2",
         vilkårsvurdering = Vilkårsvurdering("test 2 ", Evalueringer().ja("test 2")),
         behandlingsresultat = Behandlingsresultat.INNVILGET,
         sats = SatsType.SATS_1,
-        satsBeløp = SatsType.SATS_1.beløp,
+        satsBeløp = SatsType.SATS_1.beløp(LocalDate.now()),
         satsBeskrivelse = SatsType.SATS_1.beskrivelse,
-        beløp = SatsType.SATS_1.beløp.toBigDecimal()
+        beløp = SatsType.SATS_1.beløp(LocalDate.now()).toBigDecimal()
     )
 
     private fun kjørTest(
