@@ -155,8 +155,8 @@ fun Route.integrasjonApi(
             try {
                 val req = call.receive<Request>()
 
-                // TODO: hent optikers navn
-                val navnInnsender = /*redisClient.optikerNavn(fnrInnsender) ?:*/ "<Ukjent>"
+                val optikerPdl = pdlService.hentPerson(req.ansvarligOptikersFnr)
+                val navnInnsender = optikerPdl?.navn() ?: "<Ukjent>"
 
                 // Slå opp orgnavn/-adresse fra enhetsregisteret
                 val enhet: Organisasjonsenhet = enhetsregisteretService.hentOrganisasjonsenhet(req.virksomhetOrgnr)
