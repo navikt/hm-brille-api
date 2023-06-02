@@ -8,6 +8,7 @@ import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
+import no.nav.hjelpemidler.brille.vedtak.KravKilde
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
@@ -63,7 +64,8 @@ internal class KafkaServiceTest {
             sats = sats,
             satsBeløp = sats.beløp(LocalDate.now()),
             satsBeskrivelse = sats.beskrivelse,
-            beløp = sats.beløp(LocalDate.now()).toBigDecimal()
+            beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
+            kilde = KravKilde.KRAV_APP,
         )
 
         assertDoesNotThrow {

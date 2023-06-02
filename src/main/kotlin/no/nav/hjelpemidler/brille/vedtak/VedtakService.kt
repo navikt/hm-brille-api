@@ -26,7 +26,7 @@ class VedtakService(
         private val LOG = LoggerFactory.getLogger(VedtakService::class.java)
     }
 
-    suspend fun lagVedtak(fnrInnsender: String, navnInnsender: String, krav: KravDto): Vedtak<Vilkårsgrunnlag> {
+    suspend fun lagVedtak(fnrInnsender: String, navnInnsender: String, krav: KravDto, kilde: KravKilde): Vedtak<Vilkårsgrunnlag> {
         val vilkårsgrunnlag = krav.vilkårsgrunnlag
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
             vilkårsgrunnlag.fnrBarn,
@@ -63,6 +63,7 @@ class VedtakService(
                     satsBeløp = satsBeløp,
                     satsBeskrivelse = sats.beskrivelse,
                     beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
+                    kilde = kilde,
                 )
             )
             ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)

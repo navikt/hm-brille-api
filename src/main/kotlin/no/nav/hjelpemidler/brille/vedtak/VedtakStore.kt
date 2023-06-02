@@ -287,7 +287,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 sats_belop,
                 sats_beskrivelse,
                 belop,
-                opprettet
+                opprettet,
+                kilde
             )
             VALUES (
                 :fnr_barn,
@@ -303,7 +304,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 :sats_belop,
                 :sats_beskrivelse,
                 :belop,
-                :opprettet
+                :opprettet,
+                :kilde
             )
             RETURNING id
         """.trimIndent()
@@ -323,7 +325,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 "sats_belop" to vedtak.satsBeløp,
                 "sats_beskrivelse" to vedtak.satsBeskrivelse,
                 "belop" to vedtak.beløp,
-                "opprettet" to vedtak.opprettet
+                "opprettet" to vedtak.opprettet,
+                "kilde" to vedtak.kilde.toString(),
             )
         ) { row ->
             row.long("id")
@@ -353,7 +356,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 v.sats_belop,
                 v.sats_beskrivelse,
                 v.belop,
-                v.opprettet
+                v.opprettet,
+                v.kilde
             FROM
                 vedtak_v1 v,
                 vedtak_ko_v1 k,
@@ -388,7 +392,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         satsBeløp = row.int("sats_belop"),
         satsBeskrivelse = row.string("sats_beskrivelse"),
         beløp = row.bigDecimal("belop"),
-        opprettet = row.localDateTime("opprettet")
+        opprettet = row.localDateTime("opprettet"),
+        kilde = KravKilde.valueOf(row.string("kilde")),
     )
 
     override fun fjernFraVedTakKø(vedtakId: Long) = session {
@@ -417,7 +422,10 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 sats_belop,
                 sats_beskrivelse,
                 belop,
-                opprettet FROM vedtak_v1 WHERE id =:id
+                opprettet,
+                kilde
+            FROM vedtak_v1
+            WHERE id = :id
         """.trimIndent()
         sessionFactory().query(sql, mapOf("id" to vedtakId)) { row ->
             mapVedtak(row)

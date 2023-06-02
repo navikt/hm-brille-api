@@ -106,7 +106,8 @@ internal class KravApiTest {
         sats = SatsType.SATS_1,
         satsBeløp = SatsType.SATS_1.beløp(LocalDate.now()),
         satsBeskrivelse = SatsType.SATS_1.beskrivelse,
-        beløp = SatsType.SATS_1.beløp(LocalDate.now()).toBigDecimal()
+        beløp = SatsType.SATS_1.beløp(LocalDate.now()).toBigDecimal(),
+        kilde = KravKilde.KRAV_APP,
     )
 
     private fun kjørTest(

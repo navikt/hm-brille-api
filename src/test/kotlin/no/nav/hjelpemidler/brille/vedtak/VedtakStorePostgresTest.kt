@@ -53,6 +53,7 @@ internal class VedtakStorePostgresTest {
                             satsBeløp = sats.beløp(LocalDate.now()),
                             satsBeskrivelse = sats.beskrivelse,
                             beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
+                            kilde = KravKilde.KRAV_APP,
                         )
                     )
 
@@ -81,6 +82,7 @@ internal class VedtakStorePostgresTest {
                             satsBeløp = sats.beløp(LocalDate.now()),
                             satsBeskrivelse = sats.beskrivelse,
                             beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
+                            kilde = KravKilde.KRAV_APP,
                         )
                     )
 

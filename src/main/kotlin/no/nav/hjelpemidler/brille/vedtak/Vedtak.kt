@@ -24,6 +24,7 @@ data class Vedtak<T>(
     val satsBeskrivelse: String,
     val beløp: BigDecimal,
     val opprettet: LocalDateTime = LocalDateTime.now(),
+    val kilde: KravKilde,
 )
 
 data class EksisterendeVedtak(

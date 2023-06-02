@@ -10,6 +10,7 @@ import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
+import no.nav.hjelpemidler.brille.vedtak.KravKilde
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import org.junit.jupiter.api.Test
@@ -52,6 +53,7 @@ class UtbetalingServiceTest {
                 satsBeløp = sats.beløp(LocalDate.now()),
                 satsBeskrivelse = sats.beskrivelse,
                 beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
+                kilde = KravKilde.KRAV_APP,
             )
 
             val nyUtbetaling = utbetalingService.opprettNyUtbetaling(vedtak = etInnvilgetVedtak)

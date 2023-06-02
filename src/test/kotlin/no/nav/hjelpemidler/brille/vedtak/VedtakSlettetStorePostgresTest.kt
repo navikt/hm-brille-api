@@ -50,6 +50,7 @@ class VedtakSlettetStorePostgresTest {
                         satsBeløp = sats.beløp(LocalDate.now()),
                         satsBeskrivelse = sats.beskrivelse,
                         beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
+                        kilde = KravKilde.KRAV_APP,
                     )
                 )
                 this.lagreVedtakIKø(lagretVedtak.id, lagretVedtak.opprettet)

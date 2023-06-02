@@ -26,6 +26,7 @@ import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
+import no.nav.hjelpemidler.brille.vedtak.KravKilde
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakConflictException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakInternalServerErrorException
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakService
@@ -197,7 +198,8 @@ fun Route.integrasjonApi(
                         brukersNavn = barnPdl.navn(),
                         orgAdresse = enhetTilAdresseFor(enhet),
                         orgNavn = enhet.navn,
-                    )
+                    ),
+                    KravKilde.INTEGRASJON,
                 )
                 val vedtakDto = vedtak.toDto()
 

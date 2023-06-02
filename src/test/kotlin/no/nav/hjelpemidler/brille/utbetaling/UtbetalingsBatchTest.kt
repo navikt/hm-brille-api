@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldNotBe
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
+import no.nav.hjelpemidler.brille.vedtak.KravKilde
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vedtak.toDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
@@ -31,6 +32,7 @@ class UtbetalingsBatchTest {
             satsBeløp = sats.beløp(LocalDate.now()),
             satsBeskrivelse = sats.beskrivelse,
             beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
+            kilde = KravKilde.KRAV_APP,
         )
 
         val ut1 = Utbetaling(
@@ -55,6 +57,7 @@ class UtbetalingsBatchTest {
             satsBeløp = sats.beløp(LocalDate.now()),
             satsBeskrivelse = sats.beskrivelse,
             beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
+            kilde = KravKilde.KRAV_APP,
         )
 
         val ut2 = Utbetaling(
@@ -79,6 +82,7 @@ class UtbetalingsBatchTest {
             satsBeløp = sats.beløp(LocalDate.now()),
             satsBeskrivelse = sats.beskrivelse,
             beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
+            kilde = KravKilde.KRAV_APP,
         )
 
         val ut3 = Utbetaling(

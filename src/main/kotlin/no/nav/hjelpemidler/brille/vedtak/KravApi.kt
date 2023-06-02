@@ -35,7 +35,7 @@ internal fun Route.kravApi(
                 oppslagBeskrivelse = "[POST] /krav - Innsending av krav"
             )
 
-            val vedtak = vedtakService.lagVedtak(fnrInnsender, navnInnsender, kravDto)
+            val vedtak = vedtakService.lagVedtak(fnrInnsender, navnInnsender, kravDto, KravKilde.KRAV_APP)
             call.respond(
                 HttpStatusCode.OK,
                 vedtak.toDto()
