@@ -65,7 +65,8 @@ class SlettVedtakStorePostgres(private val sessionFactory: () -> Session) : Slet
                 sats_belop,
                 sats_beskrivelse,
                 belop,
-                opprettet
+                opprettet,
+                kilde
             )
             SELECT
                 id,
@@ -82,7 +83,8 @@ class SlettVedtakStorePostgres(private val sessionFactory: () -> Session) : Slet
                 sats_belop,
                 sats_beskrivelse,
                 belop,
-                opprettet
+                opprettet,
+                kilde
             FROM vedtak_v1
             WHERE id =:id;
             DELETE FROM vedtak_v1 where id =:id;
