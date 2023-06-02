@@ -8,7 +8,11 @@ import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import no.nav.hjelpemidler.configuration.EnvironmentVariable
 import java.time.Duration
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 
 object Configuration {
     private val defaultProperties = ConfigurationMap(
@@ -218,9 +222,20 @@ object Configuration {
         val port: Int = 6379,
         val password: String = this["REDIS_PASSWORD"],
         val hprExpirySeconds: Long = Duration.ofDays(1).seconds,
-        val medlemskapBarnExpirySeconds: Long = Duration.ofDays(1).seconds,
+        val medlemskapBarnExpiryDayOfMonth: Int = 7,
         val orgenhetExpirySeconds: Long = Duration.ofHours(2).seconds,
-    )
+    ) {
+        fun medlemskapBarnExpirySeconds(): Long = LocalDateTime.now().let { now ->
+            val dt = if (now.dayOfMonth < medlemskapBarnExpiryDayOfMonth) {
+                LocalDateTime.of(now.year, now.month, medlemskapBarnExpiryDayOfMonth, 0, 0)
+            } else {
+                val mo = (now.month.value % 12) + 1 // Advance by 1, wrap around to january
+                val yr = if (now.month.value < mo) { now.year } else { now.year + 1 }
+                LocalDateTime.of(yr, mo, medlemskapBarnExpiryDayOfMonth, 0, 0)
+            }
+            now.until(dt, ChronoUnit.SECONDS)
+        }
+    }
 
     data class AltinnProperties(
         val baseUrl: String = this["altinn.altinnUrl"],

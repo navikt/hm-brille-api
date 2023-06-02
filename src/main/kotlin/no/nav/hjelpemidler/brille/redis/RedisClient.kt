@@ -41,7 +41,7 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
     fun setMedlemskapBarn(fnr: String, bestillingsdato: LocalDate, medlemskapResultat: MedlemskapResultat) {
         jedis.setex(
             medlemskapBarnKey(fnr, bestillingsdato),
-            redisProps.medlemskapBarnExpirySeconds,
+            redisProps.medlemskapBarnExpirySeconds(),
             jsonMapper.writeValueAsString(medlemskapResultat)
         )
     }
