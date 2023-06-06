@@ -6,6 +6,8 @@ on:
       - ".gitignore"
       - "LICENCE"
       - "CODEOWNERS"
+      - '.hotnais/alerts/**'
+      - '.github/workflows/deploy-alerts-dev.yml'
     branches:
       - main
 env:
