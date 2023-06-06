@@ -13,7 +13,7 @@ spec:
         - apiURL:
             key: apiUrl
             name: slack-webhook
-          channel: '#digihot-brille-alerts-dev'
+          channel: 'digihot-brille-alerts-dev'
           username: 'Alert hm-brille-api {{ cluster }}'
           iconEmoji: ':error:'
           sendResolved: true
