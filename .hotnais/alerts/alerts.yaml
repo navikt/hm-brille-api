@@ -18,6 +18,8 @@ spec:
           labels:
             namespace: teamdigihot
             severity: critical
+            special_type_to_use_in_alertmanager_config: hm-brille-api-alert-manager
+            alert_type: custom
 
         - alert: test alert will always trigger
           expr: container_memory_working_set_bytes{namespace="teamdigihot", container="hm-brille-api"} > 99
@@ -28,6 +30,8 @@ spec:
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
             summary: "Container _*{{ $labels.container }}*_ has a working set of {{ $value }} bytes."
             sla: "no need to respond"
+            special_type_to_use_in_alertmanager_config: hm-brille-api-alert-manager
+            alert_type: custom
 
         - alert: hm-brille-api - Høy feilrate i logger
           expr: (100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_app="hm-brille-api",log_level=~"Warning|Error"}[3m])) / sum by (log_app, log_namespace) (rate(logd_messages_total{log_app="hm-brille-api"}[3m]))) > 10
