@@ -1,0 +1,60 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: hm-brille-api-alert-manager-slack
+  namespace: teamdigihot
+  labels:
+    alertmanagerConfig: hm-brille-api-alert-manager-slack
+    team: teamdigihot
+spec:
+  receivers:
+    - name: hm-brille-api-slack-receiver
+      slackConfigs:
+        - apiURL:
+            key: apiUrl
+            name: slack-webhook
+          channel: '#digihot-brille-alerts-dev'
+          username: 'Alert hm-brille-api {{ cluster }}'
+          iconEmoji: ':error:'
+          sendResolved: true
+          title: |-
+            [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+          text: |-
+            {{ range .Alerts -}}
+            *Alert:* {{ .Annotations.title }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+            *Summary:* {{ .Annotations.summary }}
+            *Description:* {{ .Annotations.description }} <https://logs.adeo.no/app/discover#/?_g=(time:(from:now-24h,to:now))&_a=(columns:!(message,envclass,level),index:'96e648c0-980a-11e9-830a-e17bbd64b4db',interval:auto,query:(language:lucene,query:'%2Bapplication:%22k9-los-api%22%20%2Bcluster:{{ cluster }}%20%2Blevel:Error'))|kibana>
+            {{ end }}
+          color: |-
+            {{ if eq .Status "firing" -}}
+              {{ if eq .CommonLabels.severity "warning" -}}
+                warning
+              {{- else if eq .CommonLabels.severity "fatal" -}}
+                #611f69
+              {{- else if eq .CommonLabels.severity "critical" -}}
+                #611f69
+              {{- else if eq .CommonLabels.severity "danger" -}}
+                danger
+              {{- else if eq .CommonLabels.severity "error" -}}
+                danger
+              {{- else if eq .CommonLabels.severity "notice" -}}
+                good
+              {{- else if eq .CommonLabels.severity "info" -}}
+                #36c5f0
+              {{- else -}}
+                .CommonLabels.severity
+              {{- end -}}
+            {{ else -}}
+            good
+            {{- end }}
+  route:
+    groupBy:
+      - alertname
+    matchers:
+      - name: "special_type_to_use_in_alertmanager_config"
+        matchType: "="
+        value: "hm-brille-api-alert-manager"
+    groupInterval: 10s
+    groupWait: 5s
+    receiver: hm-brille-api-slack-receiver
+    repeatInterval: 2m

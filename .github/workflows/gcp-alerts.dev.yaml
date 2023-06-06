@@ -1,0 +1,30 @@
+name: NAIS Alerts, apply changes DEV
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '.hotnais/alerts/**'
+      - '.github/workflows/gcp-alerts.dev.yaml'
+
+jobs:
+  deploy-to-dev:
+    name: Deploy to ${{ matrix.cluster }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cluster: [ dev-gcp ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: ${{ matrix.cluster }}
+          RESOURCE: .hotnais/alerts/alerts-manager-dev.yaml
+      - uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          CLUSTER: ${{ matrix.cluster }}
+          RESOURCE: .hotnais/alerts/alerts.yaml
