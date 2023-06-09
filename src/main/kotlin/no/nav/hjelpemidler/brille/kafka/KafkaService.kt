@@ -12,6 +12,7 @@ import no.nav.hjelpemidler.brille.avtale.Avtale
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
+import no.nav.hjelpemidler.brille.vedtak.KravKilde
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
@@ -108,7 +109,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 bestillingsreferanse = vedtak.bestillingsreferanse,
                 satsBeløp = vedtak.satsBeløp,
                 satsBeskrivelse = vedtak.satsBeskrivelse,
-                beløp = vedtak.beløp
+                beløp = vedtak.beløp,
+                kilde = vedtak.kilde,
             )
         )
         sendTilBigQuery(
@@ -130,7 +132,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 satsBeløp = vedtak.satsBeløp,
                 satsBeskrivelse = vedtak.satsBeskrivelse,
                 beløp = vedtak.beløp,
-                bestillingsreferanse = vedtak.bestillingsreferanse
+                bestillingsreferanse = vedtak.bestillingsreferanse,
+                kilde = vedtak.kilde,
             )
         )
     }
@@ -247,7 +250,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val bestillingsreferanse: String,
         val satsBeløp: Int,
         val satsBeskrivelse: String,
-        val beløp: BigDecimal
+        val beløp: BigDecimal,
+        val kilde: KravKilde,
     )
 
     /**
@@ -297,7 +301,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val satsBeløp: Int,
         val satsBeskrivelse: String,
         val beløp: BigDecimal,
-        val bestillingsreferanse: String
+        val bestillingsreferanse: String,
+        val kilde: KravKilde,
     )
 
     @JsonNaming(BigQueryStrategy::class)
