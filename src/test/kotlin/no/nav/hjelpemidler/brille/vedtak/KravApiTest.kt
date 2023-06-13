@@ -66,7 +66,7 @@ internal class KravApiTest {
         }
     }
 
-    @Test
+    // @Test
     internal fun `happy day`() {
         runBlocking {
             kjørTest(

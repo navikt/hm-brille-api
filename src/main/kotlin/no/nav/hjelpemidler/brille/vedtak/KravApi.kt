@@ -25,6 +25,8 @@ internal fun Route.kravApi(
 ) {
     route("/krav") {
         post {
+            // FIXME: TEST - Kristoffer
+            return@post call.respond(HttpStatusCode.InternalServerError, "Nope")
             val kravDto = call.receive<KravDto>()
             val fnrInnsender = call.extractFnr()
             val navnInnsender = redisClient.optikerNavn(fnrInnsender) ?: "<Ukjent>"
