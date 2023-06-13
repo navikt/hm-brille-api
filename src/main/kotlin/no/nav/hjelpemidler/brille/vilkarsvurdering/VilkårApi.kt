@@ -25,6 +25,8 @@ fun Route.vilkårApi(
     kafkaService: KafkaService
 ) {
     post("/vilkarsgrunnlag") {
+        // FIXME: TEST - Kristoffer
+        return@post call.respond(HttpStatusCode.InternalServerError, "Nope")
         try {
             val vilkårsgrunnlag = call.receive<VilkårsgrunnlagDto>()
             auditService.lagreOppslag(
