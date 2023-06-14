@@ -9,6 +9,15 @@ spec:
   groups:
     - name: hm-brille-api-alerts
       rules:
+        - alert: hm-brille-api har feil i logger
+          expr: (100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_namespace="teamdigihot",log_level=~"Error"}[1m]))/sum by (log_app, log_namespace) (rate(logd_messages_total{log_namespace="teamdigihot"}[1m]))) > 1
+          for: 1m
+          annotations:
+            summary: "Sjekk loggene til app {{ $labels.log_app }} i namespace {{ $labels.log_namespace }}, for å se hvorfor det er feil"
+            action: "`kubectl logs -l app={{ $labels.log_app }} -n {{ $labels.log_namespace }} -c {{ $labels.log_app }} --tail=100`"
+          labels:
+            namespace: teamdigihot
+            severity: warning
         - alert: hm-brille-api - Applikasjonen er nede
           expr: kube_deployment_status_replicas_available{deployment="hm-brille-api"} == 0
           for: 2m
@@ -18,14 +27,3 @@ spec:
           labels:
             namespace: teamdigihot
             severity: critical
-            special_type_to_use_in_alertmanager_config: hm-brille-api-alert-manager
-            alert_type: custom
-
-        - alert: hm-brille-api har feil i logger
-          expr: (100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_namespace="teamdigihot",log_level=~"Error"}[1m]))/sum by (log_app, log_namespace) (rate(logd_messages_total{log_namespace="teamdigihot"}[3m]))) > 1
-          for: 1m
-          annotations:
-            summary: "Sjekk loggene til app {{ $labels.log_app }} i namespace {{ $labels.log_namespace }}, for å se hvorfor det er feil"
-            action: "`kubectl logs -l app={{ $labels.log_app }} -n {{ $labels.log_namespace }} -c {{ $labels.log_app }} --tail=100`"
-          labels:
-            namespace: teamdigihot
