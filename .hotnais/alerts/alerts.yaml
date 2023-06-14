@@ -30,6 +30,9 @@ spec:
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
             summary: "Container _*{{ $labels.container }}*_ has a working set of {{ $value }} bytes."
             sla: "no need to respond"
+          labels:
+            namespace: teamdigihot
+            severity: warning
             special_type_to_use_in_alertmanager_config: hm-brille-api-alert-manager
             alert_type: custom
 
