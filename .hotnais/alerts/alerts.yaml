@@ -21,29 +21,11 @@ spec:
             special_type_to_use_in_alertmanager_config: hm-brille-api-alert-manager
             alert_type: custom
 
-        - alert: test alert will always trigger
-          expr: container_memory_working_set_bytes{namespace="teamdigihot", container="hm-brille-api"} > 99
+        - alert: hm-brille-api har feil i logger
+          expr: (100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_namespace="teamdigihot",log_level=~"Error"}[1m]))/sum by (log_app, log_namespace) (rate(logd_messages_total{log_namespace="teamdigihot"}[3m]))) > 1
           for: 1m
           annotations:
-            consequence: "_*{{ $labels.container }}*_ has a working set of {{ $value }} bytes, there is no consequence"
-            action: "no need to do _anything here_"
-            documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
-            summary: "Container _*{{ $labels.container }}*_ has a working set of {{ $value }} bytes."
-            sla: "no need to respond"
+            summary: "Sjekk loggene til app {{ $labels.log_app }} i namespace {{ $labels.log_namespace }}, for å se hvorfor det er feil"
+            action: "`kubectl logs -l app={{ $labels.log_app }} -n {{ $labels.log_namespace }} -c {{ $labels.log_app }} --tail=100`"
           labels:
             namespace: teamdigihot
-            severity: warning
-            special_type_to_use_in_alertmanager_config: hm-brille-api-alert-manager
-            alert_type: custom
-
-        - alert: hm-brille-api - Høy feilrate i logger
-          expr: (100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_app="hm-brille-api",log_level=~"Warning|Error"}[3m])) / sum by (log_app, log_namespace) (rate(logd_messages_total{log_app="hm-brille-api"}[3m]))) > 10
-          for: 3m
-          annotations:
-            consequence: "høy feilrate i loggene for hm-brille-api"
-            action: "Sjekk loggene til app hm-brille-api i namespace teamdigihot, for å se hvorfor det er så mye feil"
-          labels:
-            namespace: teamdigihot
-            severity: warning
-            special_type_to_use_in_alertmanager_config: hm-brille-api-alert-manager
-            alert_type: custom
