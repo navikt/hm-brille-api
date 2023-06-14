@@ -26,7 +26,7 @@ spec:
           for: 1m
           annotations:
             consequence: "_*{{ $labels.container }}*_ has a working set of {{ $value }} bytes, there is no consequence"
-            action: "no need to do _anything_"
+            action: "no need to do _anything here_"
             documentation: "https://prometheus.io/docs/prometheus/latest/querying/basics/"
             summary: "Container _*{{ $labels.container }}*_ has a working set of {{ $value }} bytes."
             sla: "no need to respond"
