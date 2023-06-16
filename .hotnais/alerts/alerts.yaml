@@ -10,7 +10,7 @@ spec:
     - name: hm-brille-api-alerts
       rules:
         - alert: hm-brille-api har feil i logger
-          expr: (100 * sum by (log_app, log_namespace) (rate(logd_messages_total{log_namespace="teamdigihot",log_level=~"Error"}[1m]))/sum by (log_app, log_namespace) (rate(logd_messages_total{log_namespace="teamdigihot"}[1m]))) > 1
+          expr:  sum (increase(log_messages_errors{app="{{hm-brille-api}}",level=~"Error"}[5m])) > 1
           for: 1m
           annotations:
             summary: "Sjekk loggene til app {{ $labels.log_app }} i namespace {{ $labels.log_namespace }}, for å se hvorfor det er feil"
