@@ -53,11 +53,11 @@ internal class SatsApiTest {
             SatsType.SATS_5.beløp(dato) shouldBe 4850
             SatsType.INGEN.beløp(dato) shouldBe 0
         } else {
-            SatsType.SATS_1.beløp(dato) shouldBe 791
-            SatsType.SATS_2.beløp(dato) shouldBe 2055
-            SatsType.SATS_3.beløp(dato) shouldBe 2793
-            SatsType.SATS_4.beløp(dato) shouldBe 3320
-            SatsType.SATS_5.beløp(dato) shouldBe 5112
+            SatsType.SATS_1.beløp(dato) shouldBe 770
+            SatsType.SATS_2.beløp(dato) shouldBe 2000
+            SatsType.SATS_3.beløp(dato) shouldBe 2715
+            SatsType.SATS_4.beløp(dato) shouldBe 3230
+            SatsType.SATS_5.beløp(dato) shouldBe 4975
             SatsType.INGEN.beløp(dato) shouldBe 0
         }
     }

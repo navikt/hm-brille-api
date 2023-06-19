@@ -74,11 +74,11 @@ enum class SatsType(
 
         // Nye satser
         false -> when (this) {
-            SATS_1 -> 791
-            SATS_2 -> 2055
-            SATS_3 -> 2793
-            SATS_4 -> 3320
-            SATS_5 -> 5112
+            SATS_1 -> 770
+            SATS_2 -> 2000
+            SATS_3 -> 2715
+            SATS_4 -> 3230
+            SATS_5 -> 4975
             INGEN -> 0
         }
     }
