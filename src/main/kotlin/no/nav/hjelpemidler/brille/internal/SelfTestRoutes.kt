@@ -8,12 +8,18 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import no.nav.hjelpemidler.brille.tss.TssIdentRiver
+import org.slf4j.LoggerFactory
+
+private val log = KotlinLogging.logger {}
 
 fun Route.internalRoutes(
+    selfTestService: SelfTestService,
     kafkaService: KafkaService,
     pdlService: PdlService,
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
@@ -45,7 +51,12 @@ fun Route.internalRoutes(
                 return@post call.respond(HttpStatusCode.InternalServerError, "Kafka consumer is closed in hm-brille-api")
             }
 
-            // TODO: Sjekk Brille-api postgres database
+            // Sjekk Brille-api postgres database
+            val dbTest = runCatching { selfTestService.sjekkDatabaseKobling() }.getOrElse { err ->
+                log.error(err) { "Exception mens man sjekket database kobling som en del av en deep-ping" }
+                return@getOrElse null
+            }
+            if (dbTest != true) return@post call.respond(HttpStatusCode.InternalServerError, "sjekk av databasekobling feilet")
 
             // TODO: Sjekk Saksbehandler/hotsak rekursivt
 
@@ -54,8 +65,10 @@ fun Route.internalRoutes(
             // TODO: Sjekk Persondataløsningen (PDL)
 
             // Sjekk Enhetsregisteret
-            runCatching { enhetsregisteretService.hentOrganisasjonsenhet("889640782") }.getOrNull()
-                ?: return@post call.respond(HttpStatusCode.InternalServerError, "ingen kontakt med enhetsregisteret")
+            runCatching { enhetsregisteretService.hentOrganisasjonsenhet("889640782") }.getOrElse { err ->
+                log.error(err) { "Exception mens man sjekket enhetsregisteret som en del av en deep-ping" }
+                return@getOrElse null
+            } ?: return@post call.respond(HttpStatusCode.InternalServerError, "ingen kontakt med enhetsregisteret")
 
             // Ferdig
             call.respond(HttpStatusCode.OK, "Klar!")
