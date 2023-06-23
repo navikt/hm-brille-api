@@ -199,7 +199,7 @@ fun Application.setupRoutes() {
     installAuthentication()
 
     routing {
-        internalRoutes(kafkaService)
+        internalRoutes(kafkaService, pdlService, syfohelsenettproxyClient, enhetsregisteretService)
 
         route("/api") {
             satsApi()
