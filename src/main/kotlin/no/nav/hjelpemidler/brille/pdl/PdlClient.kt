@@ -5,7 +5,6 @@ import com.expediagroup.graphql.client.ktor.GraphQLKtorClient
 import com.expediagroup.graphql.client.types.GraphQLClientError
 import com.expediagroup.graphql.client.types.GraphQLClientRequest
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
@@ -100,9 +99,6 @@ class PdlClient(
         }
         // Kjør en "OPTIONS" spørring mot graphql api-endepunkt, og kast exception om svaret er non-2xx
         // ref.: https://pdldocs-navno.msappproxy.net/ekstern/index.html#pdlapi-ping-og-helsesjekk
-        val response = throwAwayClient.options(baseUrl)
-        val status = response.status
-        val body = response.body<String>()
-        log.info("DEBUG: PDL-helsesjekk svar (status=$status): \"$body\"")
+        throwAwayClient.options(baseUrl)
     }
 }
