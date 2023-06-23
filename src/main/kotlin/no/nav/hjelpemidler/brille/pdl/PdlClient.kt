@@ -5,9 +5,11 @@ import com.expediagroup.graphql.client.ktor.GraphQLKtorClient
 import com.expediagroup.graphql.client.types.GraphQLClientError
 import com.expediagroup.graphql.client.types.GraphQLClientRequest
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
+import io.ktor.client.request.options
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
@@ -26,7 +28,7 @@ private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class PdlClient(
     props: Configuration.PdlProperties,
-    engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
+    val engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
 ) {
     private val baseUrl = props.baseUrl
     private val client = GraphQLKtorClient(
@@ -86,4 +88,21 @@ class PdlClient(
         execute(MedlemskapHentBarn(MedlemskapHentBarn.Variables(fnr))) {
             PdlOppslagBarn(it.hentPerson, jsonMapper.valueToTree(it))
         }
+
+    suspend fun helseSjekk() {
+        // Bruker en throw-away klient for helesjekken (ingen connection pooling, auth, etc.)
+        val throwAwayClient = HttpClient(engine) {
+            expectSuccess = true
+            defaultRequest {
+                header("Tema", "HJE")
+                header("X-Correlation-ID", UUID.randomUUID().toString())
+            }
+        }
+        // Kjør en "OPTIONS" spørring mot graphql api-endepunkt, og kast exception om svaret er non-2xx
+        // ref.: https://pdldocs-navno.msappproxy.net/ekstern/index.html#pdlapi-ping-og-helsesjekk
+        val response = throwAwayClient.options(baseUrl)
+        val status = response.status
+        val body = response.body<String>()
+        log.info("DEBUG: PDL-helsesjekk svar (status=$status): \"$body\"")
+    }
 }

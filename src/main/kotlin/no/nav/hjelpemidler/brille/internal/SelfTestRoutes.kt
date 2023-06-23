@@ -63,6 +63,10 @@ fun Route.internalRoutes(
             // TODO: Sjekk Helsepersonellregisteret (HPR)
 
             // TODO: Sjekk Persondataløsningen (PDL)
+            runCatching { pdlService.helseSjekk() }.getOrElse { err ->
+                log.error(err) { "Exception mens man sjekket PDL som en del av en deep-ping" }
+                return@getOrElse null
+            } ?: return@post call.respond(HttpStatusCode.InternalServerError, "sjekk av pdl feilet")
 
             // Sjekk Enhetsregisteret
             runCatching { enhetsregisteretService.hentOrganisasjonsenhet("889640782") }.getOrElse { err ->
