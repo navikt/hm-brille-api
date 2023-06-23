@@ -42,13 +42,13 @@ fun Route.internalRoutes(
                 call.respondText("Application is ready!", status = HttpStatusCode.OK)
         }
 
-        post("/deep-ping") {
+        get("/deep-ping") {
             // Sjekk Rapid and rivers:
             if (kafkaService.isProducerClosed()) {
-                return@post call.respond(HttpStatusCode.InternalServerError, "Kafka producer is closed in hm-brille-api")
+                return@get call.respond(HttpStatusCode.InternalServerError, "Kafka producer is closed in hm-brille-api")
             }
             if (kafkaService.isConsumerClosed()) {
-                return@post call.respond(HttpStatusCode.InternalServerError, "Kafka consumer is closed in hm-brille-api")
+                return@get call.respond(HttpStatusCode.InternalServerError, "Kafka consumer is closed in hm-brille-api")
             }
 
             // Sjekk Brille-api postgres database
@@ -56,7 +56,7 @@ fun Route.internalRoutes(
                 log.error(err) { "Exception mens man sjekket database kobling som en del av en deep-ping" }
                 return@getOrElse null
             }
-            if (dbTest != true) return@post call.respond(HttpStatusCode.InternalServerError, "sjekk av databasekobling feilet")
+            if (dbTest != true) return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av databasekobling feilet")
 
             // TODO: Sjekk Saksbehandler/hotsak rekursivt
 
@@ -66,13 +66,13 @@ fun Route.internalRoutes(
             runCatching { pdlService.helseSjekk() }.getOrElse { err ->
                 log.error(err) { "Exception mens man sjekket PDL som en del av en deep-ping" }
                 return@getOrElse null
-            } ?: return@post call.respond(HttpStatusCode.InternalServerError, "sjekk av pdl feilet")
+            } ?: return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av pdl feilet")
 
             // Sjekk Enhetsregisteret
             runCatching { enhetsregisteretService.hentOrganisasjonsenhet("889640782") }.getOrElse { err ->
                 log.error(err) { "Exception mens man sjekket enhetsregisteret som en del av en deep-ping" }
                 return@getOrElse null
-            } ?: return@post call.respond(HttpStatusCode.InternalServerError, "ingen kontakt med enhetsregisteret")
+            } ?: return@get call.respond(HttpStatusCode.InternalServerError, "ingen kontakt med enhetsregisteret")
 
             // Ferdig
             call.respond(HttpStatusCode.OK, "Klar!")
