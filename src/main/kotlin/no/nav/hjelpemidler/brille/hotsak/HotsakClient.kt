@@ -3,6 +3,8 @@ package no.nav.hjelpemidler.brille.hotsak
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.expectSuccess
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -58,6 +60,22 @@ class HotsakClient(
             throw HotsakClientException("Feil under henting av vedtaksdato data", clientReqException)
         } catch (e: Exception) {
             throw HotsakClientException("Ukjent feil under henting av vedtaksdato data", e)
+        }
+    }
+
+    suspend fun deepPing() {
+        val baseUrlNoApp = baseUrl.removeSuffix("/").removeSuffix("/api")
+        try {
+            val url = "$baseUrlNoApp/deep-ping"
+            log.info { "Kjører deep-ping mot hm-saksbehandling med url: $url" }
+            val response = client.get(url) {
+                expectSuccess = true // Vær eksplisitt i tilfelle noen endrer på den delte klienten.
+            }
+            log.info { "Har fått response fra hm-saksbehandling med status: ${response.status}" }
+        } catch (clientReqException: ClientRequestException) {
+            throw HotsakClientException("Feil under deep-ping mot hm-saksbehandling", clientReqException)
+        } catch (e: Exception) {
+            throw HotsakClientException("Ukjent feil under deep-ping mot hm-saksbehandling", e)
         }
     }
 

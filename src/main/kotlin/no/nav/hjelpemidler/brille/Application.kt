@@ -201,7 +201,7 @@ fun Application.setupRoutes() {
     installAuthentication()
 
     routing {
-        internalRoutes(selfTestService, kafkaService, pdlService, syfohelsenettproxyClient, enhetsregisteretService)
+        internalRoutes(selfTestService, kafkaService, hotsakClient, pdlService, syfohelsenettproxyClient, enhetsregisteretService)
 
         route("/api") {
             satsApi()

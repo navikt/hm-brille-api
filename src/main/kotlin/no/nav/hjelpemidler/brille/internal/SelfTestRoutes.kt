@@ -10,6 +10,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
+import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
@@ -21,6 +22,7 @@ private val log = KotlinLogging.logger {}
 fun Route.internalRoutes(
     selfTestService: SelfTestService,
     kafkaService: KafkaService,
+    hotsakClient: HotsakClient,
     pdlService: PdlService,
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     enhetsregisteretService: EnhetsregisteretService,
@@ -58,7 +60,11 @@ fun Route.internalRoutes(
             }
             if (dbTest != true) return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av databasekobling feilet")
 
-            // TODO: Sjekk Saksbehandler/hotsak rekursivt
+            // Sjekk Saksbehandler/hotsak rekursivt
+            runCatching { hotsakClient.deepPing() }.getOrElse { e ->
+                log.error(e) { "Exception mens man sjekket hotsak som en del av en deep-ping" }
+                return@getOrElse null
+            } ?: return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av hotsak feilet")
 
             // TODO: Sjekk Helsepersonellregisteret (HPR)
 
