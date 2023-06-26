@@ -9,6 +9,7 @@ import no.nav.hjelpemidler.brille.test.TestRouting
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvFileSource
 import java.time.LocalDate
+import java.time.Month
 
 internal class SatsApiTest {
     private val routing = TestRouting {
@@ -24,19 +25,20 @@ internal class SatsApiTest {
         venstreSylinder: Double,
         sats: String,
     ) = routing.test {
-        val response = client.post("/brillesedler") {
+        val response = client.post("/satsgrunnlag") {
             setBody(
-                Brilleseddel(
+                SatsGrunnlag(
                     høyreSfære = høyreSfære,
                     høyreSylinder = høyreSylinder,
                     venstreSfære = venstreSfære,
                     venstreSylinder = venstreSylinder,
+                    bestillingsdato = LocalDate.of(2023, Month.JULY, 1)
                 )
             )
         }
 
         response.status shouldBe HttpStatusCode.OK
-        response.body<BeregnetSatsDto>().sats shouldBe SatsType.valueOf(sats)
+        response.body<SatsBeregning>().sats shouldBe SatsType.valueOf(sats)
     }
 
     @ParameterizedTest
