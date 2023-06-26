@@ -5,13 +5,13 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import java.time.LocalDate
 
 fun Route.satsApi() {
+    // fixme -> fjernes når konsumenter har endret til ny url for satsberegning
     post("/brillesedler") {
-        val brilleseddel = call.receive<Brilleseddel>()
-        val satsKalkulator = SatsKalkulator(brilleseddel)
-        val satsType = satsKalkulator.kalkuler()
-        call.respond(BeregnetSatsDto(satsType, satsType.beskrivelse, satsType.beløp(LocalDate.now())))
+        call.respond(beregnSats(call.receive<SatsGrunnlag>()))
+    }
+    post("/satsgrunnlag") {
+        call.respond(beregnSats(call.receive<SatsGrunnlag>()))
     }
 }

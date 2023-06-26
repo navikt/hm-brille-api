@@ -5,6 +5,7 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.time.LocalDate
+import java.time.Month
 
 object Diopter {
     const val MIN: Double = 0.0
@@ -60,8 +61,8 @@ enum class SatsType(
         beskrivelse = "INGEN",
     );
 
-    private val datoForNyeSatser = LocalDate.parse("2023-07-01")
-    fun beløp(bestillingsdato: LocalDate) = when (bestillingsdato.isBefore(datoForNyeSatser)) {
+    private val datoForNyeSatser = LocalDate.of(2023, Month.JULY, 1)
+    fun beløp(bestillingsdato: LocalDate): Int = when (bestillingsdato.isBefore(datoForNyeSatser)) {
         // Gamle satser
         true -> when (this) {
             SATS_1 -> 750
