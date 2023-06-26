@@ -9,6 +9,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -20,7 +21,7 @@ import org.slf4j.LoggerFactory
 private val log = KotlinLogging.logger {}
 
 fun Route.internalRoutes(
-    selfTestService: SelfTestService,
+    databaseContext: DatabaseContext,
     kafkaService: KafkaService,
     hotsakClient: HotsakClient,
     pdlService: PdlService,
@@ -54,31 +55,29 @@ fun Route.internalRoutes(
             }
 
             // Sjekk Brille-api postgres database
-            val dbTest = runCatching { selfTestService.sjekkDatabaseKobling() }.getOrElse { err ->
-                log.error(err) { "Exception mens man sjekket database kobling som en del av en deep-ping" }
-                return@getOrElse null
-            }
+            val dbTest = runCatching { databaseContext.dataSource.connection!!.isValid(5) }.onFailure { e ->
+                log.error(e) { "Exception mens man sjekket database kobling som en del av en deep-ping" }
+            }.getOrNull()
             if (dbTest != true) return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av databasekobling feilet")
 
             // Sjekk Saksbehandler/hotsak rekursivt
             runCatching { hotsakClient.deepPing() }.getOrElse { e ->
                 log.error(e) { "Exception mens man sjekket hotsak som en del av en deep-ping" }
-                return@getOrElse null
-            } ?: return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av hotsak feilet")
+                return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av hotsak feilet")
+            }
 
             // TODO: Sjekk Helsepersonellregisteret (HPR)
 
             // Sjekk Persondataløsningen (PDL)
-            runCatching { pdlService.helseSjekk() }.getOrElse { err ->
-                log.error(err) { "Exception mens man sjekket PDL som en del av en deep-ping" }
-                return@getOrElse null
-            } ?: return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av pdl feilet")
+            runCatching { pdlService.helseSjekk() }.getOrElse { e ->
+                log.error(e) { "Exception mens man sjekket PDL som en del av en deep-ping" }
+                return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av pdl feilet")
+            }
 
             // Sjekk Enhetsregisteret
-            runCatching { enhetsregisteretService.hentOrganisasjonsenhet("889640782") }.getOrElse { err ->
-                log.error(err) { "Exception mens man sjekket enhetsregisteret som en del av en deep-ping" }
-                return@getOrElse null
-            } ?: return@get call.respond(HttpStatusCode.InternalServerError, "ingen kontakt med enhetsregisteret")
+            runCatching { enhetsregisteretService.hentOrganisasjonsenhet("889640782") }.onFailure { e ->
+                log.error(e) { "Exception mens man sjekket enhetsregisteret som en del av en deep-ping" }
+            }.getOrNull() ?: return@get call.respond(HttpStatusCode.InternalServerError, "ingen kontakt med enhetsregisteret")
 
             // Ferdig
             call.respond(HttpStatusCode.OK, "Klar!")

@@ -5,7 +5,6 @@ import io.mockk.mockk
 import no.nav.hjelpemidler.brille.admin.AdminStore
 import no.nav.hjelpemidler.brille.audit.AuditStore
 import no.nav.hjelpemidler.brille.innsender.InnsenderStore
-import no.nav.hjelpemidler.brille.internal.SelfTestStore
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefStore
 import no.nav.hjelpemidler.brille.rapportering.RapportStore
 import no.nav.hjelpemidler.brille.tss.TssIdentStore
@@ -44,6 +43,5 @@ fun createDatabaseSessionContextWithMocks(): DatabaseSessionContext {
         override val joarkrefStore: JoarkrefStore = mockk(relaxed = true)
         override val slettVedtakStore: SlettVedtakStore = mockk(relaxed = true)
         override val adminStore: AdminStore = mockk(relaxed = true)
-        override val selfTestStore: SelfTestStore = mockk(relaxed = true)
     }
 }

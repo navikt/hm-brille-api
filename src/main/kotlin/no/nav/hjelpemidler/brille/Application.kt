@@ -43,7 +43,6 @@ import no.nav.hjelpemidler.brille.innsender.InnsenderService
 import no.nav.hjelpemidler.brille.innsender.innsenderApi
 import no.nav.hjelpemidler.brille.integrasjon.integrasjonApi
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
-import no.nav.hjelpemidler.brille.internal.SelfTestService
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefRiver
@@ -165,7 +164,6 @@ fun Application.setupRoutes() {
     val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)
-    val selfTestService = SelfTestService(databaseContext)
     val leaderElection = LeaderElection(Configuration.electorPath)
 
     val metrics = MetricsConfig(
@@ -201,7 +199,7 @@ fun Application.setupRoutes() {
     installAuthentication()
 
     routing {
-        internalRoutes(selfTestService, kafkaService, hotsakClient, pdlService, syfohelsenettproxyClient, enhetsregisteretService)
+        internalRoutes(databaseContext, kafkaService, hotsakClient, pdlService, syfohelsenettproxyClient, enhetsregisteretService)
 
         route("/api") {
             satsApi()
