@@ -42,6 +42,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
+private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 fun Route.integrasjonApi(
     vilkårsvurderingService: VilkårsvurderingService,
@@ -150,7 +151,7 @@ fun Route.integrasjonApi(
                 val resultat: Resultat,
                 val sats: SatsType,
                 val satsBeløp: BigDecimal,
-                val navReferanse: Long,
+                val navReferanse: Long? = null,
             )
 
             try {
@@ -181,41 +182,70 @@ fun Route.integrasjonApi(
                 )
 
                 // Kjør vilkårsvurdering og opprett vedtak
-                val vedtak = vedtakService.lagVedtak(
-                    req.ansvarligOptikersFnr, navnInnsender, KravDto(
-                        vilkårsgrunnlag = VilkårsgrunnlagDto(
-                            orgnr = req.virksomhetOrgnr,
-                            fnrBarn = req.fnrBarn,
-                            brilleseddel = req.brilleseddel,
-                            bestillingsdato = req.bestillingsdato,
-                            brillepris = req.brillepris,
-                            extras = VilkårsgrunnlagExtrasDto(
-                                orgNavn = enhet.navn,
-                                bestillingsreferanse = req.bestillingsreferanse,
-                            ),
-                        ),
-                        bestillingsreferanse = req.bestillingsreferanse,
-                        brukersNavn = barnPdl.navn(),
-                        orgAdresse = enhetTilAdresseFor(enhet),
-                        orgNavn = enhet.navn,
-                    ),
-                    KravKilde.INTEGRASJON,
-                )
-                val vedtakDto = vedtak.toDto()
 
-                // Svar ut spørringen
-                call.respond(
-                    Response(
-                        resultat = if (vedtakDto.behandlingsresultat == Behandlingsresultat.INNVILGET) {
-                            Resultat.JA
-                        } else {
-                            Resultat.NEI
-                        },
-                        sats = vedtakDto.sats,
-                        satsBeløp = vedtakDto.beløp,
-                        navReferanse = vedtakDto.id,
-                    )
+                val krav = KravDto(
+                    vilkårsgrunnlag = VilkårsgrunnlagDto(
+                        orgnr = req.virksomhetOrgnr,
+                        fnrBarn = req.fnrBarn,
+                        brilleseddel = req.brilleseddel,
+                        bestillingsdato = req.bestillingsdato,
+                        brillepris = req.brillepris,
+                        extras = VilkårsgrunnlagExtrasDto(
+                            orgNavn = enhet.navn,
+                            bestillingsreferanse = req.bestillingsreferanse,
+                        ),
+                    ),
+                    bestillingsreferanse = req.bestillingsreferanse,
+                    brukersNavn = barnPdl.navn(),
+                    orgAdresse = enhetTilAdresseFor(enhet),
+                    orgNavn = enhet.navn,
                 )
+
+                val vilkårsgrunnlag = krav.vilkårsgrunnlag
+                val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
+                    vilkårsgrunnlag.fnrBarn,
+                    vilkårsgrunnlag.brilleseddel,
+                    vilkårsgrunnlag.bestillingsdato,
+                    true,
+                )
+
+                if (vilkårsvurdering.utfall != Resultat.JA) {
+                    sikkerLog.info {
+                        "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
+                    }
+                    // Svar ut spørringen
+                    call.respond(
+                        Response(
+                            resultat = Resultat.NEI,
+                            sats = SatsType.INGEN,
+                            satsBeløp = BigDecimal.ZERO
+                        )
+                    )
+
+                } else {
+                    val vedtak = vedtakService.lagVedtak(
+                        req.ansvarligOptikersFnr,
+                        navnInnsender,
+                        krav,
+                        KravKilde.INTEGRASJON,
+                    )
+                    val vedtakDto = vedtak.toDto()
+                    // Svar ut spørringen
+                    call.respond(
+                        Response(
+                            resultat = if (vedtakDto.behandlingsresultat == Behandlingsresultat.INNVILGET) {
+                                Resultat.JA
+                            } else {
+                                Resultat.NEI
+                            },
+                            sats = vedtakDto.sats,
+                            satsBeløp = vedtakDto.beløp,
+                            navReferanse = vedtakDto.id,
+                        )
+                    )
+                }
+
+
             } catch (e: Exception) {
                 log.error(e) { "Feil i krav oppretting" }
                 call.respond(HttpStatusCode.InternalServerError, "Feil i krav oppretting")
