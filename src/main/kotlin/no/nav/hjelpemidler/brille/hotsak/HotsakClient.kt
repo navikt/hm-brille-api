@@ -76,9 +76,7 @@ class HotsakClient(
             log.info { "Kjører deep-ping mot hm-saksbehandling med url: $url" }
             val response = client.get(url) {
                 expectSuccess = true // Vær eksplisitt i tilfelle noen endrer på den delte klienten.
-                headers {
-                    append(HttpHeaders.XCorrelationId, uid)
-                }
+                header(HttpHeaders.XCorrelationId, uid)
             }
             log.info { "Har fått response fra hm-saksbehandling med status: ${response.status}" }
         } catch (clientReqException: ClientRequestException) {

@@ -5,6 +5,7 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
@@ -45,7 +46,7 @@ class SyfohelsenettproxyClient(
             log.info { "Henter behandler data med url: $url (reuqestId=$uid)" }
             val response = client.get(url) {
                 expectSuccess = true
-                headers["requestId"] = uid
+                header("requestId", uid)
             }
             log.info { "Har fått response fra HPR med status: ${response.status}" }
         } catch (clientReqException: ClientRequestException) {

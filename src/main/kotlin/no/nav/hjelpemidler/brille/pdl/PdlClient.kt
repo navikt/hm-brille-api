@@ -9,6 +9,7 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
 import io.ktor.client.request.options
+import io.ktor.http.HttpHeaders
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
@@ -97,7 +98,7 @@ class PdlClient(
             expectSuccess = true
             defaultRequest {
                 header("Tema", "HJE")
-                header("X-Correlation-ID", uid)
+                header(HttpHeaders.XCorrelationId, uid)
             }
         }
         // Kjør en "OPTIONS" spørring mot graphql api-endepunkt, og kast exception om svaret er non-2xx

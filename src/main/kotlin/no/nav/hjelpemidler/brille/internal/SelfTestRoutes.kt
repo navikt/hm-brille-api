@@ -79,7 +79,7 @@ fun Route.internalRoutes(
             }
 
             // Sjekk Enhetsregisteret
-            runCatching { enhetsregisteretService.hentOrganisasjonsenhet("889640782") }.onFailure { e ->
+            runCatching { enhetsregisteretService.hentOrganisasjonsenhet("889640782", cacheBusting = true) }.onFailure { e ->
                 log.error(e) { "Exception mens man sjekket enhetsregisteret som en del av en deep-ping" }
             }.getOrNull() ?: return@get call.respond(HttpStatusCode.InternalServerError, "ingen kontakt med enhetsregisteret")
 

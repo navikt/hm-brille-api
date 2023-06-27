@@ -10,13 +10,15 @@ class EnhetsregisteretService(
     private val enhetsregisteretClient: EnhetsregisteretClient,
     private val redisClient: RedisClient,
 ) {
-    suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet? {
+    suspend fun hentOrganisasjonsenhet(orgnr: String, cacheBusting: Boolean = false): Organisasjonsenhet? {
         log.info { "Henter organisasjonsenhet med orgnr: $orgnr" }
 
-        val cachedEnhet = redisClient.organisasjonsenhet(orgnr)
-        if (cachedEnhet != null) {
-            log.info { "Hentet orgnr: $orgnr fra cache" }
-            return cachedEnhet
+        if (!cacheBusting) {
+            val cachedEnhet = redisClient.organisasjonsenhet(orgnr)
+            if (cachedEnhet != null) {
+                log.info { "Hentet orgnr: $orgnr fra cache" }
+                return cachedEnhet
+            }
         }
 
         val enhet = enhetsregisteretClient.hentOrganisasjonsenhet(orgnr)
