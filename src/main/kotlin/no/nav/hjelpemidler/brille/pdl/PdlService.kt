@@ -27,6 +27,5 @@ class PdlService(private val pdlClient: PdlClient) {
         }
     }
 
-    suspend fun helseSjekk() =
-        pdlClient.helseSjekk()
+    suspend fun helseSjekk() = pdlClient.helseSjekk()
 }

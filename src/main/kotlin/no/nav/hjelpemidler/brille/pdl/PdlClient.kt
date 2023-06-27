@@ -11,6 +11,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.options
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.brille.jsonMapper
@@ -18,6 +19,7 @@ import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
 import no.nav.hjelpemidler.brille.tilgang.innloggetBruker
 import no.nav.hjelpemidler.http.openid.azureAD
+import org.slf4j.MDC
 import java.net.URL
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
@@ -90,11 +92,12 @@ class PdlClient(
 
     suspend fun helseSjekk() {
         // Bruker en throw-away klient for helesjekken (ingen connection pooling, auth, etc.)
+        val uid = MDC.get(MDC_CORRELATION_ID)
         val throwAwayClient = HttpClient(engine) {
             expectSuccess = true
             defaultRequest {
                 header("Tema", "HJE")
-                header("X-Correlation-ID", UUID.randomUUID().toString())
+                header("X-Correlation-ID", uid)
             }
         }
         // Kjør en "OPTIONS" spørring mot graphql api-endepunkt, og kast exception om svaret er non-2xx

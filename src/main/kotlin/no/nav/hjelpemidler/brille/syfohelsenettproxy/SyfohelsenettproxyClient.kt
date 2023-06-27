@@ -13,11 +13,13 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.azureAD
+import org.slf4j.MDC
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
@@ -39,7 +41,7 @@ class SyfohelsenettproxyClient(
     suspend fun ping() {
         try {
             val url = "$baseUrl/api/v2/ping"
-            val uid = UUID.randomUUID().toString()
+            val uid = MDC.get(MDC_CORRELATION_ID)
             log.info { "Henter behandler data med url: $url (reuqestId=$uid)" }
             val response = client.get(url) {
                 expectSuccess = true

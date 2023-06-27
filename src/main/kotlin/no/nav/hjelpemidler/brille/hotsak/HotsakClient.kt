@@ -6,6 +6,7 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -75,7 +76,9 @@ class HotsakClient(
             log.info { "Kjører deep-ping mot hm-saksbehandling med url: $url" }
             val response = client.get(url) {
                 expectSuccess = true // Vær eksplisitt i tilfelle noen endrer på den delte klienten.
-                header(HttpHeaders.XCorrelationId, uid)
+                headers {
+                    append(HttpHeaders.XCorrelationId, uid)
+                }
             }
             log.info { "Har fått response fra hm-saksbehandling med status: ${response.status}" }
         } catch (clientReqException: ClientRequestException) {
