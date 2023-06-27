@@ -6,6 +6,7 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
@@ -43,10 +44,11 @@ class SyfohelsenettproxyClient(
         try {
             val url = "$baseUrl/api/v2/ping"
             val uid = MDC.get(MDC_CORRELATION_ID)
-            log.info { "Henter behandler data med url: $url (reuqestId=$uid)" }
+            log.info { "Ping'er HPR med url: $url (reuqestId=$uid)" }
             val response = client.get(url) {
                 expectSuccess = true
                 header("requestId", uid)
+                header(HttpHeaders.XCorrelationId, uid)
             }
             log.info { "Har fått response fra HPR med status: ${response.status}" }
         } catch (clientReqException: ClientRequestException) {
