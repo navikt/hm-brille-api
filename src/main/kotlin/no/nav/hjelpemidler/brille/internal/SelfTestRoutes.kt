@@ -66,7 +66,11 @@ fun Route.internalRoutes(
                 return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av hotsak feilet")
             }
 
-            // TODO: Sjekk Helsepersonellregisteret (HPR)
+            // Sjekk Helsepersonellregisteret (HPR)
+            runCatching { syfohelsenettproxyClient.ping() }.getOrElse { e ->
+                log.error(e) { "Exception mens man sjekket HPR som en del av en deep-ping" }
+                return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av HPR feilet")
+            }
 
             // Sjekk Persondataløsningen (PDL)
             runCatching { pdlService.helseSjekk() }.getOrElse { e ->

@@ -3,6 +3,7 @@ package no.nav.hjelpemidler.brille.syfohelsenettproxy
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -17,6 +18,7 @@ import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.azureAD
+import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
@@ -31,6 +33,23 @@ class SyfohelsenettproxyClient(
         expectSuccess = true
         azureAD(scope = props.scope) {
             cache(leeway = 10.seconds)
+        }
+    }
+
+    suspend fun ping() {
+        try {
+            val url = "$baseUrl/api/v2/ping"
+            val uid = UUID.randomUUID().toString()
+            log.info { "Henter behandler data med url: $url (reuqestId=$uid)" }
+            val response = client.get(url) {
+                expectSuccess = true
+                headers["requestId"] = uid
+            }
+            log.info { "Har fått response fra HPR med status: ${response.status}" }
+        } catch (clientReqException: ClientRequestException) {
+            throw SyfohelsenettproxyClientException("Feil under ping av hpr", clientReqException)
+        } catch (e: Exception) {
+            throw SyfohelsenettproxyClientException("Ukjent feil under ping av hpr", e)
         }
     }
 
