@@ -5,17 +5,21 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.azureAD
+import org.slf4j.MDC
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 
@@ -67,9 +71,11 @@ class HotsakClient(
         val baseUrlNoApp = baseUrl.removeSuffix("/").removeSuffix("/api")
         try {
             val url = "$baseUrlNoApp/deep-ping"
+            val uid = MDC.get(MDC_CORRELATION_ID)
             log.info { "Kjører deep-ping mot hm-saksbehandling med url: $url" }
             val response = client.get(url) {
                 expectSuccess = true // Vær eksplisitt i tilfelle noen endrer på den delte klienten.
+                header(HttpHeaders.XCorrelationId, uid)
             }
             log.info { "Har fått response fra hm-saksbehandling med status: ${response.status}" }
         } catch (clientReqException: ClientRequestException) {
