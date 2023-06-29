@@ -55,7 +55,7 @@ fun Route.internalRoutes(
             }
 
             // Sjekk Brille-api postgres database
-            val dbTest = runCatching { databaseContext.dataSource.connection!!.isValid(5) }.onFailure { e ->
+            val dbTest = runCatching { databaseContext.dataSource.connection!!.use { it.isValid(5) } }.onFailure { e ->
                 log.error(e) { "Exception mens man sjekket database kobling som en del av en deep-ping" }
             }.getOrNull()
             if (dbTest != true) return@get call.respond(HttpStatusCode.InternalServerError, "sjekk av databasekobling feilet")
