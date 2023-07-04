@@ -75,12 +75,12 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                     orgnr = vilkårsgrunnlag.orgnr,
                     navn = vilkårsgrunnlag.extras.orgNavn,
                     bestillingsreferanse = vilkårsgrunnlag.extras.bestillingsreferanse,
-                    harIkkeVedtakIKalenderåretOppfylt = vilkårsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret v1"),
-                    under18ÅrPåBestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Under18ÅrPåBestillingsdato v1"),
-                    medlemAvFolketrygdenOppfylt = vilkårsvurdering.harResultatJaForVilkår("MedlemAvFolketrygden v1"),
-                    brillestyrkeOppfylt = vilkårsvurdering.harResultatJaForVilkår("Brillestyrke v1"),
-                    bestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Bestillingsdato v1"),
-                    bestillingsdatoTilbakeITidOppfylt = vilkårsvurdering.harResultatJaForVilkår("BestillingsdatoTilbakeITid v1"),
+                    harIkkeVedtakIKalenderåretOppfylt = vilkårsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret"),
+                    under18ÅrPåBestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Under18ÅrPåBestillingsdato"),
+                    medlemAvFolketrygdenOppfylt = vilkårsvurdering.harResultatJaForVilkår("MedlemAvFolketrygden"),
+                    brillestyrkeOppfylt = vilkårsvurdering.harResultatJaForVilkår("Brillestyrke"),
+                    bestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Bestillingsdato"),
+                    bestillingsdatoTilbakeITidOppfylt = vilkårsvurdering.harResultatJaForVilkår("BestillingsdatoTilbakeITid"),
                     opprettet = LocalDateTime.now()
                 )
             )

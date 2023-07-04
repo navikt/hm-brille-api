@@ -27,4 +27,4 @@ data class Vilkårsgrunnlag(
 }
 
 fun Vilkårsvurdering<Vilkårsgrunnlag>.harResultatJaForVilkår(identifikator: String) =
-    this.evaluering.barn.find { it.identifikator == identifikator }!!.resultat == Resultat.JA
+    this.evaluering.barn.find { it.identifikator.startsWith(identifikator) }!!.resultat == Resultat.JA
