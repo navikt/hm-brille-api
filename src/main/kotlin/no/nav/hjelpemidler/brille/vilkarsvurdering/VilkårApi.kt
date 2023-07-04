@@ -58,7 +58,7 @@ fun Route.vilkårApi(
             val beløp = minOf(sats.beløp(vilkårsgrunnlag.bestillingsdato).toBigDecimal(), vilkårsgrunnlag.brillepris)
 
             val refInnsendersTidligereKrav =
-                if (!vilkarsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret v1")) {
+                if (!vilkarsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret")) {
                     vilkarsvurdering.grunnlag.vedtakBarn.firstOrNull {
                         it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year
                     }
