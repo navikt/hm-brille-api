@@ -45,15 +45,10 @@ class VilkårsvurderingService(
             ) else null
         )
 
-        val datoForNyeSatser = LocalDate.of(2023, Month.JULY, 1)
         val vilkårsvurdering =
             vurderVilkår(
                 vilkårsgrunnlag,
-                if (bestillingsdato.isBefore(datoForNyeSatser)) {
-                    if (sjekkHotsakVedtak) Vilkårene.BrilleV2_2022_08_01 else Vilkårene.Brille_2022_08_01
-                } else {
-                    if (sjekkHotsakVedtak) Vilkårene.BrilleV2 else Vilkårene.Brille
-                }
+                if (sjekkHotsakVedtak) Vilkårene.BrilleV2 else Vilkårene.Brille
             )
 
         if (!Configuration.prod) {
