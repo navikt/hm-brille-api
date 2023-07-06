@@ -76,7 +76,7 @@ object Vilkårene {
     val Under18ÅrPåBestillingsdato_v2 = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Barnet må være under 18 år på bestillingsdato",
         identifikator = "Under18ÅrPåBestillingsdato v2",
-        lovReferanse = "§ 2, 3 .ledd",
+        lovReferanse = "§ 2",
         lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129"
     ) { grunnlag ->
         val barnetsAlder = grunnlag.barnetsAlderPåBestillingsdato
@@ -109,8 +109,8 @@ object Vilkårene {
     val MedlemAvFolketrygden_v2 = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Medlem av folketrygden",
         identifikator = "MedlemAvFolketrygden v2",
-        lovReferanse = "<§ 2, 1. ledd> TODO TATT UT AV FORSKRIFT!!!",
-        lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129"
+        lovReferanse = "FTL § 10-7 a",
+        lovdataLenke = "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a"
     ) { grunnlag ->
         val medlemskapResultat = grunnlag.medlemskapResultat
         when {
@@ -136,7 +136,7 @@ object Vilkårene {
     val Brillestyrke_v2 = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Brillestyrken er innenfor fastsatte styrker",
         identifikator = "Brillestyrke v2",
-        lovReferanse = "§ 2, 1. ledd",
+        lovReferanse = "§ 2",
         lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129"
     ) { grunnlag ->
         val brillestyrkeGrunnlag = mapOf<String, String>(
@@ -210,7 +210,7 @@ object Vilkårene {
     val BestillingsdatoTilbakeITid_v2 = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Bestillingsdato innenfor gyldig periode",
         identifikator = "BestillingsdatoTilbakeITid v2",
-        lovReferanse = "§ 6, 2. ledd",
+        lovReferanse = "§ 6",
         lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129"
     ) { grunnlag ->
         val seksMånederSiden = grunnlag.seksMånederSiden
