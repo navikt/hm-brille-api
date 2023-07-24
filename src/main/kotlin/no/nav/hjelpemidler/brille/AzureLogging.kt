@@ -31,8 +31,8 @@ private val adminAuditLogger = KotlinLogging.logger("auditLogger")
 private fun adminAuditLog(method: String, uri: String, params: Map<String, String?>, navIdent: String?, fnrDetGjelder: String?) {
     val message = listOf(
         "CEF:0",
+        "Hjelpemiddel",
         "hm-brille-admin",
-        "auditLog",
         "1.0",
         "audit:access",
         "hm-brille-admin",
