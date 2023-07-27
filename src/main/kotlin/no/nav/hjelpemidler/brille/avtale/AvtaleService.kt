@@ -48,7 +48,13 @@ class AvtaleService(
             avgivere.forEach { avgiver ->
                 val orgnr = avgiver.orgnr
                 deferredRequests.add(async {
-                    enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                    try {
+                        enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+                    } catch (e: Exception) {
+                        log.error(e) { "Klarte ikke å hente orgenhet for orgnr <$orgnr>" }
+                        null
+                    }
+
                 })
             }
         }
