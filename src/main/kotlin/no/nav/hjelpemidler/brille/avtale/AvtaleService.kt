@@ -68,27 +68,26 @@ class AvtaleService(
             .filterNotNull()
             .associateBy { it.orgnr }
 
-        val avgivereFiltrert = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
-            .filter { avgiver ->
-                val orgnr = avgiver.orgnr
-                val enhet = organisasjoner[orgnr]
-                if (enhet == null) {
-                    false
-                } else {
-                    log.info {
-                        "Hentet enhet med orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
-                    }
-                    setOf(
-                        Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER,
-                        Næringskode.BUTIKKHANDEL_MED_GULL_OG_SØLVVARER,
-                        Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
-                        Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
-                        Næringskode.ANDRE_HELSETJENESTER,
-                        Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
-                        Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE
-                    ).any { enhet.harNæringskode(it) }
+        val avgivereFiltrert = avgivere.filter { avgiver ->
+            val orgnr = avgiver.orgnr
+            val enhet = organisasjoner[orgnr]
+            if (enhet == null) {
+                false
+            } else {
+                log.info {
+                    "Hentet enhet med orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
                 }
+                setOf(
+                    Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER,
+                    Næringskode.BUTIKKHANDEL_MED_GULL_OG_SØLVVARER,
+                    Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
+                    Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
+                    Næringskode.ANDRE_HELSETJENESTER,
+                    Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
+                    Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE
+                ).any { enhet.harNæringskode(it) }
             }
+        }
 
         sikkerLog.info {
             "Filtrert avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivereFiltrert"
