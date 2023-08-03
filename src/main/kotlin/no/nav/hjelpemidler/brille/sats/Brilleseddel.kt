@@ -10,7 +10,7 @@ data class Brilleseddel(
     val venstreSylinder: Double,
 ) {
     init {
-        val range = Diopter.MIN..Diopter.MAX
+        val range = Diopter.MIN_SFÆRE..Diopter.MAX
         when {
             høyreSfære !in range -> throw StatusCodeException(
                 HttpStatusCode.BadRequest,
