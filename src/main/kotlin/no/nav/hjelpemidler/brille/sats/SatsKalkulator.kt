@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.sats
 
 import java.time.LocalDate
+import kotlin.math.abs
 
 class SatsKalkulator(private val grunnlag: SatsGrunnlag) {
     constructor(brilleseddel: Brilleseddel, bestillingsdato: LocalDate = LocalDate.now()) : this(
@@ -16,7 +17,7 @@ class SatsKalkulator(private val grunnlag: SatsGrunnlag) {
 
 fun beregnSats(grunnlag: SatsGrunnlag): SatsBeregning {
     val brilleseddel = grunnlag.brilleseddel
-    val sfære = maxOf(brilleseddel.høyreSfære, brilleseddel.venstreSfære)
+    val sfære = maxOf(abs(brilleseddel.høyreSfære), abs(brilleseddel.venstreSfære))
     val sylinder = maxOf(brilleseddel.høyreSylinder, brilleseddel.venstreSylinder)
     val sats = when {
         sfære in SatsType.SATS_5.sfære || sylinder in SatsType.SATS_5.sylinder -> SatsType.SATS_5
