@@ -15,10 +15,16 @@ sealed interface InnloggetBruker : Principal {
     sealed interface AzureAd : InnloggetBruker {
         val objectId: UUID
 
-        data class Systembruker(
+        data class SystembrukerSaksbehandling(
             override val objectId: UUID,
         ) : AzureAd {
             override fun kanBehandlePersonerMedAdressebeskyttelse(): Boolean = true
+        }
+
+        data class SystembrukerBrilleIntegrasjon(
+            override val objectId: UUID,
+        ) : AzureAd {
+            override fun kanBehandlePersonerMedAdressebeskyttelse(): Boolean = false
         }
 
         data class Administrator(

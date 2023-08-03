@@ -49,12 +49,23 @@ internal class PdlClientTest {
     }
 
     @Test
-    fun `skal kunne hente person med adressebeskyttelse hvis azure ad systembruker`() =
+    fun `skal kunne hente person med adressebeskyttelse hvis azure ad systembruker for saksbehandling`() =
         test(
             "/mock/pdl_har_adressebeskyttelse.json",
-            InnloggetBruker.AzureAd.Systembruker(UUID.randomUUID())
+            InnloggetBruker.AzureAd.SystembrukerSaksbehandling(UUID.randomUUID())
         ) { client ->
             assertDoesNotThrow {
+                client.hentPerson("07121410995")
+            }
+        }
+
+    @Test
+    fun `skal ikke kunne hente person med adressebeskyttelse hvis azure ad systembruker for brille integrasjon`() =
+        test(
+            "/mock/pdl_har_adressebeskyttelse.json",
+            InnloggetBruker.AzureAd.SystembrukerBrilleIntegrasjon(UUID.randomUUID())
+        ) { client ->
+            assertThrows<PdlHarAdressebeskyttelseException> {
                 client.hentPerson("07121410995")
             }
         }

@@ -69,8 +69,13 @@ fun AuthenticationConfig.azureAdProvider(
             val roller = AzureAdRolle.fra(principal)
             val grupper = AzureAdGruppe.fra(principal)
             when {
-                AzureAdRolle.SYSTEMBRUKER in roller ->
-                    InnloggetBruker.AzureAd.Systembruker(
+                AzureAdRolle.SYSTEMBRUKER_SAKSBEHANDLING in roller ->
+                    InnloggetBruker.AzureAd.SystembrukerSaksbehandling(
+                        objectId = objectId,
+                    )
+
+                AzureAdRolle.SYSTEMBRUKER_BRILLE_INTEGRASJON in roller ->
+                    InnloggetBruker.AzureAd.SystembrukerBrilleIntegrasjon(
                         objectId = objectId,
                     )
 

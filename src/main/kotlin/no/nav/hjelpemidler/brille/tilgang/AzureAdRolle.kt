@@ -1,24 +1,33 @@
 package no.nav.hjelpemidler.brille.tilgang
 
 import io.ktor.server.auth.jwt.JWTPrincipal
+import no.nav.hjelpemidler.brille.Configuration
 import java.util.EnumSet
+import java.util.UUID
 
-enum class AzureAdRolle(val id: String) {
-    SYSTEMBRUKER("access_as_application"),
+enum class AzureAdRolle(val role: String, val clientId: UUID) {
+    SYSTEMBRUKER_SAKSBEHANDLING("access_as_application", Configuration.CLIENT_ID_SAKSBEHANDLING),
+    SYSTEMBRUKER_BRILLE_INTEGRASJON("access_as_application", Configuration.CLIENT_ID_BRILLE_INTEGRASJON),
     ;
 
-    override fun toString(): String = id
+    constructor(role: String, clientId: String) : this(role, UUID.fromString(clientId))
+
+    override fun toString(): String = "$role($clientId)"
 
     companion object {
         fun fra(principal: JWTPrincipal): Set<AzureAdRolle> {
             val alle = EnumSet.allOf(AzureAdRolle::class.java)
-            return principal.getListClaim("roles", String::class)
-                .mapNotNull { id ->
-                    alle.find {
-                        id == it.id
-                    }
+
+            val roles = principal.getListClaim("roles", String::class)
+            val clientId = principal.getClaim("azp", UUID::class)!!
+
+            return alle.mapNotNull {
+                if (roles.contains(it.role) && clientId == it.clientId) {
+                    it
+                } else {
+                    null
                 }
-                .toSet()
+            }.toSet()
         }
     }
 }

@@ -38,6 +38,8 @@
   "env": {
     "REDIS_HOST": "brille-redis.teamdigihot.svc.cluster.local",
     "GRUPPE_TEAMDIGIHOT": "2f632b40-4730-4692-9c7c-fb744e2d33e1",
-    "GRUPPE_BRILLEADMIN_BRUKERE": "d6f989d6-59a9-4d18-9cd1-f1372dcccfe5"
+    "GRUPPE_BRILLEADMIN_BRUKERE": "d6f989d6-59a9-4d18-9cd1-f1372dcccfe5",
+    "CLIENT_ID_SAKSBEHANDLING": "1a4ed5f2-4fa5-4e5a-b537-555609bfdb0a",
+    "CLIENT_ID_BRILLE_INTEGRASJON": "5caedb6c-34ef-4252-af8c-a755755e402e"
   }
 }
