@@ -106,3 +106,8 @@ fun Verification.withAnyGroupClaim(vararg grupper: AzureAdGruppe) {
 fun Verification.withRoleClaim(rolle: AzureAdRolle) {
     withArrayClaim("roles", rolle.toString())
 }
+
+fun Verification.withRoleAndClientIdClaim(rolle: AzureAdRolle) {
+    withArrayClaim("roles", rolle.role)
+    withClaim("azp", rolle.clientId.toString())
+}
