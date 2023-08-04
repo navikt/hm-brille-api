@@ -259,4 +259,7 @@ object Configuration {
 
     val GRUPPE_TEAMDIGIHOT by EnvironmentVariable
     val GRUPPE_BRILLEADMIN_BRUKERE by EnvironmentVariable
+
+    val CLIENT_ID_SAKSBEHANDLING by EnvironmentVariable
+    val CLIENT_ID_BRILLE_INTEGRASJON by EnvironmentVariable
 }

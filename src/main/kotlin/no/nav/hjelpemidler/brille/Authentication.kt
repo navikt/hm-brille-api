@@ -10,7 +10,7 @@ import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
 import no.nav.hjelpemidler.brille.tilgang.azureAdProvider
 import no.nav.hjelpemidler.brille.tilgang.tokenXProvider
 import no.nav.hjelpemidler.brille.tilgang.withAnyGroupClaim
-import no.nav.hjelpemidler.brille.tilgang.withRoleClaim
+import no.nav.hjelpemidler.brille.tilgang.withRoleAndClientIdClaim
 import java.util.UUID
 
 object AuthenticationProvider {
@@ -18,7 +18,8 @@ object AuthenticationProvider {
     const val TOKEN_X_LOCAL = "TOKEN_X_LOCAL"
     const val AZURE_AD_BRILLEADMIN_BRUKERE = "AZURE_AD_BRILLEADMIN_BRUKERE"
     const val AZURE_AD_BRILLEADMIN_BRUKERE_LOCAL = "AZURE_AD_BRILLEADMIN_BRUKERE_LOCAL"
-    const val AZURE_AD_SYSTEMBRUKER = "AZURE_AD_SYSTEMBRUKER"
+    const val AZURE_AD_SYSTEMBRUKER_SAKSBEHANDLING = "AZURE_AD_SYSTEMBRUKER_SAKSBEHANDLING"
+    const val AZURE_AD_SYSTEMBRUKER_BRILLE_INTEGRASJON = "AZURE_AD_SYSTEMBRUKER_BRILLE_INTEGRASJON"
 }
 
 fun Application.installAuthentication() {
@@ -27,8 +28,11 @@ fun Application.installAuthentication() {
         azureAdProvider(AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE) {
             withAnyGroupClaim(AzureAdGruppe.TEAMDIGIHOT, AzureAdGruppe.BRILLEADMIN_BRUKERE)
         }
-        azureAdProvider(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER) {
-            withRoleClaim(AzureAdRolle.SYSTEMBRUKER)
+        azureAdProvider(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_SAKSBEHANDLING) {
+            withRoleAndClientIdClaim(AzureAdRolle.SYSTEMBRUKER_SAKSBEHANDLING)
+        }
+        azureAdProvider(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_BRILLE_INTEGRASJON) {
+            withRoleAndClientIdClaim(AzureAdRolle.SYSTEMBRUKER_BRILLE_INTEGRASJON)
         }
         provider(AuthenticationProvider.TOKEN_X_LOCAL) {
             authenticate { context ->

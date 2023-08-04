@@ -232,11 +232,11 @@ fun Application.setupRoutes() {
                 adminApi(adminService, slettVedtakService, enhetsregisteretService, rapportService)
             }
 
-            authenticate(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER) {
+            authenticate(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_SAKSBEHANDLING) {
                 vilkårHotsakApi(vilkårsvurderingService)
+            }
 
-                // FIXME: Integrasjon api skal ikke ha kanBehandlePersonerMedAdressebeskyttelse(): Boolean = true, det får
-                // den her pga. AuthenticationProvider.AZURE_AD_SYSTEMBRUKER
+            authenticate(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_BRILLE_INTEGRASJON) {
                 if (!Configuration.prod) integrasjonApi(
                     vilkårsvurderingService,
                     vedtakService,
