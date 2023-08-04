@@ -103,13 +103,13 @@ fun Route.integrasjonApi(
         }
 
         post("/valider-barn") {
-            data class Request(val fnr: String)
+            data class Request(val fnrBarn: String)
             data class Response(val barnValidert: Boolean)
 
-            val fnr = call.receive<Request>().fnr
+            val fnr = call.receive<Request>().fnrBarn
             val emptyResponse = Response(false)
 
-            val response = try {
+            val response: Response = try {
                 pdlService.hentPerson(fnr)?.let {
                     Response(true)
                 } ?: emptyResponse
