@@ -16,7 +16,11 @@ import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
+import no.nav.hjelpemidler.brille.pdl.PdlClientException
+import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
+import no.nav.hjelpemidler.brille.pdl.PdlNotFoundException
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
@@ -94,6 +98,28 @@ fun Route.integrasjonApi(
                 aktiv = harAktivNavAvtale,
                 adresse = enhetTilAdresseFor(enhet),
             )
+
+            call.respond(response)
+        }
+
+        post("/valider-barn") {
+            data class Request(val fnr: String)
+            data class Response(val barnValidert: Boolean)
+
+            val fnr = call.receive<Request>().fnr
+            val emptyResponse = Response(false)
+
+            val response = try {
+                pdlService.hentPerson(fnr)?.let {
+                    Response(true)
+                } ?: emptyResponse
+            } catch (e: PdlClientException) {
+                when (e) {
+                    is PdlNotFoundException -> emptyResponse
+                    is PdlHarAdressebeskyttelseException -> emptyResponse
+                    else -> throw e
+                }
+            }
 
             call.respond(response)
         }
