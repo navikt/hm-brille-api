@@ -21,15 +21,18 @@ interface EnhetsregisteretStore : Store {
 class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : EnhetsregisteretStore, TransactionalStore(sessionFactory) {
     override fun hentEnhet(orgnr: String): Organisasjonsenhet? = session {
         val sql = "SELECT data FROM enhetesregisteret_v1 WHERE orgnr = :orgnr"
-        it.query(sql, mapOf("orgnr" to orgnr)) {
-            it.json<Organisasjonsenhet>("data")
+        it.query(sql, mapOf("orgnr" to orgnr)) { row ->
+            row.json<Organisasjonsenhet>("data")
         }
     }
 
     override fun hentEnheter(orgnre: Set<String>): Map<String, Organisasjonsenhet> = session {
+        // Bare tillat orgnr-strenger som er rene tall siden (11 sifre) vi pakker argumentet inn i sql-strengen direkte (kan ikke bruke prepared statement)
+        val orgnre = orgnre.filter { it.toIntOrNull() != null && it.count() == 11 }
+
         val sql = "SELECT data FROM enhetesregisteret_v1 WHERE orgnr IN ({ORGNRE})".replace("{ORGNRE}", orgnre.joinToString(", ") { "'$it'" })
-        it.queryList(sql, emptyMap()) {
-            it.json<Organisasjonsenhet>("data")
+        it.queryList(sql, emptyMap()) { row ->
+            row.json<Organisasjonsenhet>("data")
         }.groupBy { it.orgnr }.mapValues { it.value.first() }
     }
 
@@ -42,7 +45,7 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
                 @Language("PostgreSQL")
                 val sql = """
                     INSERT INTO enhetesregisteret_v1 (orgnr, type, data, created)
-                    VALUES (:orgnr, :type, :data, :version_id, :created)
+                    VALUES (:orgnr, :type, :data, :created)
                 """.trimIndent()
 
                 it.update(sql, mapOf(
