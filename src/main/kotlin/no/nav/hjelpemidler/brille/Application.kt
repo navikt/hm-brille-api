@@ -34,6 +34,7 @@ import no.nav.hjelpemidler.brille.avtale.avtaleApi
 import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretScheduler
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
 import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
@@ -154,7 +155,7 @@ fun Application.setupRoutes() {
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
     val rapportService = RapportService(databaseContext)
-    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
+    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext, redisClient)
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, hotsakClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
@@ -181,6 +182,7 @@ fun Application.setupRoutes() {
     VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
+    EnhetsregisteretScheduler(enhetsregisteretService, databaseContext, leaderElection, metrics)
     if (Configuration.prod) RapporterManglendeTssIdentScheduler(
         tssIdentService,
         enhetsregisteretService,

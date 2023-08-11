@@ -3,7 +3,7 @@ package no.nav.hjelpemidler.brille.enhetsregisteret
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.Configuration
-import kotlin.test.Ignore
+import org.junit.Ignore
 import kotlin.test.Test
 
 @Ignore("Benyttes bare til manuell test av integrasjon mot enhetsregisteret")
