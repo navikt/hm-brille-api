@@ -81,8 +81,7 @@ class EnhetsregisteretService(
         }
 
         if (oppdaterUansett || sistOppdatert == null || sistOppdatert.until(LocalDateTime.now(), ChronoUnit.HOURS) >= 24) {
-            enhetsregisteretClient.oppdaterMirrorHovedenheter()
-            enhetsregisteretClient.oppdaterMirrorUnderenheter()
+            enhetsregisteretClient.oppdaterMirror()
         }
     }
 }

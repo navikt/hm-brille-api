@@ -46,49 +46,45 @@ class EnhetsregisteretClient(
         }
     }
 
-    suspend fun oppdaterMirrorHovedenheter() {
-        log.info("Henter hovedenheter:")
+    suspend fun oppdaterMirror() {
+        var c = 0
+        log.info("Henter hoved-/underenheter:")
         transaction(databaseContext) {
-            it.enhetsregisteretStore.oppdaterEnheter(EnhetType.HOVEDENHET) { lagreEnhet ->
+            it.enhetsregisteretStore.oppdaterEnheter(EnhetType.HOVEDENHET) { lagre ->
                 // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#enheter-lastned
                 runBlocking {
                     httpClient.prepareGet("$baseUrl/enhetsregisteret/api/enheter/lastned") {
                         header(HttpHeaders.Accept, "application/vnd.brreg.enhetsregisteret.enhet.v1+gzip;charset=UTF-8")
                     }.execute { httpResponse ->
                         strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhet ->
-                            lagreEnhet(enhet)
+                            lagre(enhet)
+                            c++
                             return@strømOgBlåsOpp true
                         }
                     }
                 }
-            }
-        }
-        log.info("Ferdig - hovedenheter")
-    }
 
-    suspend fun oppdaterMirrorUnderenheter() {
-        log.info("Henter underenheter:")
-        transaction(databaseContext) {
-            it.enhetsregisteretStore.oppdaterEnheter(EnhetType.UNDERENHET) { lagreUnderenhet ->
                 // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#underenheter-lastned
                 runBlocking {
                     httpClient.prepareGet("$baseUrl/enhetsregisteret/api/underenheter/lastned") {
                         header(HttpHeaders.Accept, "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8")
                     }.execute { httpResponse ->
                         strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhet ->
-                            lagreUnderenhet(underenhet)
+                            lagre(underenhet)
+                            c++
                             return@strømOgBlåsOpp true
                         }
                     }
                 }
             }
         }
-        log.info("Ferdig - underenheter")
+        log.info("Ferdig - $c hoved-/underenheter lagret")
     }
 
     private suspend inline fun <reified T> strømOgBlåsOpp(httpResponse: HttpResponse, block: (enhet: T) -> Boolean) {
-        val contentLength = (httpResponse.contentLength() ?: 0) / 1024 / 1024
-        log.info("Komprimert filstørrelse: $contentLength MiB")
+        val contentLength = (httpResponse.contentLength() ?: -1)
+        val contentLengthMB = contentLength / 1024 / 1024
+        log.info("Komprimert filstørrelse: $contentLengthMB MiB ($contentLength bytes)")
 
         val gunzipStream = GZIPInputStream(httpResponse.bodyAsChannel().toInputStream())
         mapper.factory.createParser(gunzipStream).use { jsonParser ->
