@@ -88,6 +88,7 @@ private val log = KotlinLogging.logger {}
 fun main(args: Array<String>) {
     when (System.getenv("CRONJOB_TYPE")) {
         "SYNC_TSS" -> cronjobSyncTss()
+        "SYNC_BRREG" -> cronjobSyncBrreg()
         else -> io.ktor.server.cio.EngineMain.main(args)
     }
 }
@@ -293,6 +294,24 @@ fun cronjobSyncTss() {
 
         log.info("cronjob sync-tss: Virksomheter er oppdatert i TSS!")
     }
+}
+
+fun cronjobSyncBrreg() {
+    log.info("cronjob sync-brreg: start")
+
+    val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
+    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties, databaseContext)
+    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
+
+    runBlocking {
+        runCatching {
+            enhetsregisteretService.oppdaterMirrorHvisUtdatert(oppdaterUansett = true)
+        }.getOrElse { e ->
+            log.error(e) { "cronjob sync-brreg: Feil under oppdatering av vår kopi av enhetsregisteret" }
+        }
+    }
+
+    log.info("cronjob sync-brreg: enhetsregisteret-mirror er oppdatert!")
 }
 
 private fun kafkaConfig(

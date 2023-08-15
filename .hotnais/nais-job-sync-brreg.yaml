@@ -1,0 +1,61 @@
+apiVersion: nais.io/v1
+kind: Naisjob
+metadata:
+  name: hm-brille-api-job-sync-brreg
+  namespace: teamdigihot
+  labels:
+    team: teamdigihot
+spec:
+  restartPolicy: Never
+  image: {{ image }}
+  port: {{ port }}
+  env:
+  {{#each env}}
+    - name: {{@key}}
+      value: "{{this}}"
+  {{/each}}
+    - name: GIT_COMMIT
+      value: {{commit}}
+    - name: CRONJOB_TYPE
+      value: SYNC_BRREG
+  envFrom:
+    - secret: redis-password
+    - secret: hm-soknad-api-secret
+    - secret: hm-slack-hook
+    - secret: google-sql-hm-brille-api-brilleapidb-naisjob-0cb211b2
+    # - secret: hm-brille-api-naisjob-db
+  azure:
+    application:
+      enabled: true
+  accessPolicy:
+    inbound:
+      rules:
+      {{#each inbound-applications}}
+        - application: {{ this }}
+      {{/each}}
+    outbound:
+      rules:
+      {{#each outbound-applications}}
+        - application: {{ this }}
+      {{/each}}
+        - application: syfohelsenettproxy
+          namespace: teamsykmelding
+          cluster: {{ syfohelsenettproxy_cluster }}
+        - application: medlemskap-oppslag
+          namespace: medlemskap
+          cluster: {{ medlemskap_cluster }}
+        - application: brille-redis
+      external:
+      {{#each external-hosts}}
+        - host: {{ this }}
+      {{/each}}
+  kafka:
+    pool: {{ kafka-cluster }}
+  secureLogs:
+    enabled: true
+  gcp:
+    permissions:
+      - resource:
+          apiVersion: resourcemanager.cnrm.cloud.google.com/v1beta1
+          kind: Project
+        role: roles/cloudsql.client
