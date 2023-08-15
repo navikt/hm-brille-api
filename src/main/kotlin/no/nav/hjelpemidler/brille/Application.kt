@@ -142,7 +142,7 @@ fun Application.setupRoutes() {
 
     // Klienter
     val redisClient = RedisClient()
-    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties)
+    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties, databaseContext)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
     val pdlClient = PdlClient(Configuration.pdlProperties)
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
@@ -155,7 +155,7 @@ fun Application.setupRoutes() {
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
     val rapportService = RapportService(databaseContext)
-    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext, redisClient)
+    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, hotsakClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
@@ -182,7 +182,7 @@ fun Application.setupRoutes() {
     VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
-    EnhetsregisteretScheduler(enhetsregisteretService, databaseContext, leaderElection, metrics)
+    EnhetsregisteretScheduler(enhetsregisteretService, leaderElection, metrics)
     if (Configuration.prod) RapporterManglendeTssIdentScheduler(
         tssIdentService,
         enhetsregisteretService,

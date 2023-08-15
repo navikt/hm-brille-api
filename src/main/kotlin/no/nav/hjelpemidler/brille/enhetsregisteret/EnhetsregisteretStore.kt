@@ -16,11 +16,12 @@ interface EnhetsregisteretStore : Store {
     fun hentEnhet(orgnr: String): Organisasjonsenhet?
     fun hentEnheter(orgnre: Set<String>): Map<String, Organisasjonsenhet>
     fun oppdaterEnheter(type: EnhetType, block: (lagreEnhet: (enhet: Organisasjonsenhet) -> Unit) -> Unit)
+    fun sistOppdatert(): LocalDateTime?
 }
 
 class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : EnhetsregisteretStore, TransactionalStore(sessionFactory) {
     override fun hentEnhet(orgnr: String): Organisasjonsenhet? = session {
-        val sql = "SELECT data FROM enhetesregisteret_v1 WHERE orgnr = :orgnr"
+        val sql = "SELECT data FROM enhetsregisteret_v1 WHERE orgnr = :orgnr"
         it.query(sql, mapOf("orgnr" to orgnr)) { row ->
             row.json<Organisasjonsenhet>("data")
         }
@@ -30,7 +31,7 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
         // Bare tillat orgnr-strenger som er rene tall siden (11 sifre) vi pakker argumentet inn i sql-strengen direkte (kan ikke bruke prepared statement)
         val orgnre = orgnre.filter { it.toIntOrNull() != null && it.count() == 11 }
 
-        val sql = "SELECT data FROM enhetesregisteret_v1 WHERE orgnr IN ({ORGNRE})".replace("{ORGNRE}", orgnre.joinToString(", ") { "'$it'" })
+        val sql = "SELECT data FROM enhetsregisteret_v1 WHERE orgnr IN ({ORGNRE})".replace("{ORGNRE}", orgnre.joinToString(", ") { "'$it'" })
         it.queryList(sql, emptyMap()) { row ->
             row.json<Organisasjonsenhet>("data")
         }.groupBy { it.orgnr }.mapValues { it.value.first() }
@@ -38,29 +39,35 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
 
     override fun oppdaterEnheter(type: EnhetType, block: (lagreEnhet: (enhet: Organisasjonsenhet) -> Unit) -> Unit) = transaction {
         // Lagre alle nye enheter i database tabellen
-        val created = LocalDateTime.now()
+        val opprettet = LocalDateTime.now()
         runBlocking {
             block { enhet ->
                 // Lagre enhet
                 @Language("PostgreSQL")
                 val sql = """
-                    INSERT INTO enhetesregisteret_v1 (orgnr, type, data, created)
-                    VALUES (:orgnr, :type, :data, :created)
+                    INSERT INTO enhetsregisteret_v1 (orgnr, opprettet, type, data)
+                    VALUES (:orgnr, :opprettet, :type, :data)
                 """.trimIndent()
 
                 it.update(sql, mapOf(
                     "orgnr" to enhet.orgnr,
+                    "opprettet" to opprettet,
                     "type" to type.name,
                     "data" to pgObjectOf(enhet),
-                    "created" to created,
                 )).validate()
             }
         }
 
         // Slett de gamle enhetene som nå er utdaterte
-        it.update("DELETE FROM enhetesregisteret_v1 WHERE created <> :created", mapOf("created" to created))
+        it.update("DELETE FROM enhetsregisteret_v1 WHERE opprettet <> :opprettet", mapOf("opprettet" to opprettet))
 
         return@transaction Unit
+    }
+
+    override fun sistOppdatert(): LocalDateTime? = transaction {
+        it.query("SELECT opprettet FROM enhetsregisteret_v1 ORDER BY opprettet DESC LIMIT 1", emptyMap()) {
+            it.localDateTime("opprettet")
+        }
     }
 }
 

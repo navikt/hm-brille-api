@@ -1,40 +1,108 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
-import io.ktor.client.call.body
-import io.ktor.client.plugins.ResponseException
-import io.ktor.client.request.get
-import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.fasterxml.jackson.core.JsonToken
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.header
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.HttpHeaders
+import io.ktor.http.contentLength
+import io.ktor.utils.io.jvm.javaio.toInputStream
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.brille.db.DatabaseContext
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.http.createHttpClient
+import java.util.zip.GZIPInputStream
 
 private val log = KotlinLogging.logger { }
 
-class EnhetsregisteretClient(props: Configuration.EnhetsregisteretProperties) {
+class EnhetsregisteretClient(
+    props: Configuration.EnhetsregisteretProperties,
+    val databaseContext: DatabaseContext,
+) {
     private val baseUrl = props.baseUrl
-    private val client = createHttpClient()
 
-    suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet? =
-        hentEnhetHelper("$baseUrl/enheter/$orgnr")
+    private val mapper = ObjectMapper().let { mapper ->
+        mapper.registerKotlinModule()
+        mapper.registerModule(JavaTimeModule())
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        mapper
+    }
 
-    suspend fun hentUnderenhet(orgnr: String): Organisasjonsenhet? =
-        hentEnhetHelper("$baseUrl/underenheter/$orgnr")
+    private val httpClient = createHttpClient {
+        expectSuccess = true
+        install(HttpTimeout) {
+            requestTimeoutMillis = 10 * 60 * 1000
+        }
+    }
 
-    private suspend fun hentEnhetHelper(url: String): Organisasjonsenhet? {
-        try {
-            log.info { "Henter enhet med url: $url" }
-            return withContext(Dispatchers.IO) {
-                val response = client.get(url)
-                when (response.status) {
-                    HttpStatusCode.OK -> response.body()
-                    HttpStatusCode.NotFound -> null
-                    else -> throw EnhetsregisteretClientException("Uventet svar fra tjeneste: ${response.status}", null)
+    suspend fun oppdaterMirrorHovedenheter() {
+        log.info("Henter hovedenheter:")
+        transaction(databaseContext) {
+            it.enhetsregisteretStore.oppdaterEnheter(EnhetType.HOVEDENHET) { lagreEnhet ->
+                // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#enheter-lastned
+                runBlocking {
+                    httpClient.prepareGet("$baseUrl/enhetsregisteret/api/enheter/lastned") {
+                        header(HttpHeaders.Accept, "application/vnd.brreg.enhetsregisteret.enhet.v1+gzip;charset=UTF-8")
+                    }.execute { httpResponse ->
+                        strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhet ->
+                            lagreEnhet(enhet)
+                            return@strømOgBlåsOpp true
+                        }
+                    }
                 }
             }
-        } catch (e: ResponseException) {
-            throw EnhetsregisteretClientException("Feil under henting av organisasjonsenhet", e)
+        }
+        log.info("Ferdig - hovedenheter")
+    }
+
+    suspend fun oppdaterMirrorUnderenheter() {
+        log.info("Henter underenheter:")
+        transaction(databaseContext) {
+            it.enhetsregisteretStore.oppdaterEnheter(EnhetType.UNDERENHET) { lagreUnderenhet ->
+                // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#underenheter-lastned
+                runBlocking {
+                    httpClient.prepareGet("$baseUrl/enhetsregisteret/api/underenheter/lastned") {
+                        header(HttpHeaders.Accept, "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8")
+                    }.execute { httpResponse ->
+                        strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhet ->
+                            lagreUnderenhet(underenhet)
+                            return@strømOgBlåsOpp true
+                        }
+                    }
+                }
+            }
+        }
+        log.info("Ferdig - underenheter")
+    }
+
+    private suspend inline fun <reified T> strømOgBlåsOpp(httpResponse: HttpResponse, block: (enhet: T) -> Boolean) {
+        val contentLength = (httpResponse.contentLength() ?: 0) / 1024 / 1024
+        log.info("Komprimert filstørrelse: $contentLength MiB")
+
+        val gunzipStream = GZIPInputStream(httpResponse.bodyAsChannel().toInputStream())
+        mapper.factory.createParser(gunzipStream).use { jsonParser ->
+            // Check the first token
+            check(jsonParser.nextToken() === JsonToken.START_ARRAY) { "Expected content to be an array" }
+
+            // Iterate over the tokens until the end of the array
+            while (jsonParser.nextToken() !== JsonToken.END_ARRAY) {
+                // Read a Organisasjonsenhet2 instance using ObjectMapper and do something with it
+                val enhet: T = mapper.readValue(jsonParser)
+                if (!block(enhet)) {
+                    break
+                }
+            }
         }
     }
 }
