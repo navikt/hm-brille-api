@@ -8,6 +8,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -85,6 +86,16 @@ fun Route.internalRoutes(
 
             // Ferdig
             call.respond(HttpStatusCode.OK, "Klar!")
+        }
+
+        post("/sync-brreg") {
+            runBlocking {
+                runCatching {
+                    enhetsregisteretService.oppdaterMirrorHvisUtdatert(oppdaterUansett = true)
+                }.getOrElse { e ->
+                    log.error(e) { "sync-brreg endpoint: Feil under oppdatering av vår kopi av enhetsregisteret" }
+                }
+            }
         }
     }
 }
