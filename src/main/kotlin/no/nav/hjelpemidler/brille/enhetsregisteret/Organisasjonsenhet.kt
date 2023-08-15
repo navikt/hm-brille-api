@@ -27,7 +27,7 @@ data class Organisasjonsenhet(
 }
 
 data class Postadresse(
-    val postnummer: String,
+    val postnummer: String?,
     val poststed: String,
     val adresse: List<String>,
 )
