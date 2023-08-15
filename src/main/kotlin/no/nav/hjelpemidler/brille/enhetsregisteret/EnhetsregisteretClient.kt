@@ -93,7 +93,7 @@ class EnhetsregisteretClient(
 
             // Iterate over the tokens until the end of the array
             while (jsonParser.nextToken() !== JsonToken.END_ARRAY) {
-                // Read a Organisasjonsenhet2 instance using ObjectMapper and do something with it
+                // Read a Organisasjonsenhet instance using ObjectMapper and do something with it
                 val enhet: T = mapper.readValue(jsonParser)
                 if (!block(enhet)) {
                     break
