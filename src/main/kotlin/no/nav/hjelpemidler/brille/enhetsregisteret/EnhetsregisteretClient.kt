@@ -42,7 +42,7 @@ class EnhetsregisteretClient(
     private val httpClient = createHttpClient {
         expectSuccess = true
         install(HttpTimeout) {
-            requestTimeoutMillis = 10 * 60 * 1000
+            requestTimeoutMillis = 60 * 60 * 1000
         }
     }
 
