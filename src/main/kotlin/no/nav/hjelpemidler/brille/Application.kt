@@ -34,6 +34,7 @@ import no.nav.hjelpemidler.brille.avtale.avtaleApi
 import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
+import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretScheduler
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
 import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
@@ -87,6 +88,7 @@ private val log = KotlinLogging.logger {}
 fun main(args: Array<String>) {
     when (System.getenv("CRONJOB_TYPE")) {
         "SYNC_TSS" -> cronjobSyncTss()
+        "SYNC_BRREG" -> cronjobSyncBrreg()
         else -> io.ktor.server.cio.EngineMain.main(args)
     }
 }
@@ -141,7 +143,7 @@ fun Application.setupRoutes() {
 
     // Klienter
     val redisClient = RedisClient()
-    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties)
+    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties, databaseContext)
     val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
     val pdlClient = PdlClient(Configuration.pdlProperties)
     val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
@@ -154,7 +156,7 @@ fun Application.setupRoutes() {
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
     val rapportService = RapportService(databaseContext)
-    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, redisClient)
+    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, hotsakClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
@@ -181,6 +183,7 @@ fun Application.setupRoutes() {
     VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
+    EnhetsregisteretScheduler(enhetsregisteretService, leaderElection, metrics)
     if (Configuration.prod) RapporterManglendeTssIdentScheduler(
         tssIdentService,
         enhetsregisteretService,
@@ -291,6 +294,24 @@ fun cronjobSyncTss() {
 
         log.info("cronjob sync-tss: Virksomheter er oppdatert i TSS!")
     }
+}
+
+fun cronjobSyncBrreg() {
+    log.info("cronjob sync-brreg: start")
+
+    val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
+    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties, databaseContext)
+    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
+
+    runBlocking {
+        runCatching {
+            enhetsregisteretService.oppdaterMirrorHvisUtdatert(oppdaterUansett = true)
+        }.getOrElse { e ->
+            log.error(e) { "cronjob sync-brreg: Feil under oppdatering av vår kopi av enhetsregisteret" }
+        }
+    }
+
+    log.info("cronjob sync-brreg: enhetsregisteret-mirror er oppdatert!")
 }
 
 private fun kafkaConfig(
