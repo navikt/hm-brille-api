@@ -47,6 +47,14 @@ class EnhetsregisteretService(
         return null
     }
 
+    suspend fun hentOrganisasjonsenheter(orgnre: Set<String>): Map<String, Organisasjonsenhet> {
+        log.info { "Henter organisasjonsenheter med orgnre: $orgnre" }
+
+        return transaction(databaseContext) { ctx ->
+            ctx.enhetsregisteretStore.hentEnheter(orgnre)
+        }
+    }
+
     suspend fun organisasjonSlettet(orgnr: String): Boolean {
         kotlin.runCatching {
             val org = kotlin.runCatching { hentOrganisasjonsenhet(orgnr) }.getOrNull()

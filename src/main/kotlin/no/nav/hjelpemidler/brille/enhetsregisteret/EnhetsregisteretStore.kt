@@ -28,13 +28,19 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
     }
 
     override fun hentEnheter(orgnre: Set<String>): Map<String, Organisasjonsenhet> = session {
-        // Bare tillat orgnr-strenger som er rene tall siden (11 sifre) vi pakker argumentet inn i sql-strengen direkte (kan ikke bruke prepared statement)
-        val orgnre = orgnre.filter { it.toIntOrNull() != null && it.count() == 11 }
-
-        val sql = "SELECT data FROM enhetsregisteret_v1 WHERE orgnr IN ({ORGNRE})".replace("{ORGNRE}", orgnre.joinToString(", ") { "'$it'" })
-        it.queryList(sql, emptyMap()) { row ->
-            row.json<Organisasjonsenhet>("data")
-        }.groupBy { it.orgnr }.mapValues { it.value.first() }
+        // Bare tillat orgnr-strenger som er rene tall siden vi pakker argumentet inn i sql-strengen direkte (kan ikke bruke prepared statement)
+        val orgnreFiltrert = orgnre.filter { it.toIntOrNull() != null }
+        val results = mutableMapOf<String, Organisasjonsenhet>()
+        // Spør om maks 50 orgnre om gangen
+        for (chunk in orgnreFiltrert.chunked(50)) {
+            val sql = "SELECT data FROM enhetsregisteret_v1 WHERE orgnr IN ({ORGNRE})".replace("{ORGNRE}", chunk.joinToString(", ") { "'$it'" })
+            results.putAll(
+                it.queryList(sql, emptyMap()) { row ->
+                    row.json<Organisasjonsenhet>("data")
+                }.groupBy { it.orgnr }.mapValues { it.value.first() }
+            )
+        }
+        results
     }
 
     override fun oppdaterEnheter(type: EnhetType, block: (lagreEnhet: (enhet: Organisasjonsenhet) -> Unit) -> Unit) = transaction {

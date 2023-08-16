@@ -44,33 +44,11 @@ class AvtaleService(
             Slack.post("Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (se mer i sikkerlogg med id=$id)")
         }
 
-        val deferredRequests = mutableListOf<Deferred<Organisasjonsenhet?>>()
-        coroutineScope {
-            avgivere.forEach { avgiver ->
-                val orgnr = avgiver.orgnr
-                deferredRequests.add(async {
-                    try {
-                        enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
-                    } catch (e: CancellationException) {
-                        log.info { "Henting av orgenhet med orgnr <$orgnr> ble kansellert" }
-                        null
-                    } catch (e: Exception) {
-                        log.error(e) { "Klarte ikke å hente orgenhet for orgnr <$orgnr>" }
-                        null
-                    }
-
-                })
-            }
-        }
-
-        val organisasjoner = deferredRequests
-            .awaitAll()
-            .filterNotNull()
-            .associateBy { it.orgnr }
+        val enheter = enhetsregisteretService.hentOrganisasjonsenheter(avgivere.map { it.orgnr }.toSet())
 
         val avgivereFiltrert = avgivere.filter { avgiver ->
             val orgnr = avgiver.orgnr
-            val enhet = organisasjoner[orgnr]
+            val enhet = enheter[orgnr]
             if (enhet == null) {
                 false
             } else {
