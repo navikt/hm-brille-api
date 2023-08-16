@@ -57,7 +57,6 @@ class EnhetsregisteretService(
         if (Configuration.dev) {
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
             for (orgnr in orgnre) {
-                if (enheter.containsKey(orgnr)) continue
                 enheter.putAll(mapOf(
                     orgnr to Organisasjonsenhet(
                         orgnr = orgnr,
