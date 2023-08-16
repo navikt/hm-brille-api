@@ -22,25 +22,13 @@ class EnhetsregisteretService(
         }
 
         if (enhet != null) {
-            log.info { "Hentet enhet med orgnr: $orgnr fra tjeneste" }
+            log.info { "Hentet enhet/underenhet med orgnr: $orgnr fra mirror" }
             return enhet
         }
 
         if (Configuration.dev) {
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
-            return Organisasjonsenhet(
-                orgnr = orgnr,
-                navn = "Brille Verden",
-                forretningsadresse = Postadresse(
-                    adresse =  listOf("Brillevegen 42"),
-                    poststed =  "Brillestad",
-                    postnummer =  "6429"
-                ),
-                naeringskode1 = Næringskode(
-                    beskrivelse = "Butikkhandel med optiske artikler",
-                    kode = "47.782",
-                ),
-            )
+            return mockedOrg(orgnr)
         }
 
         log.info { "Klarte ikke å finne en organisasjonsenhet eller underenhet for orgnr: $orgnr" }
@@ -57,21 +45,7 @@ class EnhetsregisteretService(
         if (Configuration.dev) {
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
             for (orgnr in orgnre) {
-                enheter.putAll(mapOf(
-                    orgnr to Organisasjonsenhet(
-                        orgnr = orgnr,
-                        navn = "Brille Verden",
-                        forretningsadresse = Postadresse(
-                            adresse =  listOf("Brillevegen 42"),
-                            poststed =  "Brillestad",
-                            postnummer =  "6429"
-                        ),
-                        naeringskode1 = Næringskode(
-                            beskrivelse = "Butikkhandel med optiske artikler",
-                            kode = "47.782",
-                        ),
-                    )
-                ))
+                enheter.putAll(mapOf(orgnr to mockedOrg(orgnr)))
             }
         }
 
@@ -115,4 +89,18 @@ class EnhetsregisteretService(
             enhetsregisteretClient.oppdaterMirror()
         }
     }
+
+    private fun mockedOrg(orgnr: String) = Organisasjonsenhet(
+        orgnr = orgnr,
+        navn = "Brille Verden",
+        forretningsadresse = Postadresse(
+            adresse =  listOf("Brillevegen 42"),
+            poststed =  "Brillestad",
+            postnummer =  "6429"
+        ),
+        naeringskode1 = Næringskode(
+            beskrivelse = "Butikkhandel med optiske artikler",
+            kode = "47.782",
+        ),
+    )
 }
