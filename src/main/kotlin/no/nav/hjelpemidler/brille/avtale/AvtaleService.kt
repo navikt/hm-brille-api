@@ -45,6 +45,7 @@ class AvtaleService(
         }
 
         val enheter = enhetsregisteretService.hentOrganisasjonsenheter(avgivere.map { it.orgnr }.toSet())
+        if (Configuration.dev) log.info("DEBUG: avgivere=$avgivere, enheter=$enheter")
 
         val avgivereFiltrert = avgivere.filter { avgiver ->
             val orgnr = avgiver.orgnr
@@ -67,6 +68,8 @@ class AvtaleService(
             }
         }
 
+        if (Configuration.dev) log.info("DEBUG: avgivereFiltrert=$avgivereFiltrert")
+
         sikkerLog.info {
             "Filtrert avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivereFiltrert"
         }
@@ -76,6 +79,8 @@ class AvtaleService(
                 it.orgnr
             }
         }
+
+        if (Configuration.dev) log.info("DEBUG: virksomheter=$virksomheter")
 
         return avgivereFiltrert
             .map {
