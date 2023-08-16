@@ -29,6 +29,8 @@ internal fun Route.kravApi(
             val fnrInnsender = call.extractFnr()
             val navnInnsender = redisClient.optikerNavn(fnrInnsender) ?: "<Ukjent>"
 
+            require(kravDto.bestillingsreferanse.count() <= 100) { "Bestillingsreferansen kan ikke være over 100 karakterer lang" }
+
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnsender,
                 fnrOppslag = kravDto.vilkårsgrunnlag.fnrBarn,

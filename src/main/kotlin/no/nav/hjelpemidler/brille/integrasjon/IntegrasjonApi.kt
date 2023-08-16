@@ -186,6 +186,8 @@ fun Route.integrasjonApi(
                 val optikerPdl = pdlService.hentPerson(req.ansvarligOptikersFnr)
                 val navnInnsender = optikerPdl?.navn() ?: "<Ukjent>"
 
+                require(req.bestillingsreferanse.count() <= 100) { "Bestillingsreferansen kan ikke være over 100 karakterer lang" }
+
                 // Slå opp orgnavn/-adresse fra enhetsregisteret
                 val enhet: Organisasjonsenhet = enhetsregisteretService.hentOrganisasjonsenhet(req.virksomhetOrgnr)
                     ?: return@post call.respond(
