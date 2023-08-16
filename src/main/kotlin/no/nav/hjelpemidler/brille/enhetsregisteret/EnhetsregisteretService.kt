@@ -50,9 +50,33 @@ class EnhetsregisteretService(
     suspend fun hentOrganisasjonsenheter(orgnre: Set<String>): Map<String, Organisasjonsenhet> {
         log.info { "Henter organisasjonsenheter med orgnre: $orgnre" }
 
-        return transaction(databaseContext) { ctx ->
+        val enheter = transaction(databaseContext) { ctx ->
             ctx.enhetsregisteretStore.hentEnheter(orgnre)
+        }.toMutableMap()
+
+        if (Configuration.dev) {
+            // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
+            for (orgnr in orgnre) {
+                if (enheter.containsKey(orgnr)) continue
+                enheter.putAll(mapOf(
+                    orgnr to Organisasjonsenhet(
+                        orgnr = orgnr,
+                        navn = "Brille Verden",
+                        forretningsadresse = Postadresse(
+                            adresse =  listOf("Brillevegen 42"),
+                            poststed =  "Brillestad",
+                            postnummer =  "6429"
+                        ),
+                        naeringskode1 = Næringskode(
+                            beskrivelse = "Butikkhandel med optiske artikler",
+                            kode = "47.782",
+                        ),
+                    )
+                ))
+            }
         }
+
+        return enheter
     }
 
     suspend fun organisasjonSlettet(orgnr: String): Boolean {
