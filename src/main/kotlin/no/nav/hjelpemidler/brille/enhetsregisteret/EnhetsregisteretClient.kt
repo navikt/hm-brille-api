@@ -50,14 +50,14 @@ class EnhetsregisteretClient(
         var c = 0
         log.info("Henter hoved-/underenheter:")
         transaction(databaseContext) {
-            it.enhetsregisteretStore.oppdaterEnheter(EnhetType.HOVEDENHET) { lagre ->
+            it.enhetsregisteretStore.oppdaterEnheter { lagre ->
                 // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#enheter-lastned
                 runBlocking {
                     httpClient.prepareGet("$baseUrl/enhetsregisteret/api/enheter/lastned") {
                         header(HttpHeaders.Accept, "application/vnd.brreg.enhetsregisteret.enhet.v1+gzip;charset=UTF-8")
                     }.execute { httpResponse ->
                         strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhet ->
-                            lagre(enhet)
+                            lagre(EnhetType.HOVEDENHET, enhet)
                             c++
                             return@strømOgBlåsOpp true
                         }
@@ -70,7 +70,7 @@ class EnhetsregisteretClient(
                         header(HttpHeaders.Accept, "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8")
                     }.execute { httpResponse ->
                         strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhet ->
-                            lagre(underenhet)
+                            lagre(EnhetType.UNDERENHET, underenhet)
                             c++
                             return@strømOgBlåsOpp true
                         }

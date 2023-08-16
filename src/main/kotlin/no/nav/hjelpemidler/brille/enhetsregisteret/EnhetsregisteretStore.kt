@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 interface EnhetsregisteretStore : Store {
     fun hentEnhet(orgnr: String): Organisasjonsenhet?
     fun hentEnheter(orgnre: Set<String>): Map<String, Organisasjonsenhet>
-    fun oppdaterEnheter(type: EnhetType, block: (lagreEnhet: (enhet: Organisasjonsenhet) -> Unit) -> Unit)
+    fun oppdaterEnheter(block: (lagre: (type: EnhetType, enhet: Organisasjonsenhet) -> Unit) -> Unit)
     fun sistOppdatert(): LocalDateTime?
 }
 
@@ -43,11 +43,11 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
         results
     }
 
-    override fun oppdaterEnheter(type: EnhetType, block: (lagreEnhet: (enhet: Organisasjonsenhet) -> Unit) -> Unit) = transaction {
+    override fun oppdaterEnheter(block: (lagre: (type: EnhetType, enhet: Organisasjonsenhet) -> Unit) -> Unit) = transaction {
         // Lagre alle nye enheter i database tabellen
         val opprettet = LocalDateTime.now()
         runBlocking {
-            block { enhet ->
+            block { type, enhet ->
                 // Lagre enhet
                 @Language("PostgreSQL")
                 val sql = """
