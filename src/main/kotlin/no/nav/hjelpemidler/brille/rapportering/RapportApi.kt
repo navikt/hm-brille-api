@@ -33,7 +33,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 call.respond(HttpStatusCode.Unauthorized)
                 return@get
             }
-            val limit = call.request.queryParameters["limit"]?.toInt() ?: 20
+            val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
             val page = call.request.queryParameters["page"]?.toInt() ?: 1
 
             val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
