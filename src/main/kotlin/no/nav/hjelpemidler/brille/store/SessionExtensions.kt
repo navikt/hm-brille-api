@@ -71,7 +71,7 @@ data class PageResultQueryAction<A>(
         val items = session.list(
             query.let {
                 Query(
-                    "${it.statement} limit :limit offset :offset",
+                    "${it.statement}",
                     it.params,
                     it.paramMap.plus(
                         mapOf(
