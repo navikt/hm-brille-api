@@ -66,7 +66,7 @@ internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStor
         offset: Int,
     ): Page<Kravlinje> = session {
         @Language("PostgreSQL")
-        val sql = kravlinjeQuery(kravFilter, tilDato, referanseFilter)
+        val sql = kravlinjeQuery(kravFilter, tilDato, referanseFilter, paginert = true)
         it.queryPagedList(
             sql,
             mapOf(
