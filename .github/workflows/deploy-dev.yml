@@ -10,6 +10,7 @@ on:
       - '.github/workflows/deploy-alerts-dev.yml'
     branches:
       - main
+      - ny-rapport-tabell
 env:
   ghcr_image: ghcr.io/${{ github.repository }}/hm-brille-api:${{ github.sha }}
 jobs:
