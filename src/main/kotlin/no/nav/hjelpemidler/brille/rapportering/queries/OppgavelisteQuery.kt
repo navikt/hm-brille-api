@@ -12,7 +12,7 @@ fun kravlinjeQuery(
 ): String {
     var sql = """
         WITH alle_vedtak AS (
-            -- Slå sammen vanlige og slettede vedtak
+            -- Slå sammen gjeldende og slettede vedtak
             SELECT
                 COALESCE(v.id, vs.id) AS id,
                 COALESCE(v.fnr_barn, vs.fnr_barn) AS fnr_barn,
@@ -47,7 +47,7 @@ fun kravlinjeQuery(
             ORDER BY DATE(v.opprettet) DESC
         ), grupperte_resultater_pagination AS (
             -- Paginer resultatene og gi oss lister med vedtak-ider for hvert resultat
-            SELECT batch_id, vedtak_ids, pagination_total FROM grupperte_resultater
+            SELECT batch_id, vedtak_ids, $COLUMN_LABEL_TOTAL FROM grupperte_resultater
             ${if (paginert) "LIMIT :limit OFFSET :offset" else ""}
         )
         -- Ekspander de paginerte resultatene igjen til alle relevante vedtak
