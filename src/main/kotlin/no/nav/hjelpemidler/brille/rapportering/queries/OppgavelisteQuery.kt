@@ -43,7 +43,7 @@ fun kravlinjeQuery(
             FROM alle_vedtak v
             LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
             WHERE v.orgnr = :orgNr AND (v.slettet IS NULL OR u.id IS NOT NULL)
-            GROUP BY DATE(v.opprettet), u.batch_id
+            GROUP BY DATE(v.opprettet), u.batch_id, u.utbetalingsdato
             ORDER BY DATE(v.opprettet) DESC
         ), grupperte_resultater_pagination AS (
             -- Paginer resultatene og gi oss lister med vedtak-ider for hvert resultat
