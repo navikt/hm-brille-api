@@ -58,13 +58,13 @@ fun kravlinjeQuery(
             -- opprettet hvis de ikke har fått avstemmingsreferanse enda. Aggreger sammen
             -- lister med vedtak-ider for hvert resultat slik at vi kan ekspandere til
             -- alle vedtak igjen senere.
-            SELECT v.batch_id, v.utbetalingsdato, DATE(v.opprettet), array_agg(v.id) AS vedtak_ids, count(*) over() AS pagination_total
+            SELECT v.batch_id, v.utbetalingsdato, DATE(v.opprettet), array_agg(v.id) AS vedtak_ids, count(*) over() AS $COLUMN_LABEL_TOTAL
             FROM alle_vedtak v
             GROUP BY DATE(v.opprettet), v.batch_id, v.utbetalingsdato
             ORDER BY DATE(v.opprettet) DESC
         ), grupperte_resultater_pagination AS (
             -- Paginer resultatene
-            SELECT batch_id, utbetalingsdato, vedtak_ids, pagination_total FROM grupperte_resultater
+            SELECT batch_id, utbetalingsdato, vedtak_ids, $COLUMN_LABEL_TOTAL FROM grupperte_resultater
             ${if (paginert) { "LIMIT :limit OFFSET :offset" } else { "" }}
         )
         -- Ekspander de paginerte resultatene igjen til alle relevante vedtak
