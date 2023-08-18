@@ -14,7 +14,7 @@ fun kravlinjeQuery(
     @Language("PostgreSQL")
     var sql = """
         WITH alle_vedtak AS (
-            -- Slå sammen gjeldende og slettede vedtak
+            -- Slå sammen vanlige og slettede vedtak, filtrer/søk...
             SELECT
                 COALESCE(v.id, vs.id) AS id,
                 COALESCE(v.fnr_barn, vs.fnr_barn) AS fnr_barn,
@@ -33,69 +33,94 @@ fun kravlinjeQuery(
                 COALESCE(v.navn_innsender, vs.navn_innsender) AS navn_innsender,
                 COALESCE(v.kilde, vs.kilde) AS kilde,
                 vs.slettet,
-                vs.slettet_av_type
+                vs.slettet_av_type,
+                COALESCE(u1.batch_id, u2.batch_id) AS batch_id,
+                COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
+            LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
+            LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
+            
+            WHERE
+                -- Bare inkluder resultater fra den relevante organisasjonen
+                (v.orgnr = :orgNr OR vs.orgnr = :orgNr)
+            
+                -- Bare inkluder resultater fra slettet-vedtak tabellen som ble utbetalt før de ble slettet:
+                AND (vs.id IS NULL OR u2.utbetalingsdato IS NOT NULL)
+            
+                -- Søk:
+                {{SEARCH_PLACEHOLDER}}
+            
             ORDER BY COALESCE(v.id, vs.id) DESC
+        
         ), grupperte_resultater AS (
-            -- Grupper vedtak sammen basert på avstemmingsreferanse eller dag de ble
-            -- opprettet hvis de ikke har fått avstemmingsreferanse enda. Ekskluder
-            -- slettede vedtak som ble slettet før utbetaling.
-            SELECT u.batch_id, u.utbetalingsdato, DATE(v.opprettet), array_agg(v.id) AS vedtak_ids, count(*) over() AS $COLUMN_LABEL_TOTAL
+            -- Grupper vedtak sammen basert på avstemmingsreferanse eller dagen de ble
+            -- opprettet hvis de ikke har fått avstemmingsreferanse enda. Aggreger sammen
+            -- lister med vedtak-ider for hvert resultat slik at vi kan ekspandere til
+            -- alle vedtak igjen senere.
+            SELECT v.batch_id, v.utbetalingsdato, DATE(v.opprettet), array_agg(v.id) AS vedtak_ids, count(*) over() AS pagination_total
             FROM alle_vedtak v
-            LEFT JOIN utbetaling_v1 u ON v.id = u.vedtak_id
-            WHERE v.orgnr = :orgNr AND (v.slettet IS NULL OR u.id IS NOT NULL)
-            GROUP BY DATE(v.opprettet), u.batch_id, u.utbetalingsdato
+            GROUP BY DATE(v.opprettet), v.batch_id, v.utbetalingsdato
             ORDER BY DATE(v.opprettet) DESC
         ), grupperte_resultater_pagination AS (
-            -- Paginer resultatene og gi oss lister med vedtak-ider for hvert resultat
-            SELECT batch_id, utbetalingsdato, vedtak_ids, $COLUMN_LABEL_TOTAL FROM grupperte_resultater
-            ${if (paginert) "LIMIT :limit OFFSET :offset" else ""}
+            -- Paginer resultatene
+            SELECT batch_id, utbetalingsdato, vedtak_ids, pagination_total FROM grupperte_resultater
+            ${if (paginert) { "LIMIT :limit OFFSET :offset" } else { "" }}
         )
         -- Ekspander de paginerte resultatene igjen til alle relevante vedtak
         SELECT * FROM grupperte_resultater_pagination grp
         LEFT JOIN alle_vedtak v ON v.id = ANY(grp.vedtak_ids)
-        -- Søk relaterte begrensinger på oppslaget legges på etter denne
-        WHERE TRUE
     """
 
     if (tilDato != null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
-        sql = sql.plus(
+        sql = sql.replace(
+            "{{SEARCH_PLACEHOLDER}}",
             """
-                AND v.opprettet >= :fraDato AND v.opprettet <= :tilDato
+                AND COALESCE(v.opprettet, vs.opprettet) >= :fraDato AND COALESCE(v.opprettet, vs.opprettet) <= :tilDato
+                {{SEARCH_PLACEHOLDER}}
             """
         )
     } else if (tilDato == null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
-        sql = sql.plus(
+        sql = sql.replace(
+            "{{SEARCH_PLACEHOLDER}}",
             """
-                AND v.opprettet >= :fraDato
+                AND COALESCE(v.opprettet, vs.opprettet) >= :fraDato
+                {{SEARCH_PLACEHOLDER}}
             """
         )
     } else if (kravFilter?.equals(KravFilter.HITTILAR) == true) {
-        sql = sql.plus(
+        sql = sql.replace(
+            "{{SEARCH_PLACEHOLDER}}",
             """
-                AND date_part('year', v.opprettet) = date_part('year', CURRENT_DATE)
+                AND date_part('year', COALESCE(v.opprettet, vs.opprettet)) = date_part('year', CURRENT_DATE)
+                {{SEARCH_PLACEHOLDER}}
             """
         )
     } else if (kravFilter?.equals(KravFilter.SISTE3MND) == true) {
-        sql = sql.plus(
+        sql = sql.replace(
+            "{{SEARCH_PLACEHOLDER}}",
             """
-                AND v.opprettet > CURRENT_DATE - INTERVAL '3 months'
+                AND COALESCE(v.opprettet, vs.opprettet) > CURRENT_DATE - INTERVAL '3 months'
+                {{SEARCH_PLACEHOLDER}}
             """
         )
     }
 
     if (!referanseFilter.isNullOrBlank()) {
-        sql = sql.plus(
+        sql = sql.replace(
+            "{{SEARCH_PLACEHOLDER}}",
             """
                 AND (
-                    CAST(v.id AS TEXT) LIKE :referanseFilter
-                    OR v.bestillingsreferanse LIKE :referanseFilter
-                    OR grp.batch_id LIKE :referanseFilter
+                    CAST(COALESCE(v.id, vs.id) AS TEXT) LIKE :referanseFilter
+                    OR COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) LIKE :referanseFilter
+                    OR COALESCE(u1.batch_id, u2.batch_id) LIKE :referanseFilter
                 )
             """
         )
     }
+
+    // Hvis søk-placeholder teksten fortsatt er her, da fjerner vi den bare
+    sql = sql.replace("{{SEARCH_PLACEHOLDER}}", "")
 
     //language=PostgreSQL
     return sql.trimIndent()
