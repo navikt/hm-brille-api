@@ -2,6 +2,7 @@ package no.nav.hjelpemidler.brille.rapportering.queries
 
 import no.nav.hjelpemidler.brille.rapportering.KravFilter
 import no.nav.hjelpemidler.brille.store.COLUMN_LABEL_TOTAL
+import org.intellij.lang.annotations.Language
 import java.time.LocalDate
 
 fun kravlinjeQuery(
@@ -10,6 +11,7 @@ fun kravlinjeQuery(
     referanseFilter: String?,
     paginert: Boolean = false,
 ): String {
+    @Language("PostgreSQL")
     var sql = """
         WITH alle_vedtak AS (
             -- Slå sammen gjeldende og slettede vedtak
@@ -53,7 +55,7 @@ fun kravlinjeQuery(
         -- Ekspander de paginerte resultatene igjen til alle relevante vedtak
         SELECT * FROM grupperte_resultater_pagination grp
         LEFT JOIN alle_vedtak v ON v.id = ANY(grp.vedtak_ids)
-
+        -- Søk relaterte begrensinger på oppslaget legges på etter denne
         WHERE TRUE
     """.trimIndent()
 
