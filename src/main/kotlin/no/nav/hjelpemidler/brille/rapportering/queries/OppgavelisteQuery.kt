@@ -57,31 +57,31 @@ fun kravlinjeQuery(
         LEFT JOIN alle_vedtak v ON v.id = ANY(grp.vedtak_ids)
         -- Søk relaterte begrensinger på oppslaget legges på etter denne
         WHERE TRUE
-    """.trimIndent()
+    """
 
     if (tilDato != null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
         sql = sql.plus(
             """
                 AND v.opprettet >= :fraDato AND v.opprettet <= :tilDato
-            """.trimIndent()
+            """
         )
     } else if (tilDato == null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
         sql = sql.plus(
             """
                 AND v.opprettet >= :fraDato
-            """.trimIndent()
+            """
         )
     } else if (kravFilter?.equals(KravFilter.HITTILAR) == true) {
         sql = sql.plus(
             """
                 AND date_part('year', v.opprettet) = date_part('year', CURRENT_DATE)
-            """.trimIndent()
+            """
         )
     } else if (kravFilter?.equals(KravFilter.SISTE3MND) == true) {
         sql = sql.plus(
             """
                 AND v.opprettet > CURRENT_DATE - INTERVAL '3 months'
-            """.trimIndent()
+            """
         )
     }
 
@@ -93,7 +93,7 @@ fun kravlinjeQuery(
                     OR v.bestillingsreferanse LIKE :referanseFilter
                     OR grp.batch_id LIKE :referanseFilter
                 )
-            """.trimIndent()
+            """
         )
     }
 

@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille
 
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import kotlinx.coroutines.runBlocking
