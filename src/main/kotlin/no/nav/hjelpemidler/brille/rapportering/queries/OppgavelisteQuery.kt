@@ -35,11 +35,14 @@ fun kravlinjeQuery(
                 vs.slettet,
                 vs.slettet_av_type,
                 COALESCE(u1.batch_id, u2.batch_id) AS batch_id,
-                COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato
+                COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                COALESCE(ub1.totalbelop, ub2.totalbelop) AS batch_totalbelop
             FROM vedtak_v1 v
             FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
             LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
             LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
+            LEFT JOIN utbetalingsbatch_v1 ub1 ON u1.batch_id = ub1.batch_id
+            LEFT JOIN utbetalingsbatch_v1 ub2 ON u2.batch_id = ub2.batch_id
             
             WHERE
                 -- Bare inkluder resultater fra den relevante organisasjonen

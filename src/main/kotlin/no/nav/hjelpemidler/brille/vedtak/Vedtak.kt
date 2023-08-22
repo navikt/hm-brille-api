@@ -79,6 +79,7 @@ data class Kravlinje(
     val bestillingsreferanse: String,
     val utbetalingsdato: LocalDate?,
     val batchId: String?,
+    val batchTotalBeløp: BigDecimal?,
     val slettet: LocalDateTime?,
 ) {
 
@@ -92,6 +93,7 @@ data class Kravlinje(
             bestillingsreferanse = row.string("bestillingsreferanse"),
             utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
             batchId = row.stringOrNull("batch_id"),
+            batchTotalBeløp = row.bigDecimal("batch_totalbelop"),
             slettet = row.localDateTimeOrNull("slettet"),
         )
     }
