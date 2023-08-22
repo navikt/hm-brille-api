@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import kotliquery.Row
+import no.nav.hjelpemidler.brille.jsonOrNull
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
@@ -81,6 +82,7 @@ data class Kravlinje(
     val batchId: String?,
     val batchTotalBeløp: BigDecimal?,
     val slettet: LocalDateTime?,
+    val potensieltBortfiltrerteKrav: List<Kravlinje>?,
 ) {
 
     companion object {
@@ -95,6 +97,7 @@ data class Kravlinje(
             batchId = row.stringOrNull("batch_id"),
             batchTotalBeløp = row.bigDecimalOrNull("batch_totalbelop"),
             slettet = row.localDateTimeOrNull("slettet"),
+            potensieltBortfiltrerteKrav = row.jsonOrNull("potensielt_bortfiltrerte_krav"),
         )
     }
 }
