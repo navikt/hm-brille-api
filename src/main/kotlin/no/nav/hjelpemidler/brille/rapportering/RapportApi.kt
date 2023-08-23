@@ -12,18 +12,22 @@ import io.ktor.server.response.respondOutputStream
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import java.io.OutputStream
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
+
+private val log = KotlinLogging.logger {}
 
 fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnService) {
     route("/kravlinjer") {
         get("/paged/{orgnr}") {
+            log.info("DEBUG: Here 1")
+
             val orgnr = call.orgnr()
             if (!altinnService.harTilgangTilUtbetalingsrapport(
                     call.extractFnr(),
@@ -41,7 +45,9 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             val fraDato = call.request.queryParameters["fraDato"]?.toLocalDate()
             val tilDato = call.request.queryParameters["tilDato"]?.toLocalDate()?.plusDays(1)
 
+            log.info("DEBUG: Here 2: ${call.request.queryParameters}")
             val referanseFilter = call.request.queryParameters["referanseFilter"] ?: ""
+            log.info("DEBUG: Here 3: $referanseFilter")
 
             val kravlinjer = rapportService.hentPagedKravlinjer(
                 orgNr = orgnr,
@@ -52,6 +58,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 limit = limit,
                 offset = (page - 1) * limit,
             )
+            log.info("DEBUG: Here 4")
 
             val pagedKravlinjeListe = PagedKravlinjeliste(
                 kravlinjer = kravlinjer,
