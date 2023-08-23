@@ -49,15 +49,22 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             val referanseFilter = call.request.queryParameters["referanseFilter"] ?: ""
             log.info("DEBUG: Here 3: $referanseFilter")
 
-            val kravlinjer = rapportService.hentPagedKravlinjer(
-                orgNr = orgnr,
-                kravFilter = kravFilter,
-                fraDato = fraDato,
-                tilDato = tilDato,
-                referanseFilter = referanseFilter,
-                limit = limit,
-                offset = (page - 1) * limit,
-            )
+            val kravlinjer = runCatching {
+                rapportService.hentPagedKravlinjer(
+                    orgNr = orgnr,
+                    kravFilter = kravFilter,
+                    fraDato = fraDato,
+                    tilDato = tilDato,
+                    referanseFilter = referanseFilter,
+                    limit = limit,
+                    offset = (page - 1) * limit,
+                )
+            }.getOrElse { e ->
+                log.error(e) { "DEBUG feil med oppslag i rapporten" }
+                log.info(e.message)
+                e.printStackTrace()
+                throw e
+            }
             log.info("DEBUG: Here 4")
 
             val pagedKravlinjeListe = PagedKravlinjeliste(
