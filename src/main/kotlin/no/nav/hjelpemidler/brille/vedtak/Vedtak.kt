@@ -1,6 +1,12 @@
 package no.nav.hjelpemidler.brille.vedtak
 
+import com.fasterxml.jackson.databind.JsonNode
 import kotliquery.Row
+import no.nav.helse.rapids_rivers.asLocalDate
+import no.nav.helse.rapids_rivers.asLocalDateTime
+import no.nav.helse.rapids_rivers.asOptionalLocalDate
+import no.nav.helse.rapids_rivers.asOptionalLocalDateTime
+import no.nav.hjelpemidler.brille.jsonOrNull
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
@@ -79,21 +85,44 @@ data class Kravlinje(
     val bestillingsreferanse: String,
     val utbetalingsdato: LocalDate?,
     val batchId: String?,
+    val batchTotalBeløp: BigDecimal?,
     val slettet: LocalDateTime?,
+    val potensieltBortfiltrerteKrav: List<Kravlinje>?,
 ) {
 
     companion object {
-        fun fromRow(row: Row) = Kravlinje(
-            id = row.long("id"),
-            bestillingsdato = row.localDate("bestillingsdato"),
-            behandlingsresultat = row.string("behandlingsresultat"),
-            opprettet = row.localDateTime("opprettet"),
-            beløp = row.bigDecimal("belop"),
-            bestillingsreferanse = row.string("bestillingsreferanse"),
-            utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-            batchId = row.stringOrNull("batch_id"),
-            slettet = row.localDateTimeOrNull("slettet"),
-        )
+        fun fromRow(row: Row): Kravlinje {
+            val ekstraKravArray: Array<JsonNode>? = row.jsonOrNull("potensielt_bortfiltrerte_krav")
+            val ekstraKrav: List<Kravlinje>? = (ekstraKravArray?.toList() )?.map { node ->
+                Kravlinje (
+                    id = node.get("id").asLong(),
+                    bestillingsdato = node.get("bestillingsdato").asLocalDate(),
+                    behandlingsresultat = node.get("behandlingsresultat").textValue(),
+                    opprettet = node.get("opprettet").asLocalDateTime(),
+                    beløp = node.get("belop").decimalValue(),
+                    bestillingsreferanse = node.get("bestillingsreferanse").textValue(),
+                    utbetalingsdato = node.get("utbetalingsdato").asOptionalLocalDate(),
+                    batchId = node.get("batch_id").textValue(),
+                    batchTotalBeløp = node.get("batch_totalbelop").decimalValue(),
+                    slettet = node.get("slettet").asOptionalLocalDateTime(),
+                    potensieltBortfiltrerteKrav = null,
+                )
+            }
+
+            return Kravlinje(
+                id = row.long("id"),
+                bestillingsdato = row.localDate("bestillingsdato"),
+                behandlingsresultat = row.string("behandlingsresultat"),
+                opprettet = row.localDateTime("opprettet"),
+                beløp = row.bigDecimal("belop"),
+                bestillingsreferanse = row.string("bestillingsreferanse"),
+                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                batchId = row.stringOrNull("batch_id"),
+                batchTotalBeløp = row.bigDecimalOrNull("batch_totalbelop"),
+                slettet = row.localDateTimeOrNull("slettet"),
+                potensieltBortfiltrerteKrav = ekstraKrav,
+            )
+        }
     }
 }
 

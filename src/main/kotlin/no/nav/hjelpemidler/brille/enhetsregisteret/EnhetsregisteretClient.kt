@@ -22,6 +22,7 @@ import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.http.createHttpClient
 import java.util.zip.GZIPInputStream
+import kotlin.system.measureTimeMillis
 
 private val log = KotlinLogging.logger { }
 
@@ -48,37 +49,45 @@ class EnhetsregisteretClient(
 
     suspend fun oppdaterMirror() {
         var c = 0
-        log.info("Henter hoved-/underenheter:")
-        transaction(databaseContext) {
-            it.enhetsregisteretStore.oppdaterEnheter { lagre ->
-                // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#enheter-lastned
-                runBlocking {
-                    httpClient.prepareGet("$baseUrl/enhetsregisteret/api/enheter/lastned") {
-                        header(HttpHeaders.Accept, "application/vnd.brreg.enhetsregisteret.enhet.v1+gzip;charset=UTF-8")
-                    }.execute { httpResponse ->
-                        strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhet ->
-                            lagre(EnhetType.HOVEDENHET, enhet)
-                            c++
-                            return@strømOgBlåsOpp true
+        log.info("Oppdater mirror - Henter hoved-/underenheter:")
+        val elapsed = measureTimeMillis {
+            transaction(databaseContext) {
+                it.enhetsregisteretStore.oppdaterEnheter { lagre ->
+                    // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#enheter-lastned
+                    runBlocking {
+                        httpClient.prepareGet("$baseUrl/enhetsregisteret/api/enheter/lastned") {
+                            header(
+                                HttpHeaders.Accept,
+                                "application/vnd.brreg.enhetsregisteret.enhet.v1+gzip;charset=UTF-8"
+                            )
+                        }.execute { httpResponse ->
+                            strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhet ->
+                                lagre(EnhetType.HOVEDENHET, enhet)
+                                c++
+                                return@strømOgBlåsOpp true
+                            }
                         }
                     }
-                }
 
-                // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#underenheter-lastned
-                runBlocking {
-                    httpClient.prepareGet("$baseUrl/enhetsregisteret/api/underenheter/lastned") {
-                        header(HttpHeaders.Accept, "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8")
-                    }.execute { httpResponse ->
-                        strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhet ->
-                            lagre(EnhetType.UNDERENHET, underenhet)
-                            c++
-                            return@strømOgBlåsOpp true
+                    // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#underenheter-lastned
+                    runBlocking {
+                        httpClient.prepareGet("$baseUrl/enhetsregisteret/api/underenheter/lastned") {
+                            header(
+                                HttpHeaders.Accept,
+                                "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8"
+                            )
+                        }.execute { httpResponse ->
+                            strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhet ->
+                                lagre(EnhetType.UNDERENHET, underenhet)
+                                c++
+                                return@strømOgBlåsOpp true
+                            }
                         }
                     }
                 }
             }
         }
-        log.info("Ferdig - $c hoved-/underenheter lagret")
+        log.info("Oppdater mirror - Ferdig med å lagre $c hoved-/underenheter - $elapsed ms brukt")
     }
 
     private suspend inline fun <reified T> strømOgBlåsOpp(httpResponse: HttpResponse, block: (enhet: T) -> Boolean) {

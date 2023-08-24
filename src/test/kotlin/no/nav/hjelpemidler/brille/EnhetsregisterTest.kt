@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille
 
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import kotlinx.coroutines.runBlocking
@@ -43,4 +42,10 @@ internal class EnhetsregisterTest {
         val timerSidenOppdatert = sistOppdatert.until(LocalDateTime.now(), ChronoUnit.HOURS)
         timerSidenOppdatert shouldBe 24
     }
+
+    /* @Test
+    fun `se kravquery`() {
+        val result = kravlinjeQuery(KravFilter.EGENDEFINERT, LocalDate.now(), "some", true)
+        println(result)
+    } */
 }

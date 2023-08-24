@@ -34,7 +34,7 @@ class RapportService(
         fraDato: LocalDate? = null,
         tilDato: LocalDate? = null,
         referanseFilter: String? = "",
-        limit: Int = 20,
+        limit: Int = 10,
         offset: Int = 0,
     ): Page<Kravlinje> {
         val kravlinjer = transaction(databaseContext) { ctx ->

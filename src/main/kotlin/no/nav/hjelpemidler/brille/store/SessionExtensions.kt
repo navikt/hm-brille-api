@@ -71,11 +71,11 @@ data class PageResultQueryAction<A>(
         val items = session.list(
             query.let {
                 Query(
-                    "${it.statement} limit :limit offset :offset",
+                    it.statement,
                     it.params,
                     it.paramMap.plus(
                         mapOf(
-                            "limit" to limit + 1, // fetch one more than limit to check for "hasMore"
+                            "limit" to limit,
                             "offset" to offset,
                         )
                     )
@@ -86,7 +86,7 @@ data class PageResultQueryAction<A>(
             extractor(it)
         }
         return Page(
-            items = items.take(limit),
+            items = items,
             total = totalNumberOfItems,
         )
     }

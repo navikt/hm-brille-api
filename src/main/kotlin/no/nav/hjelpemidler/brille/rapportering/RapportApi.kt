@@ -12,14 +12,16 @@ import io.ktor.server.response.respondOutputStream
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
+import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import java.io.OutputStream
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
+
+private val log = KotlinLogging.logger {}
 
 fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnService) {
     route("/kravlinjer") {
@@ -33,7 +35,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 call.respond(HttpStatusCode.Unauthorized)
                 return@get
             }
-            val limit = call.request.queryParameters["limit"]?.toInt() ?: 20
+            val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
             val page = call.request.queryParameters["page"]?.toInt() ?: 1
 
             val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
@@ -43,15 +45,20 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
             val referanseFilter = call.request.queryParameters["referanseFilter"] ?: ""
 
-            val kravlinjer = rapportService.hentPagedKravlinjer(
-                orgNr = orgnr,
-                kravFilter = kravFilter,
-                fraDato = fraDato,
-                tilDato = tilDato,
-                referanseFilter = referanseFilter,
-                limit = limit,
-                offset = (page - 1) * limit,
-            )
+            val kravlinjer = runCatching {
+                rapportService.hentPagedKravlinjer(
+                    orgNr = orgnr,
+                    kravFilter = kravFilter,
+                    fraDato = fraDato,
+                    tilDato = tilDato,
+                    referanseFilter = referanseFilter,
+                    limit = limit,
+                    offset = (page - 1) * limit,
+                )
+            }.getOrElse { e ->
+                log.error(e) { "Feil med oppslag i rapporten" }
+                throw e
+            }
 
             val pagedKravlinjeListe = PagedKravlinjeliste(
                 kravlinjer = kravlinjer,
