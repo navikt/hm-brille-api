@@ -26,8 +26,6 @@ private val log = KotlinLogging.logger {}
 fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnService) {
     route("/kravlinjer") {
         get("/paged/{orgnr}") {
-            log.info("DEBUG: Here 1")
-
             val orgnr = call.orgnr()
             if (!altinnService.harTilgangTilUtbetalingsrapport(
                     call.extractFnr(),
@@ -45,9 +43,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             val fraDato = call.request.queryParameters["fraDato"]?.toLocalDate()
             val tilDato = call.request.queryParameters["tilDato"]?.toLocalDate()?.plusDays(1)
 
-            log.info("DEBUG: Here 2: ${call.request.queryParameters}")
             val referanseFilter = call.request.queryParameters["referanseFilter"] ?: ""
-            log.info("DEBUG: Here 3: $referanseFilter")
 
             val kravlinjer = runCatching {
                 rapportService.hentPagedKravlinjer(
@@ -60,12 +56,9 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                     offset = (page - 1) * limit,
                 )
             }.getOrElse { e ->
-                log.error(e) { "DEBUG feil med oppslag i rapporten" }
-                log.info(e.message)
-                e.printStackTrace()
+                log.error(e) { "Feil med oppslag i rapporten" }
                 throw e
             }
-            log.info("DEBUG: Here 4")
 
             val pagedKravlinjeListe = PagedKravlinjeliste(
                 kravlinjer = kravlinjer,
