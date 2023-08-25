@@ -8,6 +8,7 @@ import java.time.LocalDate
 fun kravlinjeQuery(
     kravFilter: KravFilter?,
     tilDato: LocalDate?,
+    avstemmingsreferanse: String?,
     referanseFilter: String?,
     paginert: Boolean = false,
 ): String {
@@ -112,6 +113,16 @@ fun kravlinjeQuery(
             "{{SEARCH_PLACEHOLDER}}",
             """
                 AND v.opprettet > CURRENT_DATE - INTERVAL '3 months'
+                {{SEARCH_PLACEHOLDER}}
+            """
+        )
+    }
+
+    if (avstemmingsreferanse != null) {
+        sql = sql.replace(
+            "{{SEARCH_PLACEHOLDER}}",
+            """
+                AND v.batch_id = :avstemmingsreferanse
                 {{SEARCH_PLACEHOLDER}}
             """
         )
