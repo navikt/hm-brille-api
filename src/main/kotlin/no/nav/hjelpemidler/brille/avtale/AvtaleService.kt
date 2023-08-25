@@ -106,7 +106,7 @@ class AvtaleService(
         sikkerLog.info { "fnrInnsender: $fnrInnsender, opprettAvtale: $opprettAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
-            ctx.virksomhetStore.lagreVirksomhet(
+            val virksomhet = ctx.virksomhetStore.lagreVirksomhet(
                 Virksomhet(
                     orgnr = orgnr,
                     kontonr = opprettAvtale.kontonr,
@@ -118,6 +118,25 @@ class AvtaleService(
                     utvidetAvtale = opprettAvtale.utvidet
                 )
             )
+            ctx.avtaleStore.lagreAvtale(
+                Avtale(
+                    orgnr = orgnr,
+                    fnrInnsender = fnrInnsender,
+                    aktiv = true,
+                    avtaleId = OPPGJORSAVTALE
+                )
+            )
+            if (opprettAvtale.utvidet) {
+                ctx.avtaleStore.lagreAvtale(
+                    Avtale(
+                        orgnr = orgnr,
+                        fnrInnsender = fnrInnsender,
+                        aktiv = true,
+                        avtaleId = UTVIDET_AVTALE
+                    )
+                )
+            }
+            virksomhet
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
