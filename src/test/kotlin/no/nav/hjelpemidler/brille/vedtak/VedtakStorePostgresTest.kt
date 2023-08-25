@@ -33,6 +33,7 @@ internal class VedtakStorePostgresTest {
                         fnrInnsender = "27121346261",
                         navnInnsender = "",
                         aktiv = true,
+                        utvidetAvtale = false
                     )
                 )
 

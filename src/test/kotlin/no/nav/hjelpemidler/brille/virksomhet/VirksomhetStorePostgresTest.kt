@@ -18,6 +18,7 @@ internal class VirksomhetStorePostgresTest {
                     fnrInnsender = "27121346260",
                     navnInnsender = "",
                     aktiv = true,
+                    utvidetAvtale = false
                 )
             )
             val hentetVirksomhetForOrganisasjon = hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)

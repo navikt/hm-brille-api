@@ -49,7 +49,8 @@ internal class AvtaleApiTest {
         epost = "test@test",
         fnrInnsender = fnrInnsender,
         navnInnsender = "Dag Ledersen",
-        aktiv = true
+        aktiv = true,
+        utvidetAvtale = false
     )
     private val opprettAvtale = OpprettAvtale(
         orgnr = avgiver.orgnr,

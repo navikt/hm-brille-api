@@ -29,6 +29,7 @@ class VedtakSlettetStorePostgresTest {
                         fnrInnsender = "27121346262",
                         navnInnsender = "",
                         aktiv = true,
+                        utvidetAvtale = false
                     )
                 )
             }

@@ -38,6 +38,7 @@ internal class UtbetalingStorePostgresTest {
                             fnrInnsender = "27121346260",
                             navnInnsender = "",
                             aktiv = true,
+                            utvidetAvtale = false
                         )
                     )
 

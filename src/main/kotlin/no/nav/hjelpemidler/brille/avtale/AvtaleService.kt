@@ -1,10 +1,5 @@
 package no.nav.hjelpemidler.brille.avtale
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.altinn.ALTINN_CLIENT_MAKS_ANTALL_RESULTATER
@@ -119,7 +114,8 @@ class AvtaleService(
                     fnrInnsender = fnrInnsender,
                     navnInnsender = "", // todo -> slett
                     aktiv = true,
-                    avtaleversjon = null
+                    avtaleversjon = null,
+                    utvidetAvtale = opprettAvtale.utvidet
                 )
             )
         }

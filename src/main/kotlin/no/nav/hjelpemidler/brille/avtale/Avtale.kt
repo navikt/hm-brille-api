@@ -10,6 +10,7 @@ data class Avtale(
     val kontonr: String? = null,
     val epost: String? = null,
     val avtaleversjon: String? = null,
+    val utvidetAvtale: Boolean? = false,
     val opprettet: LocalDateTime? = null,
     val oppdatert: LocalDateTime? = null,
 ) {
