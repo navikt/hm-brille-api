@@ -8,7 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
-import no.nav.hjelpemidler.brille.avtale.Avtale
+import no.nav.hjelpemidler.brille.avtale.AvtaleOld
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
@@ -35,7 +35,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         .serializationInclusion(JsonInclude.Include.NON_NULL)
         .build()
 
-    fun avtaleOpprettet(avtale: Avtale) {
+    fun avtaleOpprettet(avtale: AvtaleOld) {
         // Metrics
         sendTilBigQuery(
             avtale.orgnr,
@@ -52,7 +52,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
     }
 
-    fun avtaleOppdatert(avtale: Avtale) {
+    fun avtaleOppdatert(avtale: AvtaleOld) {
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }

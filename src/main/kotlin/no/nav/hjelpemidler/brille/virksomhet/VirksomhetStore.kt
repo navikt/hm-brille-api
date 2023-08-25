@@ -3,7 +3,7 @@ package no.nav.hjelpemidler.brille.virksomhet
 import kotliquery.Row
 import kotliquery.Session
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.avtale.Avtale
+import no.nav.hjelpemidler.brille.avtale.AvtaleOld
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query

@@ -30,7 +30,7 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avtale> {
+    suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<AvtaleOld> {
         val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
 
         if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {
@@ -74,7 +74,7 @@ class AvtaleService(
 
         return avgivereFiltrert
             .map {
-                Avtale(
+                AvtaleOld(
                     orgnr = it.orgnr,
                     navn = it.navn,
                     aktiv = virksomheter[it.orgnr]?.aktiv ?: false,
@@ -91,11 +91,11 @@ class AvtaleService(
         fnr: String,
         orgnr: String,
         tjeneste: Avgiver.Tjeneste,
-    ): Avtale? = hentAvtaler(fnr = fnr, tjeneste = tjeneste).associateBy {
+    ): AvtaleOld? = hentAvtaler(fnr = fnr, tjeneste = tjeneste).associateBy {
         it.orgnr
     }[orgnr]
 
-    suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): Avtale {
+    suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): AvtaleOld {
         val orgnr = opprettAvtale.orgnr
 
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)) {
@@ -121,7 +121,7 @@ class AvtaleService(
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
-        val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+        val avtale = AvtaleOld(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
         // For å unngå at gammelt kontonr kan brukes innen nytt er ferdigregistrert i TSS så glemmer vi alle gamle
         // TSS-identer her. Disse vil settes igjen etter TSS har kvittert mottak av nytt kontonr. Se: TssIdentRiver.
@@ -137,7 +137,7 @@ class AvtaleService(
         return avtale
     }
 
-    suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): Avtale {
+    suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): AvtaleOld {
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrOppdatertAv, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
@@ -165,7 +165,7 @@ class AvtaleService(
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
-        val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+        val avtale = AvtaleOld(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
         // For å unngå at gammelt kontonr kan brukes innen nytt er ferdigregistrert i TSS så glemmer vi alle gamle
         // TSS-identer her. Disse vil settes igjen etter TSS har kvittert mottak av nytt kontonr. Se: TssIdentRiver.

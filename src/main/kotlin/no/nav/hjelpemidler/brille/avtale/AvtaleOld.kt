@@ -3,7 +3,7 @@ package no.nav.hjelpemidler.brille.avtale
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import java.time.LocalDateTime
 
-data class Avtale(
+data class AvtaleOld(
     val orgnr: String,
     val navn: String,
     val aktiv: Boolean,
