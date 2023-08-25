@@ -81,7 +81,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 return@get
             }
 
-            val avstemmingsreferanse = call.request.queryParameters["avstemmingsreferanse"]?.trim()
+            val avstemmingsreferanse = call.parameters["avstemmingsreferanse"]?.trim()
             if (avstemmingsreferanse.isNullOrBlank()) return@get call.respond(HttpStatusCode.BadRequest, "ugyldig avstemmingsreferanse")
 
             val kravlinjer = runCatching {
@@ -93,6 +93,9 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 log.error(e) { "Feil med oppslag av enkelt utbetaling" }
                 throw e
             }
+
+            if (kravlinjer.count() == 0)
+                return@get call.respond(HttpStatusCode.NotFound, "ingen krav funnet for utbetaling med avstemmingsreferanse")
 
             call.response.header(
                 HttpHeaders.ContentDisposition,
