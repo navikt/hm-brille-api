@@ -50,4 +50,11 @@ class RapportService(
         }
         return kravlinjer
     }
+
+    suspend fun hentUtbetalingKravlinjer(orgnr: String, avstemmingsreferanse: String) = transaction(databaseContext) { ctx ->
+        ctx.rapportStore.hentUtbetalingKravlinjerForOrgNummer(
+            orgnr,
+            avstemmingsreferanse,
+        )
+    }
 }

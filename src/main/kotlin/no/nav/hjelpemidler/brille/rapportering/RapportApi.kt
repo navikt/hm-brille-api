@@ -70,6 +70,46 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             call.respond(HttpStatusCode.OK, pagedKravlinjeListe)
         }
 
+        get("/utbetaling/{orgnr}/{avstemmingsreferanse}") {
+            val orgnr = call.orgnr()
+            if (!altinnService.harTilgangTilUtbetalingsrapport(
+                    call.extractFnr(),
+                    orgnr,
+                )
+            ) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@get
+            }
+
+            val avstemmingsreferanse = call.request.queryParameters["avstemmingsreferanse"]?.trim()
+            if (avstemmingsreferanse.isNullOrBlank()) return@get call.respond(HttpStatusCode.BadRequest, "ugyldig avstemmingsreferanse")
+
+            val kravlinjer = runCatching {
+                rapportService.hentUtbetalingKravlinjer(
+                    orgnr = orgnr,
+                    avstemmingsreferanse,
+                )
+            }.getOrElse { e ->
+                log.error(e) { "Feil med oppslag av enkelt utbetaling" }
+                throw e
+            }
+
+            call.response.header(
+                HttpHeaders.ContentDisposition,
+                ContentDisposition.Attachment.withParameter(
+                    ContentDisposition.Parameters.FileName,
+                    "${avstemmingsreferanse}-${Date().time}.csv"
+                )
+                    .toString()
+            )
+
+            call.respondOutputStream(
+                status = HttpStatusCode.OK,
+                contentType = ContentType.Text.CSV,
+                producer = producer(kravlinjer)
+            )
+        }
+
         get("/csv/{orgnr}") {
             val orgnr = call.orgnr()
             if (!altinnService.harTilgangTilUtbetalingsrapport(
