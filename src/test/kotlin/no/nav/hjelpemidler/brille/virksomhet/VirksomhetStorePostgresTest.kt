@@ -1,6 +1,8 @@
 package no.nav.hjelpemidler.brille.virksomhet
 
 import io.kotest.matchers.shouldBe
+import no.nav.hjelpemidler.brille.avtale.Avtale
+import no.nav.hjelpemidler.brille.avtale.AvtaleStorePostgres
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
 import kotlin.test.Test
@@ -12,7 +14,7 @@ internal class VirksomhetStorePostgresTest {
         with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
             val lagretVirksomhet = lagreVirksomhet(
                 Virksomhet(
-                    orgnr = "986165754",
+                    orgnr = "986165753",
                     kontonr = "55718628082",
                     epost = "test@test",
                     fnrInnsender = "27121346260",

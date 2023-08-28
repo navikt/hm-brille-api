@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS avtale_v1
     id             BIGSERIAL NOT NULL PRIMARY KEY,
     orgnr          ORGNR     NOT NULL REFERENCES virksomhet_v1 (orgnr),
     fnr_innsender  FNR       NOT NULL,
-    navn_innsender TEXT      NOT NULL,
     aktiv          BOOLEAN   NOT NULL,
     avtale_id      BIGSERIAL NOT NULL REFERENCES avtaledefinisjon_v1 (id),
     opprettet      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,10 +24,9 @@ CREATE TABLE IF NOT EXISTS avtale_v1
 );
 
 INSERT INTO avtale_v1
-(orgnr, fnr_innsender, navn_innsender, aktiv, avtale_id, opprettet, oppdatert)
+(orgnr, fnr_innsender, aktiv, avtale_id, opprettet, oppdatert)
 SELECT orgnr,
        fnr_innsender,
-       navn_innsender,
        aktiv,
        1,
        opprettet,
