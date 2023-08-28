@@ -8,8 +8,16 @@ import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
-const val OPPGJORSAVTALE = 1
-const val UTVIDET_AVTALE = 2
+
+
+enum class AVTALETYPE(val avtaleId: Int) {
+    OPPGJORSAVTALE(1),
+    UTVIDET_AVTALE(2);
+
+    companion object {
+        fun fromInt(value: Int) = AVTALETYPE.values().first { it.avtaleId == value }
+    }
+}
 
 private val log = KotlinLogging.logger {}
 
@@ -26,6 +34,8 @@ data class Avtale(
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val oppdatert: LocalDateTime = opprettet,
 )
+
+
 
 class AvtaleStorePostgres(private val sessionFactory: () -> Session) : AvtaleStore,
     TransactionalStore(sessionFactory) {

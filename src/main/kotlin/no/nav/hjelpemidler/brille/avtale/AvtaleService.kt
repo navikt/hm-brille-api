@@ -124,7 +124,7 @@ class AvtaleService(
                     orgnr = orgnr,
                     fnrInnsender = fnrInnsender,
                     aktiv = true,
-                    avtaleId = OPPGJORSAVTALE
+                    avtaleId = AVTALETYPE.OPPGJORSAVTALE.avtaleId
                 )
             )
             if (opprettAvtale.utvidet) {
@@ -133,7 +133,7 @@ class AvtaleService(
                         orgnr = orgnr,
                         fnrInnsender = fnrInnsender,
                         aktiv = true,
-                        avtaleId = UTVIDET_AVTALE
+                        avtaleId = AVTALETYPE.UTVIDET_AVTALE.avtaleId
                     )
                 )
             }
@@ -155,6 +155,39 @@ class AvtaleService(
             Slack.post("AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana ved å søke: `Kontonr synkronisert til TSS: orgnr=$orgnr`")
 
         return avtale
+    }
+
+    suspend fun opprettUtvidetAvtale(
+        fnrInnsender: String,
+        opprettUtvidetAvtale: OpprettUtvidetAvtale
+    ): AvtaleOpprettet {
+        val orgnr = opprettUtvidetAvtale.orgnr
+
+        if (!altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)) {
+            throw AvtaleManglerTilgangException(orgnr)
+        }
+
+        log.info { "Oppretter utvidet avtale for orgnr: $orgnr" }
+        sikkerLog.info { "fnrInnsender: $fnrInnsender, opprettUtvidetAvtale: $opprettUtvidetAvtale" }
+
+        val utvidetAvtale = transaction(databaseContext) { ctx ->
+            ctx.avtaleStore.lagreAvtale(
+                Avtale(
+                    orgnr = orgnr,
+                    fnrInnsender = fnrInnsender,
+                    aktiv = true,
+                    avtaleId = AVTALETYPE.UTVIDET_AVTALE.avtaleId
+                )
+            )
+        }
+
+        val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
+        kafkaService.utvidetAvtaleOpprettet(utvidetAvtale, organisasjonsenhet.navn)
+
+        if (Configuration.dev || Configuration.prod)
+            Slack.post("AvtaleService: Ny utvidet avtale opprettet for orgnr=$orgnr.")
+
+        return AvtaleOpprettet.fromAvtale(utvidetAvtale)
     }
 
     suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): AvtaleOld {

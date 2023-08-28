@@ -8,6 +8,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
+import no.nav.hjelpemidler.brille.avtale.AVTALETYPE
+import no.nav.hjelpemidler.brille.avtale.Avtale
 import no.nav.hjelpemidler.brille.avtale.AvtaleOld
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
@@ -50,6 +52,19 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
             ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
+    }
+
+    fun utvidetAvtaleOpprettet(avtale: Avtale, organisasjonsnavn: String) {
+        // Metrics
+        sendTilBigQuery(
+            avtale.orgnr,
+            AvtaleStatistikkV2(
+                orgnr = avtale.orgnr,
+                navn = organisasjonsnavn,
+                opprettet = requireNotNull(avtale.opprettet),
+                avtaleType = AVTALETYPE.fromInt(avtale.avtaleId).name
+            )
+        )
     }
 
     fun avtaleOppdatert(avtale: AvtaleOld) {
@@ -280,6 +295,14 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val orgnr: String,
         val navn: String,
         val opprettet: LocalDateTime
+    )
+
+    @BigQueryHendelse(schemaId = "avtale_v2")
+    data class AvtaleStatistikkV2(
+        val orgnr: String,
+        val navn: String,
+        val opprettet: LocalDateTime,
+        val avtaleType: String
     )
 
     @JsonNaming(BigQueryStrategy::class)
