@@ -81,6 +81,7 @@ class AvtaleService(
                     kontonr = virksomheter[it.orgnr]?.kontonr,
                     epost = virksomheter[it.orgnr]?.epost,
                     avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
+                    utvidetAvtale = virksomheter[it.orgnr]?.utvidetAvtale,
                     opprettet = virksomheter[it.orgnr]?.opprettet,
                     oppdatert = virksomheter[it.orgnr]?.oppdatert
                 )
