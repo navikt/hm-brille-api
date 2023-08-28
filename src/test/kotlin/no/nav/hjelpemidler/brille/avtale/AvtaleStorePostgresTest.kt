@@ -16,7 +16,7 @@ internal class AvtaleStorePostgresTest {
         with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
             val lagretVirksomhet = lagreVirksomhet(
                 Virksomhet(
-                    orgnr = "986165754",
+                    orgnr = "986165759",
                     kontonr = "55718628082",
                     epost = "test@test",
                     fnrInnsender = "27121346260",
@@ -31,7 +31,7 @@ internal class AvtaleStorePostgresTest {
                 lagreAvtale(
                     Avtale(
                         id = 1,
-                        orgnr = "986165754",
+                        orgnr = "986165759",
                         fnrInnsender = "27121346260",
                         aktiv = true,
                         avtaleId = 1,
@@ -58,7 +58,7 @@ internal class AvtaleStorePostgresTest {
         with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
             val lagretVirksomhet = lagreVirksomhet(
                 Virksomhet(
-                    orgnr = "986165755",
+                    orgnr = "986165760",
                     kontonr = "55718628082",
                     epost = "test@test",
                     fnrInnsender = "27121346260",
@@ -73,17 +73,17 @@ internal class AvtaleStorePostgresTest {
                 lagreAvtale(
                     Avtale(
                         id = 1,
-                        orgnr = "986165755",
+                        orgnr = "986165760",
                         fnrInnsender = "27121346260",
                         aktiv = true,
-                        avtaleId = 2,
+                        avtaleId = 1,
                     )
                 )
 
                 lagreAvtale(
                     Avtale(
-                        id = 1,
-                        orgnr = "986165755",
+                        id = 2,
+                        orgnr = "986165760",
                         fnrInnsender = "27121346260",
                         aktiv = true,
                         avtaleId = 2,
