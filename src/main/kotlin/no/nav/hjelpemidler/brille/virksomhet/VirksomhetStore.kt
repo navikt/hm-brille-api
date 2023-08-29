@@ -30,6 +30,7 @@ data class Virksomhet(
     val navnInnsender: String, // todo -> slett
     val aktiv: Boolean,
     val utvidetAvtale: Boolean,
+    val utvidetAvtaleOpprettet: LocalDateTime? = null,
     val avtaleversjon: String? = null,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val oppdatert: LocalDateTime = opprettet,
@@ -41,7 +42,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
     override fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet? = session {
         @Language("PostgreSQL")
         val sql = """
-            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, v.avtaleversjon, v.opprettet, v.oppdatert
+            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, a.opprettet as utvidetOpprettet, v.avtaleversjon, v.opprettet, v.oppdatert
             FROM virksomhet_v1 v
             LEFT JOIN avtale_v1 a ON a.orgnr = v.orgnr AND a.avtale_id = 2
             WHERE v.orgnr = :orgnr
@@ -55,7 +56,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
         } else {
             @Language("PostgreSQL")
             var sql = """
-            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, v.avtaleversjon, v.opprettet, v.oppdatert
+            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, a.opprettet as utvidetOpprettet, v.avtaleversjon, v.opprettet, v.oppdatert
             FROM virksomhet_v1 v
             LEFT JOIN avtale_v1 a ON a.orgnr = v.orgnr AND a.avtale_id = 2
             WHERE v.orgnr in (?)
@@ -92,7 +93,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
                 "avtaleversjon" to virksomhet.avtaleversjon,
                 "opprettet" to virksomhet.opprettet,
                 "oppdatert" to virksomhet.oppdatert,
-            )
+            ),
         ).validate()
         virksomhet
     }
@@ -111,8 +112,8 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
                 "epost" to virksomhet.epost,
                 "fnr_oppdatert_av" to virksomhet.fnrOppdatertAv,
                 "orgnr" to virksomhet.orgnr,
-                "oppdatert" to virksomhet.oppdatert
-            )
+                "oppdatert" to virksomhet.oppdatert,
+            ),
         ).validate()
         virksomhet
     }
@@ -120,7 +121,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
     override fun hentAlleVirksomheterMedKontonr(): List<Virksomhet> = session {
         @Language("PostgreSQL")
         var sql = """
-            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, v.avtaleversjon, v.opprettet, v.oppdatert
+            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, a.opprettet as utvidetOpprettet, v.avtaleversjon, v.opprettet, v.oppdatert
             FROM virksomhet_v1 v
             LEFT JOIN avtale_v1 a ON a.orgnr = v.orgnr AND a.avtale_id = 2
             WHERE LENGTH(v.kontonr) > 1
@@ -137,6 +138,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
         navnInnsender = row.string("navn_innsender"),
         aktiv = row.boolean("hovedavtale_aktiv"),
         utvidetAvtale = row.boolean("utvidet_aktiv"),
+        utvidetAvtaleOpprettet = row.localDateTimeOrNull("utvidetOpprettet"),
         avtaleversjon = row.stringOrNull("avtaleversjon"),
         opprettet = row.localDateTime("opprettet"),
         oppdatert = row.localDateTime("oppdatert"),

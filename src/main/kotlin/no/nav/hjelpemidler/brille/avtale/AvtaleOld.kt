@@ -11,6 +11,7 @@ data class AvtaleOld(
     val epost: String? = null,
     val avtaleversjon: String? = null,
     val utvidetAvtale: Boolean? = false,
+    val utvidetAvtaleOpprettet: LocalDateTime? = null,
     val opprettet: LocalDateTime? = null,
     val oppdatert: LocalDateTime? = null,
 ) {
@@ -21,6 +22,8 @@ data class AvtaleOld(
         kontonr = virksomhet.kontonr,
         epost = virksomhet.epost,
         avtaleversjon = virksomhet.avtaleversjon,
+        utvidetAvtale = virksomhet.utvidetAvtale,
+        utvidetAvtaleOpprettet = virksomhet.utvidetAvtaleOpprettet,
         opprettet = virksomhet.opprettet,
         oppdatert = virksomhet.oppdatert,
     )
