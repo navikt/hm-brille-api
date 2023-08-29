@@ -50,8 +50,8 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
             }
 
             post("/utvidet") {
-                val opprettAvtale = call.receive<OpprettAvtale>()
-                val avtale = avtaleService.opprettAvtale(call.extractFnr(), opprettAvtale)
+                val opprettUtvidetAvtale = call.receive<OpprettUtvidetAvtale>()
+                val avtale = avtaleService.opprettUtvidetAvtale(call.extractFnr(), opprettUtvidetAvtale)
                 call.respond(HttpStatusCode.Created, avtale)
             }
             // oppdater avtale
