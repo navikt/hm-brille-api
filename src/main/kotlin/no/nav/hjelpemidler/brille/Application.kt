@@ -239,7 +239,7 @@ fun Application.setupRoutes() {
             }
 
             authenticate(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_BRILLE_INTEGRASJON) {
-                if (!Configuration.prod) integrasjonApi(
+                integrasjonApi(
                     vilkårsvurderingService,
                     vedtakService,
                     auditService,
