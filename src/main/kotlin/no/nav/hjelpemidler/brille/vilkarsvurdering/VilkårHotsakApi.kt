@@ -10,10 +10,14 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
+import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
+import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger { }
 fun Route.vilkårHotsakApi(
     vilkårsvurderingService: VilkårsvurderingService,
+    vedtakService: VedtakService,
 ) {
     post("/ad/vilkarsgrunnlag") {
         try {
@@ -44,5 +48,28 @@ fun Route.vilkårHotsakApi(
             log.error(e) { "Feil i vilkårsvurdering" }
             call.respond(HttpStatusCode.InternalServerError, "Feil i vilkårsvurdering")
         }
+    }
+
+    post("/ad/krav-for-bruker") {
+        data class Request(
+            val fnr: String,
+        )
+        data class Response (
+            val vedtakId: Long,
+            val behandlingsresultat: Behandlingsresultat,
+            val opprettet: LocalDateTime,
+        )
+
+        val req = call.receive<Request>()
+
+        val vedtak = vedtakService.hentVedtakForBruker(req.fnr).map {
+            Response(
+                vedtakId = it.id,
+                behandlingsresultat = Behandlingsresultat.valueOf(it.behandlingsresultat),
+                opprettet = it.opprettet,
+            )
+        }
+
+        call.respond(vedtak)
     }
 }
