@@ -173,7 +173,7 @@ class AvtaleService(
         sikkerLog.info { "fnrInnsender: $fnrInnsender, opprettUtvidetAvtale: $opprettUtvidetAvtale" }
 
         val utvidetAvtale = transaction(databaseContext) { ctx ->
-            ctx.avtaleStore.lagreAvtale(
+            val avtale = ctx.avtaleStore.lagreAvtale(
                 Avtale(
                     orgnr = orgnr,
                     fnrInnsender = fnrInnsender,
@@ -181,6 +181,46 @@ class AvtaleService(
                     avtaleId = AVTALETYPE.UTVIDET_AVTALE.avtaleId,
                 ),
             )
+
+            ctx.avtaleStore.lagreBilag(
+                Bilag(
+                    orgnr = orgnr,
+                    fnrInnsender = fnrInnsender,
+                    aktiv = true,
+                    avtaleId = avtale.id!!,
+                    bilagsdefinisjonId = BILAGSTYPE.BILAG_1_PERSONOPPLYSNINGER.bilagsdefinisjonId,
+                ),
+            )
+            ctx.avtaleStore.lagreBilag(
+                Bilag(
+                    orgnr = orgnr,
+                    fnrInnsender = fnrInnsender,
+                    aktiv = true,
+                    avtaleId = avtale.id,
+                    bilagsdefinisjonId = BILAGSTYPE.BILAG_2_TEKNISK.bilagsdefinisjonId,
+                ),
+            )
+
+            ctx.avtaleStore.lagreBilag(
+                Bilag(
+                    orgnr = orgnr,
+                    fnrInnsender = fnrInnsender,
+                    aktiv = true,
+                    avtaleId = avtale.id,
+                    bilagsdefinisjonId = BILAGSTYPE.BILAG_3_VARSLING_FEIL.bilagsdefinisjonId,
+                ),
+            )
+
+            ctx.avtaleStore.lagreBilag(
+                Bilag(
+                    orgnr = orgnr,
+                    fnrInnsender = fnrInnsender,
+                    aktiv = true,
+                    avtaleId = avtale.id,
+                    bilagsdefinisjonId = BILAGSTYPE.BILAG_4_ENDRINGSLOGG.bilagsdefinisjonId,
+                ),
+            )
+            avtale
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
