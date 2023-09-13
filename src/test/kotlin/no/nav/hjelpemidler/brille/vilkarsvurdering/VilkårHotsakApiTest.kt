@@ -13,6 +13,7 @@ import io.mockk.mockk
 import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
@@ -22,6 +23,7 @@ import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
+import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -30,6 +32,7 @@ internal class VilkårHotsakApiTest {
     private val hotsakClient = mockk<HotsakClient>()
     private val medlemskapBarn = mockk<MedlemskapBarn>()
     private val dagensDatoFactory = mockk<() -> LocalDate>()
+    private val kafkaService = mockk<KafkaService>()
 
     val sessionContext = createDatabaseSessionContextWithMocks()
     val databaseContext = createDatabaseContext(sessionContext)
@@ -42,9 +45,15 @@ internal class VilkårHotsakApiTest {
         dagensDatoFactory
     )
 
+    private val vedtakService = VedtakService(
+        databaseContext,
+        vilkårsvurderingService,
+        kafkaService,
+    )
+
     private val routing = TestRouting {
         authenticate("test_azuread") {
-            vilkårHotsakApi(vilkårsvurderingService)
+            vilkårHotsakApi(vilkårsvurderingService, vedtakService)
         }
     }
 

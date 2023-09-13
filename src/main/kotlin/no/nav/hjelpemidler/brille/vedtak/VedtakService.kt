@@ -97,6 +97,10 @@ class VedtakService(
         }
     }
 
+    suspend fun hentVedtakForBruker(fnr: String) = transaction(databaseContext) { ctx ->
+        ctx.vedtakStore.hentVedtakForBarn(fnr)
+    }
+
     suspend fun fjernFraVedTakKø(vedtakList: List<Vedtak<*>>) {
         return transaction(databaseContext) { ctx ->
             vedtakList.forEach {

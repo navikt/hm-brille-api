@@ -70,7 +70,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             call.respond(HttpStatusCode.OK, pagedKravlinjeListe)
         }
 
-        get("/utbetaling/{orgnr}/{avstemmingsreferanse}") {
+        get("/utbetaling/csv/{orgnr}/{avstemmingsreferanse}") {
             val orgnr = call.orgnr()
             if (!altinnService.harTilgangTilUtbetalingsrapport(
                     call.extractFnr(),

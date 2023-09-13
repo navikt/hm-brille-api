@@ -30,13 +30,10 @@ fun Route.virksomhetApi(
                 }
 
             try {
-                val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptiker.map {
+                val organisasjoner: List<Organisasjon> = tidligereBrukteOrgnrForOptiker.mapNotNull {
                     val enhet: Organisasjonsenhet =
                         enhetsregisteretService.hentOrganisasjonsenhet(it)
-                            ?: return@get call.respond(
-                                HttpStatusCode.NotFound,
-                                "Fant ikke organisasjonsenhet for orgnr: $it"
-                            )
+                            ?: return@mapNotNull null
                     Organisasjon(
                         orgnr = enhet.orgnr,
                         navn = enhet.navn,
