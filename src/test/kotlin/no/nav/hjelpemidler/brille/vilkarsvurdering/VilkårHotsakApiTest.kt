@@ -13,6 +13,7 @@ import io.mockk.mockk
 import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
@@ -51,9 +52,13 @@ internal class VilkårHotsakApiTest {
         kafkaService,
     )
 
+    private val joarkrefService = JoarkrefService(
+        databaseContext,
+    )
+
     private val routing = TestRouting {
         authenticate("test_azuread") {
-            vilkårHotsakApi(vilkårsvurderingService, vedtakService)
+            vilkårHotsakApi(vilkårsvurderingService, vedtakService, joarkrefService)
         }
     }
 

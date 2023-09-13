@@ -34,6 +34,7 @@ class JoarkrefRiver(
                     "eventId",
                     "sakId",
                     "joarkRef",
+                    "dokumentIder",
                     "opprettet",
                 )
             }
@@ -43,13 +44,20 @@ class JoarkrefRiver(
     private val JsonMessage.eventId get() = this["eventId"].textValue().let { UUID.fromString(it) }!!
     private val JsonMessage.sakId get() = this["sakId"].textValue()!!
     private val JsonMessage.joarkRef get() = this["joarkRef"].textValue()!!
+    private val JsonMessage.dokumentIder get() = this["dokumentIder"].elements().let {
+        val ider = mutableListOf<String>()
+        while (it.hasNext()) {
+            ider.add(it.next().textValue())
+        }
+        ider
+    }
     private val JsonMessage.opprettet get() = this["opprettet"].asLocalDateTime()
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        LOG.info("Kvittering for oppretting av journalpost mottatt: eventId=${packet.eventId}, sakId=${packet.sakId}, joarkRef=${packet.joarkRef}, opprettet=${packet.opprettet}")
+        LOG.info("Kvittering for oppretting av journalpost mottatt: eventId=${packet.eventId}, sakId=${packet.sakId}, joarkRef=${packet.joarkRef}, dokumentIder=${packet.dokumentIder}, opprettet=${packet.opprettet}")
         runBlocking {
             withContext(Dispatchers.IO) {
-                joarkrefService.lagreJoarkRef(packet.sakId.toLong(), packet.joarkRef.toLong())
+                joarkrefService.lagreJoarkRef(packet.sakId.toLong(), packet.joarkRef.toLong(), packet.dokumentIder)
             }
         }
     }
