@@ -1,8 +1,6 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import io.kotest.matchers.shouldBe
-import no.nav.hjelpemidler.brille.avtale.Avtale
-import no.nav.hjelpemidler.brille.avtale.AvtaleStorePostgres
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
@@ -12,7 +10,6 @@ import kotlin.test.Test
 internal class AvtaleStorePostgresTest {
     @Test
     internal fun `lagrer og henter hovedavtale`() = withMigratedDb {
-
         with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
             val lagretVirksomhet = lagreVirksomhet(
                 Virksomhet(
@@ -22,12 +19,11 @@ internal class AvtaleStorePostgresTest {
                     fnrInnsender = "27121346260",
                     navnInnsender = "",
                     aktiv = true,
-                    utvidetAvtale = false
-                )
+                    utvidetAvtale = false,
+                ),
             )
 
             with(AvtaleStorePostgres(PostgresTestHelper.sessionFactory)) {
-
                 lagreAvtale(
                     Avtale(
                         id = 1,
@@ -35,7 +31,7 @@ internal class AvtaleStorePostgresTest {
                         fnrInnsender = "27121346260",
                         aktiv = true,
                         avtaleId = 1,
-                    )
+                    ),
                 )
             }
 
@@ -54,7 +50,6 @@ internal class AvtaleStorePostgresTest {
 
     @Test
     internal fun `lagrer og henter virksomhet med utvidet avtale`() = withMigratedDb {
-
         with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
             val lagretVirksomhet = lagreVirksomhet(
                 Virksomhet(
@@ -64,30 +59,50 @@ internal class AvtaleStorePostgresTest {
                     fnrInnsender = "27121346260",
                     navnInnsender = "",
                     aktiv = true,
-                    utvidetAvtale = true
-                )
+                    utvidetAvtale = true,
+                ),
             )
 
             with(AvtaleStorePostgres(PostgresTestHelper.sessionFactory)) {
-
-                lagreAvtale(
+                val avtale = lagreAvtale(
                     Avtale(
-                        id = 1,
+                        id = null,
                         orgnr = "986165760",
                         fnrInnsender = "27121346260",
                         aktiv = true,
                         avtaleId = 1,
-                    )
+                    ),
                 )
 
-                lagreAvtale(
+                val utvidetAvtale = lagreAvtale(
                     Avtale(
-                        id = 2,
+                        id = null,
                         orgnr = "986165760",
                         fnrInnsender = "27121346260",
                         aktiv = true,
                         avtaleId = 2,
-                    )
+                    ),
+                )
+
+                val bilag1 = lagreBilag(
+                    Bilag(
+                        id = null,
+                        orgnr = "986165760",
+                        fnrInnsender = "27121346260",
+                        avtaleId = utvidetAvtale.id!!,
+                        aktiv = true,
+                        bilagsdefinisjonId = 1,
+                    ),
+                )
+                val bilag2 = lagreBilag(
+                    Bilag(
+                        id = null,
+                        orgnr = "986165760",
+                        fnrInnsender = "27121346260",
+                        avtaleId = utvidetAvtale.id!!,
+                        aktiv = true,
+                        bilagsdefinisjonId = 2,
+                    ),
                 )
             }
 

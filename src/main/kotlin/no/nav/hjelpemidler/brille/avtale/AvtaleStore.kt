@@ -1,9 +1,11 @@
 package no.nav.hjelpemidler.brille.avtale
 
+import kotliquery.Row
 import kotliquery.Session
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
+import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
@@ -64,15 +66,16 @@ class AvtaleStorePostgres(private val sessionFactory: () -> Session) : AvtaleSto
     override fun lagreAvtale(avtale: Avtale): Avtale = session {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO avtale_v1 (orgnr,
+            INSERT INTO avtale_v1 (    orgnr,
                                        fnr_innsender,
                                        aktiv,
                                        avtale_id,
                                        opprettet,
                                        oppdatert)
             VALUES (:orgnr, :fnr_innsender, :aktiv, :avtale_id, :opprettet, :oppdatert)
+            RETURNING id
         """.trimIndent()
-        val result = it.update(
+        val id = it.query(
             sql,
             mapOf(
                 "orgnr" to avtale.orgnr,
@@ -82,9 +85,10 @@ class AvtaleStorePostgres(private val sessionFactory: () -> Session) : AvtaleSto
                 "opprettet" to avtale.opprettet,
                 "oppdatert" to avtale.oppdatert,
             ),
-        )
-        result.validate()
-        avtale.copy(id = result.generatedId?.toInt())
+        ) { row: Row ->
+            row.long("id")
+        }
+        avtale.copy(id = id?.toInt())
     }
 
     override fun lagreBilag(bilag: Bilag): Bilag = session {
