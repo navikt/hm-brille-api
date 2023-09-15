@@ -7,6 +7,8 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefRiver
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
@@ -18,6 +20,7 @@ private val log = KotlinLogging.logger { }
 fun Route.vilkårHotsakApi(
     vilkårsvurderingService: VilkårsvurderingService,
     vedtakService: VedtakService,
+    joarkrefService: JoarkrefService,
 ) {
     post("/ad/vilkarsgrunnlag") {
         try {
@@ -57,15 +60,20 @@ fun Route.vilkårHotsakApi(
         data class Response (
             val vedtakId: Long,
             val behandlingsresultat: Behandlingsresultat,
+            val journalpostId: String,
+            val dokumentIder: List<String>,
             val opprettet: LocalDateTime,
         )
 
         val req = call.receive<Request>()
 
         val vedtak = vedtakService.hentVedtakForBruker(req.fnr).map {
+            val dokument = joarkrefService.hentJoarkRef(it.id)
             Response(
                 vedtakId = it.id,
                 behandlingsresultat = Behandlingsresultat.valueOf(it.behandlingsresultat),
+                journalpostId = dokument?.journalpostId?.toString() ?: "",
+                dokumentIder = dokument?.dokumentIder ?: listOf(),
                 opprettet = it.opprettet,
             )
         }

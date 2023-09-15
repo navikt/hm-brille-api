@@ -235,7 +235,7 @@ fun Application.setupRoutes() {
             }
 
             authenticate(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_SAKSBEHANDLING) {
-                vilkårHotsakApi(vilkårsvurderingService, vedtakService)
+                vilkårHotsakApi(vilkårsvurderingService, vedtakService, joarkrefService)
             }
 
             authenticate(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_BRILLE_INTEGRASJON) {
