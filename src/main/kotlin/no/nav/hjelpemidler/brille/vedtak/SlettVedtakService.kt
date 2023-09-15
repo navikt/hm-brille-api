@@ -20,7 +20,7 @@ class SlettVedtakService(
 ) {
 
     suspend fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType) {
-        val joarkRef = joarkrefService.hentJoarkRef(vedtakId)?.first
+        val joarkRef = joarkrefService.hentJoarkRef(vedtakId)?.journalpostId
             ?: throw SlettVedtakInternalServerErrorException()
         log.info("JoarkRef funnet: $joarkRef")
 

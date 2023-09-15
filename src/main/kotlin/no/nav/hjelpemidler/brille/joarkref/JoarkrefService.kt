@@ -4,9 +4,10 @@ import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 
 class JoarkrefService(val databaseContext: DatabaseContext) {
-    suspend fun hentJoarkRef(vedtakId: Long): Pair<Long, List<String>>? {
+    suspend fun hentJoarkRef(vedtakId: Long): JoarkRef? {
         return transaction(databaseContext) {
-            it.joarkrefStore.hentJoarkRef(vedtakId)
+            val joarkref = it.joarkrefStore.hentJoarkRef(vedtakId) ?: return@transaction null
+            JoarkRef(joarkref.first, joarkref.second)
         }
     }
 
@@ -16,3 +17,8 @@ class JoarkrefService(val databaseContext: DatabaseContext) {
         }
     }
 }
+
+data class JoarkRef (
+    val journalpostId: Long,
+    val dokumentIder: List<String>,
+)

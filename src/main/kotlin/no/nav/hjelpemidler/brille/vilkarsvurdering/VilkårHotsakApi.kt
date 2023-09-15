@@ -72,8 +72,8 @@ fun Route.vilkårHotsakApi(
             Response(
                 vedtakId = it.id,
                 behandlingsresultat = Behandlingsresultat.valueOf(it.behandlingsresultat),
-                journalpostId = dokument?.first?.toString() ?: "",
-                dokumentIder = dokument?.second ?: listOf(),
+                journalpostId = dokument?.journalpostId?.toString() ?: "",
+                dokumentIder = dokument?.dokumentIder ?: listOf(),
                 opprettet = it.opprettet,
             )
         }
