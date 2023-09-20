@@ -18,7 +18,7 @@ class SatsKalkulator(private val grunnlag: SatsGrunnlag) {
 fun beregnSats(grunnlag: SatsGrunnlag): SatsBeregning {
     val brilleseddel = grunnlag.brilleseddel
     val sfære = maxOf(abs(brilleseddel.høyreSfære), abs(brilleseddel.venstreSfære))
-    val sylinder = maxOf(brilleseddel.høyreSylinder, brilleseddel.venstreSylinder)
+    val sylinder = maxOf(abs(brilleseddel.høyreSylinder), abs(brilleseddel.venstreSylinder))
     val sats = when {
         sfære in SatsType.SATS_5.sfære || sylinder in SatsType.SATS_5.sylinder -> SatsType.SATS_5
         sfære in SatsType.SATS_4.sfære && sylinder in SatsType.SATS_4.sylinder -> SatsType.SATS_4
