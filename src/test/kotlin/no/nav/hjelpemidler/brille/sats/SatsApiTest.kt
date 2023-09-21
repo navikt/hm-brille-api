@@ -5,15 +5,20 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import io.mockk.mockk
+import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorService
 import no.nav.hjelpemidler.brille.test.TestRouting
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvFileSource
 import java.time.LocalDate
 import java.time.Month
+import kotlin.math.abs
 
 internal class SatsApiTest {
+    private val kalkulatorService = mockk<KalkulatorService>()
     private val routing = TestRouting {
-        satsApi()
+        satsApi(kalkulatorService)
     }
 
     @ParameterizedTest
@@ -32,8 +37,8 @@ internal class SatsApiTest {
                     høyreSylinder = høyreSylinder,
                     venstreSfære = venstreSfære,
                     venstreSylinder = venstreSylinder,
-                    bestillingsdato = LocalDate.of(2023, Month.JULY, 1)
-                )
+                    bestillingsdato = LocalDate.of(2023, Month.JULY, 1),
+                ),
             )
         }
 
@@ -62,5 +67,18 @@ internal class SatsApiTest {
             SatsType.SATS_5.beløp(dato) shouldBe 4975
             SatsType.INGEN.beløp(dato) shouldBe 0
         }
+    }
+
+    @Test
+    fun `differanse mellom to tall`() {
+        val tall1 = 5
+        val tall2 = -5
+        val differanse = abs(tall2 - tall1)
+        differanse shouldBe 10
+
+        val tall3 = 5
+        val tall4 = 10
+        val differanse2 = abs(tall4 - tall3)
+        differanse2 shouldBe 5
     }
 }

@@ -10,7 +10,6 @@ import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import java.time.LocalDate
-import java.time.Month
 
 private val log = KotlinLogging.logger {}
 
@@ -25,7 +24,7 @@ class VilkårsvurderingService(
         fnrBarn: String,
         brilleseddel: Brilleseddel,
         bestillingsdato: LocalDate,
-        sjekkHotsakVedtak: Boolean = false
+        sjekkHotsakVedtak: Boolean = false,
     ): Vilkårsvurdering<Vilkårsgrunnlag> {
         val vedtakBarn =
             transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(fnrBarn) }
@@ -39,16 +38,20 @@ class VilkårsvurderingService(
             brilleseddel = brilleseddel,
             bestillingsdato = bestillingsdato,
             dagensDato = dagensDatoFactory(),
-            eksisterendeVedtakDatoHotsak = if (sjekkHotsakVedtak) hotsakClient.hentEksisterendeVedtaksDato(
-                fnrBarn,
-                bestillingsdato
-            ) else null
+            eksisterendeVedtakDatoHotsak = if (sjekkHotsakVedtak) {
+                hotsakClient.hentEksisterendeVedtaksDato(
+                    fnrBarn,
+                    bestillingsdato,
+                )
+            } else {
+                null
+            },
         )
 
         val vilkårsvurdering =
             vurderVilkår(
                 vilkårsgrunnlag,
-                if (sjekkHotsakVedtak) Vilkårene.BrilleV2 else Vilkårene.Brille
+                if (sjekkHotsakVedtak) Vilkårene.BrilleV2 else Vilkårene.Brille,
             )
 
         if (!Configuration.prod) {
