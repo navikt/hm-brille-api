@@ -4,7 +4,7 @@ data class SatsBeregningAmblyopi(
     val sats: AmblyopiSatsType,
     val satsBeskrivelse: String,
     val satsBeløp: Int,
-){
+) {
     companion object {
         fun ingen() = SatsBeregningAmblyopi(
             sats = AmblyopiSatsType.INGEN,

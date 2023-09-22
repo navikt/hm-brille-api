@@ -141,11 +141,11 @@ class KalkulatorServiceTest {
             vedtak = false,
             strabisme = false,
             brilleseddel = Brilleseddel(
-                høyreSylinder = 1.25,
-                venstreSylinder = 1.25,
-                høyreSfære = 0.5,
-                venstreSfære = -0.5,
-                vensteAdd = 1.0,
+                høyreSylinder = 2.0,
+                venstreSylinder = 2.0,
+                høyreSfære = 0.0,
+                venstreSfære = 0.0,
+                venstreAdd = 1.0,
             ),
             bestillingsdato = LocalDate.now(),
         )

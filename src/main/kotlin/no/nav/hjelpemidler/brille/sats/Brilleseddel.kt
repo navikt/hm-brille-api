@@ -9,7 +9,7 @@ data class Brilleseddel(
     val høyreAdd: Double = 0.0,
     val venstreSfære: Double,
     val venstreSylinder: Double,
-    val vensteAdd: Double = 0.0,
+    val venstreAdd: Double = 0.0,
 ) {
     init {
         val range = Diopter.MIN_SFÆRE..Diopter.MAX

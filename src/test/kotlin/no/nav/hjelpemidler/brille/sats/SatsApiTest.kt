@@ -5,7 +5,8 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
-import io.mockk.mockk
+import no.nav.hjelpemidler.brille.sats.kalkulator.Beregningsgrunnlag
+import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorResultat
 import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorService
 import no.nav.hjelpemidler.brille.test.TestRouting
 import org.junit.jupiter.api.Test
@@ -16,7 +17,7 @@ import java.time.Month
 import kotlin.math.abs
 
 internal class SatsApiTest {
-    private val kalkulatorService = mockk<KalkulatorService>()
+    private val kalkulatorService = KalkulatorService()
     private val routing = TestRouting {
         satsApi(kalkulatorService)
     }
@@ -80,5 +81,32 @@ internal class SatsApiTest {
         val tall4 = 10
         val differanse2 = abs(tall4 - tall3)
         differanse2 shouldBe 5
+    }
+
+    @Test
+    fun `Individuell sats grunnet ADD`() = routing.test {
+        val response = client.post("/kalkulator/beregningsgrunnlag") {
+            setBody(
+                Beregningsgrunnlag(
+                    Brilleseddel(
+                        høyreSfære = 0.0,
+                        høyreSylinder = 0.0,
+                        venstreSfære = 2.0,
+                        venstreSylinder = 2.0,
+                        venstreAdd = 1.25,
+                    ),
+                    alder = true,
+                    vedtak = false,
+                    folketrygden = true,
+                    strabisme = true,
+                    bestillingsdato = LocalDate.of(2023, Month.JULY, 1),
+                ),
+            )
+        }
+
+        response.status shouldBe HttpStatusCode.OK
+
+        val satsBeregningAmblyopi = response.body<KalkulatorResultat>().amblyopistøtte
+        satsBeregningAmblyopi.sats shouldBe AmblyopiSatsType.INDIVIDUELT
     }
 }
