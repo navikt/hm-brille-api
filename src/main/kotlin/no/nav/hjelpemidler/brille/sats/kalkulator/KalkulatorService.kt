@@ -34,7 +34,7 @@ class KalkulatorService {
     private fun kalkulerAmblyopistøtte(beregningsgrunnlag: Beregningsgrunnlag): SatsBeregningAmblyopi {
         if (!beregningsgrunnlag.strabisme ||
             (!(abs(beregningsgrunnlag.brilleseddel.høyreSylinder) >= 1.5) || (abs(beregningsgrunnlag.brilleseddel.venstreSylinder) >= 1.5)) ||
-            abs(beregningsgrunnlag.brilleseddel.høyreSfære - beregningsgrunnlag.brilleseddel.venstreSfære) < 1
+            abs(beregningsgrunnlag.brilleseddel.høyreSfære - beregningsgrunnlag.brilleseddel.venstreSfære) > 1
         ) {
             return SatsBeregningAmblyopi.ingen()
         }
