@@ -60,6 +60,9 @@ spec:
       {{#each inbound-applications}}
         - application: {{ this }}
       {{/each}}
+        - application: azure-token-generator
+          namespace: aura
+          cluster: dev-gcp
     outbound:
       rules:
       {{#each outbound-applications}}
