@@ -8,11 +8,9 @@ import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import no.nav.hjelpemidler.configuration.EnvironmentVariable
 import java.time.Duration
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Locale
-import kotlin.time.Duration.Companion.seconds
 
 object Configuration {
     private val defaultProperties = ConfigurationMap(
@@ -262,4 +260,5 @@ object Configuration {
 
     val CLIENT_ID_SAKSBEHANDLING by EnvironmentVariable
     val CLIENT_ID_BRILLE_INTEGRASJON by EnvironmentVariable
+    val CLIENT_ID_AZURE_TOKEN_GENERATOR by EnvironmentVariable
 }

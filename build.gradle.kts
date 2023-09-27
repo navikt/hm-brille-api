@@ -83,6 +83,7 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testImplementation("org.testcontainers:postgresql:1.17.6")
+    testImplementation("com.nimbusds:nimbus-jose-jwt:9.35")
 }
 
 /*
