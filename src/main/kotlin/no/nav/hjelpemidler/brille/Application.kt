@@ -57,6 +57,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.rapportering.RapportService
 import no.nav.hjelpemidler.brille.rapportering.rapportApi
 import no.nav.hjelpemidler.brille.redis.RedisClient
+import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorService
 import no.nav.hjelpemidler.brille.sats.satsApi
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
@@ -166,6 +167,7 @@ fun Application.setupRoutes() {
     val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)
     val leaderElection = LeaderElection(Configuration.electorPath)
+    val kalkulatorService = KalkulatorService()
 
     val metrics = MetricsConfig(
         meterbinders = listOf(
@@ -204,7 +206,7 @@ fun Application.setupRoutes() {
         internalRoutes(databaseContext, kafkaService, hotsakClient, pdlService, syfohelsenettproxyClient, enhetsregisteretService)
 
         route("/api") {
-            satsApi()
+            satsApi(kalkulatorService)
             featureToggleApi(featureToggleService)
 
             authenticate(

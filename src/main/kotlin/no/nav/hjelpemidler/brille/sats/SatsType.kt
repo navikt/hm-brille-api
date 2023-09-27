@@ -61,7 +61,8 @@ enum class SatsType(
         sfære = 0.0..0.0,
         sylinder = 0.0..0.0,
         beskrivelse = "INGEN",
-    );
+    ),
+    ;
 
     private val datoForNyeSatser = LocalDate.of(2023, Month.JULY, 1)
     fun beløp(bestillingsdato: LocalDate): Int = when (bestillingsdato.isBefore(datoForNyeSatser)) {

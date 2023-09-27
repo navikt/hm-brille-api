@@ -10,7 +10,7 @@ data class Spesifikasjon<T>(
     val lovdataLenke: String = "",
     val grunnlag: Map<String, String> = emptyMap(),
     val barn: List<Spesifikasjon<T>> = emptyList(),
-    val implementasjon: Evalueringer.(T) -> Evaluering
+    val implementasjon: Evalueringer.(T) -> Evaluering,
 ) {
     fun evaluer(t: T): Evaluering = Evalueringer().run {
         evaluer(
@@ -18,27 +18,27 @@ data class Spesifikasjon<T>(
             identifikator = identifikator,
             lovReferanse = lovReferanse,
             lovdataLenke = lovdataLenke,
-            evaluering = implementasjon(this, t)
+            evaluering = implementasjon(this, t),
         )
     }
 
     infix fun og(annen: Spesifikasjon<T>): Spesifikasjon<T> = Spesifikasjon(
         beskrivelse = "$beskrivelse OG ${annen.beskrivelse}",
         barn = this.spesifikasjonEllerBarn() + annen.spesifikasjonEllerBarn(),
-        implementasjon = { evaluer(it) og annen.evaluer(it) }
+        implementasjon = { evaluer(it) og annen.evaluer(it) },
     )
 
     infix fun eller(annen: Spesifikasjon<T>): Spesifikasjon<T> = Spesifikasjon(
         beskrivelse = "$beskrivelse ELLER ${annen.beskrivelse}",
         barn = this.spesifikasjonEllerBarn() + annen.spesifikasjonEllerBarn(),
-        implementasjon = { evaluer(it) eller annen.evaluer(it) }
+        implementasjon = { evaluer(it) eller annen.evaluer(it) },
     )
 
     fun ikke(): Spesifikasjon<T> = Spesifikasjon(
         beskrivelse = "IKKE $beskrivelse",
         identifikator = "IKKE $identifikator",
         barn = listOf(this),
-        implementasjon = { evaluer(it).ikke() }
+        implementasjon = { evaluer(it).ikke() },
     )
 
     fun med(identifikator: String, beskrivelse: String): Spesifikasjon<T> =
