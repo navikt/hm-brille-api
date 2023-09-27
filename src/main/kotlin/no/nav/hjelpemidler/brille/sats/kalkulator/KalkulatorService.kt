@@ -19,7 +19,7 @@ class KalkulatorService {
     }
 
     private fun kalkulerBrillestøtte(beregningsgrunnlag: Beregningsgrunnlag): SatsBeregning {
-        if (!beregningsgrunnlag.alder || !beregningsgrunnlag.folketrygden || beregningsgrunnlag.vedtak) {
+        if (!beregningsgrunnlag.alder) {
             return SatsBeregning.ingen()
         }
 
@@ -32,10 +32,14 @@ class KalkulatorService {
     }
 
     private fun kalkulerAmblyopistøtte(beregningsgrunnlag: Beregningsgrunnlag): SatsBeregningAmblyopi {
+        if (!beregningsgrunnlag.alder) {
+            return SatsBeregningAmblyopi.ingen()
+        }
         if (!beregningsgrunnlag.strabisme &&
             (!(abs(beregningsgrunnlag.brilleseddel.høyreSylinder) >= 1.5) && !(abs(beregningsgrunnlag.brilleseddel.venstreSylinder) >= 1.5)) &&
             !(abs(beregningsgrunnlag.brilleseddel.høyreSfære - beregningsgrunnlag.brilleseddel.venstreSfære) >= 1) &&
-            !((beregningsgrunnlag.brilleseddel.høyreSfære >= 4) || (beregningsgrunnlag.brilleseddel.venstreSfære >= 4) )
+            !((beregningsgrunnlag.brilleseddel.høyreSfære >= 4) || (beregningsgrunnlag.brilleseddel.venstreSfære >= 4))
+
         ) {
             return SatsBeregningAmblyopi.ingen()
         }

@@ -96,8 +96,6 @@ internal class SatsApiTest {
                         venstreAdd = 1.25,
                     ),
                     alder = true,
-                    vedtak = false,
-                    folketrygden = true,
                     strabisme = true,
                     bestillingsdato = LocalDate.of(2023, Month.JULY, 1),
                 ),

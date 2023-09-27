@@ -7,8 +7,6 @@ import java.time.LocalDate
 data class Beregningsgrunnlag(
     val brilleseddel: Brilleseddel,
     val alder: Boolean,
-    val vedtak: Boolean,
-    val folketrygden: Boolean,
     val strabisme: Boolean,
     val bestillingsdato: LocalDate = LocalDate.now(),
 ) {
@@ -21,8 +19,6 @@ data class Beregningsgrunnlag(
         venstreSylinder: Double,
         venstreAdd: Double?,
         alder: Boolean,
-        vedtak: Boolean,
-        folketrygden: Boolean,
         strabisme: Boolean,
         bestillingsdato: LocalDate = LocalDate.now(),
     ) : this(
@@ -35,8 +31,6 @@ data class Beregningsgrunnlag(
             høyreAdd = høyreAdd ?: 0.0,
         ),
         alder = alder,
-        vedtak = vedtak,
-        folketrygden = folketrygden,
         strabisme = strabisme,
         bestillingsdato = bestillingsdato,
     )
