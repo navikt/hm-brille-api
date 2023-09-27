@@ -147,6 +147,7 @@ class JedisMock : StringCommands {
         TODO("Not yet implemented")
     }
 
+    @Deprecated("Deprecated in Java")
     override fun strAlgoLCSKeys(keyA: String?, keyB: String?, params: StrAlgoLCSParams?): LCSMatchResult {
         TODO("Not yet implemented")
     }
