@@ -5,24 +5,15 @@ group = "no.nav.hjelpemidler"
 version = "1.0-SNAPSHOT"
 
 plugins {
-    application
-    kotlin("jvm") version "1.8.10"
+    kotlin("jvm") version "1.9.10"
+    id("io.ktor.plugin") version "2.3.4"
     id("com.diffplug.spotless") version "6.16.0"
-    id("com.github.johnrengelman.shadow") version "8.1.0"
     id("com.expediagroup.graphql") version "6.4.0"
 }
 
 application {
     applicationName = "hm-brille-api"
     mainClass.set("no.nav.hjelpemidler.brille.ApplicationKt")
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
-    }
 }
 
 dependencies {
@@ -39,18 +30,17 @@ dependencies {
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // HTTP
-    implementation("no.nav.hjelpemidler.http:hm-http:v0.0.22")
+    implementation("no.nav.hjelpemidler:hm-http:0.1.4")
 
     // Unleash
     implementation("io.getunleash:unleash-client-java:7.1.0")
 
     // Ktor Shared
-    val ktorVersion = "2.2.4"
-    fun ktor(name: String) = "io.ktor:ktor-$name:$ktorVersion"
+    fun ktor(name: String) = "io.ktor:ktor-$name"
     implementation(ktor("serialization-jackson"))
 
     // Ktor Server
-    fun ktorServer(name: String) = "io.ktor:ktor-server-$name:$ktorVersion"
+    fun ktorServer(name: String) = "io.ktor:ktor-server-$name"
     implementation(ktorServer("core"))
     implementation(ktorServer("cio"))
     implementation(ktorServer("content-negotiation"))

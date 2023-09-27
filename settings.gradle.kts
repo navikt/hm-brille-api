@@ -1,10 +1,19 @@
 rootProject.name = "hm-brille-api"
 
-sourceControl {
-    gitRepository(uri("https://github.com/navikt/hm-database.git")) {
-        producesModule("no.nav.hjelpemidler.database:hm-database")
-    }
-    gitRepository(uri("https://github.com/navikt/hm-http.git")) {
-        producesModule("no.nav.hjelpemidler.http:hm-http")
+dependencyResolutionManagement {
+    @Suppress("UnstableApiUsage")
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/navikt/hm-http")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+        maven {
+            url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+        }
     }
 }
