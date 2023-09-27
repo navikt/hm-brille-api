@@ -37,11 +37,11 @@ fun beregnSats(grunnlag: SatsGrunnlag): SatsBeregning {
 fun beregnAmblyopiSats(grunnlag: SatsGrunnlag): SatsBeregningAmblyopi {
     val brilleseddel = grunnlag.brilleseddel
     val sfære = maxOf(abs(brilleseddel.høyreSfære), abs(brilleseddel.venstreSfære))
-    val sylinder = maxOf(abs(brilleseddel.høyreSylinder), abs(brilleseddel.venstreSylinder))
+    val sylinderMin = minOf(brilleseddel.høyreSylinder, brilleseddel.venstreSylinder)
     val add = maxOf(abs(brilleseddel.høyreAdd), abs(brilleseddel.venstreAdd))
     val sats = when {
         sfære in AmblyopiSatsType.INDIVIDUELT.sfære ||
-            sylinder in AmblyopiSatsType.INDIVIDUELT.sylinder ||
+            sylinderMin in AmblyopiSatsType.INDIVIDUELT.sylinder ||
             add in AmblyopiSatsType.INDIVIDUELT.add -> AmblyopiSatsType.INDIVIDUELT
         sfære in AmblyopiSatsType.SATS_2.sfære -> AmblyopiSatsType.SATS_2
         sfære in AmblyopiSatsType.SATS_1.sfære -> AmblyopiSatsType.SATS_1

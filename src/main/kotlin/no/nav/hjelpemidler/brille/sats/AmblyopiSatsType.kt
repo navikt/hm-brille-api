@@ -27,7 +27,7 @@ enum class AmblyopiSatsType(
     INDIVIDUELT(
         sats = 0,
         sfære = 6.25..Diopter.MAX,
-        sylinder = 4.25..Diopter.MAX,
+        sylinder = -4.0..Diopter.MAX,
         add = 1.00..Diopter.MAX,
         beskrivelse = "Briller  med sfærisk styrke på minst ett glass ≥ 6,00D og cylinderstyrke ≥ 4,00D og add ≥ 1.00D",
         beløp = 0,
