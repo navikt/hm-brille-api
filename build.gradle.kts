@@ -8,7 +8,7 @@ plugins {
     kotlin("jvm") version "1.9.10"
     id("io.ktor.plugin") version "2.3.4"
     id("com.diffplug.spotless") version "6.16.0"
-    id("com.expediagroup.graphql") version "6.4.0"
+    id("com.expediagroup.graphql") version "6.5.6"
 }
 
 application {
@@ -20,7 +20,7 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
     implementation("com.natpryce:konfig:1.6.10.0")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.10.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.11.4")
     implementation("com.github.navikt:hm-rapids-and-rivers-v2-core:202210121657")
 
     // Database
@@ -33,7 +33,7 @@ dependencies {
     implementation("no.nav.hjelpemidler:hm-http:0.1.4")
 
     // Unleash
-    implementation("io.getunleash:unleash-client-java:7.1.0")
+    implementation("io.getunleash:unleash-client-java:8.3.1")
 
     // Ktor Shared
     fun ktor(name: String) = "io.ktor:ktor-$name"
@@ -50,7 +50,7 @@ dependencies {
     implementation(ktorServer("status-pages"))
 
     // GraphQL
-    val graphQLVersion = "6.4.0"
+    val graphQLVersion = "6.5.6"
     implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphQLVersion") {
         exclude(group = "com.expediagroup", module = "graphql-kotlin-client-serialization")
         exclude(group = "io.ktor", module = "ktor-client-serialization")
@@ -58,18 +58,18 @@ dependencies {
     implementation("com.expediagroup:graphql-kotlin-client-jackson:$graphQLVersion")
 
     // Jackson
-    val jacksonVersion = "2.14.2"
+    val jacksonVersion = "2.15.2"
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jacksonVersion")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging:3.0.5")
-    runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.3")
+    runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.4")
     runtimeOnly("com.papertrailapp:logback-syslog4j:1.0.0") // auditlog https://github.com/navikt/naudit
-    runtimeOnly("ch.qos.logback:logback-classic:1.4.5")
+    runtimeOnly("ch.qos.logback:logback-classic:1.4.11")
 
     // Redis
-    implementation("redis.clients:jedis:4.3.1")
+    implementation("redis.clients:jedis:5.0.1")
 
     // Postgres from naisjob
     implementation("com.google.cloud.sql:postgres-socket-factory:1.11.0")
@@ -77,12 +77,12 @@ dependencies {
     // Testing
     testImplementation(kotlin("test"))
     testImplementation(ktorServer("test-host"))
-    testImplementation("io.mockk:mockk:1.13.4")
-    val kotestVersion = "5.5.5"
+    testImplementation("io.mockk:mockk:1.13.8")
+    val kotestVersion = "5.7.2"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
-    testImplementation("org.testcontainers:postgresql:1.17.6")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
+    testImplementation("org.testcontainers:postgresql:1.18.3")
     testImplementation("com.nimbusds:nimbus-jose-jwt:9.35")
 }
 

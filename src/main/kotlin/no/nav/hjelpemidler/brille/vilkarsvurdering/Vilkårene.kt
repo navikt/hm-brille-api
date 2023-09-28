@@ -54,11 +54,14 @@ object Vilkårene {
         lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
         val barnetsAlder = grunnlag.barnetsAlderPåBestillingsdato
+        val barnetsFødselsdato = grunnlag.barnetsFødselsdato
+        val bestillingsdato = grunnlag.bestillingsdato
+        
         when {
             barnetsAlder == null -> nei(
                 "Barnets fødselsdato er ukjent",
                 mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "bestillingsdato" to bestillingsdato.formatert(),
                     "barnetsAlder" to "ukjent",
                 ),
             )
@@ -66,16 +69,16 @@ object Vilkårene {
             barnetsAlder < 18 -> ja(
                 "Barnet var under 18 år på bestillingsdato",
                 mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
-                    "barnetsAlder" to "${grunnlag.barnetsFødselsdato?.formatert()} ($barnetsAlder år)",
+                    "bestillingsdato" to bestillingsdato.formatert(),
+                    "barnetsAlder" to "${barnetsFødselsdato?.formatert()} ($barnetsAlder år)",
                 ),
             )
 
             else -> nei(
                 "Barnet var 18 år eller eldre på bestillingsdato",
                 mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
-                    "barnetsAlder" to "${grunnlag.barnetsFødselsdato?.formatert()} ($barnetsAlder år)",
+                    "bestillingsdato" to bestillingsdato.formatert(),
+                    "barnetsAlder" to "${barnetsFødselsdato?.formatert()} ($barnetsAlder år)",
                 ),
             )
         }
@@ -88,11 +91,13 @@ object Vilkårene {
         lovdataLenke = "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a",
     ) { grunnlag ->
         val medlemskapResultat = grunnlag.medlemskapResultat
+        val bestillingsdato = grunnlag.bestillingsdato
+
         when (medlemskapResultat.resultat) {
             MedlemskapResultatResultat.JA -> ja(
                 "Barnet er medlem i folketrygden",
                 mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "bestillingsdato" to bestillingsdato.formatert(),
                     "forenkletSjekkResultat" to "Oppfylt",
                 ),
             )
@@ -100,7 +105,7 @@ object Vilkårene {
             MedlemskapResultatResultat.UAVKLART -> ja(
                 "Barnet er antatt medlem i folketrygden basert på folkeregistrert adresse i Norge",
                 mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "bestillingsdato" to bestillingsdato.formatert(),
                     "forenkletSjekkResultat" to "Uavklart medlemskap - må utredes av saksbehandler",
                 ),
             )
@@ -108,7 +113,7 @@ object Vilkårene {
             else -> nei(
                 "Barnet er antatt ikke medlem i folketrygden fordi vi ikke har klart å påvise folkeregistrert adresse i Norge",
                 mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "bestillingsdato" to bestillingsdato.formatert(),
                     "forenkletSjekkResultat" to "Ikke oppfylt",
                 ),
             )
@@ -130,6 +135,7 @@ object Vilkårene {
         val brilleseddel = grunnlag.brilleseddel
         val minsteSfære = grunnlag.minsteSfære
         val minsteSylinder = grunnlag.minsteSylinder
+
         when {
             brilleseddel.høyreSfære >= minsteSfære -> ja(
                 "Høyre sfære oppfyller vilkår om brillestyrke ≥ $minsteSfære",
@@ -164,6 +170,7 @@ object Vilkårene {
         val bestillingsdato = grunnlag.bestillingsdato
         val seksMånederSiden = grunnlag.seksMånederSiden
         val dagensDato = grunnlag.dagensDato
+
         when {
             bestillingsdato.isAfter(dagensDato) -> nei(
                 "Bestillingsdato kan ikke være i fremtiden (etter ${dagensDato.formatert()})",
@@ -177,7 +184,7 @@ object Vilkårene {
                 "Bestillingsdato kan ikke være før ${seksMånederSiden.formatert()}",
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
-                    "seksMånederSiden" to grunnlag.seksMånederSiden.formatert(),
+                    "seksMånederSiden" to seksMånederSiden.formatert(),
                 ),
             )
 
@@ -185,7 +192,7 @@ object Vilkårene {
                 "Bestillingsdato er ${seksMånederSiden.formatert()} eller senere",
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
-                    "seksMånederSiden" to grunnlag.seksMånederSiden.formatert(),
+                    "seksMånederSiden" to seksMånederSiden.formatert(),
                 ),
             )
         }

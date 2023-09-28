@@ -7,7 +7,6 @@ import redis.clients.jedis.params.BitPosParams
 import redis.clients.jedis.params.GetExParams
 import redis.clients.jedis.params.LCSParams
 import redis.clients.jedis.params.SetParams
-import redis.clients.jedis.params.StrAlgoLCSParams
 import redis.clients.jedis.resps.LCSMatchResult
 
 class JedisMock : StringCommands {
@@ -16,6 +15,10 @@ class JedisMock : StringCommands {
 
     override fun get(key: String): String? {
         return store[key]
+    }
+
+    override fun setGet(key: String?, value: String?): String {
+        TODO("Not yet implemented")
     }
 
     override fun setGet(key: String?, value: String?, params: SetParams?): String {
@@ -144,11 +147,6 @@ class JedisMock : StringCommands {
     }
 
     override fun bitop(op: BitOP?, destKey: String?, vararg srcKeys: String?): Long {
-        TODO("Not yet implemented")
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun strAlgoLCSKeys(keyA: String?, keyB: String?, params: StrAlgoLCSParams?): LCSMatchResult {
         TODO("Not yet implemented")
     }
 
