@@ -56,7 +56,7 @@ object Vilkårene {
         val barnetsAlder = grunnlag.barnetsAlderPåBestillingsdato
         val barnetsFødselsdato = grunnlag.barnetsFødselsdato
         val bestillingsdato = grunnlag.bestillingsdato
-        
+
         when {
             barnetsAlder == null -> nei(
                 "Barnets fødselsdato er ukjent",

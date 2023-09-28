@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.nare.spesifikasjon
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.hjelpemidler.brille.nare.evaluering.Evaluering
 import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 
@@ -10,6 +11,7 @@ data class Spesifikasjon<T>(
     val lovdataLenke: String = "",
     val grunnlag: Map<String, String> = emptyMap(),
     val barn: List<Spesifikasjon<T>> = emptyList(),
+    @JsonIgnore
     val implementasjon: Evalueringer.(T) -> Evaluering,
 ) {
     fun evaluer(t: T): Evaluering = Evalueringer().run {

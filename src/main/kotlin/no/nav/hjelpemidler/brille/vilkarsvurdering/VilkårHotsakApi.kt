@@ -5,6 +5,7 @@ import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
@@ -21,6 +22,9 @@ fun Route.vilkårHotsakApi(
     vedtakService: VedtakService,
     joarkrefService: JoarkrefService,
 ) {
+    get("/ad/vilkarsspesifikasjon") {
+        call.respond(Vilkårene.Brille)
+    }
     post("/ad/vilkarsgrunnlag") {
         try {
             val vilkårsgrunnlagInput = call.receive<VilkårsgrunnlagAdDto>()
