@@ -7,7 +7,6 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.joarkref.JoarkrefRiver
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
@@ -29,12 +28,14 @@ fun Route.vilkårHotsakApi(
                 vilkårsvurderingService.vurderVilkår(
                     vilkårsgrunnlagInput.fnrBarn,
                     vilkårsgrunnlagInput.brilleseddel,
-                    vilkårsgrunnlagInput.bestillingsdato
+                    vilkårsgrunnlagInput.bestillingsdato,
+                    vilkårsgrunnlagInput.eksisterendeBestillingsdato
                 )
             }
             val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
 
-            val beløp = minOf(sats.beløp(vilkårsgrunnlagInput.bestillingsdato).toBigDecimal(), vilkårsgrunnlagInput.brillepris)
+            val beløp =
+                minOf(sats.beløp(vilkårsgrunnlagInput.bestillingsdato).toBigDecimal(), vilkårsgrunnlagInput.brillepris)
 
             call.respond(
                 VilkårsvurderingHotsakDto(
@@ -57,7 +58,8 @@ fun Route.vilkårHotsakApi(
         data class Request(
             val fnr: String,
         )
-        data class Response (
+
+        data class Response(
             val vedtakId: Long,
             val behandlingsresultat: Behandlingsresultat,
             val journalpostId: String,

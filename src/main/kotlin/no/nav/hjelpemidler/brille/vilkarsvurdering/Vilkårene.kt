@@ -11,71 +11,45 @@ import java.util.Locale
 val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 
 object Vilkårene {
-    val HarIkkeVedtakIKalenderåret_v2 = Spesifikasjon<Vilkårsgrunnlag>(
+    val HarIkkeVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Ikke fått støtte til barnebriller tidligere i bestillingsåret",
-        identifikator = "HarIkkeVedtakIKalenderåret v2",
+        identifikator = "HarIkkeVedtakIKalenderåret",
         lovReferanse = "§ 3",
         lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
-        val harIkkeVedtakIKalenderåret = grunnlag.vedtakBarn.none { vedtak ->
-            vedtak.bestillingsdato.year == grunnlag.bestillingsdato.year
-        }
+        val bestillingsdato = grunnlag.bestillingsdato
+        val eksisterendeVedtakDato = grunnlag.vedtakBarn
+            .map { it.bestillingsdato }
+            .find { it.year == bestillingsdato.year }
+        val eksisterendeVedtakDatoHotsak = grunnlag.eksisterendeVedtakDatoHotsak
 
-        val eksisterendeVedtakDato = grunnlag.vedtakBarn.find { vedtak ->
-            vedtak.bestillingsdato.year == grunnlag.bestillingsdato.year
-        }?.bestillingsdato.toString()
-
-        when (harIkkeVedtakIKalenderåret) {
-            true -> {
-                ja(
-                    "Barnet har ikke vedtak om brille i kalenderåret",
-                    mapOf("bestillingsdato" to grunnlag.bestillingsdato.formatert()),
-                )
-            }
-
-            false -> nei(
+        when {
+            eksisterendeVedtakDato != null -> nei(
                 "Barnet har allerede vedtak om brille i kalenderåret",
                 mapOf(
-                    "eksisterendeVedtakDato" to eksisterendeVedtakDato,
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "eksisterendeVedtakDato" to eksisterendeVedtakDato.formatert(),
+                    "bestillingsdato" to bestillingsdato.formatert(),
                 ),
+            )
+
+            eksisterendeVedtakDatoHotsak != null -> nei(
+                "Barnet har allerede vedtak om brille i kalenderåret",
+                mapOf(
+                    "eksisterendeVedtakDato" to eksisterendeVedtakDatoHotsak.formatert(),
+                    "bestillingsdato" to bestillingsdato.formatert(),
+                ),
+            )
+
+            else -> ja(
+                "Barnet har ikke vedtak om brille i kalenderåret",
+                mapOf("bestillingsdato" to bestillingsdato.formatert()),
             )
         }
     }
 
-    val HarIkkeHotsakVedtakIKalenderåret_v2 = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Ikke fått støtte til barnebriller gjennom manuell søknad tidligere i bestillingsåret",
-        identifikator = "HarIkkeManueltVedtakIKalenderåret v2",
-        lovReferanse = "§ 3",
-        lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
-    ) { grunnlag ->
-
-        val harIkkeVedtakIKalenderåret = when (grunnlag.eksisterendeVedtakDatoHotsak) {
-            null -> true
-            else -> false
-        }
-
-        when (harIkkeVedtakIKalenderåret) {
-            true -> {
-                ja(
-                    "Barnet har ikke vedtak om brille i kalenderåret",
-                    mapOf("bestillingsdato" to grunnlag.bestillingsdato.toString()),
-                )
-            }
-
-            false -> nei(
-                "Barnet har allerede vedtak om brille i kalenderåret",
-                mapOf(
-                    "eksisterendeVedtakDato" to grunnlag.eksisterendeVedtakDatoHotsak.toString(),
-                    "bestillingsdato" to grunnlag.bestillingsdato.toString(),
-                ),
-            )
-        }
-    }
-
-    val Under18ÅrPåBestillingsdato_v2 = Spesifikasjon<Vilkårsgrunnlag>(
+    val Under18ÅrPåBestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Barnet må være under 18 år på bestillingsdato",
-        identifikator = "Under18ÅrPåBestillingsdato v2",
+        identifikator = "Under18ÅrPåBestillingsdato",
         lovReferanse = "§ 2",
         lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
@@ -107,15 +81,15 @@ object Vilkårene {
         }
     }
 
-    val MedlemAvFolketrygden_v2 = Spesifikasjon<Vilkårsgrunnlag>(
+    val MedlemAvFolketrygden = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Medlem av folketrygden",
-        identifikator = "MedlemAvFolketrygden v2",
+        identifikator = "MedlemAvFolketrygden",
         lovReferanse = "FTL § 10-7 a",
         lovdataLenke = "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a",
     ) { grunnlag ->
         val medlemskapResultat = grunnlag.medlemskapResultat
-        when {
-            medlemskapResultat.resultat == MedlemskapResultatResultat.JA -> ja(
+        when (medlemskapResultat.resultat) {
+            MedlemskapResultatResultat.JA -> ja(
                 "Barnet er medlem i folketrygden",
                 mapOf(
                     "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
@@ -123,7 +97,7 @@ object Vilkårene {
                 ),
             )
 
-            medlemskapResultat.resultat == MedlemskapResultatResultat.UAVKLART -> ja(
+            MedlemskapResultatResultat.UAVKLART -> ja(
                 "Barnet er antatt medlem i folketrygden basert på folkeregistrert adresse i Norge",
                 mapOf(
                     "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
@@ -141,9 +115,9 @@ object Vilkårene {
         }
     }
 
-    val Brillestyrke_v2 = Spesifikasjon<Vilkårsgrunnlag>(
+    val Brillestyrke = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Brillestyrken er innenfor fastsatte styrker",
-        identifikator = "Brillestyrke v2",
+        identifikator = "Brillestyrke",
         lovReferanse = "§ 2",
         lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
@@ -181,52 +155,28 @@ object Vilkårene {
         }
     }
 
-    val Bestillingsdato_v2 = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Bestillingen er gjort etter at loven trådte i kraft",
-        identifikator = "Bestillingsdato v2",
-        lovReferanse = "§ 12",
-        lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
-    ) { grunnlag ->
-        val datoOrdningenStartet = grunnlag.datoOrdningenStartet
-        when {
-            grunnlag.bestillingsdato.isAfter(grunnlag.dagensDato) -> nei(
-                "Bestillingsdato kan ikke være i fremtiden (etter ${grunnlag.dagensDato.formatert()})",
-                mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
-                    "datoOrdningenStartet" to datoOrdningenStartet.formatert(),
-                ),
-            )
-
-            grunnlag.bestillingsdato.isBefore(datoOrdningenStartet) -> nei(
-                "Bestillingsdato kan ikke være før ${datoOrdningenStartet.formatert()}",
-                mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
-                    "datoOrdningenStartet" to datoOrdningenStartet.formatert(),
-                ),
-            )
-
-            else -> ja(
-                "Bestillingsdato er ${datoOrdningenStartet.formatert()} eller senere",
-                mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
-                    "datoOrdningenStartet" to datoOrdningenStartet.formatert(),
-                ),
-            )
-        }
-    }
-
-    val BestillingsdatoTilbakeITid_v2 = Spesifikasjon<Vilkårsgrunnlag>(
+    val Bestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Bestillingsdato innenfor gyldig periode",
-        identifikator = "BestillingsdatoTilbakeITid v2",
+        identifikator = "Bestillingsdato",
         lovReferanse = "§ 6",
         lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
+        val bestillingsdato = grunnlag.bestillingsdato
         val seksMånederSiden = grunnlag.seksMånederSiden
+        val dagensDato = grunnlag.dagensDato
         when {
-            grunnlag.bestillingsdato.isBefore(seksMånederSiden) -> nei(
+            bestillingsdato.isAfter(dagensDato) -> nei(
+                "Bestillingsdato kan ikke være i fremtiden (etter ${dagensDato.formatert()})",
+                mapOf(
+                    "bestillingsdato" to bestillingsdato.formatert(),
+                    "dagensDato" to dagensDato.formatert(),
+                ),
+            )
+
+            bestillingsdato.isBefore(seksMånederSiden) -> nei(
                 "Bestillingsdato kan ikke være før ${seksMånederSiden.formatert()}",
                 mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "bestillingsdato" to bestillingsdato.formatert(),
                     "seksMånederSiden" to grunnlag.seksMånederSiden.formatert(),
                 ),
             )
@@ -234,7 +184,7 @@ object Vilkårene {
             else -> ja(
                 "Bestillingsdato er ${seksMånederSiden.formatert()} eller senere",
                 mapOf(
-                    "bestillingsdato" to grunnlag.bestillingsdato.formatert(),
+                    "bestillingsdato" to bestillingsdato.formatert(),
                     "seksMånederSiden" to grunnlag.seksMånederSiden.formatert(),
                 ),
             )
@@ -242,23 +192,12 @@ object Vilkårene {
     }
 
     val Brille = (
-        HarIkkeVedtakIKalenderåret_v2 og
-            Under18ÅrPåBestillingsdato_v2 og
-            MedlemAvFolketrygden_v2 og
-            Brillestyrke_v2 og
-            Bestillingsdato_v2 og
-            BestillingsdatoTilbakeITid_v2
-        ).med("Brille_v2", "Personen oppfyller vilkår for krav om barnebriller")
-
-    val BrilleV2 = (
-        HarIkkeVedtakIKalenderåret_v2 og
-            Under18ÅrPåBestillingsdato_v2 og
-            MedlemAvFolketrygden_v2 og
-            Brillestyrke_v2 og
-            Bestillingsdato_v2 og
-            BestillingsdatoTilbakeITid_v2 og
-            HarIkkeHotsakVedtakIKalenderåret_v2
-        ).med("Brille_v2", "Personen oppfyller vilkår for krav om barnebriller")
+            HarIkkeVedtakIKalenderåret og
+                    Under18ÅrPåBestillingsdato og
+                    MedlemAvFolketrygden og
+                    Brillestyrke og
+                    Bestillingsdato
+            ).med("Brille", "Personen oppfyller vilkår for krav om barnebriller")
 
     private fun LocalDate.formatert(): String =
         this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))

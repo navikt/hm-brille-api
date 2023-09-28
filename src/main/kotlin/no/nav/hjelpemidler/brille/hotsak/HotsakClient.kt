@@ -6,7 +6,6 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -39,7 +38,7 @@ class HotsakClient(
         }
     }
 
-    suspend fun hentEksisterendeVedtaksDato(fnr: String, bestillingsdato: LocalDate): LocalDate? {
+    suspend fun hentEksisterendeVedtakDato(fnr: String, bestillingsdato: LocalDate): LocalDate? {
         try {
             val url = "$baseUrl/vilkarsvurdering/sjekk-vedtak"
             log.info { "Henter vedtaksdato data med url: $url" }
@@ -94,5 +93,4 @@ class HotsakClient(
     data class VedtakIKalenderåretDto(
         val vedtaksdato: LocalDate?
     )
-
 }
