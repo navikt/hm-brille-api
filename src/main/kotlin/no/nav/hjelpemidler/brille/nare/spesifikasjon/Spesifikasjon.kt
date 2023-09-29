@@ -9,7 +9,6 @@ data class Spesifikasjon<T>(
     val identifikator: String = "",
     val lovReferanse: String = "",
     val lovdataLenke: String = "",
-    val grunnlag: Map<String, String> = emptyMap(),
     val barn: List<Spesifikasjon<T>> = emptyList(),
     @JsonIgnore
     val implementasjon: Evalueringer.(T) -> Evaluering,
