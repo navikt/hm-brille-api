@@ -8,6 +8,7 @@ import java.util.UUID
 enum class AzureAdRolle(val role: String, val clientId: UUID) {
     SYSTEMBRUKER_SAKSBEHANDLING("access_as_application", Configuration.CLIENT_ID_SAKSBEHANDLING),
     SYSTEMBRUKER_BRILLE_INTEGRASJON("access_as_application", Configuration.CLIENT_ID_BRILLE_INTEGRASJON),
+    SYSTEMBRUKER_AZURE_TOKEN_GENERATOR("access_as_application", Configuration.CLIENT_ID_AZURE_TOKEN_GENERATOR),
     ;
 
     constructor(role: String, clientId: String) : this(role, UUID.fromString(clientId))
@@ -22,7 +23,7 @@ enum class AzureAdRolle(val role: String, val clientId: UUID) {
             val clientId = principal.getClaim("azp", UUID::class)!!
 
             return alle.mapNotNull {
-                if (roles.contains(it.role) && clientId == it.clientId) {
+                if (it.role in roles && clientId == it.clientId) {
                     it
                 } else {
                     null

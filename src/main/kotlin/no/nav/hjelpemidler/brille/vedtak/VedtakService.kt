@@ -32,7 +32,6 @@ class VedtakService(
             vilkårsgrunnlag.fnrBarn,
             vilkårsgrunnlag.brilleseddel,
             vilkårsgrunnlag.bestillingsdato,
-            true,
         )
 
         if (vilkårsvurdering.utfall != Resultat.JA) {

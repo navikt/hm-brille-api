@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
@@ -9,6 +8,8 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
+import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.configuration.GcpEnvironment
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
@@ -24,7 +25,16 @@ class VilkårsvurderingService(
         fnrBarn: String,
         brilleseddel: Brilleseddel,
         bestillingsdato: LocalDate,
-        sjekkHotsakVedtak: Boolean = false,
+    ): Vilkårsvurdering<Vilkårsgrunnlag> {
+        val eksisterendeVedtakDatoHotsak = hotsakClient.hentEksisterendeVedtakDato(fnrBarn, bestillingsdato)
+        return vurderVilkår(fnrBarn, brilleseddel, bestillingsdato, eksisterendeVedtakDatoHotsak)
+    }
+
+    suspend fun vurderVilkår(
+        fnrBarn: String,
+        brilleseddel: Brilleseddel,
+        bestillingsdato: LocalDate,
+        eksisterendeVedtakDatoHotsak: LocalDate?,
     ): Vilkårsvurdering<Vilkårsgrunnlag> {
         val vedtakBarn =
             transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(fnrBarn) }
@@ -33,31 +43,18 @@ class VilkårsvurderingService(
             medlemskapBarn.sjekkMedlemskapBarn(fnrBarn, bestillingsdato)
         val vilkårsgrunnlag = Vilkårsgrunnlag(
             vedtakBarn = vedtakBarn,
+            eksisterendeVedtakDatoHotsak = eksisterendeVedtakDatoHotsak,
             pdlOppslagBarn = pdlOppslagBarn,
             medlemskapResultat = medlemskapResultat,
             brilleseddel = brilleseddel,
             bestillingsdato = bestillingsdato,
             dagensDato = dagensDatoFactory(),
-            eksisterendeVedtakDatoHotsak = if (sjekkHotsakVedtak) {
-                hotsakClient.hentEksisterendeVedtaksDato(
-                    fnrBarn,
-                    bestillingsdato,
-                )
-            } else {
-                null
-            },
         )
 
-        val vilkårsvurdering =
-            vurderVilkår(
-                vilkårsgrunnlag,
-                if (sjekkHotsakVedtak) Vilkårene.BrilleV2 else Vilkårene.Brille,
-            )
+        val vilkårsvurdering = vurderVilkår(vilkårsgrunnlag, Vilkårene.Brille)
 
-        if (!Configuration.prod) {
-            log.info {
-                "Resultat av vilkårsvurdering: ${vilkårsvurdering.toJson()}"
-            }
+        if (Environment.current == GcpEnvironment.DEV) {
+            log.info { "Resultat av vilkårsvurdering: ${vilkårsvurdering.toJson()}" }
         }
         return vilkårsvurdering
     }

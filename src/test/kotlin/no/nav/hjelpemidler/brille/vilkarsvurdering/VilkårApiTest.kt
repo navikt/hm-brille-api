@@ -145,13 +145,6 @@ internal class VilkårApiTest {
     )
 
     @Test
-    internal fun `bestillingsdato før ordningen startet`() = kjørTest(
-        vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.minusDays(1)),
-        dagensDato = DATO_ORDNINGEN_STARTET.plusDays(1),
-        forventetResultat = Resultat.NEI
-    )
-
-    @Test
     internal fun `bestillingsdato mer enn 6 måneder tilbake i tid`() = kjørTest(
         vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.plusMonths(1)),
         dagensDato = DATO_ORDNINGEN_STARTET.plusMonths(8),
@@ -174,7 +167,7 @@ internal class VilkårApiTest {
         } returns dagensDato
 
         coEvery {
-            hotsakClient.hentEksisterendeVedtaksDato(any(), any())
+            hotsakClient.hentEksisterendeVedtakDato(any(), any())
         } returns null
 
         every {

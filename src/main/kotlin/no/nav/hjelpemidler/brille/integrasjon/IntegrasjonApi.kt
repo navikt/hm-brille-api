@@ -16,7 +16,6 @@ import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
-import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PdlClientException
 import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
@@ -144,7 +143,6 @@ fun Route.integrasjonApi(
                         vilkårsgrunnlagInput.fnrBarn,
                         vilkårsgrunnlagInput.brilleseddel,
                         vilkårsgrunnlagInput.bestillingsdato,
-                        true,
                     )
                 }
 
@@ -234,7 +232,6 @@ fun Route.integrasjonApi(
                     vilkårsgrunnlag.fnrBarn,
                     vilkårsgrunnlag.brilleseddel,
                     vilkårsgrunnlag.bestillingsdato,
-                    true,
                 )
 
                 if (vilkårsvurdering.utfall != Resultat.JA) {

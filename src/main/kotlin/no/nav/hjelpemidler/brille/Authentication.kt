@@ -10,6 +10,7 @@ import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
 import no.nav.hjelpemidler.brille.tilgang.azureAdProvider
 import no.nav.hjelpemidler.brille.tilgang.tokenXProvider
 import no.nav.hjelpemidler.brille.tilgang.withAnyGroupClaim
+import no.nav.hjelpemidler.brille.tilgang.withAnyRoleAndClientIdClaim
 import no.nav.hjelpemidler.brille.tilgang.withRoleAndClientIdClaim
 import java.util.UUID
 
@@ -29,7 +30,10 @@ fun Application.installAuthentication() {
             withAnyGroupClaim(AzureAdGruppe.TEAMDIGIHOT, AzureAdGruppe.BRILLEADMIN_BRUKERE)
         }
         azureAdProvider(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_SAKSBEHANDLING) {
-            withRoleAndClientIdClaim(AzureAdRolle.SYSTEMBRUKER_SAKSBEHANDLING)
+            withAnyRoleAndClientIdClaim(
+                AzureAdRolle.SYSTEMBRUKER_SAKSBEHANDLING,
+                AzureAdRolle.SYSTEMBRUKER_AZURE_TOKEN_GENERATOR,
+            )
         }
         azureAdProvider(AuthenticationProvider.AZURE_AD_SYSTEMBRUKER_BRILLE_INTEGRASJON) {
             withRoleAndClientIdClaim(AzureAdRolle.SYSTEMBRUKER_BRILLE_INTEGRASJON)
