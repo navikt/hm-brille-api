@@ -13,11 +13,14 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 import no.nav.hjelpemidler.brille.tss.TssIdentRiver
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -28,6 +31,7 @@ fun Route.internalRoutes(
     pdlService: PdlService,
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     enhetsregisteretService: EnhetsregisteretService,
+    joarkrefService: JoarkrefService,
 ) {
     route("/internal") {
         get("/is-alive") {
@@ -96,6 +100,24 @@ fun Route.internalRoutes(
                     log.error(e) { "sync-brreg endpoint: Feil under oppdatering av vår kopi av enhetsregisteret" }
                 }
             }
+        }
+
+        post("/fiks-manglende-dokumentider") {
+            log.info("Fikser manglender dokumentider:")
+
+            val limit = call.request.queryParameters["limit"]?.toInt() ?: 100
+
+            val joarkrefs = joarkrefService.hentJoarkRefMedManglendeDokumentider(limit)
+            log.info("Fant ${joarkrefs.count()} joark-refs uten dokument-ider. Sender de som kafka-meldinger til joark-listener for oppslag i saf!")
+
+            kafkaService.produceEvent("static-key", mapOf(
+                "eventId" to UUID.randomUUID().toString(),
+                "eventName" to "temp-joarkref-dokumentider",
+                "opprettet" to LocalDateTime.now(),
+                "joarkrefs" to joarkrefs,
+            ))
+
+            log.info("Kafka melding sendt!")
         }
     }
 }

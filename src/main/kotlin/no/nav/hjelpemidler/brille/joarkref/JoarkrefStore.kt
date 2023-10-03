@@ -6,12 +6,15 @@ import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
+import no.nav.hjelpemidler.brille.store.queryList
 import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 
 interface JoarkrefStore : Store {
     fun lagreJoarkRef(vedtakId: Long, joarkRef: Long, dokumentIder: List<String>)
     fun hentJoarkRef(vedtakId: Long): Pair<Long, List<String>>?
+    fun hentJoarkRefMedManglendeDokumentider(limit: Int): List<Long>
+    fun oppdaterJoarkrefMedNyeDokumentIder(joarkref: Long, dokumentIder: List<String>)
 }
 
 class JoarkrefStorePostgres(private val sessionFactory: () -> Session) : JoarkrefStore, TransactionalStore(sessionFactory) {
@@ -52,5 +55,36 @@ class JoarkrefStorePostgres(private val sessionFactory: () -> Session) : Joarkre
                 it.jsonOrNull<List<String>>("dokument_ider") ?: listOf(),
             )
         }
+    }
+
+    override fun hentJoarkRefMedManglendeDokumentider(limit: Int) = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT joark_ref FROM joarkref_v1 WHERE dokument_ider = '[]'::jsonb LIMIT :limit
+        """.trimIndent()
+
+        it.queryList(
+            sql,
+            mapOf(
+                "limit" to limit,
+            ),
+        ) {
+            it.long("joark_ref")
+        }
+    }
+
+    override fun oppdaterJoarkrefMedNyeDokumentIder(joarkRef: Long, dokumentIder: List<String>) = session {
+        @Language("PostgreSQL")
+        val sql = """
+            UPDATE joarkref_v1 SET dokument_ider = :dokumentIder WHERE joark_ref = :joarkRef
+        """.trimIndent()
+
+        it.update(
+            sql,
+            mapOf(
+                "joarkRef" to joarkRef,
+                "dokumentIder" to pgObjectOf(dokumentIder),
+            ),
+        ).validate()
     }
 }

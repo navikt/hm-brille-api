@@ -46,6 +46,7 @@ import no.nav.hjelpemidler.brille.integrasjon.integrasjonApi
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.internal.internalRoutes
 import no.nav.hjelpemidler.brille.internal.setupMetrics
+import no.nav.hjelpemidler.brille.joarkref.JoarkrefDokumentIderRiver
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefRiver
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -195,6 +196,7 @@ fun Application.setupRoutes() {
     UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
     TssIdentRiver(rapid, tssIdentService)
     JoarkrefRiver(rapid, joarkrefService)
+    JoarkrefDokumentIderRiver(rapid, joarkrefService)
 
     thread(isDaemon = false) {
         rapid.start()
@@ -203,7 +205,7 @@ fun Application.setupRoutes() {
     installAuthentication()
 
     routing {
-        internalRoutes(databaseContext, kafkaService, hotsakClient, pdlService, syfohelsenettproxyClient, enhetsregisteretService)
+        internalRoutes(databaseContext, kafkaService, hotsakClient, pdlService, syfohelsenettproxyClient, enhetsregisteretService, joarkrefService)
 
         route("/api") {
             satsApi(kalkulatorService)

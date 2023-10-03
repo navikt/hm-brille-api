@@ -16,6 +16,18 @@ class JoarkrefService(val databaseContext: DatabaseContext) {
             ctx.joarkrefStore.lagreJoarkRef(vedtakId, joarkRef, dokumentIder)
         }
     }
+
+    suspend fun hentJoarkRefMedManglendeDokumentider(limit: Int): List<Long> {
+        return transaction(databaseContext) {
+            it.joarkrefStore.hentJoarkRefMedManglendeDokumentider(limit)
+        }
+    }
+
+    suspend fun oppdaterJoarkrefMedNyeDokumentIder(joarkref: Long, dokumentIder: List<String>) {
+        return transaction(databaseContext) {
+            it.joarkrefStore.oppdaterJoarkrefMedNyeDokumentIder(joarkref, dokumentIder)
+        }
+    }
 }
 
 data class JoarkRef (
