@@ -10,7 +10,7 @@ on:
       - '.github/workflows/deploy-alerts-dev.yml'
     branches:
       - main
-      - feature/amblyopi
+      - sync-dokumentider
 env:
   ghcr_image: ghcr.io/${{ github.repository }}/hm-brille-api:${{ github.sha }}
 jobs:
@@ -63,12 +63,12 @@ jobs:
           VARS: .hotnais/dev/config.json
           VAR: commit=${{ github.sha }}
       - name: post-deploy
-        if: github.ref == 'refs/heads/main'
+        #if: github.ref == 'refs/heads/main'
         uses: navikt/digihot-deploy/actions/post-deploy@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: draft release
-        if: github.ref == 'refs/heads/main'
+        #if: github.ref == 'refs/heads/main'
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
