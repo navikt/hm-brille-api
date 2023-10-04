@@ -98,7 +98,7 @@ object Configuration {
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.prod-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://prod-fss.pdl.pdl-api/.default",
-            "syfohelsenettproxy.rest-uri" to "http://syfohelsenettproxy.teamsykmelding",
+            "syfohelsenettproxy.rest-uri" to "http://syfohelsenettproxy.teamsykmelding.svc.cluster.local",
             "syfohelsenettproxy.scope" to "api://prod-gcp.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "http://medlemskap-barn.medlemskap.svc.cluster.local/",
             "medlemskap.oppslag.scope" to "api://prod-gcp.medlemskap.medlemskap-barn/.default",
