@@ -62,8 +62,6 @@ spec:
       {{/each}}
         - application: azure-token-generator
           namespace: aura
-        - application: syfohelsenettproxy
-          namespace: teamsykmelding
     outbound:
       rules:
       {{#each outbound-applications}}
