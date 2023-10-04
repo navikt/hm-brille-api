@@ -33,8 +33,6 @@
   "kafka-cluster": "nav-prod",
   "min-replicas": 2,
   "max-replicas": 4,
-  "syfohelsenettproxy_cluster": "prod-fss",
-  "medlemskap_cluster": "prod-gcp",
   "env": {
     "REDIS_HOST": "brille-redis.teamdigihot.svc.cluster.local",
     "GRUPPE_TEAMDIGIHOT": "2f632b40-4730-4692-9c7c-fb744e2d33e1",

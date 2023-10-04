@@ -40,10 +40,8 @@ spec:
       {{/each}}
         - application: syfohelsenettproxy
           namespace: teamsykmelding
-          cluster: {{ syfohelsenettproxy_cluster }}
         - application: medlemskap-oppslag
           namespace: medlemskap
-          cluster: {{ medlemskap_cluster }}
         - application: brille-redis
       external:
       {{#each external-hosts}}
