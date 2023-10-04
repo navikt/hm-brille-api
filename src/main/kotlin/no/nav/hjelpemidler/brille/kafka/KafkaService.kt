@@ -80,7 +80,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                     medlemAvFolketrygdenOppfylt = vilkårsvurdering.harResultatJaForVilkår("MedlemAvFolketrygden"),
                     brillestyrkeOppfylt = vilkårsvurdering.harResultatJaForVilkår("Brillestyrke"),
                     bestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Bestillingsdato"),
-                    bestillingsdatoTilbakeITidOppfylt = vilkårsvurdering.harResultatJaForVilkår("BestillingsdatoTilbakeITid"),
+                    bestillingsdatoTilbakeITidOppfylt = vilkårsvurdering.harResultatJaForVilkår("Bestillingsdato"),
                     opprettet = LocalDateTime.now()
                 )
             )
