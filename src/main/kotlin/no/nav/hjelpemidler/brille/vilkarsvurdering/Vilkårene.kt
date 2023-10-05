@@ -87,7 +87,7 @@ object Vilkårene {
     val MedlemAvFolketrygden = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Medlem av folketrygden",
         identifikator = "MedlemAvFolketrygden",
-        lovReferanse = "FTL § 10-7 a",
+        lovReferanse = "ftrl. § 10-7 a",
         lovdataLenke = "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a",
     ) { grunnlag ->
         val medlemskapResultat = grunnlag.medlemskapResultat
