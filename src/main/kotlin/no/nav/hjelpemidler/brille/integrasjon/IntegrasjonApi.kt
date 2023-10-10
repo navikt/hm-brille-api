@@ -10,11 +10,14 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
+import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PdlClientException
@@ -57,6 +60,8 @@ fun Route.integrasjonApi(
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     utbetalingService: UtbetalingService,
     slettVedtakService: SlettVedtakService,
+    adminService: AdminService,
+    kafkaService: KafkaService,
 ) {
     route("/integrasjon") {
 
@@ -238,6 +243,25 @@ fun Route.integrasjonApi(
                     sikkerLog.info {
                         "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                     }
+
+                    kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkårsvurdering)
+
+                    val årsaker = vilkårsvurdering.evaluering.barn
+                        .filter { vilkar -> vilkar.resultat != Resultat.JA }
+                        .map { vilkar -> vilkar.begrunnelse }
+
+                    // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
+                    adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, call.extractFnr(), vilkårsgrunnlag.orgnr, årsaker)
+
+                    // Journalfør avvisningsbrev i joark
+                    kafkaService.journalførAvvisning(
+                        vilkårsgrunnlag.fnrBarn,
+                        vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
+                        vilkårsgrunnlag.orgnr,
+                        vilkårsgrunnlag.extras.orgNavn,
+                        årsaker,
+                    )
+
                     // Svar ut spørringen
                     call.respond(
                         Response(

@@ -250,7 +250,9 @@ fun Application.setupRoutes() {
                     databaseContext,
                     syfohelsenettproxyClient,
                     utbetalingService,
-                    slettVedtakService
+                    slettVedtakService,
+                    adminService,
+                    kafkaService,
                 )
             }
 

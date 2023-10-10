@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.Avtale
+import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
@@ -63,7 +64,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         // todo -> send til bq-sink
     }
 
-    suspend fun vilkårIkkeOppfylt(
+    fun vilkårIkkeOppfylt(
         vilkårsgrunnlag: VilkårsgrunnlagDto,
         vilkårsvurdering: Vilkårsvurdering<Vilkårsgrunnlag>
     ) {
@@ -87,6 +88,16 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         } catch (e: Exception) {
             log.error(e) { "Feil under sending av statistikk til BigQuery" }
         }
+    }
+
+    fun journalførAvvisning(fnrBarn: String, navnBarn: String, orgnr: String, orgNavn: String, årsaker: List<String>) {
+        produceEvent(null, JournalførAvvisning(
+            fnrBarn = fnrBarn,
+            navnBarn = navnBarn,
+            orgnr = orgnr,
+            orgNavn = orgNavn,
+            årsaker = årsaker,
+        ))
     }
 
     fun vedtakFattet(krav: KravDto, vedtak: Vedtak<Vilkårsgrunnlag>) {
@@ -252,6 +263,17 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val satsBeskrivelse: String,
         val beløp: BigDecimal,
         val kilde: KravKilde,
+    )
+
+    internal data class JournalførAvvisning(
+        val eventName: String = "hm-brille-avvisning",
+        val eventId: UUID = UUID.randomUUID(),
+        val opprettet: LocalDateTime = LocalDateTime.now(),
+        val fnrBarn: String,
+        val navnBarn: String,
+        val orgnr: String,
+        val orgNavn: String,
+        val årsaker: List<String>,
     )
 
     /**
