@@ -167,7 +167,7 @@ fun Application.setupRoutes() {
     val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)
     val leaderElection = LeaderElection(Configuration.electorPath)
-    val kalkulatorService = KalkulatorService()
+    val kalkulatorService = KalkulatorService(kafkaService)
 
     val metrics = MetricsConfig(
         meterbinders = listOf(
@@ -175,8 +175,8 @@ fun Application.setupRoutes() {
             JvmGcMetrics(),
             ProcessorMetrics(),
             JvmThreadMetrics(),
-            LogbackMetrics()
-        ) + rapid.getMetrics()
+            LogbackMetrics(),
+        ) + rapid.getMetrics(),
     )
 
     setupMetrics(metrics)
@@ -185,12 +185,14 @@ fun Application.setupRoutes() {
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     EnhetsregisteretScheduler(enhetsregisteretService, leaderElection, metrics)
-    if (Configuration.prod) RapporterManglendeTssIdentScheduler(
-        tssIdentService,
-        enhetsregisteretService,
-        leaderElection,
-        metrics
-    )
+    if (Configuration.prod) {
+        RapporterManglendeTssIdentScheduler(
+            tssIdentService,
+            enhetsregisteretService,
+            leaderElection,
+            metrics,
+        )
+    }
 
     UtbetalingsKvitteringRiver(rapid, utbetalingService, metrics)
     TssIdentRiver(rapid, tssIdentService)
@@ -203,7 +205,14 @@ fun Application.setupRoutes() {
     installAuthentication()
 
     routing {
-        internalRoutes(databaseContext, kafkaService, hotsakClient, pdlService, syfohelsenettproxyClient, enhetsregisteretService)
+        internalRoutes(
+            databaseContext,
+            kafkaService,
+            hotsakClient,
+            pdlService,
+            syfohelsenettproxyClient,
+            enhetsregisteretService,
+        )
 
         route("/api") {
             satsApi(kalkulatorService)
@@ -213,7 +222,7 @@ fun Application.setupRoutes() {
                 when (Environment.current) {
                     LocalEnvironment -> AuthenticationProvider.TOKEN_X_LOCAL
                     else -> AuthenticationProvider.TOKEN_X
-                }
+                },
             ) {
                 authenticateOptiker(syfohelsenettproxyClient, redisClient) {
                     innbyggerApi(pdlService, auditService)
@@ -231,7 +240,7 @@ fun Application.setupRoutes() {
                 when (Environment.current) {
                     LocalEnvironment -> AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE_LOCAL
                     else -> AuthenticationProvider.AZURE_AD_BRILLEADMIN_BRUKERE
-                }
+                },
             ) {
                 adminApi(adminService, slettVedtakService, enhetsregisteretService, rapportService)
             }
@@ -250,7 +259,9 @@ fun Application.setupRoutes() {
                     databaseContext,
                     syfohelsenettproxyClient,
                     utbetalingService,
-                    slettVedtakService
+                    slettVedtakService,
+                    adminService,
+                    kafkaService,
                 )
             }
 
@@ -289,7 +300,7 @@ fun cronjobSyncTss() {
             log.info("cronjob sync-tss: Oppdaterer tss med=$it")
             kafkaService.oppdaterTSS(
                 orgnr = it.first,
-                kontonr = it.second
+                kontonr = it.second,
             )
         }
 
@@ -307,5 +318,5 @@ private fun kafkaConfig(
     truststore = kafkaProps.truststorePath,
     truststorePassword = kafkaProps.truststorePassword,
     keystoreLocation = kafkaProps.keystorePath,
-    keystorePassword = kafkaProps.keystorePassword
+    keystorePassword = kafkaProps.keystorePassword,
 )

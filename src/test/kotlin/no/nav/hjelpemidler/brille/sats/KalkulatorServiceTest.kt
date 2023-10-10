@@ -1,11 +1,23 @@
 package no.nav.hjelpemidler.brille.sats
 
+import io.mockk.every
+import io.mockk.mockk
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.sats.kalkulator.Beregningsgrunnlag
 import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorService
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import kotlin.test.BeforeTest
 
 class KalkulatorServiceTest {
+
+    private val kafkaService = mockk<KafkaService>()
+    private val kalkulatorService = KalkulatorService(kafkaService)
+
+    @BeforeTest
+    internal fun setup() {
+        every { kafkaService.kalkulertBrillestøtte(any()) } returns Unit
+    }
 
     @Test
     fun `Ingen støtte`() {
@@ -21,7 +33,7 @@ class KalkulatorServiceTest {
             bestillingsdato = LocalDate.now(),
         )
 
-        val kalkulatorResultat = KalkulatorService().kalkuler(beregningsgrunnlag)
+        val kalkulatorResultat = kalkulatorService.kalkuler(beregningsgrunnlag)
 
         assert(kalkulatorResultat.amblyopistøtte.sats == AmblyopiSatsType.INGEN)
     }
@@ -40,7 +52,7 @@ class KalkulatorServiceTest {
             bestillingsdato = LocalDate.now(),
         )
 
-        val kalkulatorResultat = KalkulatorService().kalkuler(beregningsgrunnlag)
+        val kalkulatorResultat = kalkulatorService.kalkuler(beregningsgrunnlag)
 
         assert(kalkulatorResultat.amblyopistøtte.sats == AmblyopiSatsType.SATS_1)
     }
@@ -59,7 +71,7 @@ class KalkulatorServiceTest {
             bestillingsdato = LocalDate.now(),
         )
 
-        val kalkulatorResultat = KalkulatorService().kalkuler(beregningsgrunnlag)
+        val kalkulatorResultat = kalkulatorService.kalkuler(beregningsgrunnlag)
 
         assert(kalkulatorResultat.amblyopistøtte.sats == AmblyopiSatsType.SATS_2)
     }
@@ -78,7 +90,7 @@ class KalkulatorServiceTest {
             bestillingsdato = LocalDate.now(),
         )
 
-        val kalkulatorResultat = KalkulatorService().kalkuler(beregningsgrunnlag)
+        val kalkulatorResultat = kalkulatorService.kalkuler(beregningsgrunnlag)
 
         assert(kalkulatorResultat.amblyopistøtte.sats == AmblyopiSatsType.SATS_1)
     }
@@ -97,7 +109,7 @@ class KalkulatorServiceTest {
             bestillingsdato = LocalDate.now(),
         )
 
-        val kalkulatorResultat = KalkulatorService().kalkuler(beregningsgrunnlag)
+        val kalkulatorResultat = kalkulatorService.kalkuler(beregningsgrunnlag)
 
         assert(kalkulatorResultat.amblyopistøtte.sats == AmblyopiSatsType.SATS_2)
     }
@@ -116,7 +128,7 @@ class KalkulatorServiceTest {
             bestillingsdato = LocalDate.now(),
         )
 
-        val kalkulatorResultat = KalkulatorService().kalkuler(beregningsgrunnlag)
+        val kalkulatorResultat = kalkulatorService.kalkuler(beregningsgrunnlag)
 
         assert(kalkulatorResultat.amblyopistøtte.sats == AmblyopiSatsType.SATS_1)
     }
@@ -136,7 +148,7 @@ class KalkulatorServiceTest {
             bestillingsdato = LocalDate.now(),
         )
 
-        val kalkulatorResultat = KalkulatorService().kalkuler(beregningsgrunnlag)
+        val kalkulatorResultat = kalkulatorService.kalkuler(beregningsgrunnlag)
 
         assert(kalkulatorResultat.amblyopistøtte.sats == AmblyopiSatsType.INDIVIDUELT)
     }
@@ -155,7 +167,7 @@ class KalkulatorServiceTest {
             bestillingsdato = LocalDate.now(),
         )
 
-        val kalkulatorResultat = KalkulatorService().kalkuler(beregningsgrunnlag)
+        val kalkulatorResultat = kalkulatorService.kalkuler(beregningsgrunnlag)
 
         assert(kalkulatorResultat.amblyopistøtte.sats == AmblyopiSatsType.INDIVIDUELT)
     }

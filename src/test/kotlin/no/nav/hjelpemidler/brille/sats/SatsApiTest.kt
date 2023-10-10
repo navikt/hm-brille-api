@@ -5,6 +5,9 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import io.mockk.every
+import io.mockk.mockk
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.sats.kalkulator.Beregningsgrunnlag
 import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorResultat
 import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorService
@@ -15,11 +18,18 @@ import org.junit.jupiter.params.provider.CsvFileSource
 import java.time.LocalDate
 import java.time.Month
 import kotlin.math.abs
+import kotlin.test.BeforeTest
 
 internal class SatsApiTest {
-    private val kalkulatorService = KalkulatorService()
+    private val kafkaService = mockk<KafkaService>()
+    private val kalkulatorService = KalkulatorService(kafkaService)
     private val routing = TestRouting {
         satsApi(kalkulatorService)
+    }
+
+    @BeforeTest
+    internal fun setup() {
+        every { kafkaService.kalkulertBrillestøtte(any()) } returns Unit
     }
 
     @ParameterizedTest
