@@ -251,7 +251,7 @@ fun Route.integrasjonApi(
                         .map { vilkar -> vilkar.begrunnelse }
 
                     // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
-                    adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, call.extractFnr(), vilkårsgrunnlag.orgnr, årsaker)
+                    adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, req.ansvarligOptikersFnr, vilkårsgrunnlag.orgnr, årsaker)
 
                     // Journalfør avvisningsbrev i joark
                     kafkaService.journalførAvvisning(
