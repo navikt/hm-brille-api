@@ -9,7 +9,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.Avtale
+import no.nav.hjelpemidler.brille.sats.AmblyopiSatsType
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
+import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorResultat
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
 import no.nav.hjelpemidler.brille.vedtak.KravKilde
@@ -176,6 +179,18 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
     }
 
+    fun kalkulertBrillestøtte(kalkulatorResultat: KalkulatorResultat) {
+        sendTilBigQuery(
+            null,
+            KalkulatorResultatStatistikk(
+                brillestøtte = kalkulatorResultat.brillestøtte.sats != SatsType.INGEN,
+                amblyopistøtte = kalkulatorResultat.amblyopistøtte.sats != AmblyopiSatsType.INGEN,
+                brillestøttesats = kalkulatorResultat.brillestøtte.sats.name,
+                amblyopistøttesats = kalkulatorResultat.amblyopistøtte.sats.name,
+            ),
+        )
+    }
+
     fun <T> produceEvent(key: String?, event: T) {
         try {
             val message = mapper.writeValueAsString(event)
@@ -330,6 +345,15 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val antatt: Boolean = false,
         val avvist: Boolean = false,
         val opprettet: LocalDateTime = LocalDateTime.now(),
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "kalkulatorresultat_v1")
+    internal data class KalkulatorResultatStatistikk(
+        val brillestøtte: Boolean = false,
+        val amblyopistøtte: Boolean = false,
+        val brillestøttesats: String = SatsType.INGEN.name,
+        val amblyopistøttesats: String = AmblyopiSatsType.INGEN.name,
     )
 
     @JsonNaming(BigQueryStrategy::class)

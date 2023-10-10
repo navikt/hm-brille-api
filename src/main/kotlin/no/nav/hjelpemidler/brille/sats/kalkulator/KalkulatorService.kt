@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.sats.kalkulator
 
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.sats.AmblyopiSatsType
 import no.nav.hjelpemidler.brille.sats.SatsBeregning
 import no.nav.hjelpemidler.brille.sats.SatsBeregningAmblyopi
@@ -9,13 +10,17 @@ import no.nav.hjelpemidler.brille.sats.beregnAmblyopiSats
 import no.nav.hjelpemidler.brille.sats.beregnSats
 import kotlin.math.abs
 
-class KalkulatorService {
+class KalkulatorService(
+    private val kafkaService: KafkaService,
+) {
 
     fun kalkuler(beregningsgrunnlag: Beregningsgrunnlag): KalkulatorResultat {
-        return KalkulatorResultat(
+        val kalkulatorResultat = KalkulatorResultat(
             brillestøtte = kalkulerBrillestøtte(beregningsgrunnlag),
             amblyopistøtte = kalkulerAmblyopistøtte(beregningsgrunnlag),
         )
+        kafkaService.kalkulertBrillestøtte(kalkulatorResultat)
+        return kalkulatorResultat
     }
 
     private fun kalkulerBrillestøtte(beregningsgrunnlag: Beregningsgrunnlag): SatsBeregning {
