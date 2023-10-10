@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import no.nav.hjelpemidler.configuration.Environment
 import org.slf4j.LoggerFactory
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -43,6 +44,10 @@ class AdminService(
         fnrBarn: String,
         orgnr: String,
     ) = transaction(databaseContext) { ctx ->
+        // TODO: Fjern når testing er over
+        if (Environment.current.tier.isDev) {
+            return@transaction false
+        }
         ctx.adminStore.harAvvisningDeSiste7DageneFor(fnrBarn, orgnr)
     }
 
