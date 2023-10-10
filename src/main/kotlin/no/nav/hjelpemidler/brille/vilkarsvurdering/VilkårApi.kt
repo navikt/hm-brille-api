@@ -58,13 +58,18 @@ fun Route.vilkårApi(
                 adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, call.extractFnr(), vilkårsgrunnlag.orgnr, årsaker)
 
                 // Journalfør avvisningsbrev i joark
-                kafkaService.journalførAvvisning(
+                if (!adminService.harAvvisningDeSiste7DageneFor(
                     vilkårsgrunnlag.fnrBarn,
-                    vilkarsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
                     vilkårsgrunnlag.orgnr,
-                    vilkårsgrunnlag.extras.orgNavn,
-                    årsaker,
-                )
+                )) {
+                    kafkaService.journalførAvvisning(
+                        vilkårsgrunnlag.fnrBarn,
+                        vilkarsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
+                        vilkårsgrunnlag.orgnr,
+                        vilkårsgrunnlag.extras.orgNavn,
+                        årsaker,
+                    )
+                }
             }
 
             val beløp = minOf(sats.beløp(vilkårsgrunnlag.bestillingsdato).toBigDecimal(), vilkårsgrunnlag.brillepris)

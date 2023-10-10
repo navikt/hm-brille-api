@@ -16,7 +16,6 @@ import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
-import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
@@ -254,13 +253,18 @@ fun Route.integrasjonApi(
                     adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, req.ansvarligOptikersFnr, vilkårsgrunnlag.orgnr, årsaker)
 
                     // Journalfør avvisningsbrev i joark
-                    kafkaService.journalførAvvisning(
+                    if (!adminService.harAvvisningDeSiste7DageneFor(
                         vilkårsgrunnlag.fnrBarn,
-                        vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
                         vilkårsgrunnlag.orgnr,
-                        vilkårsgrunnlag.extras.orgNavn,
-                        årsaker,
-                    )
+                    )) {
+                        kafkaService.journalførAvvisning(
+                            vilkårsgrunnlag.fnrBarn,
+                            vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
+                            vilkårsgrunnlag.orgnr,
+                            vilkårsgrunnlag.extras.orgNavn,
+                            årsaker,
+                        )
+                    }
 
                     // Svar ut spørringen
                     call.respond(
