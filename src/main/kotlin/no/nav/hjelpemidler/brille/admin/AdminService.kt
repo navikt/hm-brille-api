@@ -39,6 +39,13 @@ class AdminService(
         }
     }
 
+    suspend fun harAvvisningDeSiste7DageneFor(
+        fnrBarn: String,
+        orgnr: String,
+    ) = transaction(databaseContext) { ctx ->
+        ctx.adminStore.harAvvisningDeSiste7DageneFor(fnrBarn, orgnr)
+    }
+
     suspend fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling> {
         return transaction(databaseContext) { ctx ->
             ctx.adminStore.hentUtbetalinger(utbetalingsRef)
