@@ -10,7 +10,6 @@ import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.Avtale
 import no.nav.hjelpemidler.brille.sats.AmblyopiSatsType
-import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorResultat
@@ -93,13 +92,16 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     }
 
     fun journalførAvvisning(fnrBarn: String, navnBarn: String, orgnr: String, orgNavn: String, årsaker: List<String>) {
-        produceEvent(null, JournalførAvvisning(
-            fnrBarn = fnrBarn,
-            navnBarn = navnBarn,
-            orgnr = orgnr,
-            orgNavn = orgNavn,
-            årsaker = årsaker,
-        ))
+        produceEvent(
+            null,
+            JournalførAvvisning(
+                fnrBarn = fnrBarn,
+                navnBarn = navnBarn,
+                orgnr = orgnr,
+                orgNavn = orgNavn,
+                årsaker = årsaker,
+            ),
+        )
     }
 
     fun vedtakFattet(krav: KravDto, vedtak: Vedtak<Vilkårsgrunnlag>) {
@@ -376,6 +378,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val amblyopistøtte: Boolean = false,
         val brillestøttesats: String = SatsType.INGEN.name,
         val amblyopistøttesats: String = AmblyopiSatsType.INGEN.name,
+        val opprettet: LocalDateTime = LocalDateTime.now(),
     )
 
     @JsonNaming(BigQueryStrategy::class)
