@@ -63,14 +63,13 @@ fun Route.integrasjonApi(
     kafkaService: KafkaService,
 ) {
     route("/integrasjon") {
-
         post("/sjekk-optiker") {
             data class Request(
-                val fnrInnsender: String
+                val fnrInnsender: String,
             )
 
             data class Response(
-                val erOptiker: Boolean
+                val erOptiker: Boolean,
             )
 
             val request = call.receive<Request>()
@@ -156,7 +155,7 @@ fun Route.integrasjonApi(
                         resultat = vilkarsvurdering.utfall,
                         sats = sats,
                         satsBeløp = sats.beløp(vilkårsgrunnlagInput.bestillingsdato).toBigDecimal(),
-                    )
+                    ),
                 )
             } catch (e: Exception) {
                 log.error(e) { "Feil i vilkårsvurdering" }
@@ -208,7 +207,7 @@ fun Route.integrasjonApi(
                 auditService.lagreOppslag(
                     fnrInnlogget = req.ansvarligOptikersFnr,
                     fnrOppslag = req.fnrBarn,
-                    oppslagBeskrivelse = "[POST] /krav - Innsending av krav"
+                    oppslagBeskrivelse = "[POST] /krav - Innsending av krav",
                 )
 
                 // Kjør vilkårsvurdering og opprett vedtak
@@ -250,13 +249,19 @@ fun Route.integrasjonApi(
                         .map { vilkar -> vilkar.begrunnelse }
 
                     // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
-                    adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, req.ansvarligOptikersFnr, vilkårsgrunnlag.orgnr, årsaker)
+                    adminService.lagreAvvisning(
+                        vilkårsgrunnlag.fnrBarn,
+                        req.ansvarligOptikersFnr,
+                        vilkårsgrunnlag.orgnr,
+                        årsaker,
+                    )
 
                     // Journalfør avvisningsbrev i joark
                     if (!adminService.harAvvisningDeSiste7DageneFor(
-                        vilkårsgrunnlag.fnrBarn,
-                        vilkårsgrunnlag.orgnr,
-                    )) {
+                            vilkårsgrunnlag.fnrBarn,
+                            vilkårsgrunnlag.orgnr,
+                        )
+                    ) {
                         kafkaService.journalførAvvisning(
                             vilkårsgrunnlag.fnrBarn,
                             vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
@@ -271,10 +276,9 @@ fun Route.integrasjonApi(
                         Response(
                             resultat = Resultat.NEI,
                             sats = SatsType.INGEN,
-                            satsBeløp = BigDecimal.ZERO
-                        )
+                            satsBeløp = BigDecimal.ZERO,
+                        ),
                     )
-
                 } else {
                     val vedtak = vedtakService.lagVedtak(
                         req.ansvarligOptikersFnr,
@@ -294,11 +298,9 @@ fun Route.integrasjonApi(
                             sats = vedtakDto.sats,
                             satsBeløp = vedtakDto.beløp,
                             navReferanse = vedtakDto.id,
-                        )
+                        ),
                     )
                 }
-
-
             } catch (e: Exception) {
                 log.error(e) { "Feil i krav oppretting" }
                 call.respond(HttpStatusCode.InternalServerError, "Feil i krav oppretting")
@@ -306,7 +308,6 @@ fun Route.integrasjonApi(
         }
 
         delete("/krav/{id}") {
-
             data class Request(
                 val fnrInnsender: String,
             )
@@ -325,14 +326,14 @@ fun Route.integrasjonApi(
             if (utbetaling != null) {
                 return@delete call.respond(
                     HttpStatusCode.Unauthorized,
-                    """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}"""
+                    """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}""",
                 )
             }
 
             auditService.lagreOppslag(
                 fnrInnlogget = req.fnrInnsender,
                 fnrOppslag = vedtak.fnrBarn,
-                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
+                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId",
             )
 
             try {
@@ -344,6 +345,5 @@ fun Route.integrasjonApi(
                 call.respond(HttpStatusCode.InternalServerError, e.message!!)
             }
         }
-
     }
 }
