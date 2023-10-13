@@ -204,6 +204,15 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
     }
 
+    fun kliniskDataOpprettet(orgnr: String) {
+        sendTilBigQuery(
+            orgnr,
+            KliniskDataStatistikk(
+                orgnr = orgnr,
+            ),
+        )
+    }
+
     fun <T> produceEvent(key: String?, event: T) {
         try {
             val message = mapper.writeValueAsString(event)
@@ -386,6 +395,13 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     internal data class SlettedeVedtakStatistikk(
         val vedtakId: Long,
         val slettetAvType: SlettetAvType,
+        val opprettet: LocalDateTime = LocalDateTime.now(),
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "klinisk_data_v1")
+    internal data class KliniskDataStatistikk(
+        val orgnr: String,
         val opprettet: LocalDateTime = LocalDateTime.now(),
     )
 

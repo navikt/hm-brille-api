@@ -83,6 +83,23 @@ fun Route.integrasjonApi(
             call.respond(response)
         }
 
+        post("/kliniske-data-statistikk") {
+            data class Request(
+                val organisasjonsnummer: String,
+            )
+
+            val request = call.receive<Request>()
+
+            kafkaService.kliniskDataOpprettet(
+                request.organisasjonsnummer,
+            )
+
+            call.respond(
+                HttpStatusCode.OK,
+                "{}",
+            )
+        }
+
         get("/virksomhet/{orgnr}") {
             val orgnr =
                 call.parameters["orgnr"] ?: error("Mangler orgnr i url")
