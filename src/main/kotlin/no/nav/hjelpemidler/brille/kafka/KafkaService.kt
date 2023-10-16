@@ -11,7 +11,10 @@ import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.AVTALETYPE
 import no.nav.hjelpemidler.brille.avtale.Avtale
 import no.nav.hjelpemidler.brille.avtale.AvtaleOld
+import no.nav.hjelpemidler.brille.sats.AmblyopiSatsType
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
+import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorResultat
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravDto
 import no.nav.hjelpemidler.brille.vedtak.KravKilde
@@ -44,8 +47,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             AvtaleStatistikk(
                 orgnr = avtale.orgnr,
                 navn = avtale.navn,
-                opprettet = requireNotNull(avtale.opprettet)
-            )
+                opprettet = requireNotNull(avtale.opprettet),
+            ),
         )
 
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
@@ -78,11 +81,10 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         // todo -> send til bq-sink
     }
 
-    suspend fun vilkårIkkeOppfylt(
+    fun vilkårIkkeOppfylt(
         vilkårsgrunnlag: VilkårsgrunnlagDto,
-        vilkårsvurdering: Vilkårsvurdering<Vilkårsgrunnlag>
+        vilkårsvurdering: Vilkårsvurdering<Vilkårsgrunnlag>,
     ) {
-
         try {
             sendTilBigQuery(
                 null,
@@ -95,13 +97,26 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                     medlemAvFolketrygdenOppfylt = vilkårsvurdering.harResultatJaForVilkår("MedlemAvFolketrygden"),
                     brillestyrkeOppfylt = vilkårsvurdering.harResultatJaForVilkår("Brillestyrke"),
                     bestillingsdatoOppfylt = vilkårsvurdering.harResultatJaForVilkår("Bestillingsdato"),
-                    bestillingsdatoTilbakeITidOppfylt = vilkårsvurdering.harResultatJaForVilkår("BestillingsdatoTilbakeITid"),
-                    opprettet = LocalDateTime.now()
-                )
+                    bestillingsdatoTilbakeITidOppfylt = vilkårsvurdering.harResultatJaForVilkår("Bestillingsdato"),
+                    opprettet = LocalDateTime.now(),
+                ),
             )
         } catch (e: Exception) {
             log.error(e) { "Feil under sending av statistikk til BigQuery" }
         }
+    }
+
+    fun journalførAvvisning(fnrBarn: String, navnBarn: String, orgnr: String, orgNavn: String, årsaker: List<String>) {
+        produceEvent(
+            null,
+            JournalførAvvisning(
+                fnrBarn = fnrBarn,
+                navnBarn = navnBarn,
+                orgnr = orgnr,
+                orgNavn = orgNavn,
+                årsaker = årsaker,
+            ),
+        )
     }
 
     fun vedtakFattet(krav: KravDto, vedtak: Vedtak<Vilkårsgrunnlag>) {
@@ -126,7 +141,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 satsBeskrivelse = vedtak.satsBeskrivelse,
                 beløp = vedtak.beløp,
                 kilde = vedtak.kilde,
-            )
+            ),
         )
         sendTilBigQuery(
             fnrBarn,
@@ -149,7 +164,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 beløp = vedtak.beløp,
                 bestillingsreferanse = vedtak.bestillingsreferanse,
                 kilde = vedtak.kilde,
-            )
+            ),
         )
     }
 
@@ -158,8 +173,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             fnrBarn,
             MedlemskapFolketrygdenStatistikk(
                 vedtakId = vedtakId,
-                bevist = true
-            )
+                bevist = true,
+            ),
         )
     }
 
@@ -168,8 +183,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             fnrBarn,
             MedlemskapFolketrygdenStatistikk(
                 vedtakId = vedtakId,
-                antatt = true
-            )
+                antatt = true,
+            ),
         )
     }
 
@@ -177,8 +192,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         sendTilBigQuery(
             fnrBarn,
             MedlemskapFolketrygdenStatistikk(
-                avvist = true
-            )
+                avvist = true,
+            ),
         )
     }
 
@@ -187,16 +202,40 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             null,
             SlettedeVedtakStatistikk(
                 vedtakId = vedtakId,
-                slettetAvType = slettetAvType
-            )
+                slettetAvType = slettetAvType,
+            ),
+        )
+    }
+
+    fun kalkulertBrillestøtte(kalkulatorResultat: KalkulatorResultat) {
+        sendTilBigQuery(
+            null,
+            KalkulatorResultatStatistikk(
+                brillestøtte = kalkulatorResultat.brillestøtte.sats != SatsType.INGEN,
+                amblyopistøtte = kalkulatorResultat.amblyopistøtte.sats != AmblyopiSatsType.INGEN,
+                brillestøttesats = kalkulatorResultat.brillestøtte.sats.name,
+                amblyopistøttesats = kalkulatorResultat.amblyopistøtte.sats.name,
+            ),
+        )
+    }
+
+    fun kliniskDataOpprettet(orgnr: String) {
+        sendTilBigQuery(
+            orgnr,
+            KliniskDataStatistikk(
+                orgnr = orgnr,
+            ),
         )
     }
 
     fun <T> produceEvent(key: String?, event: T) {
         try {
             val message = mapper.writeValueAsString(event)
-            if (key != null) kafkaRapid.publishWithTimeout(key, message, 10)
-            else kafkaRapid.publishWithTimeout(message, 10)
+            if (key != null) {
+                kafkaRapid.publishWithTimeout(key, message, 10)
+            } else {
+                kafkaRapid.publishWithTimeout(message, 10)
+            }
         } catch (e: Exception) {
             log.error("We got error while sending to kafka", e)
             throw KafkaException("Error while sending to kafka", e)
@@ -213,8 +252,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 "eventId" to UUID.randomUUID(),
                 "eventName" to bigQueryHendelse.eventName,
                 "schemaId" to bigQueryHendelse.schemaId,
-                "payload" to payload
-            )
+                "payload" to payload,
+            ),
         )
     }
 
@@ -226,8 +265,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 "eventName" to "hm-utbetaling-tss-optiker",
                 "orgnr" to orgnr,
                 "kontonr" to kontonr,
-                "opprettet" to LocalDateTime.now()
-            )
+                "opprettet" to LocalDateTime.now(),
+            ),
         )
     }
 
@@ -239,8 +278,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 "eventName" to "hm-barnebriller-feilregistrer-journalpost",
                 "sakId" to sakId.toString(),
                 "joarkRef" to joarkRef.toString(),
-                "opprettet" to LocalDateTime.now()
-            )
+                "opprettet" to LocalDateTime.now(),
+            ),
         )
     }
 
@@ -269,6 +308,17 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val kilde: KravKilde,
     )
 
+    internal data class JournalførAvvisning(
+        val eventName: String = "hm-brille-avvisning",
+        val eventId: UUID = UUID.randomUUID(),
+        val opprettet: LocalDateTime = LocalDateTime.now(),
+        val fnrBarn: String,
+        val navnBarn: String,
+        val orgnr: String,
+        val orgNavn: String,
+        val årsaker: List<String>,
+    )
+
     /**
      * Lager navn på nøkler i JSON som er kompatible med direkte insert i BigQuery
      * e.g. blir høyreSfære -> hoyre_sfere
@@ -286,7 +336,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     @JsonNaming(BigQueryStrategy::class)
     internal annotation class BigQueryHendelse(
         val eventName: String = "hm-bigquery-sink-hendelse",
-        val schemaId: String
+        val schemaId: String,
     )
 
     @JsonNaming(BigQueryStrategy::class)
@@ -294,7 +344,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     data class AvtaleStatistikk(
         val orgnr: String,
         val navn: String,
-        val opprettet: LocalDateTime
+        val opprettet: LocalDateTime,
     )
 
     @BigQueryHendelse(schemaId = "avtale_v2")
@@ -340,7 +390,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val brillestyrkeOppfylt: Boolean,
         val bestillingsdatoOppfylt: Boolean,
         val bestillingsdatoTilbakeITidOppfylt: Boolean,
-        val opprettet: LocalDateTime
+        val opprettet: LocalDateTime,
     )
 
     @JsonNaming(BigQueryStrategy::class)
@@ -350,7 +400,17 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val bevist: Boolean = false,
         val antatt: Boolean = false,
         val avvist: Boolean = false,
-        val opprettet: LocalDateTime = LocalDateTime.now()
+        val opprettet: LocalDateTime = LocalDateTime.now(),
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "kalkulatorresultat_v1")
+    internal data class KalkulatorResultatStatistikk(
+        val brillestøtte: Boolean = false,
+        val amblyopistøtte: Boolean = false,
+        val brillestøttesats: String = SatsType.INGEN.name,
+        val amblyopistøttesats: String = AmblyopiSatsType.INGEN.name,
+        val opprettet: LocalDateTime = LocalDateTime.now(),
     )
 
     @JsonNaming(BigQueryStrategy::class)
@@ -358,7 +418,14 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     internal data class SlettedeVedtakStatistikk(
         val vedtakId: Long,
         val slettetAvType: SlettetAvType,
-        val opprettet: LocalDateTime = LocalDateTime.now()
+        val opprettet: LocalDateTime = LocalDateTime.now(),
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "klinisk_data_v1")
+    internal data class KliniskDataStatistikk(
+        val orgnr: String,
+        val opprettet: LocalDateTime = LocalDateTime.now(),
     )
 
     class KafkaException(message: String, cause: Throwable?) : RuntimeException(message, cause)

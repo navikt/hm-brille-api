@@ -12,6 +12,7 @@ import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 
@@ -36,7 +37,6 @@ fun Route.vilkårApi(
                 vilkårsgrunnlag.fnrBarn,
                 vilkårsgrunnlag.brilleseddel,
                 vilkårsgrunnlag.bestillingsdato,
-                true,
             )
             val sats = when (vilkarsvurdering.utfall) {
                 Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
@@ -47,12 +47,29 @@ fun Route.vilkårApi(
                 sikkerLog.info {
                     "Vilkårsvurderingen ga negativt resultat:\n${vilkarsvurdering.toJson()}"
                 }
+
                 kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkarsvurdering)
-                // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
+
                 val årsaker = vilkarsvurdering.evaluering.barn
                     .filter { vilkar -> vilkar.resultat != Resultat.JA }
                     .map { vilkar -> vilkar.begrunnelse }
+
+                // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
                 adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, call.extractFnr(), vilkårsgrunnlag.orgnr, årsaker)
+
+                // Journalfør avvisningsbrev i joark
+                if (!adminService.harAvvisningDeSiste7DageneFor(
+                    vilkårsgrunnlag.fnrBarn,
+                    vilkårsgrunnlag.orgnr,
+                )) {
+                    kafkaService.journalførAvvisning(
+                        vilkårsgrunnlag.fnrBarn,
+                        vilkarsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
+                        vilkårsgrunnlag.orgnr,
+                        vilkårsgrunnlag.extras.orgNavn,
+                        årsaker,
+                    )
+                }
             }
 
             val beløp = minOf(sats.beløp(vilkårsgrunnlag.bestillingsdato).toBigDecimal(), vilkårsgrunnlag.brillepris)

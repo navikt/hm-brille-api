@@ -24,6 +24,7 @@ interface AdminStore : Store {
     fun hentVedtak(vedtakId: Long): Vedtak?
     fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>)
     fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?): Avvisning?
+    fun harAvvisningDeSiste7DageneFor(fnrBarn: String, orgnr: String): Boolean
     fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling>
 }
 
@@ -167,6 +168,28 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 opprettet = row.localDateTime("opprettet"),
             )
         }
+    }
+
+    override fun harAvvisningDeSiste7DageneFor(fnrBarn: String, orgnr: String) = session {
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT 1 FROM avviste_krav_v1
+            WHERE
+                fnrBarn = :fnrBarn AND
+                orgnr = :orgnr AND
+                opprettet > :innslagspunkt
+        """.trimIndent()
+
+        sessionFactory().query(
+            sql,
+            mapOf(
+                "fnrBarn" to fnrBarn,
+                "orgnr" to orgnr,
+                "innslagspunkt" to LocalDateTime.now().minusDays(7),
+            )
+        ) {
+            true
+        } ?: false
     }
 
     override fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling> = session {

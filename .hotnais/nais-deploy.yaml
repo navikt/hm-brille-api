@@ -60,6 +60,8 @@ spec:
       {{#each inbound-applications}}
         - application: {{ this }}
       {{/each}}
+        - application: azure-token-generator
+          namespace: aura
     outbound:
       rules:
       {{#each outbound-applications}}
@@ -67,13 +69,10 @@ spec:
       {{/each}}
          - application: syfohelsenettproxy
            namespace: teamsykmelding
-           cluster: {{ syfohelsenettproxy_cluster }}
          - application: medlemskap-oppslag
            namespace: medlemskap
-           cluster: {{ medlemskap_cluster }}
          - application: medlemskap-barn
            namespace: medlemskap
-           cluster: {{ medlemskap_cluster }}
          - application: brille-redis
       external:
       {{#each external-hosts}}

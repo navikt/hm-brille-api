@@ -12,6 +12,7 @@ object Diopter {
     const val MAX: Double = 99.99
 
     const val MIN_SFÆRE: Double = -12.0
+    const val MIN_SYLINDER: Double = -99.0
 
     private val format: NumberFormat = DecimalFormat("#0.00", DecimalFormatSymbols(Configuration.locale))
 
@@ -61,7 +62,8 @@ enum class SatsType(
         sfære = 0.0..0.0,
         sylinder = 0.0..0.0,
         beskrivelse = "INGEN",
-    );
+    ),
+    ;
 
     private val datoForNyeSatser = LocalDate.of(2023, Month.JULY, 1)
     fun beløp(bestillingsdato: LocalDate): Int = when (bestillingsdato.isBefore(datoForNyeSatser)) {

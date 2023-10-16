@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.tilgang
 
 import com.auth0.jwk.JwkProviderBuilder
+import com.auth0.jwt.exceptions.JWTDecodeException
 import com.auth0.jwt.interfaces.Verification
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.AuthenticationConfig
@@ -69,7 +70,7 @@ fun AuthenticationConfig.azureAdProvider(
             val roller = AzureAdRolle.fra(principal)
             val grupper = AzureAdGruppe.fra(principal)
             when {
-                AzureAdRolle.SYSTEMBRUKER_SAKSBEHANDLING in roller ->
+                AzureAdRolle.SYSTEMBRUKER_SAKSBEHANDLING in roller || AzureAdRolle.SYSTEMBRUKER_AZURE_TOKEN_GENERATOR in roller ->
                     InnloggetBruker.AzureAd.SystembrukerSaksbehandling(
                         objectId = objectId,
                     )
@@ -98,16 +99,42 @@ fun AuthenticationConfig.azureAdProvider(
     }
 }
 
-fun Verification.withAnyGroupClaim(vararg grupper: AzureAdGruppe) {
-    // fixme -> kan implementeres når ktor-server-auth-jwt bumper java-jwt til 4.*, da kan man lage egne verifikasjoner med predikater, foreløpig sjekker vi dette med egen kode
-    // withArrayClaim("groups", group.toString())
-}
+/**
+ * Verifiser at token inneholder et groups claim med minst en av verdiene i [grupper].
+ */
+fun Verification.withAnyGroupClaim(vararg grupper: AzureAdGruppe): Verification =
+    withAnyOfClaim("groups", grupper.map(AzureAdGruppe::objectId))
 
-fun Verification.withRoleClaim(rolle: AzureAdRolle) {
-    withArrayClaim("roles", rolle.toString())
-}
-
+/**
+ * Verifiser at token inneholder et roles claim som inneholder [rolle] og et tilhørende azp claim.
+ */
 fun Verification.withRoleAndClientIdClaim(rolle: AzureAdRolle) {
     withArrayClaim("roles", rolle.role)
     withClaim("azp", rolle.clientId.toString())
 }
+
+/**
+ * Verifiser at token inneholder et roles claim med minst en av verdiene i [roller] og et tilhørende azp claim.
+ */
+fun Verification.withAnyRoleAndClientIdClaim(vararg roller: AzureAdRolle) {
+    withAnyOfClaim("roles", roller.map(AzureAdRolle::role))
+    withClaim("azp") { claim, _ ->
+        try {
+            claim.`as`(UUID::class.java) in roller.map(AzureAdRolle::clientId)
+        } catch (e: JWTDecodeException) {
+            false
+        }
+    }
+}
+
+/**
+ * Verifiser at token inneholder et array claim med minst en av verdiene i [items].
+ */
+inline fun <reified T> Verification.withAnyOfClaim(name: String, items: Collection<T>): Verification =
+    withClaim(name) { claim, _ ->
+        try {
+            claim.asList(T::class.java)?.any { it in items } == true
+        } catch (e: JWTDecodeException) {
+            false
+        }
+    }

@@ -10,13 +10,14 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
+import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
-import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alder
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PdlClientException
 import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
@@ -58,16 +59,17 @@ fun Route.integrasjonApi(
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     utbetalingService: UtbetalingService,
     slettVedtakService: SlettVedtakService,
+    adminService: AdminService,
+    kafkaService: KafkaService,
 ) {
     route("/integrasjon") {
-
         post("/sjekk-optiker") {
             data class Request(
-                val fnrInnsender: String
+                val fnrInnsender: String,
             )
 
             data class Response(
-                val erOptiker: Boolean
+                val erOptiker: Boolean,
             )
 
             val request = call.receive<Request>()
@@ -79,6 +81,23 @@ fun Route.integrasjonApi(
 
             val response = Response(erOptiker = erOptiker)
             call.respond(response)
+        }
+
+        post("/kliniske-data-statistikk") {
+            data class Request(
+                val organisasjonsnummer: String,
+            )
+
+            val request = call.receive<Request>()
+
+            kafkaService.kliniskDataOpprettet(
+                request.organisasjonsnummer,
+            )
+
+            call.respond(
+                HttpStatusCode.OK,
+                "{}",
+            )
         }
 
         get("/virksomhet/{orgnr}") {
@@ -144,7 +163,6 @@ fun Route.integrasjonApi(
                         vilkårsgrunnlagInput.fnrBarn,
                         vilkårsgrunnlagInput.brilleseddel,
                         vilkårsgrunnlagInput.bestillingsdato,
-                        true,
                     )
                 }
 
@@ -154,7 +172,7 @@ fun Route.integrasjonApi(
                         resultat = vilkarsvurdering.utfall,
                         sats = sats,
                         satsBeløp = sats.beløp(vilkårsgrunnlagInput.bestillingsdato).toBigDecimal(),
-                    )
+                    ),
                 )
             } catch (e: Exception) {
                 log.error(e) { "Feil i vilkårsvurdering" }
@@ -206,7 +224,7 @@ fun Route.integrasjonApi(
                 auditService.lagreOppslag(
                     fnrInnlogget = req.ansvarligOptikersFnr,
                     fnrOppslag = req.fnrBarn,
-                    oppslagBeskrivelse = "[POST] /krav - Innsending av krav"
+                    oppslagBeskrivelse = "[POST] /krav - Innsending av krav",
                 )
 
                 // Kjør vilkårsvurdering og opprett vedtak
@@ -234,22 +252,50 @@ fun Route.integrasjonApi(
                     vilkårsgrunnlag.fnrBarn,
                     vilkårsgrunnlag.brilleseddel,
                     vilkårsgrunnlag.bestillingsdato,
-                    true,
                 )
 
                 if (vilkårsvurdering.utfall != Resultat.JA) {
                     sikkerLog.info {
                         "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                     }
+
+                    kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkårsvurdering)
+
+                    val årsaker = vilkårsvurdering.evaluering.barn
+                        .filter { vilkar -> vilkar.resultat != Resultat.JA }
+                        .map { vilkar -> vilkar.begrunnelse }
+
+                    // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
+                    adminService.lagreAvvisning(
+                        vilkårsgrunnlag.fnrBarn,
+                        req.ansvarligOptikersFnr,
+                        vilkårsgrunnlag.orgnr,
+                        årsaker,
+                    )
+
+                    // Journalfør avvisningsbrev i joark
+                    if (!adminService.harAvvisningDeSiste7DageneFor(
+                            vilkårsgrunnlag.fnrBarn,
+                            vilkårsgrunnlag.orgnr,
+                        )
+                    ) {
+                        kafkaService.journalførAvvisning(
+                            vilkårsgrunnlag.fnrBarn,
+                            vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
+                            vilkårsgrunnlag.orgnr,
+                            vilkårsgrunnlag.extras.orgNavn,
+                            årsaker,
+                        )
+                    }
+
                     // Svar ut spørringen
                     call.respond(
                         Response(
                             resultat = Resultat.NEI,
                             sats = SatsType.INGEN,
-                            satsBeløp = BigDecimal.ZERO
-                        )
+                            satsBeløp = BigDecimal.ZERO,
+                        ),
                     )
-
                 } else {
                     val vedtak = vedtakService.lagVedtak(
                         req.ansvarligOptikersFnr,
@@ -269,11 +315,9 @@ fun Route.integrasjonApi(
                             sats = vedtakDto.sats,
                             satsBeløp = vedtakDto.beløp,
                             navReferanse = vedtakDto.id,
-                        )
+                        ),
                     )
                 }
-
-
             } catch (e: Exception) {
                 log.error(e) { "Feil i krav oppretting" }
                 call.respond(HttpStatusCode.InternalServerError, "Feil i krav oppretting")
@@ -281,7 +325,6 @@ fun Route.integrasjonApi(
         }
 
         delete("/krav/{id}") {
-
             data class Request(
                 val fnrInnsender: String,
             )
@@ -300,14 +343,14 @@ fun Route.integrasjonApi(
             if (utbetaling != null) {
                 return@delete call.respond(
                     HttpStatusCode.Unauthorized,
-                    """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}"""
+                    """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}""",
                 )
             }
 
             auditService.lagreOppslag(
                 fnrInnlogget = req.fnrInnsender,
                 fnrOppslag = vedtak.fnrBarn,
-                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
+                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId",
             )
 
             try {
@@ -319,6 +362,5 @@ fun Route.integrasjonApi(
                 call.respond(HttpStatusCode.InternalServerError, e.message!!)
             }
         }
-
     }
 }

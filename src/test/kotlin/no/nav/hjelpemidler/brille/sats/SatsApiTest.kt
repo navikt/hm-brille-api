@@ -5,15 +5,31 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import io.mockk.every
+import io.mockk.mockk
+import no.nav.hjelpemidler.brille.kafka.KafkaService
+import no.nav.hjelpemidler.brille.sats.kalkulator.Beregningsgrunnlag
+import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorResultat
+import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorService
 import no.nav.hjelpemidler.brille.test.TestRouting
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvFileSource
 import java.time.LocalDate
 import java.time.Month
+import kotlin.math.abs
+import kotlin.test.BeforeTest
 
 internal class SatsApiTest {
+    private val kafkaService = mockk<KafkaService>()
+    private val kalkulatorService = KalkulatorService(kafkaService)
     private val routing = TestRouting {
-        satsApi()
+        satsApi(kalkulatorService)
+    }
+
+    @BeforeTest
+    internal fun setup() {
+        every { kafkaService.kalkulertBrillestøtte(any()) } returns Unit
     }
 
     @ParameterizedTest
@@ -32,8 +48,8 @@ internal class SatsApiTest {
                     høyreSylinder = høyreSylinder,
                     venstreSfære = venstreSfære,
                     venstreSylinder = venstreSylinder,
-                    bestillingsdato = LocalDate.of(2023, Month.JULY, 1)
-                )
+                    bestillingsdato = LocalDate.of(2023, Month.JULY, 1),
+                ),
             )
         }
 
@@ -62,5 +78,43 @@ internal class SatsApiTest {
             SatsType.SATS_5.beløp(dato) shouldBe 4975
             SatsType.INGEN.beløp(dato) shouldBe 0
         }
+    }
+
+    @Test
+    fun `differanse mellom to tall`() {
+        val tall1 = 5
+        val tall2 = -5
+        val differanse = abs(tall2 - tall1)
+        differanse shouldBe 10
+
+        val tall3 = 5
+        val tall4 = 10
+        val differanse2 = abs(tall4 - tall3)
+        differanse2 shouldBe 5
+    }
+
+    @Test
+    fun `Individuell sats grunnet ADD`() = routing.test {
+        val response = client.post("/kalkulator/beregningsgrunnlag") {
+            setBody(
+                Beregningsgrunnlag(
+                    Brilleseddel(
+                        høyreSfære = 0.0,
+                        høyreSylinder = 0.0,
+                        venstreSfære = 2.0,
+                        venstreSylinder = 2.0,
+                        venstreAdd = 1.25,
+                    ),
+                    alder = true,
+                    strabisme = true,
+                    bestillingsdato = LocalDate.of(2023, Month.JULY, 1),
+                ),
+            )
+        }
+
+        response.status shouldBe HttpStatusCode.OK
+
+        val satsBeregningAmblyopi = response.body<KalkulatorResultat>().amblyopistøtte
+        satsBeregningAmblyopi.sats shouldBe AmblyopiSatsType.INDIVIDUELT
     }
 }

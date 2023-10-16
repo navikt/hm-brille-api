@@ -8,11 +8,9 @@ import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import no.nav.hjelpemidler.configuration.EnvironmentVariable
 import java.time.Duration
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Locale
-import kotlin.time.Duration.Companion.seconds
 
 object Configuration {
     private val defaultProperties = ConfigurationMap(
@@ -79,7 +77,7 @@ object Configuration {
             "pdl.graphql-uri" to "https://pdl-api.dev-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://dev-fss.pdl.pdl-api/.default",
             "syfohelsenettproxy.rest-uri" to "http://hm-mocks",
-            "syfohelsenettproxy.scope" to "api://dev-fss.teamsykmelding.syfohelsenettproxy/.default",
+            "syfohelsenettproxy.scope" to "api://dev-gcp.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "http://medlemskap-barn.medlemskap.svc.cluster.local/",
             "medlemskap.oppslag.scope" to "api://dev-gcp.medlemskap.medlemskap-barn/.default",
             "enhetsregisteret_base_url" to "http://hm-mocks",
@@ -100,8 +98,8 @@ object Configuration {
             "pdfgen.rest-uri" to "http://hm-soknad-pdfgen.teamdigihot.svc.cluster.local",
             "pdl.graphql-uri" to "https://pdl-api.prod-fss-pub.nais.io/graphql",
             "pdl.apiScope" to "api://prod-fss.pdl.pdl-api/.default",
-            "syfohelsenettproxy.rest-uri" to "https://syfohelsenettproxy.prod-fss-pub.nais.io",
-            "syfohelsenettproxy.scope" to "api://prod-fss.teamsykmelding.syfohelsenettproxy/.default",
+            "syfohelsenettproxy.rest-uri" to "http://syfohelsenettproxy.teamsykmelding.svc.cluster.local",
+            "syfohelsenettproxy.scope" to "api://prod-gcp.teamsykmelding.syfohelsenettproxy/.default",
             "medlemskap.oppslag.rest-uri" to "http://medlemskap-barn.medlemskap.svc.cluster.local/",
             "medlemskap.oppslag.scope" to "api://prod-gcp.medlemskap.medlemskap-barn/.default",
             "enhetsregisteret_base_url" to "https://data.brreg.no",
@@ -262,4 +260,5 @@ object Configuration {
 
     val CLIENT_ID_SAKSBEHANDLING by EnvironmentVariable
     val CLIENT_ID_BRILLE_INTEGRASJON by EnvironmentVariable
+    val CLIENT_ID_AZURE_TOKEN_GENERATOR by EnvironmentVariable
 }

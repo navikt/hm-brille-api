@@ -127,7 +127,7 @@ internal class KravApiTest {
 
 
         coEvery {
-            hotsakClient.hentEksisterendeVedtaksDato(any(), any())
+            hotsakClient.hentEksisterendeVedtakDato(any(), any())
         } returns null
 
         every {

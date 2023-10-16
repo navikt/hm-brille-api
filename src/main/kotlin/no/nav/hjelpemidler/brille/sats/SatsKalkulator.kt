@@ -18,7 +18,7 @@ class SatsKalkulator(private val grunnlag: SatsGrunnlag) {
 fun beregnSats(grunnlag: SatsGrunnlag): SatsBeregning {
     val brilleseddel = grunnlag.brilleseddel
     val sfære = maxOf(abs(brilleseddel.høyreSfære), abs(brilleseddel.venstreSfære))
-    val sylinder = maxOf(brilleseddel.høyreSylinder, brilleseddel.venstreSylinder)
+    val sylinder = maxOf(abs(brilleseddel.høyreSylinder), abs(brilleseddel.venstreSylinder))
     val sats = when {
         sfære in SatsType.SATS_5.sfære || sylinder in SatsType.SATS_5.sylinder -> SatsType.SATS_5
         sfære in SatsType.SATS_4.sfære && sylinder in SatsType.SATS_4.sylinder -> SatsType.SATS_4
@@ -30,6 +30,26 @@ fun beregnSats(grunnlag: SatsGrunnlag): SatsBeregning {
     return SatsBeregning(
         sats = sats,
         satsBeskrivelse = sats.beskrivelse,
-        satsBeløp = sats.beløp(grunnlag.bestillingsdato)
+        satsBeløp = sats.beløp(grunnlag.bestillingsdato),
+    )
+}
+
+fun beregnAmblyopiSats(grunnlag: SatsGrunnlag): SatsBeregningAmblyopi {
+    val brilleseddel = grunnlag.brilleseddel
+    val sfære = maxOf(abs(brilleseddel.høyreSfære), abs(brilleseddel.venstreSfære))
+    val sylinderMin = minOf(brilleseddel.høyreSylinder, brilleseddel.venstreSylinder)
+    val add = maxOf(abs(brilleseddel.høyreAdd), abs(brilleseddel.venstreAdd))
+    val sats = when {
+        sfære in AmblyopiSatsType.INDIVIDUELT.sfære ||
+            sylinderMin in AmblyopiSatsType.INDIVIDUELT.sylinder ||
+            add in AmblyopiSatsType.INDIVIDUELT.add -> AmblyopiSatsType.INDIVIDUELT
+        sfære in AmblyopiSatsType.SATS_2.sfære -> AmblyopiSatsType.SATS_2
+        sfære in AmblyopiSatsType.SATS_1.sfære -> AmblyopiSatsType.SATS_1
+        else -> AmblyopiSatsType.INGEN
+    }
+    return SatsBeregningAmblyopi(
+        sats = sats,
+        satsBeskrivelse = sats.beskrivelse,
+        satsBeløp = sats.beløp,
     )
 }
