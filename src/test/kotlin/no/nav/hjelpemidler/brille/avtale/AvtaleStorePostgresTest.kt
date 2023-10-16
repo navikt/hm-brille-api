@@ -19,7 +19,7 @@ internal class AvtaleStorePostgresTest {
                     fnrInnsender = "27121346260",
                     navnInnsender = "",
                     aktiv = true,
-                    utvidetAvtale = false,
+                    bruksvilkår = false,
                 ),
             )
 
@@ -49,7 +49,7 @@ internal class AvtaleStorePostgresTest {
     }
 
     @Test
-    internal fun `lagrer og henter virksomhet med utvidet avtale`() = withMigratedDb {
+    internal fun `lagrer og henter virksomhet med godtatte bruksvilkår for API`() = withMigratedDb {
         with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
             val lagretVirksomhet = lagreVirksomhet(
                 Virksomhet(
@@ -59,7 +59,7 @@ internal class AvtaleStorePostgresTest {
                     fnrInnsender = "27121346260",
                     navnInnsender = "",
                     aktiv = true,
-                    utvidetAvtale = true,
+                    bruksvilkår = true,
                 ),
             )
 
@@ -74,34 +74,14 @@ internal class AvtaleStorePostgresTest {
                     ),
                 )
 
-                val utvidetAvtale = lagreAvtale(
-                    Avtale(
+                val bruksvilkår = godtaBruksvilkår(
+                    BruksvilkårGodtatt(
                         id = null,
                         orgnr = "986165760",
                         fnrInnsender = "27121346260",
                         aktiv = true,
-                        avtaleId = 2,
-                    ),
-                )
-
-                val bilag1 = lagreBilag(
-                    Bilag(
-                        id = null,
-                        orgnr = "986165760",
-                        fnrInnsender = "27121346260",
-                        avtaleId = utvidetAvtale.id!!,
-                        aktiv = true,
-                        bilagsdefinisjonId = 1,
-                    ),
-                )
-                val bilag2 = lagreBilag(
-                    Bilag(
-                        id = null,
-                        orgnr = "986165760",
-                        fnrInnsender = "27121346260",
-                        avtaleId = utvidetAvtale.id!!,
-                        aktiv = true,
-                        bilagsdefinisjonId = 2,
+                        epostKontaktperson = "test@test",
+                        bruksvilkårDefinisjonId = 1,
                     ),
                 )
             }
@@ -112,7 +92,7 @@ internal class AvtaleStorePostgresTest {
                     hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
                         .firstOrNull()
                 hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
-                hentetVirksomhetForOrganisasjon?.utvidetAvtale shouldBe true
+                hentetVirksomhetForOrganisasjon?.bruksvilkår shouldBe true
             } catch (e: Exception) {
                 System.out.println(e.message)
                 throw e

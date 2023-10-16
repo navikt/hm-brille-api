@@ -6,29 +6,24 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
-import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
 enum class AVTALETYPE(val avtaleId: Int) {
     OPPGJORSAVTALE(1),
-    UTVIDET_AVTALE(2),
     ;
 
     companion object {
-        fun fromInt(value: Int) = AVTALETYPE.values().first { it.avtaleId == value }
+        fun fromInt(value: Int) = entries.first { it.avtaleId == value }
     }
 }
 
-enum class BILAGSTYPE(val bilagsdefinisjonId: Int) {
-    BILAG_1_PERSONOPPLYSNINGER(1),
-    BILAG_2_TEKNISK(2),
-    BILAG_3_VARSLING_FEIL(3),
-    BILAG_4_ENDRINGSLOGG(4),
+enum class BRUKSVILKÅRTYPE(val bruksvilkårId: Int) {
+    BRUKSVILKÅR_API(1),
     ;
 
     companion object {
-        fun fromInt(value: Int) = AVTALETYPE.values().first { it.avtaleId == value }
+        fun fromInt(value: Int) = entries.first { it.bruksvilkårId == value }
     }
 }
 
@@ -36,7 +31,7 @@ private val log = KotlinLogging.logger {}
 
 interface AvtaleStore : Store {
     fun lagreAvtale(avtale: Avtale): Avtale
-    fun lagreBilag(bilag: Bilag): Bilag
+    fun godtaBruksvilkår(bruksvilkårGodtatt: BruksvilkårGodtatt): BruksvilkårGodtatt
 }
 
 data class Avtale(
@@ -49,13 +44,13 @@ data class Avtale(
     val oppdatert: LocalDateTime = opprettet,
 )
 
-data class Bilag(
+data class BruksvilkårGodtatt(
     val id: Int? = null,
     val orgnr: String,
     val fnrInnsender: String,
-    val avtaleId: Int,
-    val bilagsdefinisjonId: Int,
+    val epostKontaktperson: String,
     val aktiv: Boolean,
+    val bruksvilkårDefinisjonId: Int,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val oppdatert: LocalDateTime = opprettet,
 )
@@ -91,31 +86,33 @@ class AvtaleStorePostgres(private val sessionFactory: () -> Session) : AvtaleSto
         avtale.copy(id = id?.toInt())
     }
 
-    override fun lagreBilag(bilag: Bilag): Bilag = session {
+    override fun godtaBruksvilkår(bruksvilkårGodtatt: BruksvilkårGodtatt): BruksvilkårGodtatt = session {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO bilag_v1 (orgnr,
+            INSERT INTO bruksvilkar_v1 (    orgnr,
                                        fnr_innsender,
+                                       epost_kontaktperson,
                                        aktiv,
-                                       avtale_id,
-                                       bilagsdefinisjon_id,
+                                       bruksvilkardefinisjon_id,
                                        opprettet,
                                        oppdatert)
-            VALUES (:orgnr, :fnr_innsender, :aktiv, :avtale_id, :bilagsdefinisjon_id, :opprettet, :oppdatert)
+            VALUES (:orgnr, :fnr_innsender, :epost_kontaktperson, :aktiv, :bruksvilkardefinisjon_id, :opprettet, :oppdatert)
+            RETURNING id
         """.trimIndent()
-        val result = it.update(
+        val id = it.query(
             sql,
             mapOf(
-                "orgnr" to bilag.orgnr,
-                "fnr_innsender" to bilag.fnrInnsender,
-                "aktiv" to bilag.aktiv,
-                "avtale_id" to bilag.avtaleId,
-                "bilagsdefinisjon_id" to bilag.bilagsdefinisjonId,
-                "opprettet" to bilag.opprettet,
-                "oppdatert" to bilag.oppdatert,
+                "orgnr" to bruksvilkårGodtatt.orgnr,
+                "fnr_innsender" to bruksvilkårGodtatt.fnrInnsender,
+                "epost_kontaktperson" to bruksvilkårGodtatt.epostKontaktperson,
+                "aktiv" to bruksvilkårGodtatt.aktiv,
+                "bruksvilkardefinisjon_id" to bruksvilkårGodtatt.bruksvilkårDefinisjonId,
+                "opprettet" to bruksvilkårGodtatt.opprettet,
+                "oppdatert" to bruksvilkårGodtatt.oppdatert,
             ),
-        )
-        result.validate()
-        bilag.copy(id = result.generatedId?.toInt())
+        ) { row: Row ->
+            row.long("id")
+        }
+        bruksvilkårGodtatt.copy(id = id?.toInt())
     }
 }

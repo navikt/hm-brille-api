@@ -1,8 +1,6 @@
 package no.nav.hjelpemidler.brille.virksomhet
 
 import io.kotest.matchers.shouldBe
-import no.nav.hjelpemidler.brille.avtale.Avtale
-import no.nav.hjelpemidler.brille.avtale.AvtaleStorePostgres
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
 import kotlin.test.Test
@@ -20,7 +18,7 @@ internal class VirksomhetStorePostgresTest {
                     fnrInnsender = "27121346260",
                     navnInnsender = "",
                     aktiv = true,
-                    utvidetAvtale = false
+                    bruksvilkår = false
                 )
             )
             val hentetVirksomhetForOrganisasjon = hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)

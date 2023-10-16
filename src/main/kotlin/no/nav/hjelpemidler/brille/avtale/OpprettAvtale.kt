@@ -4,5 +4,4 @@ data class OpprettAvtale(
     val orgnr: String,
     val kontonr: String,
     val epost: String,
-    val utvidet: Boolean = false
 )

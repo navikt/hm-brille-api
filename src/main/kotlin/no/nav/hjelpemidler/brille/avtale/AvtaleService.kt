@@ -30,7 +30,7 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<AvtaleOld> {
+    suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<IngåttAvtale> {
         val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
 
         if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {
@@ -74,15 +74,15 @@ class AvtaleService(
 
         return avgivereFiltrert
             .map {
-                AvtaleOld(
+                IngåttAvtale(
                     orgnr = it.orgnr,
                     navn = it.navn,
                     aktiv = virksomheter[it.orgnr]?.aktiv ?: false,
                     kontonr = virksomheter[it.orgnr]?.kontonr,
                     epost = virksomheter[it.orgnr]?.epost,
                     avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
-                    utvidetAvtale = virksomheter[it.orgnr]?.utvidetAvtale,
-                    utvidetAvtaleOpprettet = virksomheter[it.orgnr]?.utvidetAvtaleOpprettet,
+                    bruksvilkår = virksomheter[it.orgnr]?.bruksvilkår,
+                    utvidetAvtaleOpprettet = virksomheter[it.orgnr]?.bruksvilkårGodtattDato,
                     opprettet = virksomheter[it.orgnr]?.opprettet,
                     oppdatert = virksomheter[it.orgnr]?.oppdatert,
                 )
@@ -93,11 +93,11 @@ class AvtaleService(
         fnr: String,
         orgnr: String,
         tjeneste: Avgiver.Tjeneste,
-    ): AvtaleOld? = hentAvtaler(fnr = fnr, tjeneste = tjeneste).associateBy {
+    ): IngåttAvtale? = hentAvtaler(fnr = fnr, tjeneste = tjeneste).associateBy {
         it.orgnr
     }[orgnr]
 
-    suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): AvtaleOld {
+    suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): IngåttAvtale {
         val orgnr = opprettAvtale.orgnr
 
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)) {
@@ -117,7 +117,6 @@ class AvtaleService(
                     navnInnsender = "", // todo -> slett
                     aktiv = true,
                     avtaleversjon = null,
-                    utvidetAvtale = opprettAvtale.utvidet,
                 ),
             )
             ctx.avtaleStore.lagreAvtale(
@@ -128,21 +127,11 @@ class AvtaleService(
                     avtaleId = AVTALETYPE.OPPGJORSAVTALE.avtaleId,
                 ),
             )
-            if (opprettAvtale.utvidet) {
-                ctx.avtaleStore.lagreAvtale(
-                    Avtale(
-                        orgnr = orgnr,
-                        fnrInnsender = fnrInnsender,
-                        aktiv = true,
-                        avtaleId = AVTALETYPE.UTVIDET_AVTALE.avtaleId,
-                    ),
-                )
-            }
             virksomhet
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
-        val avtale = AvtaleOld(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+        val avtale = IngåttAvtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
         // For å unngå at gammelt kontonr kan brukes innen nytt er ferdigregistrert i TSS så glemmer vi alle gamle
         // TSS-identer her. Disse vil settes igjen etter TSS har kvittert mottak av nytt kontonr. Se: TssIdentRiver.
@@ -159,81 +148,42 @@ class AvtaleService(
         return avtale
     }
 
-    suspend fun opprettUtvidetAvtale(
+    suspend fun godtaBruksvilkår(
         fnrInnsender: String,
-        opprettUtvidetAvtale: OpprettUtvidetAvtale,
-    ): AvtaleOpprettet {
-        val orgnr = opprettUtvidetAvtale.orgnr
-
+        orgnr: String,
+        epostKontaktPerson: String,
+    ): BruksvilkårGodtattDto {
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
 
-        log.info { "Oppretter utvidet avtale for orgnr: $orgnr" }
-        sikkerLog.info { "fnrInnsender: $fnrInnsender, opprettUtvidetAvtale: $opprettUtvidetAvtale" }
+        log.info { "Registrerer at bruksvilkår for api er godtatt for orgnr: $orgnr" }
+        sikkerLog.info { "fnrInnsender: $fnrInnsender, bruksvilkår for api godtatt for orgnr: $orgnr" }
 
-        val utvidetAvtale = transaction(databaseContext) { ctx ->
-            val avtale = ctx.avtaleStore.lagreAvtale(
-                Avtale(
+        val bruksvilkårGodtatt = transaction(databaseContext) { ctx ->
+            val bruksvilkårGodtatt = ctx.avtaleStore.godtaBruksvilkår(
+                BruksvilkårGodtatt(
                     orgnr = orgnr,
                     fnrInnsender = fnrInnsender,
                     aktiv = true,
-                    avtaleId = AVTALETYPE.UTVIDET_AVTALE.avtaleId,
+                    epostKontaktperson = epostKontaktPerson,
+                    bruksvilkårDefinisjonId = BRUKSVILKÅRTYPE.BRUKSVILKÅR_API.bruksvilkårId,
                 ),
             )
-
-            ctx.avtaleStore.lagreBilag(
-                Bilag(
-                    orgnr = orgnr,
-                    fnrInnsender = fnrInnsender,
-                    aktiv = true,
-                    avtaleId = avtale.id!!,
-                    bilagsdefinisjonId = BILAGSTYPE.BILAG_1_PERSONOPPLYSNINGER.bilagsdefinisjonId,
-                ),
-            )
-            ctx.avtaleStore.lagreBilag(
-                Bilag(
-                    orgnr = orgnr,
-                    fnrInnsender = fnrInnsender,
-                    aktiv = true,
-                    avtaleId = avtale.id,
-                    bilagsdefinisjonId = BILAGSTYPE.BILAG_2_TEKNISK.bilagsdefinisjonId,
-                ),
-            )
-
-            ctx.avtaleStore.lagreBilag(
-                Bilag(
-                    orgnr = orgnr,
-                    fnrInnsender = fnrInnsender,
-                    aktiv = true,
-                    avtaleId = avtale.id,
-                    bilagsdefinisjonId = BILAGSTYPE.BILAG_3_VARSLING_FEIL.bilagsdefinisjonId,
-                ),
-            )
-
-            ctx.avtaleStore.lagreBilag(
-                Bilag(
-                    orgnr = orgnr,
-                    fnrInnsender = fnrInnsender,
-                    aktiv = true,
-                    avtaleId = avtale.id,
-                    bilagsdefinisjonId = BILAGSTYPE.BILAG_4_ENDRINGSLOGG.bilagsdefinisjonId,
-                ),
-            )
-            avtale
+            bruksvilkårGodtatt
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
-        kafkaService.utvidetAvtaleOpprettet(utvidetAvtale, organisasjonsenhet.navn)
+        kafkaService.bruksvilkårGodtatt(bruksvilkårGodtatt, organisasjonsenhet.navn)
 
         if (Configuration.dev || Configuration.prod) {
-            Slack.post("AvtaleService: Ny utvidet avtale opprettet for orgnr=$orgnr.")
+            Slack.post("AvtaleService: Bruksvilkår godtatt for orgnr=$orgnr.")
         }
 
-        return AvtaleOpprettet.fromAvtale(utvidetAvtale)
+        return BruksvilkårGodtattDto.fromBruksvilkårGodtatt(bruksvilkårGodtatt)
     }
 
-    suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): AvtaleOld {
+    suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): IngåttAvtale {
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrOppdatertAv, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
@@ -261,7 +211,7 @@ class AvtaleService(
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
-        val avtale = AvtaleOld(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+        val avtale = IngåttAvtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
         // For å unngå at gammelt kontonr kan brukes innen nytt er ferdigregistrert i TSS så glemmer vi alle gamle
         // TSS-identer her. Disse vil settes igjen etter TSS har kvittert mottak av nytt kontonr. Se: TssIdentRiver.

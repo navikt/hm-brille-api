@@ -29,8 +29,8 @@ data class Virksomhet(
     val fnrOppdatertAv: String? = null,
     val navnInnsender: String, // todo -> slett
     val aktiv: Boolean,
-    val utvidetAvtale: Boolean,
-    val utvidetAvtaleOpprettet: LocalDateTime? = null,
+    val bruksvilkår: Boolean = false,
+    val bruksvilkårGodtattDato: LocalDateTime? = null,
     val avtaleversjon: String? = null,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val oppdatert: LocalDateTime = opprettet,
@@ -44,7 +44,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
         val sql = """
             SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, a.opprettet as utvidet_opprettet, v.avtaleversjon, v.opprettet, v.oppdatert
             FROM virksomhet_v1 v
-            LEFT JOIN avtale_v1 a ON a.orgnr = v.orgnr AND a.avtale_id = 2
+            LEFT JOIN bruksvilkar_v1 a ON a.orgnr = v.orgnr AND a.bruksvilkardefinisjon_id = 1
             WHERE v.orgnr = :orgnr
         """.trimIndent()
         it.query(sql, mapOf("orgnr" to orgnr), ::mapper)
@@ -58,7 +58,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
             var sql = """
             SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, a.opprettet as utvidet_opprettet, v.avtaleversjon, v.opprettet, v.oppdatert
             FROM virksomhet_v1 v
-            LEFT JOIN avtale_v1 a ON a.orgnr = v.orgnr AND a.avtale_id = 2
+            LEFT JOIN bruksvilkar_v1 a ON a.orgnr = v.orgnr AND a.bruksvilkardefinisjon_id = 1
             WHERE v.orgnr in (?)
             """.trimIndent()
             sql = sql.replace("(?)", "(" + (0 until orgnr.count()).joinToString { "?" } + ")")
@@ -137,8 +137,8 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
         fnrOppdatertAv = row.stringOrNull("fnr_oppdatert_av"),
         navnInnsender = row.string("navn_innsender"),
         aktiv = row.boolean("hovedavtale_aktiv"),
-        utvidetAvtale = row.boolean("utvidet_aktiv"),
-        utvidetAvtaleOpprettet = row.localDateTimeOrNull("utvidet_opprettet"),
+        bruksvilkår = row.boolean("utvidet_aktiv"),
+        bruksvilkårGodtattDato = row.localDateTimeOrNull("utvidet_opprettet"),
         avtaleversjon = row.stringOrNull("avtaleversjon"),
         opprettet = row.localDateTime("opprettet"),
         oppdatert = row.localDateTime("oppdatert"),

@@ -50,7 +50,7 @@ internal class AvtaleApiTest {
         fnrInnsender = fnrInnsender,
         navnInnsender = "Dag Ledersen",
         aktiv = true,
-        utvidetAvtale = false
+        bruksvilkår = false
     )
     private val opprettAvtale = OpprettAvtale(
         orgnr = avgiver.orgnr,
