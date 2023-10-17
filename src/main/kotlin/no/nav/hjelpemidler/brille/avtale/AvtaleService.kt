@@ -181,7 +181,7 @@ class AvtaleService(
             Slack.post("AvtaleService: Bruksvilkår godtatt for orgnr=$orgnr.")
         }
 
-        return BruksvilkårGodtattDto.fromBruksvilkårGodtatt(bruksvilkårGodtatt)
+        return BruksvilkårGodtattDto.fromBruksvilkårGodtatt(bruksvilkårGodtatt, organisasjonsenhet.navn)
     }
 
     suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): IngåttAvtale {
