@@ -18,13 +18,13 @@ import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import no.nav.hjelpemidler.nare.evaluering.Resultat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 

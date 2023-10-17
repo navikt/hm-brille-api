@@ -8,7 +8,6 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
-import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravKilde
@@ -18,6 +17,7 @@ import no.nav.hjelpemidler.brille.vedtak.toDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
+import no.nav.hjelpemidler.nare.evaluering.Evalueringer
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import java.time.LocalDate

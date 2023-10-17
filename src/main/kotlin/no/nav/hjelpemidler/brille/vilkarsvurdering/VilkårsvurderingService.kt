@@ -5,11 +5,11 @@ import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
-import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.GcpEnvironment
+import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}

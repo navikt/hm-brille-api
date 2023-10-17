@@ -18,7 +18,6 @@ import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
-import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
 import no.nav.hjelpemidler.brille.redis.RedisClient
@@ -31,6 +30,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
+import no.nav.hjelpemidler.nare.evaluering.Evalueringer
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate

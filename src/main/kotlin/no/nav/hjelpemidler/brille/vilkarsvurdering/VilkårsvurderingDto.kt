@@ -1,7 +1,7 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.nare.evaluering.Resultat
 import java.math.BigDecimal
 
 data class VilkårsvurderingDto(
@@ -11,5 +11,4 @@ data class VilkårsvurderingDto(
     val satsBeløp: Int,
     val beløp: BigDecimal,
     val kravFraFørFraInnsender: String?,
-
 )

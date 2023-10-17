@@ -31,6 +31,9 @@ dependencies {
     // HTTP
     implementation("no.nav.hjelpemidler:hm-http:0.1.4")
 
+    // NARE
+    implementation("no.nav.hjelpemidler:hm-nare:0.1.4")
+
     // Unleash
     implementation("io.getunleash:unleash-client-java:8.3.1")
 
@@ -90,6 +93,7 @@ spotless {
         ktlint().editorConfigOverride(
             mapOf(
                 "ktlint_standard_enum-entry-name-case" to "disabled",
+                "ktlint_standard_filename" to "disabled",
             ),
         )
         targetExclude("build/generated/source/**")

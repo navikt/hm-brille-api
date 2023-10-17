@@ -1,7 +1,7 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
-import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
+import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
@@ -14,8 +14,8 @@ object Vilkårene {
     val HarIkkeVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Ikke fått støtte til barnebriller tidligere i bestillingsåret",
         identifikator = "HarIkkeVedtakIKalenderåret",
-        lovReferanse = "§ 3",
-        lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        lovreferanse = "§ 3",
+        lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
         val bestillingsdato = grunnlag.bestillingsdato
         val eksisterendeVedtakDato = grunnlag.vedtakBarn
@@ -50,8 +50,8 @@ object Vilkårene {
     val Under18ÅrPåBestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Barnet må være under 18 år på bestillingsdato",
         identifikator = "Under18ÅrPåBestillingsdato",
-        lovReferanse = "§ 2",
-        lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        lovreferanse = "§ 2",
+        lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
         val barnetsAlder = grunnlag.barnetsAlderPåBestillingsdato
         val barnetsFødselsdato = grunnlag.barnetsFødselsdato
@@ -87,8 +87,8 @@ object Vilkårene {
     val MedlemAvFolketrygden = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Medlem av folketrygden",
         identifikator = "MedlemAvFolketrygden",
-        lovReferanse = "ftrl. § 10-7 a",
-        lovdataLenke = "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a",
+        lovreferanse = "ftrl. § 10-7 a",
+        lovdataUrl = "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a",
     ) { grunnlag ->
         val medlemskapResultat = grunnlag.medlemskapResultat
         val bestillingsdato = grunnlag.bestillingsdato
@@ -123,8 +123,8 @@ object Vilkårene {
     val Brillestyrke = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Brillestyrken er innenfor fastsatte styrker",
         identifikator = "Brillestyrke",
-        lovReferanse = "§ 2",
-        lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        lovreferanse = "§ 2",
+        lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
         val brillestyrkeGrunnlag = mapOf<String, String>(
             "venstreSfære" to grunnlag.brilleseddel.venstreSfære.toString(),
@@ -164,8 +164,8 @@ object Vilkårene {
     val Bestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
         beskrivelse = "Bestillingsdato innenfor gyldig periode",
         identifikator = "Bestillingsdato",
-        lovReferanse = "§ 6",
-        lovdataLenke = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        lovreferanse = "§ 6",
+        lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
         val bestillingsdato = grunnlag.bestillingsdato
         val seksMånederSiden = grunnlag.seksMånederSiden
