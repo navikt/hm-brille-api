@@ -36,11 +36,9 @@ class VilkårsvurderingService(
         bestillingsdato: LocalDate,
         eksisterendeVedtakDatoHotsak: LocalDate?,
     ): Vilkårsvurdering<Vilkårsgrunnlag> {
-        val vedtakBarn =
-            transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(fnrBarn) }
+        val vedtakBarn = transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(fnrBarn) }
         val pdlOppslagBarn = pdlClient.hentPerson(fnrBarn)
-        val medlemskapResultat =
-            medlemskapBarn.sjekkMedlemskapBarn(fnrBarn, bestillingsdato)
+        val medlemskapResultat = medlemskapBarn.sjekkMedlemskapBarn(fnrBarn, bestillingsdato)
         val vilkårsgrunnlag = Vilkårsgrunnlag(
             vedtakBarn = vedtakBarn,
             eksisterendeVedtakDatoHotsak = eksisterendeVedtakDatoHotsak,
@@ -56,6 +54,7 @@ class VilkårsvurderingService(
         if (Environment.current == GcpEnvironment.DEV) {
             log.info { "Resultat av vilkårsvurdering: ${vilkårsvurdering.toJson()}" }
         }
+
         return vilkårsvurdering
     }
 

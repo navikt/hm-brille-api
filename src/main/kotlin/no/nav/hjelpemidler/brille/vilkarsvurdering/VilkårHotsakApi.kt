@@ -10,10 +10,12 @@ import io.ktor.server.routing.post
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger { }
@@ -27,29 +29,33 @@ fun Route.vilkårHotsakApi(
     }
     post("/ad/vilkarsgrunnlag") {
         try {
-            val vilkårsgrunnlagInput = call.receive<VilkårsgrunnlagAdDto>()
-            val vilkarsvurdering = withTilgangContext(call) {
+            val vilkårsgrunnlag = call.receive<VilkårsgrunnlagAdDto>()
+            val brilleseddel = vilkårsgrunnlag.brilleseddel ?: Brilleseddel.INGEN
+            val bestillingsdato = vilkårsgrunnlag.bestillingsdato ?: MANGLENDE_DATO
+            val brillepris = vilkårsgrunnlag.brillepris ?: BigDecimal.ZERO
+
+            val vilkårsvurdering = withTilgangContext(call) {
                 vilkårsvurderingService.vurderVilkår(
-                    vilkårsgrunnlagInput.fnrBarn,
-                    vilkårsgrunnlagInput.brilleseddel,
-                    vilkårsgrunnlagInput.bestillingsdato,
-                    vilkårsgrunnlagInput.eksisterendeBestillingsdato,
+                    vilkårsgrunnlag.fnrBarn,
+                    brilleseddel,
+                    bestillingsdato,
+                    vilkårsgrunnlag.eksisterendeBestillingsdato,
                 )
             }
-            val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
 
-            val beløp =
-                minOf(sats.beløp(vilkårsgrunnlagInput.bestillingsdato).toBigDecimal(), vilkårsgrunnlagInput.brillepris)
+            val sats = SatsKalkulator(brilleseddel).kalkuler()
+
+            val beløp = minOf(sats.beløp(bestillingsdato).toBigDecimal(), brillepris)
 
             call.respond(
                 VilkårsvurderingHotsakDto(
-                    resultat = vilkarsvurdering.utfall,
+                    resultat = vilkårsvurdering.utfall,
                     sats = sats,
                     satsBeskrivelse = sats.beskrivelse,
-                    satsBeløp = sats.beløp(vilkårsgrunnlagInput.bestillingsdato),
+                    satsBeløp = sats.beløp(bestillingsdato),
                     beløp = beløp,
-                    vilkårsgrunnlag = jsonMapper.valueToTree(vilkarsvurdering),
-                    evaluering = vilkarsvurdering.evaluering,
+                    vilkårsgrunnlag = jsonMapper.valueToTree(vilkårsvurdering),
+                    evaluering = vilkårsvurdering.evaluering,
                 ),
             )
         } catch (e: Exception) {

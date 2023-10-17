@@ -109,7 +109,7 @@ internal class VilkårApiTest {
     )
 
     @Test
-    internal fun `brillestyrke under minstgrense`() = kjørTest(
+    internal fun `brillestyrke under minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(),
         forventetResultat = Resultat.NEI,
     )

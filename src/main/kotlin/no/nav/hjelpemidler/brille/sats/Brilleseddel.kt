@@ -35,4 +35,15 @@ data class Brilleseddel(
             )
         }
     }
+
+    fun mangler(): Boolean = this === INGEN
+
+    companion object {
+        val INGEN: Brilleseddel = Brilleseddel(
+            høyreSfære = 0.0,
+            høyreSylinder = 0.0,
+            venstreSfære = 0.0,
+            venstreSylinder = 0.0,
+        )
+    }
 }

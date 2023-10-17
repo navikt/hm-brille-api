@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
+import no.nav.hjelpemidler.nare.evaluering.Årsak
 import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
 import java.time.Month
@@ -24,6 +25,11 @@ object Vilkårene {
         val eksisterendeVedtakDatoHotsak = grunnlag.eksisterendeVedtakDatoHotsak
 
         when {
+            bestillingsdato.mangler() -> nei(
+                "Bestillingsdato mangler, kan ikke vurdere om barnet allerede har vedtak om brille i kalenderåret",
+                Årsak.DOKUMENTASJON_MANGLER,
+            )
+
             eksisterendeVedtakDato != null -> nei(
                 "Barnet har allerede vedtak om brille i kalenderåret",
                 mapOf(
@@ -53,32 +59,47 @@ object Vilkårene {
         lovreferanse = "§ 2",
         lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
-        val barnetsAlder = grunnlag.barnetsAlderPåBestillingsdato
         val barnetsFødselsdato = grunnlag.barnetsFødselsdato
+        val barnetsAlderPåBestillingsdato = grunnlag.barnetsAlderPåBestillingsdato
+        val barnetsAlderIDag = grunnlag.barnetsAlderIDag
         val bestillingsdato = grunnlag.bestillingsdato
+        val dagensDato = grunnlag.dagensDato
 
         when {
-            barnetsAlder == null -> nei(
+            barnetsFødselsdato == null -> nei(
                 "Barnets fødselsdato er ukjent",
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
-                    "barnetsAlder" to "ukjent",
+                    "barnetsAlder" to "Ukjent",
                 ),
             )
 
-            barnetsAlder < 18 -> ja(
+            barnetsAlderPåBestillingsdato.erUnder18() -> ja(
                 "Barnet var under 18 år på bestillingsdato",
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
-                    "barnetsAlder" to "${barnetsFødselsdato?.formatert()} ($barnetsAlder år)",
+                    "barnetsAlder" to "${barnetsFødselsdato.formatert()} ($barnetsAlderPåBestillingsdato år)",
                 ),
+            )
+
+            barnetsAlderIDag.erUnder18() -> ja(
+                "Barnet er under 18 år",
+                mapOf(
+                    "dagensDato" to dagensDato.formatert(),
+                    "barnetsAlder" to "${barnetsFødselsdato.formatert()} ($barnetsAlderIDag år)",
+                ),
+            )
+
+            bestillingsdato.mangler() -> nei(
+                "Bestillingsdato mangler, kan ikke vurdere om barnet var under 18 år på bestillingsdato",
+                Årsak.DOKUMENTASJON_MANGLER,
             )
 
             else -> nei(
                 "Barnet var 18 år eller eldre på bestillingsdato",
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
-                    "barnetsAlder" to "${barnetsFødselsdato?.formatert()} ($barnetsAlder år)",
+                    "barnetsAlder" to "${barnetsFødselsdato.formatert()} ($barnetsAlderPåBestillingsdato år)",
                 ),
             )
         }
@@ -90,9 +111,15 @@ object Vilkårene {
         lovreferanse = "ftrl. § 10-7 a",
         lovdataUrl = "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a",
     ) { grunnlag ->
-        val medlemskapResultat = grunnlag.medlemskapResultat
         val bestillingsdato = grunnlag.bestillingsdato
+        if (bestillingsdato.mangler()) {
+            return@Spesifikasjon nei(
+                "Bestillingsdato mangler, kan ikke vurdere om barnet er medlem i folketrygden",
+                Årsak.DOKUMENTASJON_MANGLER,
+            )
+        }
 
+        val medlemskapResultat = grunnlag.medlemskapResultat
         when (medlemskapResultat.resultat) {
             MedlemskapResultatResultat.JA -> ja(
                 "Barnet er medlem i folketrygden",
@@ -126,15 +153,22 @@ object Vilkårene {
         lovreferanse = "§ 2",
         lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
-        val brillestyrkeGrunnlag = mapOf<String, String>(
-            "venstreSfære" to grunnlag.brilleseddel.venstreSfære.toString(),
-            "venstreSylinder" to grunnlag.brilleseddel.venstreSylinder.toString(),
-            "høyreSfære" to grunnlag.brilleseddel.høyreSfære.toString(),
-            "høyreSylinder" to grunnlag.brilleseddel.høyreSylinder.toString(),
-        )
         val brilleseddel = grunnlag.brilleseddel
+        if (brilleseddel.mangler()) {
+            return@Spesifikasjon nei(
+                "Brilleseddel mangler, kan ikke vurdere om brillestyrken er innenfor fastsatte styrker",
+                Årsak.DOKUMENTASJON_MANGLER,
+            )
+        }
+
         val minsteSfære = grunnlag.minsteSfære
         val minsteSylinder = grunnlag.minsteSylinder
+        val brillestyrkeGrunnlag = mapOf(
+            "venstreSfære" to brilleseddel.venstreSfære.toString(),
+            "venstreSylinder" to brilleseddel.venstreSylinder.toString(),
+            "høyreSfære" to brilleseddel.høyreSfære.toString(),
+            "høyreSylinder" to brilleseddel.høyreSylinder.toString(),
+        )
 
         when {
             brilleseddel.høyreSfære >= minsteSfære -> ja(
@@ -172,6 +206,11 @@ object Vilkårene {
         val dagensDato = grunnlag.dagensDato
 
         when {
+            bestillingsdato.mangler() -> nei(
+                "Bestillingsdato mangler, kan ikke vurdere om den er innenfor gyldig periode",
+                Årsak.DOKUMENTASJON_MANGLER,
+            )
+
             bestillingsdato.isAfter(dagensDato) -> nei(
                 "Bestillingsdato kan ikke være i fremtiden (etter ${dagensDato.formatert()})",
                 mapOf(

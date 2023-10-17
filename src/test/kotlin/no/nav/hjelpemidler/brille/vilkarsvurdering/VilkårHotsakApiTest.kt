@@ -1,6 +1,8 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -24,9 +26,12 @@ import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
+import no.nav.hjelpemidler.nare.evaluering.Evaluering
 import no.nav.hjelpemidler.nare.evaluering.Resultat
-import org.junit.jupiter.api.Test
+import no.nav.hjelpemidler.nare.evaluering.Årsak
+import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
+import kotlin.test.Test
 
 internal class VilkårHotsakApiTest {
     private val pdlClient = mockk<PdlClient>()
@@ -114,7 +119,7 @@ internal class VilkårHotsakApiTest {
     )
 
     @Test
-    internal fun `brillestyrke under minstgrense`() = kjørTest(
+    internal fun `brillestyrke under minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(),
         forventetResultat = Resultat.NEI,
     )
@@ -156,6 +161,36 @@ internal class VilkårHotsakApiTest {
         forventetResultat = Resultat.NEI,
     )
 
+    @Test
+    fun `bestillingsdato mangler`() = kjørTest(
+        vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = null),
+        forventetResultat = Resultat.NEI,
+    ) {
+        evaluering.verifiser(Vilkårene.HarIkkeVedtakIKalenderåret) {
+            resultat shouldBe Resultat.NEI
+            årsak shouldBe Årsak.DOKUMENTASJON_MANGLER
+        }
+        evaluering.verifiser(Vilkårene.MedlemAvFolketrygden) {
+            resultat shouldBe Resultat.NEI
+            årsak shouldBe Årsak.DOKUMENTASJON_MANGLER
+        }
+        evaluering.verifiser(Vilkårene.Bestillingsdato) {
+            resultat shouldBe Resultat.NEI
+            årsak shouldBe Årsak.DOKUMENTASJON_MANGLER
+        }
+    }
+
+    @Test
+    fun `brilleseddel mangler`() = kjørTest(
+        vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(brilleseddel = null),
+        forventetResultat = Resultat.NEI,
+    ) {
+        evaluering.verifiser(Vilkårene.Brillestyrke) {
+            resultat shouldBe Resultat.NEI
+            årsak shouldBe Årsak.DOKUMENTASJON_MANGLER
+        }
+    }
+
     private fun kjørTest(
         vilkårsgrunnlag: VilkårsgrunnlagAdDto = defaultVilkårsgrunnlag,
         vedtakForBruker: List<EksisterendeVedtak> = emptyList(),
@@ -166,6 +201,7 @@ internal class VilkårHotsakApiTest {
         ),
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
         forventetResultat: Resultat,
+        assertions: VilkårsvurderingHotsakDto.(VilkårsvurderingHotsakDto) -> Unit = {},
     ) {
         every {
             dagensDatoFactory()
@@ -184,7 +220,10 @@ internal class VilkårHotsakApiTest {
         } returns lagMockPdlOppslag(fødselsdato)
 
         coEvery {
-            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBarn, vilkårsgrunnlag.bestillingsdato)
+            medlemskapBarn.sjekkMedlemskapBarn(
+                vilkårsgrunnlag.fnrBarn,
+                vilkårsgrunnlag.bestillingsdato ?: MANGLENDE_DATO,
+            )
         } returns medlemskapResultat
 
         routing.test {
@@ -197,6 +236,8 @@ internal class VilkårHotsakApiTest {
             vilkårsvurdering.resultat shouldBe forventetResultat
 
             vilkårsvurdering.satsBeløp.shouldNotBeNull()
+
+            assertSoftly(vilkårsvurdering, assertions)
         }
     }
 
@@ -238,3 +279,12 @@ internal class VilkårHotsakApiTest {
         brillepris = "1500".toBigDecimal(),
     )
 }
+
+private fun Evaluering.toList(): List<Evaluering> =
+    when {
+        barn.isEmpty() -> listOf(this)
+        else -> barn.flatMap(Evaluering::toList)
+    }
+
+private fun <T> Evaluering.verifiser(spesifikasjon: Spesifikasjon<T>, matcher: Evaluering.() -> Unit) =
+    toList().single { it.identifikator == spesifikasjon.identifikator }.should(matcher)
