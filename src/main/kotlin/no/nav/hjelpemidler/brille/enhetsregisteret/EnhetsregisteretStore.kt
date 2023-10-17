@@ -37,7 +37,7 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
             results.putAll(
                 it.queryList(sql, emptyMap()) { row ->
                     row.json<Organisasjonsenhet>("data")
-                }.groupBy { it.orgnr }.mapValues { it.value.first() }
+                }.groupBy { it.orgnr }.mapValues { it.value.first() },
             )
         }
         results
@@ -55,12 +55,15 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
                     VALUES (:orgnr, :opprettet, :type, :data)
                 """.trimIndent()
 
-                it.update(sql, mapOf(
-                    "orgnr" to enhet.orgnr,
-                    "opprettet" to opprettet,
-                    "type" to type.name,
-                    "data" to pgObjectOf(enhet),
-                )).validate()
+                it.update(
+                    sql,
+                    mapOf(
+                        "orgnr" to enhet.orgnr,
+                        "opprettet" to opprettet,
+                        "type" to type.name,
+                        "data" to pgObjectOf(enhet),
+                    ),
+                ).validate()
             }
         }
 
@@ -79,6 +82,5 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
 
 enum class EnhetType {
     HOVEDENHET,
-    UNDERENHET
-    ;
+    UNDERENHET,
 }

@@ -105,7 +105,7 @@ class SlettVedtakStorePostgres(private val sessionFactory: () -> Session) : Slet
                 "id" to vedtakId,
                 "slettetAv" to slettetAv,
                 "slettetAvType" to slettetAvType.toString(),
-            )
+            ),
         ).rowCount
     }
 
@@ -124,7 +124,7 @@ class SlettVedtakStorePostgres(private val sessionFactory: () -> Session) : Slet
         satsBeskrivelse = row.string("sats_beskrivelse"),
         beløp = row.bigDecimal("belop"),
         opprettet = row.localDateTime("opprettet"),
-        slettet = row.localDateTime("slettet")
+        slettet = row.localDateTime("slettet"),
     )
 }
 
@@ -148,5 +148,5 @@ data class VedtakSlettet(
     val satsBeskrivelse: String,
     val beløp: BigDecimal,
     val opprettet: LocalDateTime = LocalDateTime.now(),
-    val slettet: LocalDateTime = LocalDateTime.now()
+    val slettet: LocalDateTime = LocalDateTime.now(),
 )

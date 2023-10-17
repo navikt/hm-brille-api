@@ -39,7 +39,7 @@ class UtbetalingsBatchTest {
             vedtakId = etVedtak.id,
             referanse = "ref1",
             utbetalingsdato = LocalDate.now(),
-            vedtak = etVedtak.toDto()
+            vedtak = etVedtak.toDto(),
         )
 
         val etVedtak2 = Vedtak(
@@ -64,7 +64,7 @@ class UtbetalingsBatchTest {
             vedtakId = etVedtak2.id,
             referanse = "ref1",
             utbetalingsdato = LocalDate.now(),
-            vedtak = etVedtak2.toDto()
+            vedtak = etVedtak2.toDto(),
         )
 
         val etVedtak3 = Vedtak(
@@ -89,7 +89,7 @@ class UtbetalingsBatchTest {
             vedtakId = etVedtak3.id,
             referanse = "ref1",
             utbetalingsdato = LocalDate.now(),
-            vedtak = etVedtak3.toDto()
+            vedtak = etVedtak3.toDto(),
         )
 
         val utbetalinger = listOf<Utbetaling>(ut1, ut2, ut3)

@@ -46,7 +46,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
                 throw SjekkOptikerPluginException(
                     HttpStatusCode.InternalServerError,
                     "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
-                    it
+                    it,
                 )
             }
 
@@ -71,7 +71,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
         if (!sjekkErOptiker(fnrOptiker)) {
             throw SjekkOptikerPluginException(
                 HttpStatusCode.Forbidden,
-                "innlogget bruker er ikke registrert som optiker i HPR"
+                "innlogget bruker er ikke registrert som optiker i HPR",
             )
         }
     }

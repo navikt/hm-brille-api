@@ -32,7 +32,7 @@ object Configuration {
             "cronjob.gcp.dbinstance" to "",
             "hotsak.apiUrl" to "http://host.docker.internal:8089/hotsak",
             "hotsak.apiScope" to "api://dev-gcp.hotsak.hotsak-api/.default",
-        )
+        ),
     )
 
     private val localProperties = ConfigurationMap(
@@ -65,7 +65,7 @@ object Configuration {
             "SLACK_HOOK" to "http://dummy",
             "hotsak.apiUrl" to "http://host.docker.internal:8089/hotsak",
             "hotsak.apiScope" to "api://dev-gcp.hotsak.hotsak-api/.default",
-        )
+        ),
     )
 
     private val devProperties = ConfigurationMap(
@@ -88,7 +88,7 @@ object Configuration {
             "cronjob.gcp.dbinstance" to "hm-brille-api-db-dev",
             "hotsak.apiUrl" to "http://hm-saksbehandling.teamdigihot.svc.cluster.local/api",
             "hotsak.apiScope" to "api://dev-gcp.teamdigihot.hm-saksbehandling/.default",
-        )
+        ),
     )
 
     private val prodProperties = ConfigurationMap(
@@ -110,7 +110,7 @@ object Configuration {
             "cronjob.gcp.dbinstance" to "hm-brille-api-db-prod",
             "hotsak.apiUrl" to "http://hm-saksbehandling.teamdigihot.svc.cluster.local/api",
             "hotsak.apiScope" to "api://prod-gcp.teamdigihot.hm-saksbehandling/.default",
-        )
+        ),
     )
 
     private val cronjobProperties = ConfigurationMap(
@@ -123,7 +123,7 @@ object Configuration {
             "DB_PASSWORD" to System.getenv("DB_NAISJOB_PASSWORD"),
             "DB_HOST" to System.getenv("DB_NAISJOB_HOST"),
             "DB_PORT" to System.getenv("DB_NAISJOB_PORT"),
-        )
+        ),
     )
 
     private val resourceProperties =

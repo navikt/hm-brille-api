@@ -26,7 +26,7 @@ internal class AuditStorePostgres(sessionFactory: () -> Session) : AuditStore,
                 "fnr_innlogget" to fnrInnlogget,
                 "fnr_oppslag" to fnrOppslag,
                 "oppslag_beskrivelse" to oppslagBeskrivelse,
-            )
+            ),
         )
             .validate()
     }

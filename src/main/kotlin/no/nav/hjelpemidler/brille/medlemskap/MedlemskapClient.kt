@@ -52,7 +52,7 @@ class MedlemskapClient(
                 Request(
                     fnr = fnr,
                     bestillingsdato = bestillingsDato,
-                )
+                ),
             )
         }
         if (response.status == HttpStatusCode.OK) {

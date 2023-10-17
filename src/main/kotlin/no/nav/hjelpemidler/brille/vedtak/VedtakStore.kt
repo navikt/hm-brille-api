@@ -30,7 +30,7 @@ interface VedtakStore : Store {
     fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime): Long
     fun <T> hentVedtakForUtbetaling(
         opprettet: LocalDateTime,
-        behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET
+        behandlingsresultat: Behandlingsresultat = Behandlingsresultat.INNVILGET,
     ): List<Vedtak<T>>
 
     fun fjernFraVedTakKø(vedtakId: Long): Int?
@@ -58,8 +58,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             sql,
             mapOf(
                 "vedtakId" to vedtakId,
-                "opprettet" to opprettet
-            )
+                "opprettet" to opprettet,
+            ),
         ) { row ->
             row.long("id")
         }
@@ -82,7 +82,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 bestillingsdato = row.localDate("bestillingsdato"),
                 behandlingsresultat = row.string("behandlingsresultat"),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
-                opprettet = row.localDateTime("opprettet")
+                opprettet = row.localDateTime("opprettet"),
             )
         }
     }
@@ -127,8 +127,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             sql,
             mapOf(
                 "fnr_innsender" to fnrInnsender,
-                "vedtak_id" to vedtakId
-            )
+                "vedtak_id" to vedtakId,
+            ),
         ) { row ->
             val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
 
@@ -155,7 +155,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                 opprettet = row.localDateTime("opprettet"),
                 slettet = row.localDateTimeOrNull("slettet"),
-                slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) }
+                slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
             )
         }
     }
@@ -215,8 +215,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 mapOf(
                     "fnr_innsender" to fnrInnsender,
                     "limit" to itemsPerPage,
-                    "offset" to offset
-                )
+                    "offset" to offset,
+                ),
             ) { row ->
                 val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
 
@@ -243,7 +243,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                     opprettet = row.localDateTime("opprettet"),
                     slettet = row.localDateTimeOrNull("slettet"),
-                    slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) }
+                    slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
                 )
             }
 
@@ -251,7 +251,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 numberOfPages = ceil(totaltAntall.toDouble() / itemsPerPage.toDouble()).toInt(),
                 itemsPerPage = itemsPerPage,
                 totalItems = totaltAntall,
-                items = items
+                items = items,
             )
         }
 
@@ -327,7 +327,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 "belop" to vedtak.beløp,
                 "opprettet" to vedtak.opprettet,
                 "kilde" to vedtak.kilde.toString(),
-            )
+            ),
         ) { row ->
             row.long("id")
         }
@@ -337,7 +337,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
 
     override fun <T> hentVedtakForUtbetaling(
         opprettet: LocalDateTime,
-        behandlingsresultat: Behandlingsresultat
+        behandlingsresultat: Behandlingsresultat,
     ): List<Vedtak<T>> = session {
         @Language("PostgreSQL")
         val sql = """
@@ -372,8 +372,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             sql,
             mapOf(
                 "opprettet" to opprettet,
-                "behandlingsresultat" to behandlingsresultat.toString()
-            )
+                "behandlingsresultat" to behandlingsresultat.toString(),
+            ),
         ) { row -> mapVedtak(row) }.toList()
     }
 

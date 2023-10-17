@@ -33,7 +33,7 @@ fun Route.vilkårHotsakApi(
                     vilkårsgrunnlagInput.fnrBarn,
                     vilkårsgrunnlagInput.brilleseddel,
                     vilkårsgrunnlagInput.bestillingsdato,
-                    vilkårsgrunnlagInput.eksisterendeBestillingsdato
+                    vilkårsgrunnlagInput.eksisterendeBestillingsdato,
                 )
             }
             val sats = SatsKalkulator(vilkårsgrunnlagInput.brilleseddel).kalkuler()
@@ -49,8 +49,8 @@ fun Route.vilkårHotsakApi(
                     satsBeløp = sats.beløp(vilkårsgrunnlagInput.bestillingsdato),
                     beløp = beløp,
                     vilkårsgrunnlag = jsonMapper.valueToTree(vilkarsvurdering),
-                    evaluering = vilkarsvurdering.evaluering
-                )
+                    evaluering = vilkarsvurdering.evaluering,
+                ),
             )
         } catch (e: Exception) {
             log.error(e) { "Feil i vilkårsvurdering" }

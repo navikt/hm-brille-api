@@ -54,7 +54,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
 
         sessionFactory().queryList(
             sql,
-            mapOf("fnr" to fnr)
+            mapOf("fnr" to fnr),
         ) { row ->
             val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
             VedtakListe(
@@ -99,7 +99,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
 
         sessionFactory().query(
             sql,
-            mapOf("vedtakId" to vedtakId)
+            mapOf("vedtakId" to vedtakId),
         ) { row ->
             val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
             Vedtak(
@@ -142,7 +142,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 "fnrInnsender" to fnrInnsender,
                 "orgnr" to orgnr,
                 "begrunnelser" to pgObjectOf(årsaker),
-            )
+            ),
         ).validate()
     }
 
@@ -159,7 +159,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             mapOf(
                 "fnrBarn" to fnrBarn,
                 "vedtakOpprettet" to etterVedtak?.opprettet,
-            )
+            ),
         ) { row ->
             Avvisning(
                 orgnr = row.string("orgnr"),
@@ -186,7 +186,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 "fnrBarn" to fnrBarn,
                 "orgnr" to orgnr,
                 "innslagspunkt" to LocalDateTime.now().minusDays(7),
-            )
+            ),
         ) {
             true
         } ?: false
@@ -213,7 +213,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
 
         sessionFactory().queryList(
             sql,
-            mapOf("utbetalingsRef" to utbetalingsRef)
+            mapOf("utbetalingsRef" to utbetalingsRef),
         ) { row ->
             val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
             Utbetaling(

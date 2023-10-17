@@ -57,7 +57,7 @@ object StubEngine {
         respond(
             jsonMapper.writeValueAsString(body),
             HttpStatusCode.OK,
-            headersOf(HttpHeaders.ContentType, "application/json")
+            headersOf(HttpHeaders.ContentType, "application/json"),
         )
 
     private fun mockEngineBuilder(block: MockEngineBuilder.() -> Unit): MockEngineBuilder =
@@ -81,8 +81,8 @@ object StubEngine {
             respond(
                 mapOf(
                     "issuer" to "http://localhost:8080/default",
-                    "jwks_uri" to "http://localhost:8080/default/jwks"
-                )
+                    "jwks_uri" to "http://localhost:8080/default/jwks",
+                ),
             )
         }
     }
@@ -94,14 +94,14 @@ object StubEngine {
                     godkjenninger = listOf(
                         Godkjenning(
                             helsepersonellkategori = Kode(aktiv = true, oid = -1, verdi = "OP"),
-                        )
+                        ),
                     ),
                     fnr = "15084300133",
                     hprNummer = null,
                     fornavn = "Sedat",
                     mellomnavn = null,
-                    etternavn = "Kronjuvel"
-                )
+                    etternavn = "Kronjuvel",
+                ),
             )
         }
     }
@@ -110,8 +110,8 @@ object StubEngine {
         get("/hotsak/vilkarsvurdering/sjekk-vedtak") {
             respond(
                 HotsakClient.VedtakIKalenderåretDto(
-                    vedtaksdato = null
-                )
+                    vedtaksdato = null,
+                ),
             )
         }
     }
@@ -121,7 +121,7 @@ object StubEngine {
             respond(
                 javaClass.getResourceAsStream("/mock/pdl.json").use {
                     jsonMapper.readTree(requireNotNull(it))
-                }
+                },
             )
         }
         post("/default/token") {

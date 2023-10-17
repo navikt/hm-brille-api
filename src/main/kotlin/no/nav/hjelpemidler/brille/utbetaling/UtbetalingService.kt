@@ -13,7 +13,7 @@ import kotlin.time.Duration
 
 class UtbetalingService(
     private val databaseContext: DatabaseContext,
-    private val kafkaService: KafkaService
+    private val kafkaService: KafkaService,
 ) {
 
     companion object {
@@ -21,8 +21,9 @@ class UtbetalingService(
     }
 
     suspend fun <T> opprettNyUtbetaling(vedtak: Vedtak<T>): Utbetaling {
-        if (vedtak.behandlingsresultat != Behandlingsresultat.INNVILGET)
+        if (vedtak.behandlingsresultat != Behandlingsresultat.INNVILGET) {
             throw UtbetalingsException("Vedtaket må være innvilget")
+        }
         return transaction(databaseContext) { ctx ->
             ctx.vedtakStore.fjernFraVedTakKø(vedtak.id)
             ctx.utbetalingStore.lagreUtbetaling(
@@ -30,8 +31,8 @@ class UtbetalingService(
                     vedtakId = vedtak.id,
                     referanse = vedtak.bestillingsreferanse,
                     utbetalingsdato = null,
-                    vedtak = vedtak.toDto()
-                )
+                    vedtak = vedtak.toDto(),
+                ),
             )
         }
     }
@@ -43,8 +44,8 @@ class UtbetalingService(
                 ctx.utbetalingStore.oppdaterStatus(
                     it.copy(
                         status = UtbetalingStatus.TIL_UTBETALING,
-                        oppdatert = LocalDateTime.now()
-                    )
+                        oppdatert = LocalDateTime.now(),
+                    ),
                 )
             }
             kafkaService.produceEvent(null, utbetalingsBatchDTO.lagMelding(tssIdent).toJson())
@@ -58,8 +59,8 @@ class UtbetalingService(
                 ctx.utbetalingStore.oppdaterStatus(
                     it.copy(
                         status = UtbetalingStatus.TIL_UTBETALING,
-                        oppdatert = LocalDateTime.now()
-                    )
+                        oppdatert = LocalDateTime.now(),
+                    ),
                 )
             }
             kafkaService.produceEvent(null, utbetalingsBatchDTO.lagMelding(tssIdent).toJson())
@@ -73,8 +74,8 @@ class UtbetalingService(
                 utbetaling.copy(
                     status = UtbetalingStatus.UTBETALT,
                     oppdatert = LocalDateTime.now(),
-                    utbetalingsdato = LocalDate.now()
-                )
+                    utbetalingsdato = LocalDate.now(),
+                ),
             )
         }
     }
@@ -84,7 +85,7 @@ class UtbetalingService(
                 ctx ->
             ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDatoOpprettet(
                 batchDato = batchDato,
-                opprettet = LocalDateTime.now().minusMinutes(opprettetFor.inWholeMinutes)
+                opprettet = LocalDateTime.now().minusMinutes(opprettetFor.inWholeMinutes),
             )
         }
     }

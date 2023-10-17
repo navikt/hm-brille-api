@@ -55,7 +55,7 @@ internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStor
                 "fraDato" to fraDato,
                 "tilDato" to tilDato,
                 "referanseFilter" to "%$referanseFilter%",
-            )
+            ),
         ) { row ->
             Kravlinje.fromRow(row)
         }
@@ -83,7 +83,7 @@ internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStor
                 "referanseFilter" to "%$referanseFilter%",
             ),
             limit,
-            offset
+            offset,
         ) { row ->
             Kravlinje.fromRow(row)
         }

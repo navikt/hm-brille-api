@@ -67,10 +67,10 @@ class MedlemskapBarn(
                     mapOf(
                         "fnr" to fnrBarn,
                         "bestillingsdato" to bestillingsdato,
-                        "correlation-id" to baseCorrelationId
-                    )
-                )
-            )
+                        "correlation-id" to baseCorrelationId,
+                    ),
+                ),
+            ),
         )
 
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
@@ -104,9 +104,9 @@ class MedlemskapBarn(
                     mapOf(
                         "fnr" to fnrBarn,
                         "pdl" to pdlResponse.rawData,
-                    )
+                    ),
                 ),
-            )
+            ),
         )
 
         // Sjekk minimumskravet vårt for å anta medlemskap for barnet i folketrygden.
@@ -138,9 +138,9 @@ class MedlemskapBarn(
                             "note" to "failed to check relation membership",
                             "exception" to e.stackTraceToString(),
                             "correlation-id-subcall-medlemskap" to baseCorrelationId,
-                        )
-                    )
-                )
+                        ),
+                    ),
+                ),
             )
 
             // Pass-through til koden under
@@ -148,10 +148,12 @@ class MedlemskapBarn(
         }
 
         if (medlemskapResultLovMeJson != null) {
-            saksgrunnlag.add(Saksgrunnlag(
-                kilde = SaksgrunnlagKilde.LOV_ME,
-                saksgrunnlag = medlemskapResultLovMeJson,
-            ))
+            saksgrunnlag.add(
+                Saksgrunnlag(
+                    kilde = SaksgrunnlagKilde.LOV_ME,
+                    saksgrunnlag = medlemskapResultLovMeJson,
+                ),
+            )
 
             val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
             if (medlemskapResultatLovMe.resultat == MedlemskapResultatResultat.JA) {
@@ -171,7 +173,7 @@ class MedlemskapBarn(
         val medlemskapResultat =
             MedlemskapResultat(
                 resultat = MedlemskapResultatResultat.UAVKLART,
-                saksgrunnlag = saksgrunnlag
+                saksgrunnlag = saksgrunnlag,
             )
         redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
         kafkaService.medlemskapFolketrygdenAntatt(fnrBarn)
@@ -200,8 +202,8 @@ private fun sjekkFolkeregistrertAdresseINorge(
         if (!finnesFolkeregistrertAdresse) {
             sikkerLog.info {
                 "Fant ingen folkeregistrert adresse for barn:" +
-                " bostedsadresser=${jsonMapper.writePrettyString(bostedsadresser)} " +
-                " deltBostedBarn=${jsonMapper.writePrettyString(deltBostedBarn)} "
+                    " bostedsadresser=${jsonMapper.writePrettyString(bostedsadresser)} " +
+                    " deltBostedBarn=${jsonMapper.writePrettyString(deltBostedBarn)} "
             }
         }
     } catch (e: Exception) {
@@ -225,11 +227,11 @@ private fun slåSammenAktiveBosteder(
         },
         delteBosted.filter {
             (it.startdatoForKontrakt.isEqual(bestillingsdato) || it.startdatoForKontrakt.isBefore(bestillingsdato)) &&
-            (
-                it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(bestillingsdato) || it.sluttdatoForKontrakt.isAfter(
-                    bestillingsdato
-                )
-            )
+                (
+                    it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(bestillingsdato) || it.sluttdatoForKontrakt.isAfter(
+                        bestillingsdato,
+                    )
+                    )
         }.map {
             Bostedsadresse(
                 gyldigFraOgMed = it.startdatoForKontrakt.atStartOfDay(),
@@ -241,18 +243,18 @@ private fun slåSammenAktiveBosteder(
                 matrikkeladresse = it.matrikkeladresse,
                 ukjentBosted = it.ukjentBosted,
             )
-        }
+        },
     ).flatten()
 }
 
 private fun sjekkBostedsadresseDatoerMotBestillingsdato(bestillingsdato: LocalDate, adresse: Bostedsadresse): Boolean {
     return (
         adresse.gyldigFraOgMed == null ||
-        adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsdato) ||
-        adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsdato)
-    ) && (
+            adresse.gyldigFraOgMed.toLocalDate().isEqual(bestillingsdato) ||
+            adresse.gyldigFraOgMed.toLocalDate().isBefore(bestillingsdato)
+        ) && (
         adresse.gyldigTilOgMed == null ||
-        adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsdato) ||
-        adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsdato)
-    )
+            adresse.gyldigTilOgMed.toLocalDate().isEqual(bestillingsdato) ||
+            adresse.gyldigTilOgMed.toLocalDate().isAfter(bestillingsdato)
+        )
 }

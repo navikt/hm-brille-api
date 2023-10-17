@@ -13,7 +13,7 @@ import java.util.UUID
 
 class TssIdentRiver(
     rapidsConnection: RapidsConnection,
-    private val tssIdentService: TssIdentService
+    private val tssIdentService: TssIdentService,
 ) : PacketListenerWithOnError {
 
     private val eventName = "hm-utbetaling-tss-optiker-svar"

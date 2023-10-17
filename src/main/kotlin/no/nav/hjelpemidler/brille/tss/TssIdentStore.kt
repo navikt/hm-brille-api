@@ -38,8 +38,8 @@ class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIden
             sql,
             mapOf(
                 "orgnr" to orgnr,
-                "tssIdent" to tssIdent
-            )
+                "tssIdent" to tssIdent,
+            ),
         ).validate()
     }
 
@@ -51,7 +51,7 @@ class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIden
             sql,
             mapOf(
                 "orgnr" to orgnr,
-            )
+            ),
         )
 
         Unit

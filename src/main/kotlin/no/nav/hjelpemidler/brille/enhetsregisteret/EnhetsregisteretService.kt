@@ -94,9 +94,9 @@ class EnhetsregisteretService(
         orgnr = orgnr,
         navn = "Brille Verden",
         forretningsadresse = Postadresse(
-            adresse =  listOf("Brillevegen 42"),
-            poststed =  "Brillestad",
-            postnummer =  "6429"
+            adresse = listOf("Brillevegen 42"),
+            poststed = "Brillestad",
+            postnummer = "6429",
         ),
         naeringskode1 = Næringskode(
             beskrivelse = "Butikkhandel med optiske artikler",

@@ -64,7 +64,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 kravlinjer = kravlinjer,
                 totalCount = kravlinjer.total,
                 currentPage = page,
-                pageSize = limit
+                pageSize = limit,
             )
 
             call.respond(HttpStatusCode.OK, pagedKravlinjeListe)
@@ -94,22 +94,23 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 throw e
             }
 
-            if (kravlinjer.count() == 0)
+            if (kravlinjer.count() == 0) {
                 return@get call.respond(HttpStatusCode.NotFound, "ingen krav funnet for utbetaling med avstemmingsreferanse")
+            }
 
             call.response.header(
                 HttpHeaders.ContentDisposition,
                 ContentDisposition.Attachment.withParameter(
                     ContentDisposition.Parameters.FileName,
-                    "${avstemmingsreferanse}-${Date().time}.csv"
+                    "$avstemmingsreferanse-${Date().time}.csv",
                 )
-                    .toString()
+                    .toString(),
             )
 
             call.respondOutputStream(
                 status = HttpStatusCode.OK,
                 contentType = ContentType.Text.CSV,
-                producer = producer(kravlinjer)
+                producer = producer(kravlinjer),
             )
         }
 
@@ -143,15 +144,15 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 HttpHeaders.ContentDisposition,
                 ContentDisposition.Attachment.withParameter(
                     ContentDisposition.Parameters.FileName,
-                    "${Date().time}.csv"
+                    "${Date().time}.csv",
                 )
-                    .toString()
+                    .toString(),
             )
 
             call.respondOutputStream(
                 status = HttpStatusCode.OK,
                 contentType = ContentType.Text.CSV,
-                producer = producer(kravlinjer)
+                producer = producer(kravlinjer),
             )
         }
     }
@@ -174,7 +175,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
             "Kommentar",
         )
             .joinToString(";")
-            .toByteArray()
+            .toByteArray(),
     )
     write("\n".toByteArray())
 
@@ -194,7 +195,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
                 if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else "",
             )
                 .joinToString(";")
-                .toByteArray()
+                .toByteArray(),
         )
         write("\n".toByteArray())
     }
@@ -206,7 +207,7 @@ fun String.toLocalDate() =
     } else {
         LocalDate.parse(
             this,
-            DateTimeFormatter.ofPattern("dd.MM.uuuu")
+            DateTimeFormatter.ofPattern("dd.MM.uuuu"),
         )
     }
 
@@ -225,5 +226,5 @@ enum class KravFilter {
     ALLE,
     SISTE3MND,
     HITTILAR,
-    EGENDEFINERT
+    EGENDEFINERT,
 }

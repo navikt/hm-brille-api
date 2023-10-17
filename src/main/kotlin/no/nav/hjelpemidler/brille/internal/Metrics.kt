@@ -12,7 +12,6 @@ import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 
 fun Application.setupMetrics(metricsConfig: MetricsConfig) {
-
     install(MicrometerMetrics) {
         registry = metricsConfig.registry
         meterBinders = metricsConfig.meterbinders
@@ -27,5 +26,5 @@ fun Application.setupMetrics(metricsConfig: MetricsConfig) {
 
 data class MetricsConfig(
     val registry: PrometheusMeterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT),
-    val meterbinders: List<MeterBinder>
+    val meterbinders: List<MeterBinder>,
 )

@@ -9,7 +9,7 @@ import no.nav.hjelpemidler.brille.sats.kalkulator.Beregningsgrunnlag
 import no.nav.hjelpemidler.brille.sats.kalkulator.KalkulatorService
 
 fun Route.satsApi(
-    kalkulatorService: KalkulatorService
+    kalkulatorService: KalkulatorService,
 ) {
     // fixme -> fjernes når konsumenter har endret til ny url for satsberegning
     post("/brillesedler") {

@@ -14,12 +14,12 @@ class Evalueringer {
         beskrivelse: String,
         lovReferanse: String,
         lovdataLenke: String,
-        evaluering: Evaluering
+        evaluering: Evaluering,
     ) =
         evaluering.copy(
             identifikator = identifikator,
             beskrivelse = beskrivelse,
             lovReferanse = lovReferanse,
-            lovdataLenke = lovdataLenke
+            lovdataLenke = lovdataLenke,
         )
 }

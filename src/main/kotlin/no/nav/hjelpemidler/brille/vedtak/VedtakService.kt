@@ -20,7 +20,7 @@ private val sikkerLog = KotlinLogging.logger("tjenestekall")
 class VedtakService(
     val databaseContext: DatabaseContext,
     private val vilkårsvurderingService: VilkårsvurderingService,
-    private val kafkaService: KafkaService
+    private val kafkaService: KafkaService,
 ) {
     companion object {
         private val LOG = LoggerFactory.getLogger(VedtakService::class.java)
@@ -63,7 +63,7 @@ class VedtakService(
                     satsBeskrivelse = sats.beskrivelse,
                     beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
                     kilde = kilde,
-                )
+                ),
             )
             ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
             kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)

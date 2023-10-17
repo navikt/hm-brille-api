@@ -23,8 +23,8 @@ class InnsenderStorePostgres(sessionFactory: () -> Session) : InnsenderStore, Tr
             sql,
             mapOf(
                 "fnr_innsender" to innsender.fnrInnsender,
-                "godtatt" to innsender.godtatt
-            )
+                "godtatt" to innsender.godtatt,
+            ),
         ).validate()
         innsender
     }
@@ -40,7 +40,7 @@ class InnsenderStorePostgres(sessionFactory: () -> Session) : InnsenderStore, Tr
             Innsender(
                 fnrInnsender = row.string("fnr_innsender"),
                 godtatt = row.boolean("godtatt"),
-                opprettet = row.localDateTime("opprettet")
+                opprettet = row.localDateTime("opprettet"),
             )
         }
     }

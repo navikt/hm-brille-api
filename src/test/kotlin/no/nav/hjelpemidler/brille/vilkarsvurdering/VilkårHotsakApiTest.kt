@@ -43,7 +43,7 @@ internal class VilkårHotsakApiTest {
         pdlClient,
         hotsakClient,
         medlemskapBarn,
-        dagensDatoFactory
+        dagensDatoFactory,
     )
 
     private val vedtakService = VedtakService(
@@ -68,92 +68,92 @@ internal class VilkårHotsakApiTest {
     @Test
     internal fun `har vedtak i kalenderåret`() = kjørTest(
         vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET)),
-        forventetResultat = Resultat.NEI
+        forventetResultat = Resultat.NEI,
     )
 
     @Test
     internal fun `har vedtak i annet år`() = kjørTest(
         vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET.minusYears(1))),
-        forventetResultat = Resultat.JA
+        forventetResultat = Resultat.JA,
     )
 
     @Test
     internal fun `barnet fyller 18 år på bestillingsdato`() = kjørTest(
         fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).toString(),
-        forventetResultat = Resultat.NEI
+        forventetResultat = Resultat.NEI,
     )
 
     @Test
     internal fun `barnet fyller 18 år dagen etter bestillingsdato`() = kjørTest(
         fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).plusDays(1).toString(),
-        forventetResultat = Resultat.JA
+        forventetResultat = Resultat.JA,
     )
 
     @Test
     internal fun `barnet fyller 18 år dagen før bestillingsdato`() = kjørTest(
         fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).minusDays(1).toString(),
-        forventetResultat = Resultat.NEI
+        forventetResultat = Resultat.NEI,
     )
 
     @Test
     internal fun `barnet er bevist ikke medlem i folktrygden`() = kjørTest(
         medlemskapResultat = MedlemskapResultat(
             resultat = MedlemskapResultatResultat.NEI,
-            saksgrunnlag = emptyList()
+            saksgrunnlag = emptyList(),
         ),
-        forventetResultat = Resultat.NEI
+        forventetResultat = Resultat.NEI,
     )
 
     @Test
     internal fun `barnets medlemskap i folktrygden er uavklart`() = kjørTest(
         medlemskapResultat = MedlemskapResultat(
             resultat = MedlemskapResultatResultat.UAVKLART,
-            saksgrunnlag = emptyList()
+            saksgrunnlag = emptyList(),
         ),
-        forventetResultat = Resultat.JA
+        forventetResultat = Resultat.JA,
     )
 
     @Test
     internal fun `brillestyrke under minstgrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(),
-        forventetResultat = Resultat.NEI
+        forventetResultat = Resultat.NEI,
     )
 
     @Test
     internal fun `brillestyrke høyreSylinder over minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            høyreSylinder = 2.00
+            høyreSylinder = 2.00,
         ),
-        forventetResultat = Resultat.JA
+        forventetResultat = Resultat.JA,
     )
 
     @Test
     internal fun `brillestyrke venstreSfære over minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            venstreSfære = 3.00
+            venstreSfære = 3.00,
         ),
-        forventetResultat = Resultat.JA
+        forventetResultat = Resultat.JA,
     )
 
     @Test
     internal fun `brillestyrke venstreSylinder over minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            venstreSylinder = 1.00
+            venstreSylinder = 1.00,
         ),
-        forventetResultat = Resultat.JA
+        forventetResultat = Resultat.JA,
     )
 
     @Test
     internal fun `bestillingsdato i fremtiden`() = kjørTest(
         vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.plusDays(1)),
-        forventetResultat = Resultat.NEI
+        forventetResultat = Resultat.NEI,
     )
 
     @Test
     internal fun `bestillingsdato mer enn 6 måneder tilbake i tid`() = kjørTest(
         vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.plusMonths(1)),
         dagensDato = DATO_ORDNINGEN_STARTET.plusMonths(8),
-        forventetResultat = Resultat.NEI
+        forventetResultat = Resultat.NEI,
     )
 
     private fun kjørTest(
@@ -208,7 +208,7 @@ internal class VilkårHotsakApiTest {
             behandlingsresultat = "",
             opprettet = bestillingsdato.atStartOfDay(),
             fnrInnsender = "23456789101",
-            bestillingsreferanse = "adawd"
+            bestillingsreferanse = "adawd",
         )
 
     private fun defaulVilkårMedBrilleseddel(
@@ -222,8 +222,8 @@ internal class VilkårHotsakApiTest {
                 høyreSfære = høyreSfære,
                 høyreSylinder = høyreSylinder,
                 venstreSfære = venstreSfære,
-                venstreSylinder = venstreSylinder
-            )
+                venstreSylinder = venstreSylinder,
+            ),
         )
 
     private val defaultVilkårsgrunnlag = VilkårsgrunnlagAdDto(
@@ -232,9 +232,9 @@ internal class VilkårHotsakApiTest {
             høyreSfære = 1.00,
             høyreSylinder = 0.00,
             venstreSfære = 0.00,
-            venstreSylinder = 0.00
+            venstreSylinder = 0.00,
         ),
         bestillingsdato = DATO_ORDNINGEN_STARTET,
-        brillepris = "1500".toBigDecimal()
+        brillepris = "1500".toBigDecimal(),
     )
 }

@@ -34,13 +34,13 @@ internal fun Route.kravApi(
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnsender,
                 fnrOppslag = kravDto.vilkårsgrunnlag.fnrBarn,
-                oppslagBeskrivelse = "[POST] /krav - Innsending av krav"
+                oppslagBeskrivelse = "[POST] /krav - Innsending av krav",
             )
 
             val vedtak = vedtakService.lagVedtak(fnrInnsender, navnInnsender, kravDto, KravKilde.KRAV_APP)
             call.respond(
                 HttpStatusCode.OK,
-                vedtak.toDto()
+                vedtak.toDto(),
             )
         }
 
@@ -62,7 +62,7 @@ internal fun Route.kravApi(
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnsender,
                 fnrOppslag = vedtak.fnrBarn,
-                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId"
+                oppslagBeskrivelse = "[DELETE] /krav - Sletting av krav $vedtakId",
             )
 
             try {

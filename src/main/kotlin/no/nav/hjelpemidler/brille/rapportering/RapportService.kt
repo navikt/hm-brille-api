@@ -45,7 +45,7 @@ class RapportService(
                 tilDato = tilDato,
                 referanseFilter = referanseFilter,
                 limit = limit,
-                offset = offset
+                offset = offset,
             )
         }
         return kravlinjer

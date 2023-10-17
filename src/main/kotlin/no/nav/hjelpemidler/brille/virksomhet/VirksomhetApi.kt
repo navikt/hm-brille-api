@@ -38,13 +38,13 @@ fun Route.virksomhetApi(
                         orgnr = enhet.orgnr,
                         navn = enhet.navn,
                         adresse = enhetTilAdresseFor(enhet),
-                        aktiv = true
+                        aktiv = true,
 
                     )
                 }
                 val response = TidligereBrukteOrganisasjonerForOptiker(
                     sistBrukteOrganisasjon = organisasjoner.firstOrNull(),
-                    tidligereBrukteOrganisasjoner = organisasjoner
+                    tidligereBrukteOrganisasjoner = organisasjoner,
                 )
                 call.respond(response)
             } catch (e: EnhetsregisteretClientException) {

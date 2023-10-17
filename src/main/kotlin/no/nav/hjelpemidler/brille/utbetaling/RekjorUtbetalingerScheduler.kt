@@ -15,7 +15,7 @@ class RekjorUtbetalingerScheduler(
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
     delay: Duration = 5.minutes,
-    onlyWorkHours: Boolean = true
+    onlyWorkHours: Boolean = true,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
     companion object {
@@ -30,8 +30,9 @@ class RekjorUtbetalingerScheduler(
             val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
             LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
             utbetalingsBatchList.forEach {
-                if (it.utbetalinger.size > 100)
+                if (it.utbetalinger.size > 100) {
                     LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
+                }
                 val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
                     ?: throw RuntimeException("ingen tss ident tilgjengelig for batch (skal ikke skje)")
                 utbetalingService.rekjorBatchTilUtbetaling(it, tssIdent)

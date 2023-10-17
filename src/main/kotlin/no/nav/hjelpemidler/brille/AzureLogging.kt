@@ -14,7 +14,7 @@ fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>,
         "method" to request.httpMethod.value,
         "oid" to extractUUID().toString(),
         "email" to extractEmail(),
-        "name" to extractName()
+        "name" to extractName(),
     )
 
     val allParams = defaultParams.toMutableMap()
@@ -43,7 +43,7 @@ private fun adminAuditLog(method: String, uri: String, params: Map<String, Strin
             "requestMethod" to method,
             "request" to uri.substring(
                 0,
-                uri.length.coerceAtMost(70)
+                uri.length.coerceAtMost(70),
             ),
             "suid" to navIdent,
             "duid" to fnrDetGjelder,
@@ -51,10 +51,10 @@ private fun adminAuditLog(method: String, uri: String, params: Map<String, Strin
             // Add all extra params
             this.putAll(params)
         }
-            .filterValues { value ->  value != null }
+            .filterValues { value -> value != null }
             .map { (key, value) ->
-                "$key=${value.toString()}"
-            }.joinToString(" ")
+                "$key=$value"
+            }.joinToString(" "),
     ).joinToString("|")
 
     if (Configuration.dev) {

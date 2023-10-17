@@ -54,7 +54,7 @@ internal class KravApiTest {
         pdlClient,
         hotsakClient,
         medlemskapBarn,
-        dagensDatoFactory
+        dagensDatoFactory,
     )
 
     private val vedtakService =
@@ -71,9 +71,12 @@ internal class KravApiTest {
         runBlocking {
             kjørTest(
                 krav = KravDto(
-                    vilkårsgrunnlag, orgAdresse = "", orgNavn = "",
-                    bestillingsreferanse = "", brukersNavn = ""
-                )
+                    vilkårsgrunnlag,
+                    orgAdresse = "",
+                    orgNavn = "",
+                    bestillingsreferanse = "",
+                    brukersNavn = "",
+                ),
 
             )
         }
@@ -90,7 +93,7 @@ internal class KravApiTest {
         ),
         bestillingsdato = DATO_ORDNINGEN_STARTET,
         brillepris = BigDecimal.valueOf(3000),
-        extras = VilkårsgrunnlagExtrasDto("", "")
+        extras = VilkårsgrunnlagExtrasDto("", ""),
     )
 
     val mockedVedtak = Vedtak<Any>(
@@ -120,11 +123,9 @@ internal class KravApiTest {
         ),
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
     ) {
-
         every {
             sessionContext.vedtakStore.hentVedtakForBarn(krav.vilkårsgrunnlag.fnrBarn)
         } returns vedtakForBruker
-
 
         coEvery {
             hotsakClient.hentEksisterendeVedtakDato(any(), any())

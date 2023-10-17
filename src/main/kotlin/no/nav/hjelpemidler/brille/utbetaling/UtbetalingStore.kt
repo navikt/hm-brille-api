@@ -81,7 +81,7 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
         vedtak = row.json("vedtak"),
         status = UtbetalingStatus.valueOf(row.string("status")),
         batchDato = row.localDate("batch_dato"),
-        batchId = row.string("batch_id")
+        batchId = row.string("batch_id"),
     )
 
     override fun lagreUtbetaling(utbetaling: Utbetaling): Utbetaling = session {
@@ -122,8 +122,8 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
                 "vedtak" to pgObjectOf(utbetaling.vedtak),
                 "status" to utbetaling.status.name,
                 "batch_dato" to utbetaling.batchDato,
-                "batch_id" to utbetaling.batchId
-            )
+                "batch_id" to utbetaling.batchId,
+            ),
         ) { row ->
             row.long("id")
         }
@@ -143,8 +143,8 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
             mapOf(
                 "status" to utbetaling.status.name,
                 "oppdatert" to utbetaling.oppdatert,
-                "id" to utbetaling.id
-            )
+                "id" to utbetaling.id,
+            ),
         ).validate()
         utbetaling
     }
@@ -162,8 +162,8 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
                 "status" to utbetaling.status.name,
                 "oppdatert" to utbetaling.oppdatert,
                 "utbetalingsdato" to utbetaling.utbetalingsdato,
-                "id" to utbetaling.id
-            )
+                "id" to utbetaling.id,
+            ),
         ).validate()
         utbetaling
     }
@@ -212,7 +212,7 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
                 "antall_utbetalinger" to utbetalingsBatch.antallUtbetalinger,
                 "totalbelop" to utbetalingsBatch.totalbeløp,
                 "opprettet" to utbetalingsBatch.opprettet,
-            )
+            ),
         ).rowCount
     }
 
@@ -229,7 +229,7 @@ internal class UtbetalingStorePostgres(sessionFactory: () -> Session) : Utbetali
                 batchId = row.string("batch_id"),
                 totalbeløp = row.bigDecimal("totalbelop"),
                 antallUtbetalinger = row.int("antall_utbetalinger"),
-                opprettet = row.localDateTime("opprettet")
+                opprettet = row.localDateTime("opprettet"),
             )
         }
     }

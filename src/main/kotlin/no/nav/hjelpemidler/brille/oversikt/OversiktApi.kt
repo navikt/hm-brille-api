@@ -26,7 +26,7 @@ fun Route.oversiktApi(
             val vedtak = transaction(databaseContext) { ctx ->
                 ctx.vedtakStore.hentVedtakForOptiker(
                     fnrInnsender,
-                    vedtakId
+                    vedtakId,
                 )
             }?.let { vedtak ->
                 vedtak.orgnavn = enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "Ukjent"
@@ -54,8 +54,9 @@ fun Route.oversiktApi(
 
             resultat.items = resultat.items.map { vedtak ->
                 vedtak.orgnavn = enhetsregisterOppslagCache[vedtak.orgnr].let {
-                    if (it != null) it
-                    else {
+                    if (it != null) {
+                        it
+                    } else {
                         val orgnavn =
                             enhetsregisteretService.hentOrganisasjonsenhet(vedtak.orgnr)?.navn ?: "<Ukjent>"
                         enhetsregisterOppslagCache[vedtak.orgnr] = orgnavn

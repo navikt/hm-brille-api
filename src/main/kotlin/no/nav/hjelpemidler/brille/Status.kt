@@ -45,7 +45,7 @@ fun Application.configureStatusPages() {
                     }
                     call.respondText(
                         "Noe gikk galt! Feilen har blitt logget og vil bli undersøkt.",
-                        status = HttpStatusCode.InternalServerError
+                        status = HttpStatusCode.InternalServerError,
                     )
                 }
             }

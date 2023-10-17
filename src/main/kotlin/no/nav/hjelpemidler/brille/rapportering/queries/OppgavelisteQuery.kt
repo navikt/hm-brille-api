@@ -78,8 +78,8 @@ fun kravlinjeQuery(
         )
         -- Ekspander de paginerte resultatene igjen til alle relevante vedtak
         SELECT * ${if (!referanseFilter.isNullOrBlank()) {
-            ", (SELECT json_agg(ak) FROM alle_vedtak ak WHERE ak.batch_id IS NOT NULL AND ak.batch_id = v.batch_id) AS potensielt_bortfiltrerte_krav"
-        } else { ", NULL AS potensielt_bortfiltrerte_krav" }}
+        ", (SELECT json_agg(ak) FROM alle_vedtak ak WHERE ak.batch_id IS NOT NULL AND ak.batch_id = v.batch_id) AS potensielt_bortfiltrerte_krav"
+    } else { ", NULL AS potensielt_bortfiltrerte_krav" }}
         FROM grupperte_resultater_pagination grp
         LEFT JOIN alle_vedtak_sok_filtrert v ON v.id = ANY(grp.vedtak_ids)
     """
@@ -90,7 +90,7 @@ fun kravlinjeQuery(
             """
                 AND v.opprettet >= :fraDato AND v.opprettet <= :tilDato
                 {{SEARCH_PLACEHOLDER}}
-            """
+            """,
         )
     } else if (tilDato == null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
         sql = sql.replace(
@@ -98,7 +98,7 @@ fun kravlinjeQuery(
             """
                 AND v.opprettet >= :fraDato
                 {{SEARCH_PLACEHOLDER}}
-            """
+            """,
         )
     } else if (kravFilter?.equals(KravFilter.HITTILAR) == true) {
         sql = sql.replace(
@@ -106,7 +106,7 @@ fun kravlinjeQuery(
             """
                 AND date_part('year', v.opprettet) = date_part('year', CURRENT_DATE)
                 {{SEARCH_PLACEHOLDER}}
-            """
+            """,
         )
     } else if (kravFilter?.equals(KravFilter.SISTE3MND) == true) {
         sql = sql.replace(
@@ -114,7 +114,7 @@ fun kravlinjeQuery(
             """
                 AND v.opprettet > CURRENT_DATE - INTERVAL '3 months'
                 {{SEARCH_PLACEHOLDER}}
-            """
+            """,
         )
     }
 
@@ -124,7 +124,7 @@ fun kravlinjeQuery(
             """
                 AND v.batch_id = :avstemmingsreferanse
                 {{SEARCH_PLACEHOLDER}}
-            """
+            """,
         )
     }
 
@@ -137,7 +137,7 @@ fun kravlinjeQuery(
                     OR v.bestillingsreferanse LIKE :referanseFilter
                     OR v.batch_id LIKE :referanseFilter
                 )
-            """
+            """,
         )
     }
 

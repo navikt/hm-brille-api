@@ -37,7 +37,7 @@ internal class EnhetsregisterTest {
     }
 
     @Test
-    fun `Test tid siden sist oppdatert logikk` () {
+    fun `Test tid siden sist oppdatert logikk`() {
         val sistOppdatert = LocalDateTime.now().minusHours(24)
         val timerSidenOppdatert = sistOppdatert.until(LocalDateTime.now(), ChronoUnit.HOURS)
         timerSidenOppdatert shouldBe 24

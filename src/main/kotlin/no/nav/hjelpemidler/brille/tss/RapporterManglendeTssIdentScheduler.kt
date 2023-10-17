@@ -16,7 +16,7 @@ class RapporterManglendeTssIdentScheduler(
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
     delay: Duration = 24.hours,
-    onlyWorkHours: Boolean = false
+    onlyWorkHours: Boolean = false,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
     companion object {
@@ -41,19 +41,22 @@ class RapporterManglendeTssIdentScheduler(
                 Result(
                     orgnr = orgnr,
                     slettet = enhetsregisteretService.organisasjonSlettetNår(orgnr),
-                )
+                ),
             )
         }
 
         // Post til slack
         val count = results.count()
         val resultString = results.joinToString { res ->
-            if (res.slettet == null) res.orgnr
-            else "${res.orgnr} (slettet: ${res.slettet})"
+            if (res.slettet == null) {
+                res.orgnr
+            } else {
+                "${res.orgnr} (slettet: ${res.slettet})"
+            }
         }
 
         Slack.post(
-            "RapporterManglendeTssIdentScheduler: Fant $count virksomheter med avtale som ikke har TSS-ident. Orgnr: $resultString."
+            "RapporterManglendeTssIdentScheduler: Fant $count virksomheter med avtale som ikke har TSS-ident. Orgnr: $resultString.",
         )
     }
 }

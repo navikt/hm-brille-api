@@ -22,7 +22,6 @@ import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.azureAD
 import org.slf4j.MDC
-import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
@@ -109,7 +108,7 @@ fun Route.sjekkErOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
                     throw SjekkOptikerPluginException(
                         HttpStatusCode.InternalServerError,
                         "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
-                        it
+                        it,
                     )
                 }
 
@@ -124,7 +123,7 @@ fun Route.sjekkErOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
                     erOptiker = behandler.godkjenninger.any {
                         it.helsepersonellkategori?.aktiv == true && it.helsepersonellkategori.verdi == "OP"
                     },
-                )
+                ),
             )
         }.getOrElse {
             log.error(it) { "sjekkErOptikerMedHprnr feilet!" }
@@ -135,14 +134,14 @@ fun Route.sjekkErOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
         kotlin.runCatching {
             val fnre = call.receive<List<String>>().toSet().toList()
 
-            data class ResponseItem (
+            data class ResponseItem(
                 val fnr: String,
                 val behandler: Behandler?,
                 val erOptiker: Boolean?,
                 val navnFnrKombo: String,
             )
 
-            data class Response (
+            data class Response(
                 val items: List<ResponseItem>,
             )
 
@@ -153,11 +152,11 @@ fun Route.sjekkErOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
                         throw SjekkOptikerPluginException(
                             HttpStatusCode.InternalServerError,
                             "Kunne ikke hente data fra syfohelsenettproxyClient: $it",
-                            it
+                            it,
                         )
                     }
 
-                ResponseItem (
+                ResponseItem(
                     fnr = fnr,
                     behandler = behandler,
                     erOptiker = behandler?.godkjenninger?.any {
@@ -170,7 +169,7 @@ fun Route.sjekkErOptiker(syfohelsenettproxyClient: SyfohelsenettproxyClient) {
             call.respond(
                 Response(
                     items = responseItems,
-                )
+                ),
             )
         }.getOrElse {
             log.error(it) { "sjekkErOptikerMedFnre feilet!" }

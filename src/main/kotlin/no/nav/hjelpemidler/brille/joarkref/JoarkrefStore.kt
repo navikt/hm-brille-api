@@ -29,7 +29,7 @@ class JoarkrefStorePostgres(private val sessionFactory: () -> Session) : Joarkre
                 "vedtakId" to vedtakId,
                 "joarkRef" to joarkRef,
                 "dokumentIder" to pgObjectOf(dokumentIder),
-            )
+            ),
         )
 
         Unit
@@ -45,7 +45,7 @@ class JoarkrefStorePostgres(private val sessionFactory: () -> Session) : Joarkre
             sql,
             mapOf(
                 "vedtakId" to vedtakId,
-            )
+            ),
         ) {
             Pair(
                 it.long("joark_ref"),
