@@ -192,16 +192,32 @@ class AvtaleService(
         sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
-            ctx.virksomhetStore.oppdaterVirksomhet(
+            val virksomhet = ctx.virksomhetStore.oppdaterVirksomhet(
                 requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
                     "Fant ikke virksomhet med orgnr: $orgnr"
                 }.copy(
                     kontonr = oppdaterAvtale.kontonr,
                     epost = oppdaterAvtale.epost,
+                    bruksvilkårEpost = oppdaterAvtale.epostBruksvilkar,
                     fnrOppdatertAv = fnrOppdatertAv,
                     oppdatert = LocalDateTime.now(),
                 ),
             )
+
+            if (oppdaterAvtale.epostBruksvilkar != null) {
+                val bruksvilkår = ctx.avtaleStore.henBruksvilkårOrganisasjon(orgnr)
+                if (bruksvilkår != null) {
+                    ctx.avtaleStore.oppdaterBruksvilkår(
+                        bruksvilkår.copy(
+                            epostKontaktperson = oppdaterAvtale.epostBruksvilkar,
+                            fnrOppdatertAv = fnrOppdatertAv,
+                            oppdatert = LocalDateTime.now(),
+                        ),
+                    )
+                }
+            }
+
+            virksomhet
         }
 
         if (virksomhet.fnrInnsender != virksomhet.fnrOppdatertAv) {

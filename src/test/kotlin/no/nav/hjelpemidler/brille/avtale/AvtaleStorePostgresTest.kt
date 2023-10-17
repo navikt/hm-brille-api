@@ -49,7 +49,7 @@ internal class AvtaleStorePostgresTest {
     }
 
     @Test
-    internal fun `lagrer og henter virksomhet med godtatte bruksvilkår for API`() = withMigratedDb {
+    internal fun `lagrer, oppdaterer og henter virksomhet med godtatte bruksvilkår for API`() = withMigratedDb {
         with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
             val lagretVirksomhet = lagreVirksomhet(
                 Virksomhet(
@@ -84,6 +84,11 @@ internal class AvtaleStorePostgresTest {
                         bruksvilkårDefinisjonId = 1,
                     ),
                 )
+
+                val bruksvilkårHentet = henBruksvilkårOrganisasjon("986165760")
+
+                val oppdaterteBruksvilkår =
+                    oppdaterBruksvilkår(bruksvilkårHentet!!.copy(epostKontaktperson = "test2@test2"))
             }
 
             val hentetVirksomhetForOrganisasjon = hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
@@ -93,6 +98,7 @@ internal class AvtaleStorePostgresTest {
                         .firstOrNull()
                 hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
                 hentetVirksomhetForOrganisasjon?.bruksvilkår shouldBe true
+                hentetVirksomhetForOrganisasjon?.bruksvilkårEpost shouldBe "test2@test2"
             } catch (e: Exception) {
                 System.out.println(e.message)
                 throw e
