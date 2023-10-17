@@ -8,9 +8,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
-import no.nav.hjelpemidler.brille.avtale.IngåttAvtale
 import no.nav.hjelpemidler.brille.avtale.BRUKSVILKÅRTYPE
 import no.nav.hjelpemidler.brille.avtale.BruksvilkårGodtatt
+import no.nav.hjelpemidler.brille.avtale.IngåttAvtale
 import no.nav.hjelpemidler.brille.sats.AmblyopiSatsType
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
