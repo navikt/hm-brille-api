@@ -17,7 +17,7 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
             redisProps.host,
             redisProps.port,
             2 * 1000, // 2 seconds
-            redisProps.password
+            redisProps.password,
         )
     }
 
@@ -42,7 +42,7 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
         jedis.setex(
             medlemskapBarnKey(fnr, bestillingsdato),
             redisProps.medlemskapBarnExpirySeconds(),
-            jsonMapper.writeValueAsString(medlemskapResultat)
+            jsonMapper.writeValueAsString(medlemskapResultat),
         )
     }
 
@@ -54,7 +54,7 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
         jedis.setex(
             orgenhetKey(orgnr),
             redisProps.orgenhetExpirySeconds,
-            jsonMapper.writeValueAsString(orgenhet)
+            jsonMapper.writeValueAsString(orgenhet),
         )
     }
 }

@@ -17,7 +17,7 @@ object UnleashKlient {
                     .instanceId("hm-brille.api" + "_" + miljø.name)
                     .unleashAPI("https://unleash.nais.io/api/")
                     .build(),
-                ClusterStrategy(miljø)
+                ClusterStrategy(miljø),
             )
         }
     }

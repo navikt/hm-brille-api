@@ -32,7 +32,7 @@ fun Route.innbyggerApi(pdlService: PdlService, auditService: AuditService) {
             auditService.lagreOppslag(
                 fnrInnlogget = fnrInnlogget,
                 fnrOppslag = fnrOppslag,
-                "[POST] /innbyggere/sok - personoppslag mot PDL"
+                "[POST] /innbyggere/sok - personoppslag mot PDL",
             )
 
             val emptyResponse = Response(fnr = "", navn = "")
@@ -41,7 +41,7 @@ fun Route.innbyggerApi(pdlService: PdlService, auditService: AuditService) {
                     Response(
                         fnr = fnrOppslag,
                         navn = it.navn(),
-                        alder = it.alder()
+                        alder = it.alder(),
                     )
                 } ?: emptyResponse
             } catch (e: PdlClientException) {

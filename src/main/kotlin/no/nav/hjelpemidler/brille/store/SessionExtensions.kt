@@ -77,10 +77,10 @@ data class PageResultQueryAction<A>(
                         mapOf(
                             "limit" to limit,
                             "offset" to offset,
-                        )
-                    )
+                        ),
+                    ),
                 )
-            }
+            },
         ) {
             totalNumberOfItems = it.intOrNull(COLUMN_LABEL_TOTAL) ?: -1
             extractor(it)

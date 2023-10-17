@@ -199,12 +199,12 @@ object Vilkårene {
     }
 
     val Brille = (
-            HarIkkeVedtakIKalenderåret og
-                    Under18ÅrPåBestillingsdato og
-                    MedlemAvFolketrygden og
-                    Brillestyrke og
-                    Bestillingsdato
-            ).med("Brille", "Personen oppfyller vilkår for krav om barnebriller")
+        HarIkkeVedtakIKalenderåret og
+            Under18ÅrPåBestillingsdato og
+            MedlemAvFolketrygden og
+            Brillestyrke og
+            Bestillingsdato
+        ).med("Brille", "Personen oppfyller vilkår for krav om barnebriller")
 
     private fun LocalDate.formatert(): String =
         this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))

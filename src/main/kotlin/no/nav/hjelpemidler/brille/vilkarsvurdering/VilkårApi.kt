@@ -23,7 +23,7 @@ fun Route.vilkårApi(
     vilkårsvurderingService: VilkårsvurderingService,
     adminService: AdminService,
     auditService: AuditService,
-    kafkaService: KafkaService
+    kafkaService: KafkaService,
 ) {
     post("/vilkarsgrunnlag") {
         try {
@@ -31,7 +31,7 @@ fun Route.vilkårApi(
             auditService.lagreOppslag(
                 fnrInnlogget = call.extractFnr(),
                 fnrOppslag = vilkårsgrunnlag.fnrBarn,
-                oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om barn og bestilling oppfyller vilkår for støtte"
+                oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om barn og bestilling oppfyller vilkår for støtte",
             )
             val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(
                 vilkårsgrunnlag.fnrBarn,
@@ -59,9 +59,10 @@ fun Route.vilkårApi(
 
                 // Journalfør avvisningsbrev i joark
                 if (!adminService.harAvvisningDeSiste7DageneFor(
-                    vilkårsgrunnlag.fnrBarn,
-                    vilkårsgrunnlag.orgnr,
-                )) {
+                        vilkårsgrunnlag.fnrBarn,
+                        vilkårsgrunnlag.orgnr,
+                    )
+                ) {
                     kafkaService.journalførAvvisning(
                         vilkårsgrunnlag.fnrBarn,
                         vilkarsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
@@ -91,8 +92,8 @@ fun Route.vilkårApi(
                     satsBeskrivelse = sats.beskrivelse,
                     satsBeløp = sats.beløp(vilkårsgrunnlag.bestillingsdato),
                     beløp = beløp,
-                    kravFraFørFraInnsender = refInnsendersTidligereKrav
-                )
+                    kravFraFørFraInnsender = refInnsendersTidligereKrav,
+                ),
             )
         } catch (e: Exception) {
             log.error(e) { "Feil i vilkårsvurdering" }

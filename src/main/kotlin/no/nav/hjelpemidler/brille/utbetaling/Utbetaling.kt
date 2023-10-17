@@ -15,7 +15,7 @@ data class Utbetaling(
     val oppdatert: LocalDateTime = LocalDateTime.now(),
     val status: UtbetalingStatus = UtbetalingStatus.NY,
     val batchDato: LocalDate = vedtak.opprettet.toLocalDate(),
-    val batchId: String = "${vedtak.orgnr}-${batchDato.format(batchIdDateFormatter)}"
+    val batchId: String = "${vedtak.orgnr}-${batchDato.format(batchIdDateFormatter)}",
 )
 
 val batchIdDateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -24,5 +24,5 @@ enum class UtbetalingStatus {
     NY, // Ved innvilget vedtak, blir det registrert ny utbetaling for vedtaket.
     TIL_UTBETALING, // sendt til utbetaling
     UTBETALT, // utbetalt kvittering fra Utbetalingsmodulen,
-    REKJOR // Manuell verdi for utbetalinger som skal rekjøres
+    REKJOR, // Manuell verdi for utbetalinger som skal rekjøres
 }

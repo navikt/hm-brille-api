@@ -36,7 +36,7 @@ class TestRouting(configuration: Routing.() -> Unit) {
                                 email = "example@example.com",
                                 name = "E. X. Ample",
                                 navIdent = "X123456",
-                            )
+                            ),
                         )
                     }
                 }

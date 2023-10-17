@@ -58,7 +58,7 @@ class EnhetsregisteretClient(
                         httpClient.prepareGet("$baseUrl/enhetsregisteret/api/enheter/lastned") {
                             header(
                                 HttpHeaders.Accept,
-                                "application/vnd.brreg.enhetsregisteret.enhet.v1+gzip;charset=UTF-8"
+                                "application/vnd.brreg.enhetsregisteret.enhet.v1+gzip;charset=UTF-8",
                             )
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhet ->
@@ -74,7 +74,7 @@ class EnhetsregisteretClient(
                         httpClient.prepareGet("$baseUrl/enhetsregisteret/api/underenheter/lastned") {
                             header(
                                 HttpHeaders.Accept,
-                                "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8"
+                                "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8",
                             )
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhet ->

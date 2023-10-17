@@ -13,5 +13,5 @@ data class VilkårsvurderingHotsakDto(
     val satsBeløp: Int,
     val beløp: BigDecimal,
     val vilkårsgrunnlag: JsonNode,
-    val evaluering: Evaluering
+    val evaluering: Evaluering,
 )

@@ -18,7 +18,7 @@ data class Organisasjonsenhet(
     fun næringskoder(): Set<Næringskode> = setOfNotNull(
         naeringskode1,
         naeringskode2,
-        naeringskode3
+        naeringskode3,
     )
 
     fun harNæringskode(kode: String): Boolean = næringskoder().any {

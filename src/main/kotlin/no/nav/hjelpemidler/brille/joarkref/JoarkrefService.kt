@@ -18,7 +18,7 @@ class JoarkrefService(val databaseContext: DatabaseContext) {
     }
 }
 
-data class JoarkRef (
+data class JoarkRef(
     val journalpostId: Long,
     val dokumentIder: List<String>,
 )

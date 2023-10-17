@@ -4,7 +4,7 @@ data class SatsBeregning(
     val sats: SatsType,
     val satsBeskrivelse: String,
     val satsBeløp: Int,
-){
+) {
     companion object {
         fun ingen() = SatsBeregning(
             sats = SatsType.INGEN,

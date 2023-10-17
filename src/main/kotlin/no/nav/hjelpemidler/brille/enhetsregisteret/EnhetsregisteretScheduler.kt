@@ -12,7 +12,7 @@ class EnhetsregisteretScheduler(
     leaderElection: LeaderElection,
     metricsConfig: MetricsConfig,
     delay: Duration = 1.hours,
-    onlyWorkHours: Boolean = true
+    onlyWorkHours: Boolean = true,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
     companion object {

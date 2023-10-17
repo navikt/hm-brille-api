@@ -20,7 +20,7 @@ class SendTilUtbetalingScheduler(
     private val metricsConfig: MetricsConfig,
     delay: Duration = if (Configuration.dev) 3.minutes else 1.hours,
     private val dager: Long = 15,
-    onlyWorkHours: Boolean = true
+    onlyWorkHours: Boolean = true,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
 
     private var maxUtbetalinger: Double = 0.0
@@ -40,7 +40,7 @@ class SendTilUtbetalingScheduler(
     override suspend fun action() {
         val utbetalinger = utbetalingService.hentUtbetalingerForOppdrag(
             batchDato = LocalDate.now().minusDays(dager),
-            opprettetFor = 2.minutes
+            opprettetFor = 2.minutes,
         ) // hent kun de som har blitt registrert minst x minutter siden.
         LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
         if (utbetalinger.isNotEmpty()) {

@@ -65,8 +65,8 @@ abstract class SimpleScheduler(
                 LOG.info(
                     "NOT running $mySchedulerName: isLeader: ${leaderElection.isLeader()}" +
                         ", onlyWorkHours: $onlyWorkHours, isWorkingHours: ${
-                        LocalDateTime.now().isWorkingHours()
-                        }"
+                            LocalDateTime.now().isWorkingHours()
+                        }",
                 )
             }
         }

@@ -1,14 +1,13 @@
 import com.expediagroup.graphql.plugin.gradle.config.GraphQLScalar
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.hjelpemidler"
 version = "1.0-SNAPSHOT"
 
 plugins {
     kotlin("jvm") version "1.9.10"
-    id("io.ktor.plugin") version "2.3.4"
+    id("io.ktor.plugin") version "2.3.5"
     id("com.diffplug.spotless") version "6.16.0"
-    id("com.expediagroup.graphql") version "6.5.6"
+    id("com.expediagroup.graphql") version "7.0.1"
 }
 
 application {
@@ -50,7 +49,7 @@ dependencies {
     implementation(ktorServer("status-pages"))
 
     // GraphQL
-    val graphQLVersion = "6.5.6"
+    val graphQLVersion = "7.0.1"
     implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphQLVersion") {
         exclude(group = "com.expediagroup", module = "graphql-kotlin-client-serialization")
         exclude(group = "io.ktor", module = "ktor-client-serialization")
@@ -86,28 +85,37 @@ dependencies {
     testImplementation("com.nimbusds:nimbus-jose-jwt:9.35")
 }
 
-/*
 spotless {
     kotlin {
-        targetExclude("build/generated/**/*")
-        ktlint()
+        ktlint().editorConfigOverride(
+            mapOf(
+                "ktlint_standard_enum-entry-name-case" to "disabled",
+            ),
+        )
+        targetExclude("build/generated/source/**")
     }
     kotlinGradle {
-        target("*.gradle.kts")
         ktlint()
     }
 }
-*/
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
+val jdkVersion = 17
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(jdkVersion))
+    }
 }
 
-tasks.withType<Test> {
+kotlin {
+    jvmToolchain(jdkVersion)
+}
+
+tasks.test {
     useJUnitPlatform()
 }
 
-tasks.named("compileKotlin") {
+tasks.compileKotlin {
     dependsOn("spotlessApply")
     dependsOn("spotlessCheck")
 }

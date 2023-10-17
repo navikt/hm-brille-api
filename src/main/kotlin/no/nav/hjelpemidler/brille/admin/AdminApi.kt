@@ -51,14 +51,14 @@ fun Route.adminApi(
             call.adminAuditLogging(
                 "søk",
                 mapOf(
-                    "query" to query
-                )
+                    "query" to query,
+                ),
             )
 
             if (!Regex("[0-9-]+").matches(query)) {
                 return@post call.respond(
                     HttpStatusCode.BadRequest,
-                    """{"error": "Ugyldig format: bare tall og bindestrek er tillatt"}"""
+                    """{"error": "Ugyldig format: bare tall og bindestrek er tillatt"}""",
                 )
             }
 
@@ -78,11 +78,11 @@ fun Route.adminApi(
                         avvisning?.copy(
                             orgNavn = avvisning.orgnr.let { orgnr ->
                                 enhetsregisteretService.hentOrganisasjonsenhet(
-                                    orgnr
+                                    orgnr,
                                 )?.navn
                             } ?: "<Ukjent>",
-                        )
-                    )
+                        ),
+                    ),
                 )
             } else if (Regex("[0-9]{9}-[0-9]{8}").matches(query)) {
                 val utbetaling = adminService.hentUtbetalinger(query).isNotEmpty()
@@ -110,7 +110,7 @@ fun Route.adminApi(
             call.adminAuditLogging(
                 "detaljer vedtak",
                 mapOf(
-                    "vedtakId" to vedtakId.toString()
+                    "vedtakId" to vedtakId.toString(),
                 ),
                 vedtak.innsenderFnr,
             )
@@ -149,8 +149,8 @@ fun Route.adminApi(
                     utbetalingsreferanse = vedtak.batchId,
                     slettet = vedtak.slettet,
                     slettetAv = vedtak.slettetAv,
-                    slettetAvType = vedtak.slettetAvType
-                )
+                    slettetAvType = vedtak.slettetAvType,
+                ),
             )
         }
 
@@ -168,7 +168,7 @@ fun Route.adminApi(
             call.adminAuditLogging(
                 "slett vedtak",
                 mapOf(
-                    "vedtakId" to vedtakId.toString()
+                    "vedtakId" to vedtakId.toString(),
                 ),
                 vedtak.innsenderFnr,
             )
@@ -227,10 +227,10 @@ fun Route.adminApi(
                             bestillingsreferanse = it.bestillingsreferanse,
                             barnsNavn = it.barnsNavn,
                             beløp = it.beløp,
-                            slettet = it.slettet
+                            slettet = it.slettet,
                         )
-                    }
-                )
+                    },
+                ),
             )
         }
 
@@ -248,7 +248,7 @@ fun Route.adminApi(
                     "orgnr" to orgnr,
                     "kravFilter" to kravFilter?.toString(),
                     "fraDato" to fraDato?.toString(),
-                    "tilDato" to tilDato?.toString()
+                    "tilDato" to tilDato?.toString(),
                 ),
             )
 
@@ -256,22 +256,22 @@ fun Route.adminApi(
                 orgNr = orgnr,
                 kravFilter = kravFilter,
                 fraDato = fraDato,
-                tilDato = tilDato
+                tilDato = tilDato,
             )
 
             call.response.header(
                 HttpHeaders.ContentDisposition,
                 ContentDisposition.Attachment.withParameter(
                     ContentDisposition.Parameters.FileName,
-                    "${Date().time}.csv"
+                    "${Date().time}.csv",
                 )
-                    .toString()
+                    .toString(),
             )
 
             call.respondOutputStream(
                 status = HttpStatusCode.OK,
                 contentType = ContentType.Text.CSV,
-                producer = producer(kravlinjer)
+                producer = producer(kravlinjer),
             )
         }
     }

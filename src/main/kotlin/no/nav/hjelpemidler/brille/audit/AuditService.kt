@@ -12,7 +12,7 @@ class AuditService(val databaseContext: DatabaseContext) {
             ctx.auditStore.lagreOppslag(
                 fnrInnlogget = fnrInnlogget,
                 fnrOppslag = fnrOppslag,
-                oppslagBeskrivelse = oppslagBeskrivelse
+                oppslagBeskrivelse = oppslagBeskrivelse,
             )
         }
     }

@@ -49,16 +49,16 @@ internal class AvtaleApiTest {
         epost = "test@test",
         fnrInnsender = fnrInnsender,
         navnInnsender = "Dag Ledersen",
-        aktiv = true
+        aktiv = true,
     )
     private val opprettAvtale = OpprettAvtale(
         orgnr = avgiver.orgnr,
         kontonr = virksomhet.kontonr,
-        epost = "test@test"
+        epost = "test@test",
     )
     private val oppdaterAvtale = OppdaterAvtale(
         kontonr = virksomhet.kontonr,
-        epost = opprettAvtale.epost
+        epost = opprettAvtale.epost,
     )
 
     @BeforeTest
@@ -76,20 +76,22 @@ internal class AvtaleApiTest {
             beliggenhetsadresse = null,
             naeringskode1 = Næringskode("", Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER),
             naeringskode2 = null,
-            naeringskode3 = null
+            naeringskode3 = null,
         )
         coEvery {
             enhetsregisteretService.hentOrganisasjonsenheter(setOf(avgiver.orgnr))
-        } returns mapOf(avgiver.orgnr to Organisasjonsenhet(
-            orgnr = avgiver.orgnr,
-            overordnetEnhet = null,
-            navn = avgiver.navn,
-            forretningsadresse = null,
-            beliggenhetsadresse = null,
-            naeringskode1 = Næringskode("", Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER),
-            naeringskode2 = null,
-            naeringskode3 = null
-        ))
+        } returns mapOf(
+            avgiver.orgnr to Organisasjonsenhet(
+                orgnr = avgiver.orgnr,
+                overordnetEnhet = null,
+                navn = avgiver.navn,
+                forretningsadresse = null,
+                beliggenhetsadresse = null,
+                naeringskode1 = Næringskode("", Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER),
+                naeringskode2 = null,
+                naeringskode3 = null,
+            ),
+        )
         every {
             kafkaService.avtaleOpprettet(any())
         } returns Unit

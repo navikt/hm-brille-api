@@ -22,9 +22,7 @@ internal class VedtakStorePostgresTest {
     internal fun `lagrer og henter vedtak`() =
 
         withMigratedDb {
-
             with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
-
                 val virksomhet = lagreVirksomhet(
                     Virksomhet(
                         orgnr = "127627797",
@@ -33,7 +31,7 @@ internal class VedtakStorePostgresTest {
                         fnrInnsender = "27121346261",
                         navnInnsender = "",
                         aktiv = true,
-                    )
+                    ),
                 )
 
                 with(VedtakStorePostgres(PostgresTestHelper.sessionFactory)) {
@@ -54,7 +52,7 @@ internal class VedtakStorePostgresTest {
                             satsBeskrivelse = sats.beskrivelse,
                             beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
                             kilde = KravKilde.KRAV_APP,
-                        )
+                        ),
                     )
 
                     this.lagreVedtakIKø(lagretVedtak.id, lagretVedtak.opprettet)
@@ -83,7 +81,7 @@ internal class VedtakStorePostgresTest {
                             satsBeskrivelse = sats.beskrivelse,
                             beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
                             kilde = KravKilde.KRAV_APP,
-                        )
+                        ),
                     )
 
                     this.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
@@ -92,7 +90,7 @@ internal class VedtakStorePostgresTest {
                     // Test før tss-ident eksisterer
                     val vedtakListTom =
                         this.hentVedtakForUtbetaling<Vedtak<*>>(
-                            opprettet = LocalDateTime.now()
+                            opprettet = LocalDateTime.now(),
                         )
                     vedtakListTom.size shouldBe 0
 
@@ -103,7 +101,7 @@ internal class VedtakStorePostgresTest {
 
                     val vedtakList =
                         this.hentVedtakForUtbetaling<Vedtak<*>>(
-                            opprettet = LocalDateTime.now()
+                            opprettet = LocalDateTime.now(),
                         )
                     vedtakList.size shouldBeGreaterThan 1
                     vedtakList.forEach {
@@ -111,7 +109,7 @@ internal class VedtakStorePostgresTest {
                     }
                     val tomtList =
                         this.hentVedtakForUtbetaling<Vedtak<*>>(
-                            opprettet = LocalDateTime.now()
+                            opprettet = LocalDateTime.now(),
                         )
                     tomtList.isEmpty() shouldBe true
 

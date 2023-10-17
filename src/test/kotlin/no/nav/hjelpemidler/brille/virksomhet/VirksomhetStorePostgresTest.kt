@@ -8,7 +8,6 @@ import kotlin.test.Test
 internal class VirksomhetStorePostgresTest {
     @Test
     internal fun `lagrer og henter virksomhet`() = withMigratedDb {
-
         with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
             val lagretVirksomhet = lagreVirksomhet(
                 Virksomhet(
@@ -18,7 +17,7 @@ internal class VirksomhetStorePostgresTest {
                     fnrInnsender = "27121346260",
                     navnInnsender = "",
                     aktiv = true,
-                )
+                ),
             )
             val hentetVirksomhetForOrganisasjon = hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
             try {

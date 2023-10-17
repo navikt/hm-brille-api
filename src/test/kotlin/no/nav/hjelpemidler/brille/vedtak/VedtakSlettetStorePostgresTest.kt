@@ -20,7 +20,6 @@ class VedtakSlettetStorePostgresTest {
         withMigratedDb {
             var virksomhet: Virksomhet
             with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
-
                 virksomhet = lagreVirksomhet(
                     Virksomhet(
                         orgnr = "000000009",
@@ -29,7 +28,7 @@ class VedtakSlettetStorePostgresTest {
                         fnrInnsender = "27121346262",
                         navnInnsender = "",
                         aktiv = true,
-                    )
+                    ),
                 )
             }
             var vedtakId: Long
@@ -51,7 +50,7 @@ class VedtakSlettetStorePostgresTest {
                         satsBeskrivelse = sats.beskrivelse,
                         beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
                         kilde = KravKilde.KRAV_APP,
-                    )
+                    ),
                 )
                 this.lagreVedtakIKø(lagretVedtak.id, lagretVedtak.opprettet)
                 vedtakId = lagretVedtak.id

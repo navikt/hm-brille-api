@@ -89,7 +89,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
                 "avtaleversjon" to virksomhet.avtaleversjon,
                 "opprettet" to virksomhet.opprettet,
                 "oppdatert" to virksomhet.oppdatert,
-            )
+            ),
         ).validate()
         virksomhet
     }
@@ -108,8 +108,8 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
                 "epost" to virksomhet.epost,
                 "fnr_oppdatert_av" to virksomhet.fnrOppdatertAv,
                 "orgnr" to virksomhet.orgnr,
-                "oppdatert" to virksomhet.oppdatert
-            )
+                "oppdatert" to virksomhet.oppdatert,
+            ),
         ).validate()
         virksomhet
     }

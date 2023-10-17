@@ -93,8 +93,8 @@ data class Kravlinje(
     companion object {
         fun fromRow(row: Row): Kravlinje {
             val ekstraKravArray: Array<JsonNode>? = row.jsonOrNull("potensielt_bortfiltrerte_krav")
-            val ekstraKrav: List<Kravlinje>? = (ekstraKravArray?.toList() )?.map { node ->
-                Kravlinje (
+            val ekstraKrav: List<Kravlinje>? = (ekstraKravArray?.toList())?.map { node ->
+                Kravlinje(
                     id = node.get("id").asLong(),
                     bestillingsdato = node.get("bestillingsdato").asLocalDate(),
                     behandlingsresultat = node.get("behandlingsresultat").textValue(),
@@ -127,5 +127,5 @@ data class Kravlinje(
 }
 
 enum class Behandlingsresultat {
-    INNVILGET
+    INNVILGET,
 }

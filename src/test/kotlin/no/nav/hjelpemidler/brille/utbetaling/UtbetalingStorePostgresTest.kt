@@ -38,7 +38,7 @@ internal class UtbetalingStorePostgresTest {
                             fnrInnsender = "27121346260",
                             navnInnsender = "",
                             aktiv = true,
-                        )
+                        ),
                     )
 
                     val sats = SatsType.SATS_1
@@ -59,7 +59,7 @@ internal class UtbetalingStorePostgresTest {
                                 satsBeskrivelse = sats.beskrivelse,
                                 beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
                                 kilde = KravKilde.KRAV_APP,
-                            )
+                            ),
                         )
 
                         val lagretVedtak2 = this.lagreVedtak(
@@ -78,7 +78,7 @@ internal class UtbetalingStorePostgresTest {
                                 satsBeskrivelse = sats.beskrivelse,
                                 beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
                                 kilde = KravKilde.KRAV_APP,
-                            )
+                            ),
                         )
 
                         val utbetaling = lagreUtbetaling(
@@ -86,16 +86,16 @@ internal class UtbetalingStorePostgresTest {
                                 vedtakId = lagretVedtak.id,
                                 referanse = lagretVedtak.bestillingsreferanse,
                                 utbetalingsdato = lagretVedtak.bestillingsdato,
-                                vedtak = lagretVedtak.toDto()
-                            )
+                                vedtak = lagretVedtak.toDto(),
+                            ),
                         )
                         val utbetaling2 = lagreUtbetaling(
                             Utbetaling(
                                 vedtakId = lagretVedtak2.id,
                                 referanse = lagretVedtak2.bestillingsreferanse,
                                 utbetalingsdato = lagretVedtak2.bestillingsdato,
-                                vedtak = lagretVedtak2.toDto()
-                            )
+                                vedtak = lagretVedtak2.toDto(),
+                            ),
                         )
                         utbetaling.id shouldBeGreaterThan 0
                         val hentUtbetaling = hentUtbetalingForVedtak(utbetaling.vedtakId).shouldNotBeNull()
@@ -122,7 +122,8 @@ internal class UtbetalingStorePostgresTest {
 
                         val tiMinutterSiden = LocalDateTime.now().minusMinutes(10)
                         val utbetalinger10MinSiden = hentUtbetalingerMedStatusBatchDatoOpprettet(
-                            batchDato = LocalDate.now(), opprettet = tiMinutterSiden
+                            batchDato = LocalDate.now(),
+                            opprettet = tiMinutterSiden,
                         )
                         utbetalinger10MinSiden.size shouldBe 0
 

@@ -48,7 +48,7 @@ class HotsakClient(
                     SjekkVedtakDto(
                         fnr = fnr,
                         bestillingsdato = bestillingsdato,
-                    )
+                    ),
                 )
             }
             log.info { "Har fått response fra hm-saksbehandling med status: ${response.status}" }
@@ -87,10 +87,10 @@ class HotsakClient(
 
     data class SjekkVedtakDto(
         val fnr: String,
-        val bestillingsdato: LocalDate
+        val bestillingsdato: LocalDate,
     )
 
     data class VedtakIKalenderåretDto(
-        val vedtaksdato: LocalDate?
+        val vedtaksdato: LocalDate?,
     )
 }

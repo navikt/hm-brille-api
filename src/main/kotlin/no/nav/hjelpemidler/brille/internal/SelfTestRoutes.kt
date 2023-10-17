@@ -16,8 +16,6 @@ import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
-import no.nav.hjelpemidler.brille.tss.TssIdentRiver
-import org.slf4j.LoggerFactory
 
 private val log = KotlinLogging.logger {}
 
@@ -31,19 +29,22 @@ fun Route.internalRoutes(
 ) {
     route("/internal") {
         get("/is-alive") {
-            if (kafkaService.isProducerClosed())
+            if (kafkaService.isProducerClosed()) {
                 call.respondText("Kafka producer is not running", status = HttpStatusCode.InternalServerError)
-            else if (kafkaService.isConsumerClosed()) // Don't restart app, even consumer is closed.
+            } else if (kafkaService.isConsumerClosed()) {
+                // Don't restart app, even consumer is closed.
                 call.respondText("Kafka consumer is not running", status = HttpStatusCode.OK)
-            else
+            } else {
                 call.respondText("Application is alive!", status = HttpStatusCode.OK)
+            }
         }
 
         get("/is-ready") {
-            if (kafkaService.isProducerClosed())
+            if (kafkaService.isProducerClosed()) {
                 call.respondText("Kafka producer is not running", status = HttpStatusCode.InternalServerError)
-            else
+            } else {
                 call.respondText("Application is ready!", status = HttpStatusCode.OK)
+            }
         }
 
         get("/deep-ping") {

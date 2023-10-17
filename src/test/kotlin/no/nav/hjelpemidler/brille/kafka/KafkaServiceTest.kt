@@ -25,7 +25,6 @@ internal class KafkaServiceTest {
 
     @Test
     internal fun `vedtak fattet`() {
-
         every {
             kafkaRapid.publishWithTimeout(any(), any(), any())
             kafkaRapid.publishWithTimeout(any(), any())
@@ -40,16 +39,16 @@ internal class KafkaServiceTest {
                     høyreSfære = 1.0,
                     høyreSylinder = 1.0,
                     venstreSfære = 1.0,
-                    venstreSylinder = 1.0
+                    venstreSylinder = 1.0,
                 ),
                 bestillingsdato = LocalDate.now(),
                 brillepris = BigDecimal.ZERO,
-                extras = VilkårsgrunnlagExtrasDto("", "")
+                extras = VilkårsgrunnlagExtrasDto("", ""),
             ),
             "test",
             "test",
             "test",
-            "test"
+            "test",
         )
         val vedtak = Vedtak<Vilkårsgrunnlag>(
             fnrBarn = krav.vilkårsgrunnlag.fnrBarn,
@@ -71,7 +70,7 @@ internal class KafkaServiceTest {
         assertDoesNotThrow {
             service.vedtakFattet(
                 krav = krav,
-                vedtak = vedtak
+                vedtak = vedtak,
             )
         }
     }

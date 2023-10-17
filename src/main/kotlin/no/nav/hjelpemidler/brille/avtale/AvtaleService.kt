@@ -1,10 +1,5 @@
 package no.nav.hjelpemidler.brille.avtale
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.altinn.ALTINN_CLIENT_MAKS_ANTALL_RESULTATER
@@ -62,7 +57,7 @@ class AvtaleService(
                     Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
                     Næringskode.ANDRE_HELSETJENESTER,
                     Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
-                    Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE
+                    Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE,
                 ).any { enhet.harNæringskode(it) }
             }
         }
@@ -87,7 +82,7 @@ class AvtaleService(
                     epost = virksomheter[it.orgnr]?.epost,
                     avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
                     opprettet = virksomheter[it.orgnr]?.opprettet,
-                    oppdatert = virksomheter[it.orgnr]?.oppdatert
+                    oppdatert = virksomheter[it.orgnr]?.oppdatert,
                 )
             }
     }
@@ -119,8 +114,8 @@ class AvtaleService(
                     fnrInnsender = fnrInnsender,
                     navnInnsender = "", // todo -> slett
                     aktiv = true,
-                    avtaleversjon = null
-                )
+                    avtaleversjon = null,
+                ),
             )
         }
 
@@ -135,8 +130,9 @@ class AvtaleService(
         }
         kafkaService.avtaleOpprettet(avtale)
 
-        if (Configuration.dev || Configuration.prod)
+        if (Configuration.dev || Configuration.prod) {
             Slack.post("AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana ved å søke: `Kontonr synkronisert til TSS: orgnr=$orgnr`")
+        }
 
         return avtale
     }
@@ -158,7 +154,7 @@ class AvtaleService(
                     epost = oppdaterAvtale.epost,
                     fnrOppdatertAv = fnrOppdatertAv,
                     oppdatert = LocalDateTime.now(),
-                )
+                ),
             )
         }
 

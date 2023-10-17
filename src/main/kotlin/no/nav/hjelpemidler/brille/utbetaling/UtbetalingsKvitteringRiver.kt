@@ -39,7 +39,7 @@ class UtbetalingsKvitteringRiver(
                     "feilkode_oppdrag",
                     "beskrivelse",
                     "originalXml",
-                    "batchId"
+                    "batchId",
                 )
             }
         }.register(this)
