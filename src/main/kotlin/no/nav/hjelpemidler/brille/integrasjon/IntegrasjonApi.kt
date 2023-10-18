@@ -279,12 +279,32 @@ fun Route.integrasjonApi(
                             vilkårsgrunnlag.orgnr,
                         )
                     ) {
+                        val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
+                            .filter { vilkar -> vilkar.resultat != Resultat.JA }
+                            .map { vilkar -> vilkar.identifikator }
+
+                        val eksisterendeVedtakDatoDirekteoppgjor = vilkårsvurdering.grunnlag.vedtakBarn
+                            .maxByOrNull { it.opprettet }?.opprettet?.toLocalDate()
+                        val eksisterendeVedtakDatoHotsak = vilkårsvurdering.grunnlag.eksisterendeVedtakDatoHotsak
+                        val eksisterendeVedtakDato = if (eksisterendeVedtakDatoDirekteoppgjor == null || eksisterendeVedtakDatoHotsak == null) {
+                            eksisterendeVedtakDatoDirekteoppgjor ?: eksisterendeVedtakDatoHotsak
+                        } else {
+                            if (eksisterendeVedtakDatoDirekteoppgjor.isAfter(eksisterendeVedtakDatoHotsak)) {
+                                eksisterendeVedtakDatoDirekteoppgjor
+                            } else {
+                                eksisterendeVedtakDatoHotsak
+                            }
+                        }
+
                         kafkaService.journalførAvvisning(
                             vilkårsgrunnlag.fnrBarn,
                             vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
                             vilkårsgrunnlag.orgnr,
                             vilkårsgrunnlag.extras.orgNavn,
-                            årsaker,
+                            vilkårsgrunnlag.brilleseddel,
+                            vilkårsgrunnlag.bestillingsdato,
+                            eksisterendeVedtakDato,
+                            årsakerIdentifikator,
                         )
                     }
 
