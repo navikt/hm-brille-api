@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
+import no.nav.hjelpemidler.brille.sats.mangler
 import no.nav.hjelpemidler.nare.evaluering.Årsak
 import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
@@ -153,16 +154,9 @@ object Vilkårene {
         lovreferanse = "§ 2",
         lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
-        val brilleseddel = grunnlag.brilleseddel
-        if (brilleseddel.mangler()) {
-            return@Spesifikasjon nei(
-                "Brilleseddel mangler, kan ikke vurdere om brillestyrken er innenfor fastsatte styrker",
-                Årsak.DOKUMENTASJON_MANGLER,
-            )
-        }
-
         val minsteSfære = grunnlag.minsteSfære
         val minsteSylinder = grunnlag.minsteSylinder
+        val brilleseddel = grunnlag.brilleseddel
         val brillestyrkeGrunnlag = mapOf(
             "venstreSfære" to brilleseddel.venstreSfære.toString(),
             "venstreSylinder" to brilleseddel.venstreSylinder.toString(),
@@ -171,6 +165,11 @@ object Vilkårene {
         )
 
         when {
+            brilleseddel.mangler() -> nei(
+                "Brilleseddel mangler, kan ikke vurdere om brillestyrken er innenfor fastsatte styrker",
+                Årsak.DOKUMENTASJON_MANGLER,
+            )
+
             brilleseddel.høyreSfære >= minsteSfære -> ja(
                 "Høyre sfære oppfyller vilkår om brillestyrke ≥ $minsteSfære",
                 brillestyrkeGrunnlag,

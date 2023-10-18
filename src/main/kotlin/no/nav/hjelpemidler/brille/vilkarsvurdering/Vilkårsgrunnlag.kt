@@ -29,11 +29,14 @@ data class Vilkårsgrunnlag(
     val barnetsAlderIDag: Int? get() = barnetsFødselsdato alderPå dagensDato
 }
 
+/**
+ * Null-verdi for dato.
+ */
 val MANGLENDE_DATO: LocalDate = LocalDate.MAX
 
-infix fun LocalDate?.alderPå(dato: LocalDate): Int? = this?.until(dato)?.years
+fun LocalDate?.mangler(): Boolean = this == null || this === MANGLENDE_DATO
 
-fun LocalDate?.mangler(): Boolean = this === MANGLENDE_DATO
+infix fun LocalDate?.alderPå(dato: LocalDate): Int? = this?.until(dato)?.years
 
 fun Int?.erUnder18(): Boolean = this != null && this < 18
 
