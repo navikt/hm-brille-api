@@ -67,18 +67,12 @@ fun Route.vilkårApi(
                         .filter { vilkar -> vilkar.resultat != Resultat.JA }
                         .map { vilkar -> vilkar.identifikator }
 
-                    val eksisterendeVedtakDatoDirekteoppgjor = vilkarsvurdering.grunnlag.vedtakBarn
-                        .maxByOrNull { it.opprettet }?.opprettet?.toLocalDate()
-                    val eksisterendeVedtakDatoHotsak = vilkarsvurdering.grunnlag.eksisterendeVedtakDatoHotsak
-                    val eksisterendeVedtakDato = if (eksisterendeVedtakDatoDirekteoppgjor == null || eksisterendeVedtakDatoHotsak == null) {
-                        eksisterendeVedtakDatoDirekteoppgjor ?: eksisterendeVedtakDatoHotsak
-                    } else {
-                        if (eksisterendeVedtakDatoDirekteoppgjor.isAfter(eksisterendeVedtakDatoHotsak)) {
-                            eksisterendeVedtakDatoDirekteoppgjor
-                        } else {
-                            eksisterendeVedtakDatoHotsak
-                        }
-                    }
+                    val eksisterendeVedtakDato = KafkaService
+                        .JournalførAvvisning
+                        .nyesteDatoFraDatoer(
+                            vilkarsvurdering.grunnlag.vedtakBarn.maxByOrNull { it.opprettet }?.opprettet?.toLocalDate(),
+                            vilkarsvurdering.grunnlag.eksisterendeVedtakDatoHotsak,
+                        )
 
                     kafkaService.journalførAvvisning(
                         vilkårsgrunnlag.fnrBarn,

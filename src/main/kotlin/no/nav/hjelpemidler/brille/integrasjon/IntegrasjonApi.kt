@@ -283,18 +283,12 @@ fun Route.integrasjonApi(
                             .filter { vilkar -> vilkar.resultat != Resultat.JA }
                             .map { vilkar -> vilkar.identifikator }
 
-                        val eksisterendeVedtakDatoDirekteoppgjor = vilkårsvurdering.grunnlag.vedtakBarn
-                            .maxByOrNull { it.opprettet }?.opprettet?.toLocalDate()
-                        val eksisterendeVedtakDatoHotsak = vilkårsvurdering.grunnlag.eksisterendeVedtakDatoHotsak
-                        val eksisterendeVedtakDato = if (eksisterendeVedtakDatoDirekteoppgjor == null || eksisterendeVedtakDatoHotsak == null) {
-                            eksisterendeVedtakDatoDirekteoppgjor ?: eksisterendeVedtakDatoHotsak
-                        } else {
-                            if (eksisterendeVedtakDatoDirekteoppgjor.isAfter(eksisterendeVedtakDatoHotsak)) {
-                                eksisterendeVedtakDatoDirekteoppgjor
-                            } else {
-                                eksisterendeVedtakDatoHotsak
-                            }
-                        }
+                        val eksisterendeVedtakDato = KafkaService
+                            .JournalførAvvisning
+                            .nyesteDatoFraDatoer(
+                                vilkårsvurdering.grunnlag.vedtakBarn.maxByOrNull { it.opprettet }?.opprettet?.toLocalDate(),
+                                vilkårsvurdering.grunnlag.eksisterendeVedtakDatoHotsak,
+                            )
 
                         kafkaService.journalførAvvisning(
                             vilkårsgrunnlag.fnrBarn,
