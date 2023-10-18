@@ -11,10 +11,10 @@ import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.kafka.KafkaService
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.nare.evaluering.Resultat
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 

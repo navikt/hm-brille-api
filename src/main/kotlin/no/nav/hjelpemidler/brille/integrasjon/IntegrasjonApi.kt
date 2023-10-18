@@ -17,7 +17,6 @@ import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.kafka.KafkaService
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PdlClientException
 import no.nav.hjelpemidler.brille.pdl.PdlHarAdressebeskyttelseException
@@ -43,6 +42,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.virksomhet.Organisasjon
 import no.nav.hjelpemidler.brille.virksomhet.enhetTilAdresseFor
+import no.nav.hjelpemidler.nare.evaluering.Resultat
 import java.math.BigDecimal
 import java.time.LocalDate
 

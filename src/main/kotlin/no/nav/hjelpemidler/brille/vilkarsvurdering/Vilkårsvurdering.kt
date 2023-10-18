@@ -3,9 +3,9 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.jsonMapper
-import no.nav.hjelpemidler.brille.nare.evaluering.Evaluering
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.writePrettyString
+import no.nav.hjelpemidler.nare.evaluering.Evaluering
+import no.nav.hjelpemidler.nare.evaluering.Resultat
 
 data class Vilkårsvurdering<T>(
     val grunnlag: T,
