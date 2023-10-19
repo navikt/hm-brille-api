@@ -63,15 +63,15 @@ fun Route.vilkårApi(
                         vilkårsgrunnlag.orgnr,
                     )
                 ) {
-                    val årsakerIdentifikator = vilkarsvurdering.evaluering.barn
+                    val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
                         .filter { vilkar -> vilkar.resultat != Resultat.JA }
                         .map { vilkar -> vilkar.identifikator }
 
                     val eksisterendeVedtakDato = KafkaService
                         .JournalførAvvisning
                         .nyesteDatoFraDatoer(
-                            vilkarsvurdering.grunnlag.vedtakBarn.maxByOrNull { it.opprettet }?.opprettet?.toLocalDate(),
-                            vilkarsvurdering.grunnlag.eksisterendeVedtakDatoHotsak,
+                            vilkårsvurdering.grunnlag.vedtakBarn.maxByOrNull { it.opprettet }?.opprettet?.toLocalDate(),
+                            vilkårsvurdering.grunnlag.eksisterendeVedtakDatoHotsak,
                         )
 
                     kafkaService.journalførAvvisning(
