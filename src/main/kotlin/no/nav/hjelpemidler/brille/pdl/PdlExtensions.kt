@@ -45,23 +45,23 @@ fun List<AdressebeskyttelseGradering>.erFortrolig() = any { gradering ->
 }
 
 object HentPersonExtensions {
-    fun Person.fodselsdato(): LocalDate? {
-        val fodsel = foedsel.firstOrDefault(Foedsel())
+    fun Person.fødselsdato(): LocalDate? {
+        val fødsel = foedsel.firstOrDefault(Foedsel())
         return when {
-            fodsel.foedselsdato != null -> fodsel.foedselsdato
-            fodsel.foedselsaar != null -> LocalDate.of(fodsel.foedselsaar, Month.DECEMBER, 31)
+            fødsel.foedselsdato != null -> fødsel.foedselsdato
+            fødsel.foedselsaar != null -> LocalDate.of(fødsel.foedselsaar, Month.DECEMBER, 31)
             else -> null
         }
     }
 
     fun Person.alder(): Int? {
-        val fodselsdato = fodselsdato() ?: return null
-        return Period.between(fodselsdato, LocalDate.now()).years
+        val fødselsdato = fødselsdato() ?: return null
+        return Period.between(fødselsdato, LocalDate.now()).years
     }
 
     fun Person.alderPåDato(dato: LocalDate): Int? {
-        val fodselsdato = fodselsdato() ?: return null
-        return Period.between(fodselsdato, dato).years
+        val fødselsdato = fødselsdato() ?: return null
+        return fødselsdato.until(dato).years
     }
 
     fun Person.navn(): String {

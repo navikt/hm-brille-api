@@ -6,8 +6,8 @@ import java.time.LocalDate
 
 data class VilkårsgrunnlagAdDto(
     val fnrBarn: String,
-    val brilleseddel: Brilleseddel,
-    val bestillingsdato: LocalDate,
-    val brillepris: BigDecimal,
+    val brilleseddel: Brilleseddel?,
+    val bestillingsdato: LocalDate?,
+    val brillepris: BigDecimal?,
     val eksisterendeBestillingsdato: LocalDate? = null,
 )

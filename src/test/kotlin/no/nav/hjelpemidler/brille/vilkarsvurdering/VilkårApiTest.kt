@@ -22,6 +22,7 @@ import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.test.TestRouting
+import no.nav.hjelpemidler.brille.test.`år på`
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.nare.evaluering.Resultat
 import org.junit.jupiter.api.Test
@@ -74,24 +75,24 @@ internal class VilkårApiTest {
 
     @Test
     internal fun `barnet fyller 18 år på bestillingsdato`() = kjørTest(
-        fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).toString(),
+        fødselsdato = 18 `år på` DATO_ORDNINGEN_STARTET,
         forventetResultat = Resultat.NEI,
     )
 
     @Test
     internal fun `barnet fyller 18 år dagen etter bestillingsdato`() = kjørTest(
-        fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).plusDays(1).toString(),
+        fødselsdato = (18 `år på` DATO_ORDNINGEN_STARTET).plusDays(1),
         forventetResultat = Resultat.JA,
     )
 
     @Test
     internal fun `barnet fyller 18 år dagen før bestillingsdato`() = kjørTest(
-        fødselsdato = DATO_ORDNINGEN_STARTET.minusYears(18).minusDays(1).toString(),
+        fødselsdato = (18 `år på` DATO_ORDNINGEN_STARTET).minusDays(1),
         forventetResultat = Resultat.NEI,
     )
 
     @Test
-    internal fun `barnet er bevist ikke medlem i folktrygden`() = kjørTest(
+    internal fun `barnet er bevist ikke medlem i folketrygden`() = kjørTest(
         medlemskapResultat = MedlemskapResultat(
             resultat = MedlemskapResultatResultat.NEI,
             saksgrunnlag = emptyList(),
@@ -100,7 +101,7 @@ internal class VilkårApiTest {
     )
 
     @Test
-    internal fun `barnets medlemskap i folktrygden er uavklart`() = kjørTest(
+    internal fun `barnets medlemskap i folketrygden er uavklart`() = kjørTest(
         medlemskapResultat = MedlemskapResultat(
             resultat = MedlemskapResultatResultat.UAVKLART,
             saksgrunnlag = emptyList(),
@@ -109,7 +110,7 @@ internal class VilkårApiTest {
     )
 
     @Test
-    internal fun `brillestyrke under minstgrense`() = kjørTest(
+    internal fun `brillestyrke under minstegrense`() = kjørTest(
         vilkårsgrunnlag = defaulVilkårMedBrilleseddel(),
         forventetResultat = Resultat.NEI,
     )
@@ -154,7 +155,7 @@ internal class VilkårApiTest {
     private fun kjørTest(
         vilkårsgrunnlag: VilkårsgrunnlagDto = defaultVilkårsgrunnlag,
         vedtakForBruker: List<EksisterendeVedtak> = emptyList(),
-        fødselsdato: String = "2014-08-15",
+        fødselsdato: LocalDate = LocalDate.parse("2014-08-15"),
         medlemskapResultat: MedlemskapResultat = MedlemskapResultat(
             resultat = MedlemskapResultatResultat.JA,
             saksgrunnlag = emptyList(),
@@ -176,7 +177,7 @@ internal class VilkårApiTest {
 
         coEvery {
             pdlClient.hentPerson(vilkårsgrunnlag.fnrBarn)
-        } returns lagMockPdlOppslag(fødselsdato)
+        } returns lagMockPdlOppslag(fødselsdato.toString())
 
         coEvery {
             medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBarn, vilkårsgrunnlag.bestillingsdato)
@@ -214,14 +215,14 @@ internal class VilkårApiTest {
             behandlingsresultat = "",
             opprettet = bestillingsdato.atStartOfDay(),
             fnrInnsender = fnrInnsender,
-            bestillingsreferanse = "1213e",
+            bestillingsreferanse = "bestillingsreferanse",
         )
 
     private fun defaulVilkårMedBrilleseddel(
-        høyreSfære: Double = 0.00,
-        høyreSylinder: Double = 0.00,
-        venstreSfære: Double = 0.00,
-        venstreSylinder: Double = 0.00,
+        høyreSfære: Double = 0.0,
+        høyreSylinder: Double = 0.0,
+        venstreSfære: Double = 0.0,
+        venstreSylinder: Double = 0.0,
     ) =
         defaultVilkårsgrunnlag.copy(
             brilleseddel = Brilleseddel(

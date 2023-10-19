@@ -11,6 +11,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Bostedsadresse
 import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.DeltBosted
 import no.nav.hjelpemidler.brille.redis.RedisClient
+import no.nav.hjelpemidler.brille.vilkarsvurdering.mangler
 import no.nav.hjelpemidler.brille.writePrettyString
 import org.slf4j.MDC
 import java.time.LocalDate
@@ -58,6 +59,11 @@ class MedlemskapBarn(
 ) {
     suspend fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsdato: LocalDate): MedlemskapResultat {
         log.info("Sjekker medlemskap for barn")
+
+        if (bestillingsdato.mangler()) {
+            log.info { "Ukjent bestillingsdato, returnerer negativt medlemskapsresultat" }
+            return MedlemskapResultat(MedlemskapResultatResultat.NEI, emptyList())
+        }
 
         val baseCorrelationId = MDC.get(MDC_CORRELATION_ID)
         val saksgrunnlag = mutableListOf(

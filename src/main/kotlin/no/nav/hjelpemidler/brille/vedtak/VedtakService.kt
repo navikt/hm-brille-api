@@ -11,7 +11,6 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingException
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.nare.evaluering.Resultat
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
@@ -22,10 +21,6 @@ class VedtakService(
     private val vilkårsvurderingService: VilkårsvurderingService,
     private val kafkaService: KafkaService,
 ) {
-    companion object {
-        private val LOG = LoggerFactory.getLogger(VedtakService::class.java)
-    }
-
     suspend fun lagVedtak(
         fnrInnsender: String,
         navnInnsender: String,

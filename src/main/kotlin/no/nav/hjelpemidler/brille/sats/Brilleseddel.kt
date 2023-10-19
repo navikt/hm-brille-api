@@ -35,4 +35,18 @@ data class Brilleseddel(
             )
         }
     }
+
+    companion object {
+        /**
+         * Null-verdi for brilleseddel.
+         */
+        val INGEN: Brilleseddel = Brilleseddel(
+            høyreSfære = 0.0,
+            høyreSylinder = 0.0,
+            venstreSfære = 0.0,
+            venstreSylinder = 0.0,
+        )
+    }
 }
+
+fun Brilleseddel?.mangler() = this == null || this === Brilleseddel.INGEN

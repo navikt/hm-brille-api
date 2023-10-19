@@ -33,24 +33,24 @@ fun Route.vilkårApi(
                 fnrOppslag = vilkårsgrunnlag.fnrBarn,
                 oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om barn og bestilling oppfyller vilkår for støtte",
             )
-            val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(
+            val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
                 vilkårsgrunnlag.fnrBarn,
                 vilkårsgrunnlag.brilleseddel,
                 vilkårsgrunnlag.bestillingsdato,
             )
-            val sats = when (vilkarsvurdering.utfall) {
+            val sats = when (vilkårsvurdering.utfall) {
                 Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
                 else -> SatsType.INGEN
             }
 
-            if (vilkarsvurdering.utfall != Resultat.JA) {
+            if (vilkårsvurdering.utfall != Resultat.JA) {
                 sikkerLog.info {
-                    "Vilkårsvurderingen ga negativt resultat:\n${vilkarsvurdering.toJson()}"
+                    "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                 }
 
-                kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkarsvurdering)
+                kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkårsvurdering)
 
-                val årsaker = vilkarsvurdering.evaluering.barn
+                val årsaker = vilkårsvurdering.evaluering.barn
                     .filter { vilkar -> vilkar.resultat != Resultat.JA }
                     .map { vilkar -> vilkar.begrunnelse }
 
@@ -76,7 +76,7 @@ fun Route.vilkårApi(
 
                     kafkaService.journalførAvvisning(
                         vilkårsgrunnlag.fnrBarn,
-                        vilkarsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
+                        vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
                         vilkårsgrunnlag.orgnr,
                         vilkårsgrunnlag.extras.orgNavn,
                         vilkårsgrunnlag.brilleseddel,
@@ -90,8 +90,8 @@ fun Route.vilkårApi(
             val beløp = minOf(sats.beløp(vilkårsgrunnlag.bestillingsdato).toBigDecimal(), vilkårsgrunnlag.brillepris)
 
             val refInnsendersTidligereKrav =
-                if (!vilkarsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret")) {
-                    vilkarsvurdering.grunnlag.vedtakBarn.firstOrNull {
+                if (!vilkårsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret")) {
+                    vilkårsvurdering.grunnlag.vedtakBarn.firstOrNull {
                         it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year
                     }
                         ?.bestillingsreferanse
@@ -101,7 +101,7 @@ fun Route.vilkårApi(
 
             call.respond(
                 VilkårsvurderingDto(
-                    resultat = vilkarsvurdering.utfall,
+                    resultat = vilkårsvurdering.utfall,
                     sats = sats,
                     satsBeskrivelse = sats.beskrivelse,
                     satsBeløp = sats.beløp(vilkårsgrunnlag.bestillingsdato),
