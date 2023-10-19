@@ -6,12 +6,11 @@ import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingException
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
-import org.slf4j.LoggerFactory
+import no.nav.hjelpemidler.nare.evaluering.Resultat
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
@@ -22,11 +21,12 @@ class VedtakService(
     private val vilkårsvurderingService: VilkårsvurderingService,
     private val kafkaService: KafkaService,
 ) {
-    companion object {
-        private val LOG = LoggerFactory.getLogger(VedtakService::class.java)
-    }
-
-    suspend fun lagVedtak(fnrInnsender: String, navnInnsender: String, krav: KravDto, kilde: KravKilde): Vedtak<Vilkårsgrunnlag> {
+    suspend fun lagVedtak(
+        fnrInnsender: String,
+        navnInnsender: String,
+        krav: KravDto,
+        kilde: KravKilde,
+    ): Vedtak<Vilkårsgrunnlag> {
         val vilkårsgrunnlag = krav.vilkårsgrunnlag
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
             vilkårsgrunnlag.fnrBarn,

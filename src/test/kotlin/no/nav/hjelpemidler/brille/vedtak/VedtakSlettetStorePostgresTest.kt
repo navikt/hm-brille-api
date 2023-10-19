@@ -4,11 +4,11 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper
 import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
-import no.nav.hjelpemidler.brille.nare.evaluering.Evalueringer
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
+import no.nav.hjelpemidler.nare.evaluering.Evalueringer
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 

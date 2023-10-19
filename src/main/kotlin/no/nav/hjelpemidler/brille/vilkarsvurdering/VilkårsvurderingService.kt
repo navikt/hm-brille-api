@@ -5,11 +5,11 @@ import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
-import no.nav.hjelpemidler.brille.nare.spesifikasjon.Spesifikasjon
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.GcpEnvironment
+import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
@@ -36,11 +36,9 @@ class VilkårsvurderingService(
         bestillingsdato: LocalDate,
         eksisterendeVedtakDatoHotsak: LocalDate?,
     ): Vilkårsvurdering<Vilkårsgrunnlag> {
-        val vedtakBarn =
-            transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(fnrBarn) }
+        val vedtakBarn = transaction(databaseContext) { ctx -> ctx.vedtakStore.hentVedtakForBarn(fnrBarn) }
         val pdlOppslagBarn = pdlClient.hentPerson(fnrBarn)
-        val medlemskapResultat =
-            medlemskapBarn.sjekkMedlemskapBarn(fnrBarn, bestillingsdato)
+        val medlemskapResultat = medlemskapBarn.sjekkMedlemskapBarn(fnrBarn, bestillingsdato)
         val vilkårsgrunnlag = Vilkårsgrunnlag(
             vedtakBarn = vedtakBarn,
             eksisterendeVedtakDatoHotsak = eksisterendeVedtakDatoHotsak,
@@ -56,6 +54,7 @@ class VilkårsvurderingService(
         if (Environment.current == GcpEnvironment.DEV) {
             log.info { "Resultat av vilkårsvurdering: ${vilkårsvurdering.toJson()}" }
         }
+
         return vilkårsvurdering
     }
 

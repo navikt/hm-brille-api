@@ -106,7 +106,16 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         }
     }
 
-    fun journalførAvvisning(fnrBarn: String, navnBarn: String, orgnr: String, orgNavn: String, årsaker: List<String>) {
+    fun journalførAvvisning(
+        fnrBarn: String,
+        navnBarn: String,
+        orgnr: String,
+        orgNavn: String,
+        brilleseddel: Brilleseddel,
+        bestillingsdato: LocalDate,
+        eksisterendeVedtakDato: LocalDate?,
+        årsaker: List<String>,
+    ) {
         produceEvent(
             null,
             JournalførAvvisning(
@@ -114,6 +123,9 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 navnBarn = navnBarn,
                 orgnr = orgnr,
                 orgNavn = orgNavn,
+                brilleseddel = brilleseddel,
+                bestillingsdato = bestillingsdato,
+                eksisterendeVedtakDato = eksisterendeVedtakDato,
                 årsaker = årsaker,
             ),
         )
@@ -316,8 +328,19 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val navnBarn: String,
         val orgnr: String,
         val orgNavn: String,
+        val brilleseddel: Brilleseddel,
+        val bestillingsdato: LocalDate,
+        val eksisterendeVedtakDato: LocalDate?,
         val årsaker: List<String>,
-    )
+    ) {
+        companion object {
+            fun nyesteDatoFraDatoer(a: LocalDate?, b: LocalDate?): LocalDate? {
+                return if (a == null || b == null) { a ?: b } else {
+                    if (a.isAfter(b)) { a } else { b }
+                }
+            }
+        }
+    }
 
     /**
      * Lager navn på nøkler i JSON som er kompatible med direkte insert i BigQuery

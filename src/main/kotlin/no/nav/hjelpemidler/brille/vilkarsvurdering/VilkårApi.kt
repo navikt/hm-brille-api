@@ -11,10 +11,10 @@ import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.kafka.KafkaService
-import no.nav.hjelpemidler.brille.nare.evaluering.Resultat
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.nare.evaluering.Resultat
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
@@ -33,24 +33,24 @@ fun Route.vilkårApi(
                 fnrOppslag = vilkårsgrunnlag.fnrBarn,
                 oppslagBeskrivelse = "[POST] /vilkarsgrunnlag - Sjekk om barn og bestilling oppfyller vilkår for støtte",
             )
-            val vilkarsvurdering = vilkårsvurderingService.vurderVilkår(
+            val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
                 vilkårsgrunnlag.fnrBarn,
                 vilkårsgrunnlag.brilleseddel,
                 vilkårsgrunnlag.bestillingsdato,
             )
-            val sats = when (vilkarsvurdering.utfall) {
+            val sats = when (vilkårsvurdering.utfall) {
                 Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
                 else -> SatsType.INGEN
             }
 
-            if (vilkarsvurdering.utfall != Resultat.JA) {
+            if (vilkårsvurdering.utfall != Resultat.JA) {
                 sikkerLog.info {
-                    "Vilkårsvurderingen ga negativt resultat:\n${vilkarsvurdering.toJson()}"
+                    "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                 }
 
-                kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkarsvurdering)
+                kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkårsvurdering)
 
-                val årsaker = vilkarsvurdering.evaluering.barn
+                val årsaker = vilkårsvurdering.evaluering.barn
                     .filter { vilkar -> vilkar.resultat != Resultat.JA }
                     .map { vilkar -> vilkar.begrunnelse }
 
@@ -63,12 +63,26 @@ fun Route.vilkårApi(
                         vilkårsgrunnlag.orgnr,
                     )
                 ) {
+                    val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
+                        .filter { vilkar -> vilkar.resultat != Resultat.JA }
+                        .map { vilkar -> vilkar.identifikator }
+
+                    val eksisterendeVedtakDato = KafkaService
+                        .JournalførAvvisning
+                        .nyesteDatoFraDatoer(
+                            vilkårsvurdering.grunnlag.vedtakBarn.maxByOrNull { it.opprettet }?.opprettet?.toLocalDate(),
+                            vilkårsvurdering.grunnlag.eksisterendeVedtakDatoHotsak,
+                        )
+
                     kafkaService.journalførAvvisning(
                         vilkårsgrunnlag.fnrBarn,
-                        vilkarsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
+                        vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
                         vilkårsgrunnlag.orgnr,
                         vilkårsgrunnlag.extras.orgNavn,
-                        årsaker,
+                        vilkårsgrunnlag.brilleseddel,
+                        vilkårsgrunnlag.bestillingsdato,
+                        eksisterendeVedtakDato,
+                        årsakerIdentifikator,
                     )
                 }
             }
@@ -76,8 +90,8 @@ fun Route.vilkårApi(
             val beløp = minOf(sats.beløp(vilkårsgrunnlag.bestillingsdato).toBigDecimal(), vilkårsgrunnlag.brillepris)
 
             val refInnsendersTidligereKrav =
-                if (!vilkarsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret")) {
-                    vilkarsvurdering.grunnlag.vedtakBarn.firstOrNull {
+                if (!vilkårsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret")) {
+                    vilkårsvurdering.grunnlag.vedtakBarn.firstOrNull {
                         it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year
                     }
                         ?.bestillingsreferanse
@@ -87,7 +101,7 @@ fun Route.vilkårApi(
 
             call.respond(
                 VilkårsvurderingDto(
-                    resultat = vilkarsvurdering.utfall,
+                    resultat = vilkårsvurdering.utfall,
                     sats = sats,
                     satsBeskrivelse = sats.beskrivelse,
                     satsBeløp = sats.beløp(vilkårsgrunnlag.bestillingsdato),
