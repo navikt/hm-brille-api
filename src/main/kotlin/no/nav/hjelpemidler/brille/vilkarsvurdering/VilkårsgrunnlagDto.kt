@@ -11,7 +11,11 @@ data class VilkårsgrunnlagDto(
     val bestillingsdato: LocalDate,
     val brillepris: BigDecimal,
     val extras: VilkårsgrunnlagExtrasDto, // kun til statistikk o.l.
-)
+) {
+    fun validerBestillingsdatoIkkeIFremtiden(): Boolean {
+        return !bestillingsdato.isAfter(LocalDate.now())
+    }
+}
 
 data class VilkårsgrunnlagExtrasDto(
     val orgNavn: String,

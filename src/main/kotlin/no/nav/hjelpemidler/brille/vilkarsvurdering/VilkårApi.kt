@@ -28,6 +28,10 @@ fun Route.vilkårApi(
     post("/vilkarsgrunnlag") {
         try {
             val vilkårsgrunnlag = call.receive<VilkårsgrunnlagDto>()
+            if (!vilkårsgrunnlag.validerBestillingsdatoIkkeIFremtiden()) {
+                return@post call.respond(HttpStatusCode.BadRequest, "bestillingsdato kan ikke være i fremtiden")
+            }
+
             auditService.lagreOppslag(
                 fnrInnlogget = call.extractFnr(),
                 fnrOppslag = vilkårsgrunnlag.fnrBarn,
