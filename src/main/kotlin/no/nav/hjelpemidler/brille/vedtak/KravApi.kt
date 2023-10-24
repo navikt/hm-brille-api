@@ -26,6 +26,10 @@ internal fun Route.kravApi(
     route("/krav") {
         post {
             val kravDto = call.receive<KravDto>()
+            if (!kravDto.vilkårsgrunnlag.validerBestillingsdatoIkkeIFremtiden()) {
+                return@post call.respond(HttpStatusCode.BadRequest, "bestillingsdato kan ikke være i fremtiden")
+            }
+
             val fnrInnsender = call.extractFnr()
             val navnInnsender = redisClient.optikerNavn(fnrInnsender) ?: "<Ukjent>"
 
