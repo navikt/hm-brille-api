@@ -12,7 +12,6 @@ data class IngåttAvtale(
     val avtaleversjon: String? = null,
     val bruksvilkår: Boolean? = false,
     val bruksvilkårOpprettet: LocalDateTime? = null,
-    val bruksvilkårEpost: String?,
     val opprettet: LocalDateTime? = null,
     val oppdatert: LocalDateTime? = null,
 ) {
@@ -25,7 +24,6 @@ data class IngåttAvtale(
         avtaleversjon = virksomhet.avtaleversjon,
         bruksvilkår = virksomhet.bruksvilkår,
         bruksvilkårOpprettet = virksomhet.bruksvilkårGodtattDato,
-        bruksvilkårEpost = virksomhet.bruksvilkårEpost,
         opprettet = virksomhet.opprettet,
         oppdatert = virksomhet.oppdatert,
     )

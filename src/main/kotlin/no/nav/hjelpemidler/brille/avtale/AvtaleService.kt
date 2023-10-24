@@ -83,7 +83,6 @@ class AvtaleService(
                     avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
                     bruksvilkår = virksomheter[it.orgnr]?.bruksvilkår,
                     bruksvilkårOpprettet = virksomheter[it.orgnr]?.bruksvilkårGodtattDato,
-                    bruksvilkårEpost = virksomheter[it.orgnr]?.bruksvilkårEpost,
                     opprettet = virksomheter[it.orgnr]?.opprettet,
                     oppdatert = virksomheter[it.orgnr]?.oppdatert,
                 )
@@ -167,7 +166,6 @@ class AvtaleService(
                     orgnr = orgnr,
                     fnrInnsender = fnrInnsender,
                     aktiv = true,
-                    epostKontaktperson = epostKontaktPerson,
                     bruksvilkårDefinisjonId = BRUKSVILKÅRTYPE.BRUKSVILKÅR_API.bruksvilkårId,
                 ),
             )
@@ -199,24 +197,10 @@ class AvtaleService(
                 }.copy(
                     kontonr = oppdaterAvtale.kontonr,
                     epost = oppdaterAvtale.epost,
-                    bruksvilkårEpost = oppdaterAvtale.epostBruksvilkar,
                     fnrOppdatertAv = fnrOppdatertAv,
                     oppdatert = LocalDateTime.now(),
                 ),
             )
-
-            if (oppdaterAvtale.epostBruksvilkar != null) {
-                val bruksvilkår = ctx.avtaleStore.henBruksvilkårOrganisasjon(orgnr)
-                if (bruksvilkår != null) {
-                    ctx.avtaleStore.oppdaterBruksvilkår(
-                        bruksvilkår.copy(
-                            epostKontaktperson = oppdaterAvtale.epostBruksvilkar,
-                            fnrOppdatertAv = fnrOppdatertAv,
-                            oppdatert = LocalDateTime.now(),
-                        ),
-                    )
-                }
-            }
 
             virksomhet
         }

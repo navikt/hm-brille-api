@@ -80,15 +80,11 @@ internal class AvtaleStorePostgresTest {
                         orgnr = "986165760",
                         fnrInnsender = "27121346260",
                         aktiv = true,
-                        epostKontaktperson = "test@test",
                         bruksvilkårDefinisjonId = 1,
                     ),
                 )
 
                 val bruksvilkårHentet = henBruksvilkårOrganisasjon("986165760")
-
-                val oppdaterteBruksvilkår =
-                    oppdaterBruksvilkår(bruksvilkårHentet!!.copy(epostKontaktperson = "test2@test2"))
             }
 
             val hentetVirksomhetForOrganisasjon = hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
@@ -98,7 +94,6 @@ internal class AvtaleStorePostgresTest {
                         .firstOrNull()
                 hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
                 hentetVirksomhetForOrganisasjon?.bruksvilkår shouldBe true
-                hentetVirksomhetForOrganisasjon?.bruksvilkårEpost shouldBe "test2@test2"
             } catch (e: Exception) {
                 System.out.println(e.message)
                 throw e

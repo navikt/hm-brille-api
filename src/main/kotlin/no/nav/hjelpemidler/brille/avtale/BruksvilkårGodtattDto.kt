@@ -7,7 +7,6 @@ data class BruksvilkårGodtattDto(
     val avtaletype: String,
     val opprettet: LocalDateTime,
     val navn: String,
-    val bruksvilkårEpost: String,
 ) {
 
     companion object {
@@ -17,7 +16,6 @@ data class BruksvilkårGodtattDto(
                 BRUKSVILKÅRTYPE.fromInt(bruksvilkårGodtatt.bruksvilkårDefinisjonId).name,
                 bruksvilkårGodtatt.opprettet,
                 navn,
-                bruksvilkårGodtatt.epostKontaktperson,
             )
     }
 }
