@@ -26,6 +26,7 @@ import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
+import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
@@ -286,12 +287,8 @@ fun Route.integrasjonApi(
                             .filter { vilkar -> vilkar.resultat != Resultat.JA }
                             .map { vilkar -> vilkar.identifikator }
 
-                        val eksisterendeVedtakDato = KafkaService
-                            .JournalførAvvisning
-                            .nyesteDatoFraDatoer(
-                                vilkårsvurdering.grunnlag.vedtakBarn.maxByOrNull { it.opprettet }?.opprettet?.toLocalDate(),
-                                vilkårsvurdering.grunnlag.eksisterendeVedtakDatoHotsak,
-                            )
+                        val eksisterendeVedtakDato =
+                            vilkårsvurdering.grunnlag.senesteVedtak()?.vedtaksdato?.toLocalDate()
 
                         kafkaService.journalførAvvisning(
                             vilkårsgrunnlag.fnrBarn,

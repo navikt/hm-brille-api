@@ -20,6 +20,7 @@ import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.azureAD
 import org.slf4j.MDC
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 
@@ -38,7 +39,8 @@ class HotsakClient(
         }
     }
 
-    suspend fun hentEksisterendeVedtakDato(fnr: String, bestillingsdato: LocalDate): LocalDate? {
+    @Deprecated("Bruk hentEksisterendeVedtak")
+    private suspend fun hentEksisterendeVedtakDato(fnr: String, bestillingsdato: LocalDate): LocalDate? {
         try {
             val url = "$baseUrl/vilkarsvurdering/sjekk-vedtak"
             log.info { "Henter vedtaksdato data med url: $url" }
@@ -66,6 +68,20 @@ class HotsakClient(
             throw HotsakClientException("Ukjent feil under henting av vedtaksdato data", e)
         }
     }
+
+    /**
+     * fixme -> lag ferdig implementasjon når hm-saksbehandling går i produksjon
+     */
+    suspend fun hentEksisterendeVedtak(fnr: String, bestillingsdato: LocalDate): List<HotsakVedtak> =
+        listOfNotNull(hentEksisterendeVedtakDato(fnr, bestillingsdato)).map {
+            HotsakVedtak(
+                sakId = "",
+                vedtakId = "",
+                vedtaksdato = Instant.now(),
+                vedtaksstatus = "",
+                bestillingsdato = it,
+            )
+        }
 
     suspend fun deepPing() {
         val baseUrlNoApp = baseUrl.removeSuffix("/").removeSuffix("/api")

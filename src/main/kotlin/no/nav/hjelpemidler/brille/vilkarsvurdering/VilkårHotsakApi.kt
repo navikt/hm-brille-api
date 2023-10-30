@@ -8,10 +8,14 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import mu.KotlinLogging
+import no.nav.hjelpemidler.brille.hotsak.HotsakVedtak
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
+import no.nav.hjelpemidler.brille.tid.MANGLENDE_DATO
+import no.nav.hjelpemidler.brille.tid.toInstant
+import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
@@ -19,6 +23,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger { }
+
 fun Route.vilkårHotsakApi(
     vilkårsvurderingService: VilkårsvurderingService,
     vedtakService: VedtakService,
@@ -29,22 +34,33 @@ fun Route.vilkårHotsakApi(
     }
     post("/ad/vilkarsgrunnlag") {
         try {
-            val vilkårsgrunnlag = call.receive<VilkårsgrunnlagAdDto>()
+            val vilkårsgrunnlag = call.receive<VilkårsgrunnlagHotsakDto>()
             val brilleseddel = vilkårsgrunnlag.brilleseddel ?: Brilleseddel.INGEN
             val bestillingsdato = vilkårsgrunnlag.bestillingsdato ?: MANGLENDE_DATO
             val brillepris = vilkårsgrunnlag.brillepris ?: BigDecimal.ZERO
 
+            // fixme -> ikke bruk når eksisterendeBestillingsdato hm-saksbehandling går i produksjon
+            val vedtakHotsak = listOfNotNull(vilkårsgrunnlag.eksisterendeBestillingsdato).map {
+                HotsakVedtak(
+                    sakId = "",
+                    vedtakId = "",
+                    vedtaksdato = it.toInstant(),
+                    vedtaksstatus = "",
+                    bestillingsdato = it,
+                )
+            } + vilkårsgrunnlag.vedtak
+
             val vilkårsvurdering = withTilgangContext(call) {
                 vilkårsvurderingService.vurderVilkår(
-                    vilkårsgrunnlag.fnrBarn,
-                    brilleseddel,
-                    bestillingsdato,
-                    vilkårsgrunnlag.eksisterendeBestillingsdato,
+                    fnrBarn = vilkårsgrunnlag.fnrBarn,
+                    brilleseddel = brilleseddel,
+                    bestillingsdato = bestillingsdato,
+                    mottaksdato = vilkårsgrunnlag.mottaksdato.toLocalDate(),
+                    vedtakHotsak = vedtakHotsak,
                 )
             }
 
             val sats = SatsKalkulator(brilleseddel).kalkuler()
-
             val beløp = minOf(sats.beløp(bestillingsdato).toBigDecimal(), brillepris)
 
             call.respond(

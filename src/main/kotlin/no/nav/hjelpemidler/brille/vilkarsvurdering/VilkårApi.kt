@@ -14,6 +14,8 @@ import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.tid.toLocalDate
+import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.nare.evaluering.Resultat
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -74,12 +76,8 @@ fun Route.vilkårApi(
                         .filter { vilkar -> vilkar.resultat != Resultat.JA }
                         .map { vilkar -> vilkar.identifikator }
 
-                    val eksisterendeVedtakDato = KafkaService
-                        .JournalførAvvisning
-                        .nyesteDatoFraDatoer(
-                            vilkårsvurdering.grunnlag.vedtakBarn.maxByOrNull { it.opprettet }?.opprettet?.toLocalDate(),
-                            vilkårsvurdering.grunnlag.eksisterendeVedtakDatoHotsak,
-                        )
+                    val eksisterendeVedtakDato =
+                        vilkårsvurdering.grunnlag.senesteVedtak()?.vedtaksdato?.toLocalDate()
 
                     kafkaService.journalførAvvisning(
                         vilkårsgrunnlag.fnrBarn,
@@ -98,7 +96,7 @@ fun Route.vilkårApi(
 
             val refInnsendersTidligereKrav =
                 if (!vilkårsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret")) {
-                    vilkårsvurdering.grunnlag.vedtakBarn.firstOrNull {
+                    vilkårsvurdering.grunnlag.vedtakBarn.filterIsInstance<EksisterendeVedtak>().firstOrNull {
                         it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year
                     }
                         ?.bestillingsreferanse

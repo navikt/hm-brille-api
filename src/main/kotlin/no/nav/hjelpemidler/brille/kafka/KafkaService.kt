@@ -331,15 +331,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val bestillingsdato: LocalDate,
         val eksisterendeVedtakDato: LocalDate?,
         val årsaker: List<String>,
-    ) {
-        companion object {
-            fun nyesteDatoFraDatoer(a: LocalDate?, b: LocalDate?): LocalDate? {
-                return if (a == null || b == null) { a ?: b } else {
-                    if (a.isAfter(b)) { a } else { b }
-                }
-            }
-        }
-    }
+    )
 
     /**
      * Lager navn på nøkler i JSON som er kompatible med direkte insert i BigQuery

@@ -14,29 +14,33 @@ import io.mockk.mockk
 import no.nav.hjelpemidler.brille.db.createDatabaseContext
 import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
+import no.nav.hjelpemidler.brille.hotsak.HotsakVedtak
+import no.nav.hjelpemidler.brille.hotsak.lagHotsakVedtak
+import no.nav.hjelpemidler.brille.hotsak.toList
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
-import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.test.TestRouting
 import no.nav.hjelpemidler.brille.test.`år på`
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
+import no.nav.hjelpemidler.brille.vedtak.lagEksisterendeVedtak
+import no.nav.hjelpemidler.brille.vedtak.toList
 import no.nav.hjelpemidler.nare.evaluering.Resultat
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 
-internal class VilkårApiTest {
+class VilkårApiTest {
     private val pdlClient = mockk<PdlClient>()
     private val hotsakClient = mockk<HotsakClient>()
     private val medlemskapBarn = mockk<MedlemskapBarn>()
     private val dagensDatoFactory = mockk<() -> LocalDate>()
 
-    val sessionContext = createDatabaseSessionContextWithMocks()
-    val databaseContext = createDatabaseContext(sessionContext)
+    private val sessionContext = createDatabaseSessionContextWithMocks()
+    private val databaseContext = createDatabaseContext(sessionContext)
 
     private val vilkårsvurderingService = VilkårsvurderingService(
         databaseContext,
@@ -53,46 +57,103 @@ internal class VilkårApiTest {
     }
 
     @Test
-    internal fun `happy case`() = kjørTest(forventetResultat = Resultat.JA)
+    fun `happy case`() = kjørTest(forventetResultat = Resultat.JA)
 
     @Test
-    internal fun `har vedtak i kalenderåret`() = kjørTest(
-        vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET)),
-        forventetResultat = Resultat.NEI,
-    )
+    fun `har vedtak i kalenderåret`() {
+        val bestillingsdato = LocalDate.now().minusMonths(2)
+        kjørTest(
+            vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+                this.bestillingsdato = bestillingsdato
+            },
+            vedtak = lagEksisterendeVedtak {
+                this.bestillingsdato = bestillingsdato
+            }.toList(),
+            forventetResultat = Resultat.NEI,
+        )
+    }
 
     @Test
-    internal fun `har vedtak i kalenderåret samme innsender`() = kjørTest(
-        vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET, "15084300133")),
-        forventetResultat = Resultat.NEI,
-    )
+    fun `har vedtak i kalenderåret fra hotsak`() {
+        val bestillingsdato = LocalDate.now().minusMonths(2)
+        kjørTest(
+            vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+                this.bestillingsdato = bestillingsdato
+            },
+            vedtakHotsak = lagHotsakVedtak {
+                this.bestillingsdato = bestillingsdato
+            }.toList(),
+            forventetResultat = Resultat.NEI,
+        )
+    }
 
     @Test
-    internal fun `har vedtak i annet år`() = kjørTest(
-        vedtakForBruker = listOf(lagEksisterendeVedtak(DATO_ORDNINGEN_STARTET.minusYears(1))),
-        forventetResultat = Resultat.JA,
-    )
+    fun `har vedtak i kalenderåret samme innsender`() {
+        val bestillingsdato = LocalDate.now().minusMonths(2)
+        kjørTest(
+            vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+                this.bestillingsdato = bestillingsdato
+            },
+            vedtak = lagEksisterendeVedtak {
+                this.bestillingsdato = bestillingsdato
+                this.fnrInnsender = "15084300133"
+            }.toList(),
+            forventetResultat = Resultat.NEI,
+        )
+    }
 
     @Test
-    internal fun `barnet fyller 18 år på bestillingsdato`() = kjørTest(
-        fødselsdato = 18 `år på` DATO_ORDNINGEN_STARTET,
-        forventetResultat = Resultat.NEI,
-    )
+    fun `har vedtak i annet år`() {
+        val bestillingsdato = LocalDate.now().minusMonths(2)
+        kjørTest(
+            vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+                this.bestillingsdato = bestillingsdato
+            },
+            vedtak = lagEksisterendeVedtak {
+                this.bestillingsdato = bestillingsdato.minusYears(1)
+            }.toList(),
+            forventetResultat = Resultat.JA,
+        )
+    }
 
     @Test
-    internal fun `barnet fyller 18 år dagen etter bestillingsdato`() = kjørTest(
-        fødselsdato = (18 `år på` DATO_ORDNINGEN_STARTET).plusDays(1),
-        forventetResultat = Resultat.JA,
-    )
+    fun `barnet fyller 18 år på bestillingsdato`() {
+        val bestillingsdato = LocalDate.now().minusMonths(2)
+        kjørTest(
+            vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+                this.bestillingsdato = bestillingsdato
+            },
+            fødselsdato = 18 `år på` bestillingsdato,
+            forventetResultat = Resultat.NEI,
+        )
+    }
 
     @Test
-    internal fun `barnet fyller 18 år dagen før bestillingsdato`() = kjørTest(
-        fødselsdato = (18 `år på` DATO_ORDNINGEN_STARTET).minusDays(1),
-        forventetResultat = Resultat.NEI,
-    )
+    fun `barnet fyller 18 år dagen etter bestillingsdato`() {
+        val bestillingsdato = LocalDate.now().minusMonths(2)
+        kjørTest(
+            vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+                this.bestillingsdato = bestillingsdato
+            },
+            fødselsdato = (18 `år på` bestillingsdato).plusDays(1),
+            forventetResultat = Resultat.JA,
+        )
+    }
 
     @Test
-    internal fun `barnet er bevist ikke medlem i folketrygden`() = kjørTest(
+    fun `barnet fyller 18 år dagen før bestillingsdato`() {
+        val bestillingsdato = LocalDate.now().minusMonths(2)
+        kjørTest(
+            vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+                this.bestillingsdato = bestillingsdato
+            },
+            fødselsdato = (18 `år på` DATO_ORDNINGEN_STARTET).minusDays(1),
+            forventetResultat = Resultat.NEI,
+        )
+    }
+
+    @Test
+    fun `barnet er bevist ikke medlem i folketrygden`() = kjørTest(
         medlemskapResultat = MedlemskapResultat(
             resultat = MedlemskapResultatResultat.NEI,
             saksgrunnlag = emptyList(),
@@ -101,7 +162,7 @@ internal class VilkårApiTest {
     )
 
     @Test
-    internal fun `barnets medlemskap i folketrygden er uavklart`() = kjørTest(
+    fun `barnets medlemskap i folketrygden er uavklart`() = kjørTest(
         medlemskapResultat = MedlemskapResultat(
             resultat = MedlemskapResultatResultat.UAVKLART,
             saksgrunnlag = emptyList(),
@@ -110,92 +171,101 @@ internal class VilkårApiTest {
     )
 
     @Test
-    internal fun `brillestyrke under minstegrense`() = kjørTest(
-        vilkårsgrunnlag = defaulVilkårMedBrilleseddel(),
+    fun `brillestyrke under minstegrense`() = kjørTest(
+        vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+            brilleseddel {
+                høyreSfære = 0.0
+                høyreSylinder = 0.0
+                venstreSfære = 0.0
+                venstreSylinder = 0.0
+            }
+        },
         forventetResultat = Resultat.NEI,
     )
 
     @Test
-    internal fun `brillestyrke høyreSylinder over minstegrense`() = kjørTest(
-        vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            høyreSylinder = 2.00,
-        ),
+    fun `brillestyrke høyreSylinder over minstegrense`() = kjørTest(
+        vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+            brilleseddel {
+                høyreSylinder = 2.0
+            }
+        },
         forventetResultat = Resultat.JA,
     )
 
     @Test
-    internal fun `brillestyrke venstreSfære over minstegrense`() = kjørTest(
-        vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            venstreSfære = 3.00,
-        ),
+    fun `brillestyrke venstreSfære over minstegrense`() = kjørTest(
+        vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+            brilleseddel {
+                venstreSfære = 3.0
+            }
+        },
         forventetResultat = Resultat.JA,
     )
 
     @Test
-    internal fun `brillestyrke venstreSylinder over minstegrense`() = kjørTest(
-        vilkårsgrunnlag = defaulVilkårMedBrilleseddel(
-            venstreSylinder = 1.00,
-        ),
+    fun `brillestyrke venstreSylinder over minstegrense`() = kjørTest(
+        vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+            brilleseddel {
+                venstreSylinder = 1.0
+            }
+        },
         forventetResultat = Resultat.JA,
     )
 
     @Test
-    internal fun `bestillingsdato i fremtiden`() = kjørTest(
-        vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.plusDays(1)),
+    fun `bestillingsdato i fremtiden`() = kjørTest(
+        vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+            bestillingsdato = LocalDate.now()
+        },
+        dagensDato = LocalDate.now().minusDays(1),
         forventetResultat = Resultat.NEI,
     )
 
     @Test
-    internal fun `bestillingsdato mer enn 6 måneder tilbake i tid`() = kjørTest(
-        vilkårsgrunnlag = defaultVilkårsgrunnlag.copy(bestillingsdato = DATO_ORDNINGEN_STARTET.plusMonths(1)),
-        dagensDato = DATO_ORDNINGEN_STARTET.plusMonths(8),
+    fun `bestillingsdato mer enn 6 måneder tilbake i tid`() = kjørTest(
+        vilkårsgrunnlag = lagVilkårsgrunnlagDto {
+            bestillingsdato = LocalDate.now().minusMonths(6).minusDays(1)
+        },
         forventetResultat = Resultat.NEI,
     )
 
     private fun kjørTest(
-        vilkårsgrunnlag: VilkårsgrunnlagDto = defaultVilkårsgrunnlag,
-        vedtakForBruker: List<EksisterendeVedtak> = emptyList(),
-        fødselsdato: LocalDate = LocalDate.parse("2014-08-15"),
+        vilkårsgrunnlag: VilkårsgrunnlagDto = lagVilkårsgrunnlagDto(),
+        vedtak: List<EksisterendeVedtak> = emptyList(),
+        vedtakHotsak: List<HotsakVedtak> = emptyList(),
+        fødselsdato: LocalDate = 12 `år på` vilkårsgrunnlag.bestillingsdato,
+        dagensDato: LocalDate = LocalDate.now(),
         medlemskapResultat: MedlemskapResultat = MedlemskapResultat(
             resultat = MedlemskapResultatResultat.JA,
             saksgrunnlag = emptyList(),
         ),
-        dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
         forventetResultat: Resultat,
     ) {
-        every {
-            dagensDatoFactory()
-        } returns dagensDato
+        every { dagensDatoFactory() } returns dagensDato
+
+        coEvery { hotsakClient.hentEksisterendeVedtak(any(), any()) } returns vedtakHotsak
+
+        every { sessionContext.vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn) } returns vedtak
+
+        coEvery { pdlClient.hentPerson(vilkårsgrunnlag.fnrBarn) } returns lagMockPdlOppslag(fødselsdato.toString())
 
         coEvery {
-            hotsakClient.hentEksisterendeVedtakDato(any(), any())
-        } returns null
-
-        every {
-            sessionContext.vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn)
-        } returns vedtakForBruker
-
-        coEvery {
-            pdlClient.hentPerson(vilkårsgrunnlag.fnrBarn)
-        } returns lagMockPdlOppslag(fødselsdato.toString())
-
-        coEvery {
-            medlemskapBarn.sjekkMedlemskapBarn(vilkårsgrunnlag.fnrBarn, vilkårsgrunnlag.bestillingsdato)
+            medlemskapBarn.sjekkMedlemskapBarn(
+                vilkårsgrunnlag.fnrBarn,
+                vilkårsgrunnlag.bestillingsdato,
+            )
         } returns medlemskapResultat
 
         routing.test {
-            val response = client.post("/vilkarsgrunnlag") {
-                setBody(vilkårsgrunnlag)
-            }
-
+            val response = client.post("/vilkarsgrunnlag") { setBody(vilkårsgrunnlag) }
             response.status shouldBe HttpStatusCode.OK
+
             val vilkårsvurdering = response.body<VilkårsvurderingDto>()
             vilkårsvurdering.resultat shouldBe forventetResultat
 
             when (vilkårsvurdering.resultat) {
-                Resultat.NEI -> {
-                    vilkårsvurdering.sats shouldBe SatsType.INGEN
-                }
+                Resultat.NEI -> vilkårsvurdering.sats shouldBe SatsType.INGEN
 
                 else -> {
                     vilkårsvurdering.sats shouldNotBe SatsType.INGEN
@@ -206,44 +276,4 @@ internal class VilkårApiTest {
             vilkårsvurdering.satsBeløp.shouldNotBeNull()
         }
     }
-
-    private fun lagEksisterendeVedtak(bestillingsdato: LocalDate, fnrInnsender: String = "23456789101") =
-        EksisterendeVedtak(
-            id = 1,
-            fnrBarn = "12345678910",
-            bestillingsdato = bestillingsdato,
-            behandlingsresultat = "",
-            opprettet = bestillingsdato.atStartOfDay(),
-            fnrInnsender = fnrInnsender,
-            bestillingsreferanse = "bestillingsreferanse",
-        )
-
-    private fun defaulVilkårMedBrilleseddel(
-        høyreSfære: Double = 0.0,
-        høyreSylinder: Double = 0.0,
-        venstreSfære: Double = 0.0,
-        venstreSylinder: Double = 0.0,
-    ) =
-        defaultVilkårsgrunnlag.copy(
-            brilleseddel = Brilleseddel(
-                høyreSfære = høyreSfære,
-                høyreSylinder = høyreSylinder,
-                venstreSfære = venstreSfære,
-                venstreSylinder = venstreSylinder,
-            ),
-        )
-
-    private val defaultVilkårsgrunnlag = VilkårsgrunnlagDto(
-        orgnr = "",
-        fnrBarn = "07480966982",
-        brilleseddel = Brilleseddel(
-            høyreSfære = 1.00,
-            høyreSylinder = 0.00,
-            venstreSfære = 0.00,
-            venstreSylinder = 0.00,
-        ),
-        bestillingsdato = DATO_ORDNINGEN_STARTET,
-        brillepris = "1500".toBigDecimal(),
-        extras = VilkårsgrunnlagExtrasDto("", ""),
-    )
 }

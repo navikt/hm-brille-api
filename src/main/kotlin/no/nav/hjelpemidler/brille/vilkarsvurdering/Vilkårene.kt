@@ -2,6 +2,7 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.sats.mangler
+import no.nav.hjelpemidler.brille.tid.mangler
 import no.nav.hjelpemidler.nare.evaluering.Årsak
 import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
@@ -23,9 +24,12 @@ object Vilkårene {
         val eksisterendeVedtakDato = grunnlag.vedtakBarn
             .map { it.bestillingsdato }
             .find { it.year == bestillingsdato.year }
-        val eksisterendeVedtakDatoHotsak = grunnlag.eksisterendeVedtakDatoHotsak
 
         when {
+            grunnlag.vedtakBarn.isEmpty() -> ja(
+                "Barnet har ingen vedtak om brille fra tidligere",
+            )
+
             bestillingsdato.mangler() -> nei(
                 "Bestillingsdato mangler, kan ikke vurdere om barnet allerede har vedtak om brille i kalenderåret",
                 Årsak.DOKUMENTASJON_MANGLER,
@@ -35,14 +39,6 @@ object Vilkårene {
                 "Barnet har allerede vedtak om brille i kalenderåret",
                 mapOf(
                     "eksisterendeVedtakDato" to eksisterendeVedtakDato.formatert(),
-                    "bestillingsdato" to bestillingsdato.formatert(),
-                ),
-            )
-
-            eksisterendeVedtakDatoHotsak != null -> nei(
-                "Barnet har allerede vedtak om brille i kalenderåret",
-                mapOf(
-                    "eksisterendeVedtakDato" to eksisterendeVedtakDatoHotsak.formatert(),
                     "bestillingsdato" to bestillingsdato.formatert(),
                 ),
             )
@@ -62,8 +58,10 @@ object Vilkårene {
     ) { grunnlag ->
         val barnetsFødselsdato = grunnlag.barnetsFødselsdato
         val barnetsAlderPåBestillingsdato = grunnlag.barnetsAlderPåBestillingsdato
+        val barnetsAlderPåMottaksdato = grunnlag.barnetsAlderPåMottaksdato
         val barnetsAlderIDag = grunnlag.barnetsAlderIDag
         val bestillingsdato = grunnlag.bestillingsdato
+        val mottaksdato = grunnlag.mottaksdato
         val dagensDato = grunnlag.dagensDato
 
         when {
@@ -80,6 +78,14 @@ object Vilkårene {
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
                     "barnetsAlder" to "${barnetsFødselsdato.formatert()} ($barnetsAlderPåBestillingsdato år)",
+                ),
+            )
+
+            barnetsAlderPåMottaksdato.erUnder18() -> ja(
+                "Barnet var under 18 år på mottaksdato",
+                mapOf(
+                    "mottaksdato" to mottaksdato.formatert(),
+                    "barnetsAlder" to "${barnetsFødselsdato.formatert()} ($barnetsAlderPåMottaksdato år)",
                 ),
             )
 
@@ -201,8 +207,9 @@ object Vilkårene {
         lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
     ) { grunnlag ->
         val bestillingsdato = grunnlag.bestillingsdato
-        val seksMånederSiden = grunnlag.seksMånederSiden
         val dagensDato = grunnlag.dagensDato
+        val seksMånederSiden = grunnlag.seksMånederSiden
+        val tidligsteMuligeBestillingsdato = grunnlag.tidligsteMuligeBestillingsdato
 
         when {
             bestillingsdato.mangler() -> nei(
@@ -218,31 +225,31 @@ object Vilkårene {
                 ),
             )
 
-            bestillingsdato.isBefore(seksMånederSiden) -> nei(
-                "Bestillingsdato kan ikke være før ${seksMånederSiden.formatert()}",
+            bestillingsdato.isBefore(tidligsteMuligeBestillingsdato) -> nei(
+                "Bestillingsdato kan ikke være før ${tidligsteMuligeBestillingsdato.formatert()}",
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
                     "seksMånederSiden" to seksMånederSiden.formatert(),
+                    "tidligsteMuligeBestillingsdato" to tidligsteMuligeBestillingsdato.formatert(),
                 ),
             )
 
             else -> ja(
-                "Bestillingsdato er ${seksMånederSiden.formatert()} eller senere",
+                "Bestillingsdato er ${tidligsteMuligeBestillingsdato.formatert()} eller senere",
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
                     "seksMånederSiden" to seksMånederSiden.formatert(),
+                    "tidligsteMuligeBestillingsdato" to tidligsteMuligeBestillingsdato.formatert(),
                 ),
             )
         }
     }
 
-    val Brille = (
-        HarIkkeVedtakIKalenderåret og
-            Under18ÅrPåBestillingsdato og
-            MedlemAvFolketrygden og
-            Brillestyrke og
-            Bestillingsdato
-        ).med("Brille", "Personen oppfyller vilkår for krav om barnebriller")
+    val Brille: Spesifikasjon<Vilkårsgrunnlag> =
+        (HarIkkeVedtakIKalenderåret og Under18ÅrPåBestillingsdato og MedlemAvFolketrygden og Brillestyrke og Bestillingsdato).med(
+            identifikator = "Brille",
+            beskrivelse = "Personen oppfyller vilkår for krav om barnebriller",
+        )
 
     private fun LocalDate.formatert(): String =
         this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))
