@@ -39,7 +39,7 @@ fun Route.vilkårHotsakApi(
             val bestillingsdato = vilkårsgrunnlag.bestillingsdato ?: MANGLENDE_DATO
             val brillepris = vilkårsgrunnlag.brillepris ?: BigDecimal.ZERO
 
-            // fixme -> ikke bruk når eksisterendeBestillingsdato hm-saksbehandling går i produksjon
+            // fixme -> ikke bruk eksisterendeBestillingsdato når hm-saksbehandling går i produksjon
             val vedtakHotsak = listOfNotNull(vilkårsgrunnlag.eksisterendeBestillingsdato).map {
                 HotsakVedtak(
                     sakId = "",
