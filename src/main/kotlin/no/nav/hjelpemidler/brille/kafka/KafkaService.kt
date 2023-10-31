@@ -225,6 +225,20 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
     }
 
+    fun sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager(kilde: String) {
+        opprettHendelseV2Data("hm-brille-api.avvisning.sendte.ikke.brev.pga.tidligere.brev.7dager", mapOf("kilde" to kilde))
+    }
+
+    fun opprettHendelseV2Data(navn: String, data: Map<String, Any>) {
+        sendTilBigQuery(
+            navn,
+            HendelseV2(
+                navn = navn,
+                data = data.mapValues { it.toString() },
+            ),
+        )
+    }
+
     fun <T> produceEvent(key: String?, event: T) {
         try {
             val message = mapper.writeValueAsString(event)
@@ -426,6 +440,15 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     internal data class KliniskDataStatistikk(
         val orgnr: String,
         val opprettet: LocalDateTime = LocalDateTime.now(),
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "hendelse_v2")
+    internal data class HendelseV2(
+        val opprettet: LocalDateTime = LocalDateTime.now(),
+        val kilde: String = "hm-brille-api",
+        val navn: String,
+        val data: Map<String, String>,
     )
 
     class KafkaException(message: String, cause: Throwable?) : RuntimeException(message, cause)

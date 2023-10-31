@@ -274,11 +274,14 @@ fun Route.integrasjonApi(
                     )
 
                     // Journalfør avvisningsbrev i joark
-                    if (!adminService.harAvvisningDeSiste7DageneFor(
+                    if (adminService.harAvvisningDeSiste7DageneFor(
                             vilkårsgrunnlag.fnrBarn,
                             vilkårsgrunnlag.orgnr,
                         )
                     ) {
+                        log.info("Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene")
+                        kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("integrasjon")
+                    } else {
                         val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
                             .filter { vilkar -> vilkar.resultat != Resultat.JA }
                             .map { vilkar -> vilkar.identifikator }
