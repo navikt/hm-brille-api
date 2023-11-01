@@ -23,7 +23,7 @@ fun LocalDate.toInstant(): Instant =
     atStartOfDay(zoneId).toInstant()
 
 fun LocalDateTime.toInstant(): Instant =
-    atZone(timeZone.toZoneId()).toInstant()
+    atZone(zoneId).toInstant()
 
 fun Instant.toLocalDate(): LocalDate =
     ZonedDateTime.ofInstant(this, zoneId).toLocalDate()
