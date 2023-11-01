@@ -34,7 +34,6 @@ data class Vilkårsgrunnlag(
     val barnetsFødselsdato: LocalDate? get() = pdlOppslagBarn.data?.fødselsdato()
     val barnetsAlderPåBestillingsdato: Int? get() = barnetsFødselsdato alderPå bestillingsdato
     val barnetsAlderPåMottaksdato: Int? get() = barnetsFødselsdato alderPå mottaksdato
-    val barnetsAlderIDag: Int? get() = barnetsFødselsdato alderPå dagensDato
 
     fun senesteVedtak(): Vedtak? = vedtakBarn.maxByOrNull { it.vedtaksdato }
 

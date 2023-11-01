@@ -59,10 +59,8 @@ object Vilkårene {
         val barnetsFødselsdato = grunnlag.barnetsFødselsdato
         val barnetsAlderPåBestillingsdato = grunnlag.barnetsAlderPåBestillingsdato
         val barnetsAlderPåMottaksdato = grunnlag.barnetsAlderPåMottaksdato
-        val barnetsAlderIDag = grunnlag.barnetsAlderIDag
         val bestillingsdato = grunnlag.bestillingsdato
         val mottaksdato = grunnlag.mottaksdato
-        val dagensDato = grunnlag.dagensDato
 
         when {
             barnetsFødselsdato == null -> nei(
@@ -86,14 +84,6 @@ object Vilkårene {
                 mapOf(
                     "mottaksdato" to mottaksdato.formatert(),
                     "barnetsAlder" to "${barnetsFødselsdato.formatert()} ($barnetsAlderPåMottaksdato år)",
-                ),
-            )
-
-            barnetsAlderIDag.erUnder18() -> ja(
-                "Barnet er under 18 år",
-                mapOf(
-                    "dagensDato" to dagensDato.formatert(),
-                    "barnetsAlder" to "${barnetsFødselsdato.formatert()} ($barnetsAlderIDag år)",
                 ),
             )
 

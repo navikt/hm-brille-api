@@ -247,6 +247,7 @@ class VilkårHotsakApiTest {
                 bestillingsdato = null
             },
             fødselsdato = (18 `år på` dagensDato).plusDays(1),
+            dagensDato = dagensDato,
             forventetResultat = Resultat.NEI,
         ) {
             verifiser(Vilkårene.HarIkkeVedtakIKalenderåret) { skalVærePositiv() }
