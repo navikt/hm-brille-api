@@ -6,7 +6,7 @@ Det er ment som en oversikt over hvilke systemer som er involvert, og hvordan de
 
 ### Overordnet skisse
 
-![okosystem.png](okosystem.png)
+![okosys.png](okosys.png)
 
 ## Beskrivelse av typisk flyt
 
