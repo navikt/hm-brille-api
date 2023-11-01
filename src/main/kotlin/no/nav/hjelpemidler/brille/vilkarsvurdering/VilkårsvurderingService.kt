@@ -31,8 +31,8 @@ class VilkårsvurderingService(
             fnrBarn = fnrBarn,
             brilleseddel = brilleseddel,
             bestillingsdato = bestillingsdato,
-            vedtakHotsak = vedtakHotsak,
             mottaksdato = dagensDatoFactory(),
+            vedtakHotsak = vedtakHotsak,
         )
     }
 
