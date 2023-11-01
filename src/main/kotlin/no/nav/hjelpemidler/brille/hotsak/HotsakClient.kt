@@ -39,15 +39,14 @@ class HotsakClient(
         }
     }
 
-    @Deprecated("Bruk hentEksisterendeVedtak")
-    private suspend fun hentEksisterendeVedtakDato(fnr: String, bestillingsdato: LocalDate): LocalDate? {
+    suspend fun hentEksisterendeVedtak(fnr: String, bestillingsdato: LocalDate): List<HotsakVedtak> {
         try {
             val url = "$baseUrl/vilkarsvurdering/sjekk-vedtak"
             log.info { "Henter vedtaksdato data med url: $url" }
             val response = client.post(url) {
                 contentType(ContentType.Application.Json)
                 setBody(
-                    SjekkVedtakDto(
+                    HentEksisterendeVedtakRequest(
                         fnr = fnr,
                         bestillingsdato = bestillingsdato,
                     ),
@@ -56,9 +55,17 @@ class HotsakClient(
             log.info { "Har fått response fra hm-saksbehandling med status: ${response.status}" }
             when (response.status) {
                 HttpStatusCode.OK -> {
-                    val vedtaksdato = response.body<VedtakIKalenderåretDto>()
-                    sikkerLog.info { "Fikk svar fra hm-saksbehandøing: $vedtaksdato" }
-                    return vedtaksdato.vedtaksdato
+                    val vedtak = response.body<HentEksisterendeVedtakResponse>()
+                    sikkerLog.info { "Fikk svar fra hm-saksbehandling: $vedtak" }
+                    return vedtak.vedtak ?: listOfNotNull(vedtak.vedtaksdato).map {
+                        HotsakVedtak(
+                            sakId = "",
+                            vedtakId = "",
+                            vedtaksdato = Instant.now(), // vedtaksdato i response er egentlig bestillingsdato
+                            vedtaksstatus = "",
+                            bestillingsdato = it,
+                        )
+                    }
                 }
             }
             throw HotsakClientException("Uventet svar fra tjeneste: ${response.status}", null)
@@ -69,24 +76,10 @@ class HotsakClient(
         }
     }
 
-    /**
-     * fixme -> lag ferdig implementasjon når hm-saksbehandling går i produksjon
-     */
-    suspend fun hentEksisterendeVedtak(fnr: String, bestillingsdato: LocalDate): List<HotsakVedtak> =
-        listOfNotNull(hentEksisterendeVedtakDato(fnr, bestillingsdato)).map {
-            HotsakVedtak(
-                sakId = "",
-                vedtakId = "",
-                vedtaksdato = Instant.now(),
-                vedtaksstatus = "",
-                bestillingsdato = it,
-            )
-        }
-
     suspend fun deepPing() {
-        val baseUrlNoApp = baseUrl.removeSuffix("/").removeSuffix("/api")
+        val baseUrl = baseUrl.removeSuffix("/").removeSuffix("/api")
         try {
-            val url = "$baseUrlNoApp/deep-ping"
+            val url = "$baseUrl/deep-ping"
             val uid = MDC.get(MDC_CORRELATION_ID)
             log.info { "Kjører deep-ping mot hm-saksbehandling med url: $url" }
             val response = client.get(url) {
@@ -94,19 +87,20 @@ class HotsakClient(
                 header(HttpHeaders.XCorrelationId, uid)
             }
             log.info { "Har fått response fra hm-saksbehandling med status: ${response.status}" }
-        } catch (clientReqException: ClientRequestException) {
-            throw HotsakClientException("Feil under deep-ping mot hm-saksbehandling", clientReqException)
+        } catch (e: ClientRequestException) {
+            throw HotsakClientException("Feil under deep-ping mot hm-saksbehandling", e)
         } catch (e: Exception) {
             throw HotsakClientException("Ukjent feil under deep-ping mot hm-saksbehandling", e)
         }
     }
 
-    data class SjekkVedtakDto(
+    data class HentEksisterendeVedtakRequest(
         val fnr: String,
         val bestillingsdato: LocalDate,
     )
 
-    data class VedtakIKalenderåretDto(
+    data class HentEksisterendeVedtakResponse(
         val vedtaksdato: LocalDate?,
+        val vedtak: List<HotsakVedtak>? = null,
     )
 }

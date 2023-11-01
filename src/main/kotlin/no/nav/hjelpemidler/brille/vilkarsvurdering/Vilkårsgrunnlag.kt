@@ -12,7 +12,7 @@ import java.time.LocalDate
 
 data class Vilkårsgrunnlag(
     /**
-     * Komplett liste med vedtak barnet fra tidligere, inkludert Hotsak.
+     * Komplett liste med vedtak barnet har fra tidligere, inkludert Hotsak.
      */
     val vedtakBarn: List<Vedtak>,
     val pdlOppslagBarn: PdlOppslag<Person?>,

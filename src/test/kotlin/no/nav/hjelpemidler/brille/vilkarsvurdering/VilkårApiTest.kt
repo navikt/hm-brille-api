@@ -147,7 +147,7 @@ class VilkårApiTest {
             vilkårsgrunnlag = lagVilkårsgrunnlagDto {
                 this.bestillingsdato = bestillingsdato
             },
-            fødselsdato = (18 `år på` DATO_ORDNINGEN_STARTET).minusDays(1),
+            fødselsdato = (18 `år på` bestillingsdato).minusDays(1),
             forventetResultat = Resultat.NEI,
         )
     }
