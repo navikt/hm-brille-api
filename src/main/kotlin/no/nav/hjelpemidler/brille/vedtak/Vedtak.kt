@@ -8,9 +8,12 @@ import no.nav.helse.rapids_rivers.asOptionalLocalDate
 import no.nav.helse.rapids_rivers.asOptionalLocalDateTime
 import no.nav.hjelpemidler.brille.jsonOrNull
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.tid.toInstant
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
+import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -37,11 +40,13 @@ data class EksisterendeVedtak(
     val id: Long,
     val fnrBarn: String,
     val fnrInnsender: String,
-    val bestillingsdato: LocalDate,
+    override val bestillingsdato: LocalDate,
     val behandlingsresultat: String,
     val bestillingsreferanse: String,
     val opprettet: LocalDateTime,
-)
+) : Vilkårsgrunnlag.Vedtak {
+    override val vedtaksdato: Instant = opprettet.toInstant()
+}
 
 data class OversiktVedtakPaged(
     val numberOfPages: Int,
