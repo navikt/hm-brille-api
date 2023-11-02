@@ -18,7 +18,6 @@ private val log = KotlinLogging.logger {}
 fun Application.configureStatusPages() {
     install(StatusPages) {
         exception<SjekkOptikerPluginException> { call, e ->
-            // TODO: Fjern når vi ikke trenger den lengre.
             log.warn(e) { "Exception fra middleware med status: ${e.status.description}" }
             call.respond(e.status)
         }

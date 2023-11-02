@@ -52,7 +52,19 @@ data class OversiktVedtakPaged(
     val numberOfPages: Int,
     val itemsPerPage: Int,
     val totalItems: Int,
-    var items: List<OversiktVedtak>,
+    var items: List<OversiktVedtakListItem>,
+)
+
+data class OversiktVedtakListItem(
+    val id: Long,
+    var orgnavn: String,
+    val orgnr: String,
+    val barnsNavn: String,
+    val bestillingsreferanse: String,
+    val utbetalingsdato: LocalDate?,
+    val utbetalingsstatus: UtbetalingStatus?,
+    val opprettet: LocalDateTime,
+    val slettet: LocalDateTime?,
 )
 
 data class OversiktVedtak(
