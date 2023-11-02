@@ -13,7 +13,7 @@ class TssIdentService(val databaseContext: DatabaseContext) {
         transaction(databaseContext) { ctx ->
             // Sjekk at ønsket kontonr fortsatt stemmer med kvitteringen (i tilfelle man endret flere ganger på rad, ungå race condition)
             val virksomhet = ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)
-                ?: error("Mottok kvittering på tss-oppdatering fra ukjent orgnr") // TODO: Vurder feil-håndtering som ikke kaster og tar ned tjenesten
+                ?: error("Mottok kvittering på tss-oppdatering fra ukjent orgnr")
 
             if (virksomhet.kontonr != kontonr) {
                 LOG.info("Mottok kvittering på tss-oppdatering som gjaldt utdatert kontonr, ignorerer")
