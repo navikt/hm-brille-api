@@ -12,7 +12,7 @@ import javax.sql.DataSource
 internal object PostgresTestHelper {
 
     private val instance by lazy {
-        PostgreSQLContainer("postgres:12").apply {
+        PostgreSQLContainer("postgres:13-alpine").apply {
             waitingFor(Wait.forListeningPort())
             start()
         }
@@ -41,6 +41,7 @@ internal object PostgresTestHelper {
                         tx.run(queryOf("CREATE ROLE naisjob").asExecute)
                     }
                 }
+
             else -> HikariDataSource(HikariConfig())
                 .also {
                     sessionOf(it).transaction { tx ->

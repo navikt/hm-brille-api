@@ -160,7 +160,6 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         }
     }
 
-    // TODO: Trim ned datamodell når design er landet for liste-viewet
     override fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int): OversiktVedtakPaged =
         session {
             val offset = (page - 1) * itemsPerPage
@@ -170,25 +169,12 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 SELECT
                     COALESCE(v.id, vs.id) AS id,
                     COALESCE(v.orgnr, vs.orgnr) AS orgnr,
-                    COALESCE(v.bestillingsdato, vs.bestillingsdato) AS bestillingsdato,
-                    COALESCE(v.brillepris, vs.brillepris) AS brillepris,
                     COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
-                    COALESCE(v.sats, vs.sats) AS sats,
-                    COALESCE(v.sats_belop, vs.sats_belop) AS sats_belop,
-                    COALESCE(v.sats_beskrivelse, vs.sats_beskrivelse) AS sats_beskrivelse,
-                    COALESCE(v.belop, vs.belop) AS belop,
-                    COALESCE(v.behandlingsresultat, vs.behandlingsresultat) AS behandlingsresultat,
                     COALESCE(v.opprettet, vs.opprettet) AS opprettet,
-                    COALESCE(v.fnr_barn, vs.fnr_barn) AS fnr_barn,
-                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSfære,
-                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSfære' AS høyreSylinder,
-                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSfære,
-                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'brilleseddel' ->> 'høyreSylinder' AS venstreSylinder,
                     COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
                     COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
                     COALESCE(u1.status, u2.status) AS utbetalingsstatus,
-                    vs.slettet,
-                    vs.slettet_av_type
+                    vs.slettet
                 FROM vedtak_v1 v
                 FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
                 LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
@@ -220,30 +206,16 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             ) { row ->
                 val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
 
-                OversiktVedtak(
+                OversiktVedtakListItem(
                     id = row.long("id"),
                     orgnavn = "",
                     orgnr = row.string("orgnr"),
                     barnsNavn = person.navn(),
-                    barnsFnr = row.string("fnr_barn"),
-                    barnsAlder = person.alderPåDato(row.localDate("bestillingsdato")) ?: -1,
-                    høyreSfære = row.double("høyreSfære"),
-                    høyreSylinder = row.double("høyreSylinder"),
-                    venstreSfære = row.double("venstreSfære"),
-                    venstreSylinder = row.double("venstreSylinder"),
-                    bestillingsdato = row.localDate("bestillingsdato"),
-                    brillepris = row.bigDecimal("brillepris"),
-                    beløp = row.bigDecimal("belop"),
                     bestillingsreferanse = row.string("bestillingsreferanse"),
-                    satsNr = SatsType.valueOf(row.string("sats")).sats,
-                    satsBeløp = row.int("sats_belop"),
-                    satsBeskrivelse = row.string("sats_beskrivelse"),
-                    behandlingsresultat = row.string("behandlingsresultat"),
                     utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                     utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
                     opprettet = row.localDateTime("opprettet"),
                     slettet = row.localDateTimeOrNull("slettet"),
-                    slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
                 )
             }
 

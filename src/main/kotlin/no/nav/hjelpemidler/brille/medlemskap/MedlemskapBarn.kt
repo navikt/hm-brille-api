@@ -11,7 +11,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlClient
 import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Bostedsadresse
 import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.DeltBosted
 import no.nav.hjelpemidler.brille.redis.RedisClient
-import no.nav.hjelpemidler.brille.vilkarsvurdering.mangler
+import no.nav.hjelpemidler.brille.tid.mangler
 import no.nav.hjelpemidler.brille.writePrettyString
 import org.slf4j.MDC
 import java.time.LocalDate

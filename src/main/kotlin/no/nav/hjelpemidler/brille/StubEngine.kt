@@ -109,7 +109,7 @@ object StubEngine {
     fun hotsak(): HttpClientEngine = mockEngine {
         get("/hotsak/vilkarsvurdering/sjekk-vedtak") {
             respond(
-                HotsakClient.VedtakIKalenderåretDto(
+                HotsakClient.HentEksisterendeVedtakResponse(
                     vedtaksdato = null,
                 ),
             )

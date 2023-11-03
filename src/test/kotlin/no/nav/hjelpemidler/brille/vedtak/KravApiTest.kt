@@ -86,10 +86,10 @@ internal class KravApiTest {
         orgnr = "123456789",
         fnrBarn = "07480966982",
         brilleseddel = Brilleseddel(
-            høyreSfære = 2.00,
-            høyreSylinder = 1.00,
-            venstreSfære = 5.00,
-            venstreSylinder = 5.00,
+            høyreSfære = 2.0,
+            høyreSylinder = 1.0,
+            venstreSfære = 5.0,
+            venstreSylinder = 5.0,
         ),
         bestillingsdato = DATO_ORDNINGEN_STARTET,
         brillepris = BigDecimal.valueOf(3000),
@@ -128,8 +128,8 @@ internal class KravApiTest {
         } returns vedtakForBruker
 
         coEvery {
-            hotsakClient.hentEksisterendeVedtakDato(any(), any())
-        } returns null
+            hotsakClient.hentEksisterendeVedtak(any(), any())
+        } returns emptyList()
 
         every {
             sessionContext.vedtakStore.hentVedtak<Any>(any())

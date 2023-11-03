@@ -14,6 +14,8 @@ import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
+import no.nav.hjelpemidler.brille.tid.toLocalDate
+import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.nare.evaluering.Resultat
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -62,21 +64,20 @@ fun Route.vilkårApi(
                 adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, call.extractFnr(), vilkårsgrunnlag.orgnr, årsaker)
 
                 // Journalfør avvisningsbrev i joark
-                if (!adminService.harAvvisningDeSiste7DageneFor(
+                if (adminService.harAvvisningDeSiste7DageneFor(
                         vilkårsgrunnlag.fnrBarn,
                         vilkårsgrunnlag.orgnr,
                     )
                 ) {
+                    log.info("Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene")
+                    kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("krav_app")
+                } else {
                     val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
                         .filter { vilkar -> vilkar.resultat != Resultat.JA }
                         .map { vilkar -> vilkar.identifikator }
 
-                    val eksisterendeVedtakDato = KafkaService
-                        .JournalførAvvisning
-                        .nyesteDatoFraDatoer(
-                            vilkårsvurdering.grunnlag.vedtakBarn.maxByOrNull { it.opprettet }?.opprettet?.toLocalDate(),
-                            vilkårsvurdering.grunnlag.eksisterendeVedtakDatoHotsak,
-                        )
+                    val eksisterendeVedtakDato =
+                        vilkårsvurdering.grunnlag.senesteVedtak()?.vedtaksdato?.toLocalDate()
 
                     kafkaService.journalførAvvisning(
                         vilkårsgrunnlag.fnrBarn,
@@ -95,7 +96,7 @@ fun Route.vilkårApi(
 
             val refInnsendersTidligereKrav =
                 if (!vilkårsvurdering.harResultatJaForVilkår("HarIkkeVedtakIKalenderåret")) {
-                    vilkårsvurdering.grunnlag.vedtakBarn.firstOrNull {
+                    vilkårsvurdering.grunnlag.vedtakBarn.filterIsInstance<EksisterendeVedtak>().firstOrNull {
                         it.fnrInnsender == call.extractFnr() && it.bestillingsdato.year == vilkårsgrunnlag.bestillingsdato.year
                     }
                         ?.bestillingsreferanse

@@ -44,10 +44,6 @@ class AdminService(
         fnrBarn: String,
         orgnr: String,
     ) = transaction(databaseContext) { ctx ->
-        // TODO: Fjern når testing er over
-        if (Environment.current.tier.isDev) {
-            return@transaction false
-        }
         ctx.adminStore.harAvvisningDeSiste7DageneFor(fnrBarn, orgnr)
     }
 

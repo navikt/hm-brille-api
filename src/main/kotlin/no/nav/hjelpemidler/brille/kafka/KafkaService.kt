@@ -52,7 +52,6 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
 
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
-        // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
             ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
     }
@@ -72,7 +71,6 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
 
     fun avtaleOppdatert(avtale: IngåttAvtale) {
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
-        // TODO: Vurder om null-sjekken under er nødvendig og garanter at man blir eventually consistent
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
             ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
     }
@@ -240,6 +238,20 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
     }
 
+    fun sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager(kilde: String) {
+        opprettHendelseV2Data("hm-brille-api.avvisning.sendte.ikke.brev.pga.tidligere.brev.7dager", mapOf("kilde" to kilde))
+    }
+
+    fun opprettHendelseV2Data(navn: String, data: Map<String, Any>) {
+        sendTilBigQuery(
+            navn,
+            HendelseV2(
+                navn = navn,
+                data = data.mapValues { it.toString() },
+            ),
+        )
+    }
+
     fun <T> produceEvent(key: String?, event: T) {
         try {
             val message = mapper.writeValueAsString(event)
@@ -332,15 +344,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val bestillingsdato: LocalDate,
         val eksisterendeVedtakDato: LocalDate?,
         val årsaker: List<String>,
-    ) {
-        companion object {
-            fun nyesteDatoFraDatoer(a: LocalDate?, b: LocalDate?): LocalDate? {
-                return if (a == null || b == null) { a ?: b } else {
-                    if (a.isAfter(b)) { a } else { b }
-                }
-            }
-        }
-    }
+    )
 
     /**
      * Lager navn på nøkler i JSON som er kompatible med direkte insert i BigQuery
@@ -449,6 +453,15 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     internal data class KliniskDataStatistikk(
         val orgnr: String,
         val opprettet: LocalDateTime = LocalDateTime.now(),
+    )
+
+    @JsonNaming(BigQueryStrategy::class)
+    @BigQueryHendelse(schemaId = "hendelse_v2")
+    internal data class HendelseV2(
+        val opprettet: LocalDateTime = LocalDateTime.now(),
+        val kilde: String = "hm-brille-api",
+        val navn: String,
+        val data: Map<String, String>,
     )
 
     class KafkaException(message: String, cause: Throwable?) : RuntimeException(message, cause)
