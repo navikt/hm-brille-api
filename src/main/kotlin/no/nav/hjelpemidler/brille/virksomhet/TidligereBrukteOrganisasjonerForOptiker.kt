@@ -11,3 +11,11 @@ data class Organisasjon(
     val navn: String,
     val adresse: String?,
 )
+
+data class OrganisasjonMedBruksvilkår(
+    val orgnr: String,
+    val aktiv: Boolean,
+    val navn: String,
+    val adresse: String?,
+    val bruksvilkår: Boolean,
+)

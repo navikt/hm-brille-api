@@ -41,7 +41,7 @@ import no.nav.hjelpemidler.brille.vedtak.toDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
-import no.nav.hjelpemidler.brille.virksomhet.Organisasjon
+import no.nav.hjelpemidler.brille.virksomhet.OrganisasjonMedBruksvilkår
 import no.nav.hjelpemidler.brille.virksomhet.enhetTilAdresseFor
 import no.nav.hjelpemidler.nare.evaluering.Resultat
 import java.math.BigDecimal
@@ -108,15 +108,17 @@ fun Route.integrasjonApi(
             val virksomhet =
                 transaction(databaseContext) { ctx -> ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr) }
             val harAktivNavAvtale = virksomhet?.aktiv ?: false
+            val harSignertBruksvilkår = virksomhet?.bruksvilkår ?: false
             log.info("Søker etter $orgnr har aktiv NavAvtale: $harAktivNavAvtale")
             val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
 
-            val response = Organisasjon(
+            val response = OrganisasjonMedBruksvilkår(
                 orgnr = enhet.orgnr,
                 navn = enhet.navn,
                 aktiv = harAktivNavAvtale,
                 adresse = enhetTilAdresseFor(enhet),
+                bruksvilkår = harSignertBruksvilkår,
             )
 
             call.respond(response)
