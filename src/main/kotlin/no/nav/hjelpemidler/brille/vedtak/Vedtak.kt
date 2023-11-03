@@ -34,6 +34,7 @@ data class Vedtak<T>(
     val beløp: BigDecimal,
     val opprettet: LocalDateTime = LocalDateTime.now(),
     val kilde: KravKilde,
+    val avsendersystemOrgNr: String? = null,
 )
 
 data class EksisterendeVedtak(

@@ -190,6 +190,7 @@ fun Route.integrasjonApi(
                 val bestillingsreferanse: String,
                 val virksomhetOrgnr: String,
                 val ansvarligOptikersFnr: String,
+                val avsendersystemOrgNr: String,
             )
 
             data class Response(
@@ -316,6 +317,7 @@ fun Route.integrasjonApi(
                         navnInnsender,
                         krav,
                         KravKilde.INTEGRASJON,
+                        req.avsendersystemOrgNr,
                     )
                     val vedtakDto = vedtak.toDto()
                     // Svar ut spørringen

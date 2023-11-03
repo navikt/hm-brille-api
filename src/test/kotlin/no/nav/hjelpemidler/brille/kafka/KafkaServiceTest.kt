@@ -65,6 +65,7 @@ internal class KafkaServiceTest {
             satsBeskrivelse = sats.beskrivelse,
             beløp = sats.beløp(LocalDate.now()).toBigDecimal(),
             kilde = KravKilde.KRAV_APP,
+            avsendersystemOrgNr = krav.vilkårsgrunnlag.orgnr,
         )
 
         assertDoesNotThrow {

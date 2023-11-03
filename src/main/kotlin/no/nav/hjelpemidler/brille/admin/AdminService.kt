@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
-import no.nav.hjelpemidler.configuration.Environment
 import org.slf4j.LoggerFactory
 
 private val sikkerLog = KotlinLogging.logger("tjenestekall")

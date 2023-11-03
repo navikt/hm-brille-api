@@ -26,6 +26,7 @@ class VedtakService(
         navnInnsender: String,
         krav: KravDto,
         kilde: KravKilde,
+        avsendersystemOrgNr: String? = null,
     ): Vedtak<Vilkårsgrunnlag> {
         val vilkårsgrunnlag = krav.vilkårsgrunnlag
         val vilkårsvurdering = vilkårsvurderingService.vurderVilkår(
@@ -63,6 +64,7 @@ class VedtakService(
                     satsBeskrivelse = sats.beskrivelse,
                     beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
                     kilde = kilde,
+                    avsendersystemOrgNr = avsendersystemOrgNr,
                 ),
             )
             ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)

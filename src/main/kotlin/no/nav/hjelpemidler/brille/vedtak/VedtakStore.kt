@@ -152,7 +152,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 satsBeskrivelse = row.string("sats_beskrivelse"),
                 behandlingsresultat = row.string("behandlingsresultat"),
                 utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
+                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
+                    ?.let { status -> UtbetalingStatus.valueOf(status) },
                 opprettet = row.localDateTime("opprettet"),
                 slettet = row.localDateTimeOrNull("slettet"),
                 slettetAvType = row.stringOrNull("slettet_av_type")?.let { SlettetAvType.valueOf(it) },
@@ -213,7 +214,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     barnsNavn = person.navn(),
                     bestillingsreferanse = row.string("bestillingsreferanse"),
                     utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-                    utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
+                    utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
+                        ?.let { status -> UtbetalingStatus.valueOf(status) },
                     opprettet = row.localDateTime("opprettet"),
                     slettet = row.localDateTimeOrNull("slettet"),
                 )
@@ -260,7 +262,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 sats_beskrivelse,
                 belop,
                 opprettet,
-                kilde
+                kilde,
+                avsendersystem_org_nr
             )
             VALUES (
                 :fnr_barn,
@@ -277,7 +280,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 :sats_beskrivelse,
                 :belop,
                 :opprettet,
-                :kilde
+                :kilde,
+                :avsenderSystemOrgNr
             )
             RETURNING id
         """.trimIndent()
@@ -299,6 +303,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 "belop" to vedtak.beløp,
                 "opprettet" to vedtak.opprettet,
                 "kilde" to vedtak.kilde.toString(),
+                "avsenderSystemOrgNr" to vedtak.avsendersystemOrgNr,
             ),
         ) { row ->
             row.long("id")
@@ -329,7 +334,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 v.sats_beskrivelse,
                 v.belop,
                 v.opprettet,
-                v.kilde
+                v.kilde,
+                v.avsendersystem_org_nr
             FROM
                 vedtak_v1 v,
                 vedtak_ko_v1 k,
@@ -366,6 +372,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         beløp = row.bigDecimal("belop"),
         opprettet = row.localDateTime("opprettet"),
         kilde = KravKilde.valueOf(row.string("kilde")),
+        avsendersystemOrgNr = row.stringOrNull("avsendersystem_org_nr"),
     )
 
     override fun fjernFraVedTakKø(vedtakId: Long) = session {
@@ -395,7 +402,8 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 sats_beskrivelse,
                 belop,
                 opprettet,
-                kilde
+                kilde,
+                avsendersystem_org_nr
             FROM vedtak_v1
             WHERE id = :id
         """.trimIndent()
