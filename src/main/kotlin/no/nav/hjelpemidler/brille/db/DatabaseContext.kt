@@ -6,6 +6,8 @@ import no.nav.hjelpemidler.brille.admin.AdminStore
 import no.nav.hjelpemidler.brille.admin.AdminStorePostgres
 import no.nav.hjelpemidler.brille.audit.AuditStore
 import no.nav.hjelpemidler.brille.audit.AuditStorePostgres
+import no.nav.hjelpemidler.brille.avtale.AvtaleStore
+import no.nav.hjelpemidler.brille.avtale.AvtaleStorePostgres
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretStore
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretStorePostgres
 import no.nav.hjelpemidler.brille.innsender.InnsenderStore
@@ -50,6 +52,7 @@ interface DatabaseSessionContext {
     val slettVedtakStore: SlettVedtakStore
     val adminStore: AdminStore
     val enhetsregisteretStore: EnhetsregisteretStore
+    val avtaleStore: AvtaleStore
 }
 
 class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSessionContext {
@@ -64,4 +67,5 @@ class DefaultDatabaseSessionContext(sessionFactory: SessionFactory) : DatabaseSe
     override val slettVedtakStore: SlettVedtakStore = SlettVedtakStorePostgres(sessionFactory)
     override val adminStore: AdminStore = AdminStorePostgres(sessionFactory)
     override val enhetsregisteretStore: EnhetsregisteretStore = EnhetsregisteretStorePostgres(sessionFactory)
+    override val avtaleStore = AvtaleStorePostgres(sessionFactory)
 }
