@@ -151,7 +151,6 @@ class AvtaleService(
     suspend fun godtaBruksvilkår(
         fnrInnsender: String,
         orgnr: String,
-        epostKontaktPerson: String,
     ): BruksvilkårGodtattDto {
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)

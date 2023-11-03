@@ -54,7 +54,6 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
                 val avtale = avtaleService.godtaBruksvilkår(
                     call.extractFnr(),
                     godtaBruksvilkårRequest.orgnr,
-                    godtaBruksvilkårRequest.epostKontaktperson,
                 )
                 call.respond(
                     HttpStatusCode.Created,
