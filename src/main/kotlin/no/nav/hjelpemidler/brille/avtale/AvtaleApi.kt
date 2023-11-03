@@ -48,6 +48,19 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
                 val avtale = avtaleService.opprettAvtale(call.extractFnr(), opprettAvtale)
                 call.respond(HttpStatusCode.Created, avtale)
             }
+
+            post("/bruksvilkar") {
+                val godtaBruksvilkårRequest = call.receive<GodtaBruksvilkår>()
+                val avtale = avtaleService.godtaBruksvilkår(
+                    call.extractFnr(),
+                    godtaBruksvilkårRequest.orgnr,
+                    godtaBruksvilkårRequest.epostKontaktperson,
+                )
+                call.respond(
+                    HttpStatusCode.Created,
+                    avtale,
+                )
+            }
             // oppdater avtale
             put("/{orgnr}") {
                 val orgnr = call.orgnr()

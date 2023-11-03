@@ -8,7 +8,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
-import no.nav.hjelpemidler.brille.avtale.Avtale
+import no.nav.hjelpemidler.brille.avtale.BRUKSVILKÅRTYPE
+import no.nav.hjelpemidler.brille.avtale.BruksvilkårGodtatt
+import no.nav.hjelpemidler.brille.avtale.IngåttAvtale
 import no.nav.hjelpemidler.brille.sats.AmblyopiSatsType
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
@@ -38,7 +40,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         .serializationInclusion(JsonInclude.Include.NON_NULL)
         .build()
 
-    fun avtaleOpprettet(avtale: Avtale) {
+    fun avtaleOpprettet(avtale: IngåttAvtale) {
         // Metrics
         sendTilBigQuery(
             avtale.orgnr,
@@ -54,7 +56,20 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
     }
 
-    fun avtaleOppdatert(avtale: Avtale) {
+    fun bruksvilkårGodtatt(bruksvilkårGodtatt: BruksvilkårGodtatt, organisasjonsnavn: String) {
+        // Metrics
+        sendTilBigQuery(
+            bruksvilkårGodtatt.orgnr,
+            AvtaleStatistikkV2(
+                orgnr = bruksvilkårGodtatt.orgnr,
+                navn = organisasjonsnavn,
+                opprettet = requireNotNull(bruksvilkårGodtatt.opprettet),
+                bruksvilkartype = BRUKSVILKÅRTYPE.fromInt(bruksvilkårGodtatt.bruksvilkårDefinisjonId).name,
+            ),
+        )
+    }
+
+    fun avtaleOppdatert(avtale: IngåttAvtale) {
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
             ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
@@ -357,6 +372,14 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val orgnr: String,
         val navn: String,
         val opprettet: LocalDateTime,
+    )
+
+    @BigQueryHendelse(schemaId = "avtale_v2")
+    data class AvtaleStatistikkV2(
+        val orgnr: String,
+        val navn: String,
+        val opprettet: LocalDateTime,
+        val bruksvilkartype: String,
     )
 
     @JsonNaming(BigQueryStrategy::class)
