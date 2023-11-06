@@ -281,7 +281,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 :belop,
                 :opprettet,
                 :kilde,
-                :avsenderSystemOrgNr
+                :avsendersystem_org_nr
             )
             RETURNING id
         """.trimIndent()
@@ -303,7 +303,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 "belop" to vedtak.beløp,
                 "opprettet" to vedtak.opprettet,
                 "kilde" to vedtak.kilde.toString(),
-                "avsenderSystemOrgNr" to vedtak.avsendersystemOrgNr,
+                "avsendersystem_org_nr" to vedtak.avsendersystemOrgNr,
             ),
         ) { row ->
             row.long("id")

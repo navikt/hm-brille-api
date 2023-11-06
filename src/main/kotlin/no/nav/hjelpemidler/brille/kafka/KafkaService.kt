@@ -8,7 +8,6 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
-import no.nav.hjelpemidler.brille.avtale.BRUKSVILKÅRTYPE
 import no.nav.hjelpemidler.brille.avtale.BruksvilkårGodtatt
 import no.nav.hjelpemidler.brille.avtale.IngåttAvtale
 import no.nav.hjelpemidler.brille.sats.AmblyopiSatsType
@@ -60,11 +59,10 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         // Metrics
         sendTilBigQuery(
             bruksvilkårGodtatt.orgnr,
-            AvtaleStatistikkV2(
+            BruksvilkarStatistikkV2(
                 orgnr = bruksvilkårGodtatt.orgnr,
                 navn = organisasjonsnavn,
                 opprettet = requireNotNull(bruksvilkårGodtatt.opprettet),
-                bruksvilkartype = BRUKSVILKÅRTYPE.fromInt(bruksvilkårGodtatt.bruksvilkårDefinisjonId).name,
             ),
         )
     }
@@ -374,12 +372,11 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         val opprettet: LocalDateTime,
     )
 
-    @BigQueryHendelse(schemaId = "avtale_v2")
-    data class AvtaleStatistikkV2(
+    @BigQueryHendelse(schemaId = "bruksvilkar_v1")
+    data class BruksvilkarStatistikkV2(
         val orgnr: String,
         val navn: String,
         val opprettet: LocalDateTime,
-        val bruksvilkartype: String,
     )
 
     @JsonNaming(BigQueryStrategy::class)
