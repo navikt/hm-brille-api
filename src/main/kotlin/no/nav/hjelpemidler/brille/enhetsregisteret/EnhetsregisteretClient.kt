@@ -62,6 +62,7 @@ class EnhetsregisteretClient(
                             )
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhetChunk ->
+                                log.info("Lagrer batch av ${enhetChunk.count()} enheter")
                                 lagre(EnhetType.HOVEDENHET, enhetChunk)
                                 c += enhetChunk.count()
                             }
@@ -77,6 +78,7 @@ class EnhetsregisteretClient(
                             )
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhetChunk ->
+                                log.info("Lagrer batch av ${underenhetChunk.count()} underenheter")
                                 lagre(EnhetType.UNDERENHET, underenhetChunk)
                                 c += underenhetChunk.count()
                             }
