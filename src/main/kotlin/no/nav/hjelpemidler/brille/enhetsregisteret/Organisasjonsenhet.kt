@@ -13,6 +13,7 @@ data class Organisasjonsenhet(
     val naeringskode1: Næringskode? = null,
     val naeringskode2: Næringskode? = null,
     val naeringskode3: Næringskode? = null,
+    val konkursdato: LocalDate? = null,
     val slettedato: LocalDate? = null,
 ) {
     fun næringskoder(): Set<Næringskode> = setOfNotNull(
