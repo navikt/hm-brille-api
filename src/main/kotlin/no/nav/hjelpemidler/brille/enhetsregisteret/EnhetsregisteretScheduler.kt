@@ -4,6 +4,8 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
+import no.nav.hjelpemidler.brille.slack.Slack
+import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
@@ -23,7 +25,9 @@ class EnhetsregisteretScheduler(
         runCatching {
             enhetsregisteretService.oppdaterMirrorHvisUtdatert()
         }.getOrElse { e ->
-            log.error(e) { "Feil under oppdatering av vår kopi av enhetsregisteret" }
+            val uid = UUID.randomUUID()
+            log.error(e) { "Feil under oppdatering av vår kopi av enhetsregisteret ($uid)" }
+            Slack.post("Feil under oppdatering av vår kopi av enhetsregisteret (søk kibana: $uid)")
         }
     }
 }
