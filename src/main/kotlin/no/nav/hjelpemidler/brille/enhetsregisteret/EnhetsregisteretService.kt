@@ -85,7 +85,8 @@ class EnhetsregisteretService(
             it.enhetsregisteretStore.sistOppdatert()
         }
 
-        if (oppdaterUansett || sistOppdatert == null || sistOppdatert.until(LocalDateTime.now(), ChronoUnit.HOURS) >= 24) {
+        val now = LocalDateTime.now()
+        if (oppdaterUansett || sistOppdatert == null || (sistOppdatert.until(now, ChronoUnit.HOURS) > 5 && now.hour < 5)) {
             enhetsregisteretClient.oppdaterMirror()
         }
     }
