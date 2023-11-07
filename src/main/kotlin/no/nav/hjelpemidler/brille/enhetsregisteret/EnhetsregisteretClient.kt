@@ -63,7 +63,7 @@ class EnhetsregisteretClient(
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhetChunk ->
                                 lagre(EnhetType.HOVEDENHET, enhetChunk)
-                                c++
+                                c += enhetChunk.count()
                             }
                         }
                     }
@@ -78,7 +78,7 @@ class EnhetsregisteretClient(
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhetChunk ->
                                 lagre(EnhetType.UNDERENHET, underenhetChunk)
-                                c++
+                                c += underenhetChunk.count()
                             }
                         }
                     }
