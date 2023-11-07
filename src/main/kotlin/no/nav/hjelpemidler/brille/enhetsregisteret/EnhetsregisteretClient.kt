@@ -106,6 +106,7 @@ class EnhetsregisteretClient(
                 chunk.add(enhet)
                 if (chunk.count() == 5000) {
                     block(chunk)
+                    chunk.clear()
                 }
             }
             if (chunk.isNotEmpty()) block(chunk)
