@@ -5,6 +5,7 @@ import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.store.Store
+import no.nav.hjelpemidler.brille.store.StoreException
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
 import no.nav.hjelpemidler.brille.store.queryList
@@ -15,7 +16,7 @@ import java.time.LocalDateTime
 interface EnhetsregisteretStore : Store {
     fun hentEnhet(orgnr: String): Organisasjonsenhet?
     fun hentEnheter(orgnre: Set<String>): Map<String, Organisasjonsenhet>
-    fun oppdaterEnheter(block: (lagre: (type: EnhetType, enhet: Organisasjonsenhet) -> Unit) -> Unit)
+    fun oppdaterEnheter(block: (lagre: (type: EnhetType, enhetChunk: List<Organisasjonsenhet>) -> Unit) -> Unit)
     fun sistOppdatert(): LocalDateTime?
 }
 
@@ -43,11 +44,11 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
         results
     }
 
-    override fun oppdaterEnheter(block: (lagre: (type: EnhetType, enhet: Organisasjonsenhet) -> Unit) -> Unit) = transaction {
+    override fun oppdaterEnheter(block: (lagre: (type: EnhetType, enhetChunk: List<Organisasjonsenhet>) -> Unit) -> Unit) = transaction {
         // Lagre alle nye enheter i database tabellen
         val opprettet = LocalDateTime.now()
         runBlocking {
-            block { type, enhet ->
+            block { type, enhetChunk ->
                 // Lagre enhet
                 @Language("PostgreSQL")
                 val sql = """
@@ -55,15 +56,19 @@ class EnhetsregisteretStorePostgres(sessionFactory: () -> Session) : Enhetsregis
                     VALUES (:orgnr, :opprettet, :type, :data)
                 """.trimIndent()
 
-                it.update(
+                // Batch-oppdater rader i databasen med en enkelt PreparedStatement
+                val rowsUpdated = it.batchPreparedNamedStatement(
                     sql,
-                    mapOf(
-                        "orgnr" to enhet.orgnr,
-                        "opprettet" to opprettet,
-                        "type" to type.name,
-                        "data" to pgObjectOf(enhet),
-                    ),
-                ).validate()
+                    enhetChunk.map { enhet ->
+                        mapOf(
+                            "orgnr" to enhet.orgnr,
+                            "opprettet" to opprettet,
+                            "type" to type.name,
+                            "data" to pgObjectOf(enhet),
+                        )
+                    },
+                )
+                if (rowsUpdated.count { it > 0 } != enhetChunk.count()) throw StoreException("en eller flere rowsUpdated i batch var 0")
             }
         }
 

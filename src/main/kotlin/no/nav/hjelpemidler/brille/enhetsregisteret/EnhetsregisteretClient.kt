@@ -61,10 +61,9 @@ class EnhetsregisteretClient(
                                 "application/vnd.brreg.enhetsregisteret.enhet.v1+gzip;charset=UTF-8",
                             )
                         }.execute { httpResponse ->
-                            strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhet ->
-                                lagre(EnhetType.HOVEDENHET, enhet)
+                            strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhetChunk ->
+                                lagre(EnhetType.HOVEDENHET, enhetChunk)
                                 c++
-                                return@strømOgBlåsOpp true
                             }
                         }
                     }
@@ -77,10 +76,9 @@ class EnhetsregisteretClient(
                                 "application/vnd.brreg.enhetsregisteret.underenhet.v1+gzip;charset=UTF-8",
                             )
                         }.execute { httpResponse ->
-                            strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhet ->
-                                lagre(EnhetType.UNDERENHET, underenhet)
+                            strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhetChunk ->
+                                lagre(EnhetType.UNDERENHET, underenhetChunk)
                                 c++
-                                return@strømOgBlåsOpp true
                             }
                         }
                     }
@@ -90,7 +88,7 @@ class EnhetsregisteretClient(
         log.info("Oppdater mirror - Ferdig med å lagre $c hoved-/underenheter - $elapsed ms brukt")
     }
 
-    private suspend inline fun <reified T> strømOgBlåsOpp(httpResponse: HttpResponse, block: (enhet: T) -> Boolean) {
+    private suspend inline fun <reified T> strømOgBlåsOpp(httpResponse: HttpResponse, block: (enhet: List<T>) -> Unit) {
         val contentLength = (httpResponse.contentLength() ?: -1)
         val contentLengthMB = contentLength / 1024 / 1024
         log.info("Komprimert filstørrelse: $contentLengthMB MiB ($contentLength bytes)")
@@ -101,13 +99,16 @@ class EnhetsregisteretClient(
             check(jsonParser.nextToken() === JsonToken.START_ARRAY) { "Expected content to be an array" }
 
             // Iterate over the tokens until the end of the array
+            val chunk = mutableListOf<T>()
             while (jsonParser.nextToken() !== JsonToken.END_ARRAY) {
-                // Read a Organisasjonsenhet instance using ObjectMapper and do something with it
+                // Read an Organisasjonsenhet instance using ObjectMapper and do something with it
                 val enhet: T = mapper.readValue(jsonParser)
-                if (!block(enhet)) {
-                    break
+                chunk.add(enhet)
+                if (chunk.count() == 5000) {
+                    block(chunk)
                 }
             }
+            if (chunk.isNotEmpty()) block(chunk)
         }
     }
 }
