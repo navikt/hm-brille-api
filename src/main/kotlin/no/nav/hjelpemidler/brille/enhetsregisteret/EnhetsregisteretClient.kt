@@ -106,6 +106,10 @@ class EnhetsregisteretClient(
                 // Read an Organisasjonsenhet instance using ObjectMapper and do something with it
                 val enhet: T = mapper.readValue(jsonParser)
                 chunk.add(enhet)
+                if (chunk.count() == 10000) {
+                    block(chunk)
+                    chunk.clear()
+                }
             }
             if (chunk.isNotEmpty()) block(chunk)
         }
