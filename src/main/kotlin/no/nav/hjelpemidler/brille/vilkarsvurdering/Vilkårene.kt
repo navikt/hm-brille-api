@@ -191,7 +191,7 @@ object Vilkårene {
     }
 
     val Bestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
-        beskrivelse = "Bestillingsdato innenfor gyldig periode",
+        beskrivelse = "Bestillingsdato må være innenfor gyldig periode",
         identifikator = "Bestillingsdato",
         lovreferanse = "§ 6",
         lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
