@@ -97,6 +97,9 @@ fun Route.internalRoutes(
                     log.error(e) { "sync-brreg endpoint: Feil under oppdatering av vår kopi av enhetsregisteret" }
                 }.getOrNull() ?: return@runBlocking call.respond(HttpStatusCode.InternalServerError, "feil under manuell sync brreg")
             }
+
+            // Ferdig
+            call.respond(HttpStatusCode.OK, "Done!")
         }
     }
 }
