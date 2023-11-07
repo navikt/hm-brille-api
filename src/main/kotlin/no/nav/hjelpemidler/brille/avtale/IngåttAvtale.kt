@@ -3,13 +3,15 @@ package no.nav.hjelpemidler.brille.avtale
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import java.time.LocalDateTime
 
-data class Avtale(
+data class IngåttAvtale(
     val orgnr: String,
     val navn: String,
     val aktiv: Boolean,
     val kontonr: String? = null,
     val epost: String? = null,
     val avtaleversjon: String? = null,
+    val bruksvilkår: Boolean? = false,
+    val bruksvilkårOpprettet: LocalDateTime? = null,
     val opprettet: LocalDateTime? = null,
     val oppdatert: LocalDateTime? = null,
 ) {
@@ -20,6 +22,8 @@ data class Avtale(
         kontonr = virksomhet.kontonr,
         epost = virksomhet.epost,
         avtaleversjon = virksomhet.avtaleversjon,
+        bruksvilkår = virksomhet.bruksvilkår,
+        bruksvilkårOpprettet = virksomhet.bruksvilkårGodtattDato,
         opprettet = virksomhet.opprettet,
         oppdatert = virksomhet.oppdatert,
     )

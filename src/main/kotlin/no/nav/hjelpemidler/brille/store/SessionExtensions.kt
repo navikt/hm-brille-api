@@ -39,6 +39,11 @@ fun Session.update(
     queryParameters: QueryParameters = emptyMap(),
 ): UpdateResult = UpdateResult(rowCount = run(queryOf(sql, queryParameters).asUpdate))
 
+fun Session.updateAndReturnGeneratedId(
+    @Language("PostgreSQL") sql: String,
+    queryParameters: QueryParameters = emptyMap(),
+): UpdateResult = UpdateResult(generatedId = run(queryOf(sql, queryParameters).asUpdateAndReturnGeneratedKey))
+
 const val COLUMN_LABEL_TOTAL = "total"
 
 typealias QueryParameters = Map<String, Any?>

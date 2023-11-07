@@ -30,7 +30,7 @@ class AvtaleService(
             "Fant ikke organisasjonsenhet med orgnr: $orgnr"
         }
 
-    suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avtale> {
+    suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<IngåttAvtale> {
         val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
 
         if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {
@@ -74,13 +74,15 @@ class AvtaleService(
 
         return avgivereFiltrert
             .map {
-                Avtale(
+                IngåttAvtale(
                     orgnr = it.orgnr,
                     navn = it.navn,
                     aktiv = virksomheter[it.orgnr]?.aktiv ?: false,
                     kontonr = virksomheter[it.orgnr]?.kontonr,
                     epost = virksomheter[it.orgnr]?.epost,
                     avtaleversjon = virksomheter[it.orgnr]?.avtaleversjon,
+                    bruksvilkår = virksomheter[it.orgnr]?.bruksvilkår,
+                    bruksvilkårOpprettet = virksomheter[it.orgnr]?.bruksvilkårGodtattDato,
                     opprettet = virksomheter[it.orgnr]?.opprettet,
                     oppdatert = virksomheter[it.orgnr]?.oppdatert,
                 )
@@ -91,11 +93,11 @@ class AvtaleService(
         fnr: String,
         orgnr: String,
         tjeneste: Avgiver.Tjeneste,
-    ): Avtale? = hentAvtaler(fnr = fnr, tjeneste = tjeneste).associateBy {
+    ): IngåttAvtale? = hentAvtaler(fnr = fnr, tjeneste = tjeneste).associateBy {
         it.orgnr
     }[orgnr]
 
-    suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): Avtale {
+    suspend fun opprettAvtale(fnrInnsender: String, opprettAvtale: OpprettAvtale): IngåttAvtale {
         val orgnr = opprettAvtale.orgnr
 
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)) {
@@ -106,7 +108,7 @@ class AvtaleService(
         sikkerLog.info { "fnrInnsender: $fnrInnsender, opprettAvtale: $opprettAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
-            ctx.virksomhetStore.lagreVirksomhet(
+            val virksomhet = ctx.virksomhetStore.lagreVirksomhet(
                 Virksomhet(
                     orgnr = orgnr,
                     kontonr = opprettAvtale.kontonr,
@@ -117,10 +119,19 @@ class AvtaleService(
                     avtaleversjon = null,
                 ),
             )
+            ctx.avtaleStore.lagreAvtale(
+                Avtale(
+                    orgnr = orgnr,
+                    fnrInnsender = fnrInnsender,
+                    aktiv = true,
+                    avtaleId = AVTALETYPE.OPPGJORSAVTALE.avtaleId,
+                ),
+            )
+            virksomhet
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
-        val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+        val avtale = IngåttAvtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
         // For å unngå at gammelt kontonr kan brukes innen nytt er ferdigregistrert i TSS så glemmer vi alle gamle
         // TSS-identer her. Disse vil settes igjen etter TSS har kvittert mottak av nytt kontonr. Se: TssIdentRiver.
@@ -137,7 +148,40 @@ class AvtaleService(
         return avtale
     }
 
-    suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): Avtale {
+    suspend fun godtaBruksvilkår(
+        fnrInnsender: String,
+        orgnr: String,
+    ): BruksvilkårGodtattDto {
+        if (!altinnService.harTilgangTilOppgjørsavtale(fnrInnsender, orgnr)) {
+            throw AvtaleManglerTilgangException(orgnr)
+        }
+
+        log.info { "Registrerer at bruksvilkår for api er godtatt for orgnr: $orgnr" }
+        sikkerLog.info { "fnrInnsender: $fnrInnsender, bruksvilkår for api godtatt for orgnr: $orgnr" }
+
+        val bruksvilkårGodtatt = transaction(databaseContext) { ctx ->
+            val bruksvilkårGodtatt = ctx.avtaleStore.godtaBruksvilkår(
+                BruksvilkårGodtatt(
+                    orgnr = orgnr,
+                    fnrInnsender = fnrInnsender,
+                    aktiv = true,
+                    bruksvilkårDefinisjonId = BRUKSVILKÅRTYPE.BRUKSVILKÅR_API.bruksvilkårId,
+                ),
+            )
+            bruksvilkårGodtatt
+        }
+
+        val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
+        kafkaService.bruksvilkårGodtatt(bruksvilkårGodtatt, organisasjonsenhet.navn)
+
+        if (Configuration.dev || Configuration.prod) {
+            Slack.post("AvtaleService: Bruksvilkår godtatt for orgnr=$orgnr.")
+        }
+
+        return BruksvilkårGodtattDto.fromBruksvilkårGodtatt(bruksvilkårGodtatt, organisasjonsenhet.navn)
+    }
+
+    suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): IngåttAvtale {
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrOppdatertAv, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)
         }
@@ -146,7 +190,7 @@ class AvtaleService(
         sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
-            ctx.virksomhetStore.oppdaterVirksomhet(
+            val virksomhet = ctx.virksomhetStore.oppdaterVirksomhet(
                 requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
                     "Fant ikke virksomhet med orgnr: $orgnr"
                 }.copy(
@@ -156,6 +200,8 @@ class AvtaleService(
                     oppdatert = LocalDateTime.now(),
                 ),
             )
+
+            virksomhet
         }
 
         if (virksomhet.fnrInnsender != virksomhet.fnrOppdatertAv) {
@@ -165,7 +211,7 @@ class AvtaleService(
         }
 
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
-        val avtale = Avtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
+        val avtale = IngåttAvtale(virksomhet = virksomhet, navn = organisasjonsenhet.navn)
 
         // For å unngå at gammelt kontonr kan brukes innen nytt er ferdigregistrert i TSS så glemmer vi alle gamle
         // TSS-identer her. Disse vil settes igjen etter TSS har kvittert mottak av nytt kontonr. Se: TssIdentRiver.
