@@ -93,9 +93,9 @@ fun Route.internalRoutes(
             runBlocking {
                 runCatching {
                     enhetsregisteretService.oppdaterMirrorHvisUtdatert(oppdaterUansett = true)
-                }.getOrElse { e ->
+                }.onFailure { e ->
                     log.error(e) { "sync-brreg endpoint: Feil under oppdatering av vår kopi av enhetsregisteret" }
-                }
+                }.getOrNull() ?: return@runBlocking call.respond(HttpStatusCode.InternalServerError, "feil under manuell sync brreg")
             }
         }
     }
