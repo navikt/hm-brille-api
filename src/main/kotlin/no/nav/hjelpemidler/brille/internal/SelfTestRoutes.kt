@@ -90,16 +90,38 @@ fun Route.internalRoutes(
         }
 
         post("/sync-brreg") {
-            runBlocking {
-                runCatching {
-                    enhetsregisteretService.oppdaterMirrorHvisUtdatert(oppdaterUansett = true)
-                }.onFailure { e ->
-                    log.error(e) { "sync-brreg endpoint: Feil under oppdatering av vår kopi av enhetsregisteret" }
-                }.getOrNull() ?: return@runBlocking call.respond(HttpStatusCode.InternalServerError, "feil under manuell sync brreg")
-            }
+            runCatching {
+                enhetsregisteretService.oppdaterMirrorHvisUtdatert(oppdaterUansett = true)
+            }.onFailure { e ->
+                log.error(e) { "sync-brreg endpoint: Feil under oppdatering av vår kopi av enhetsregisteret" }
+            }.getOrNull() ?: return@post call.respond(HttpStatusCode.InternalServerError, "feil under manuell sync brreg")
 
             // Ferdig
             call.respond(HttpStatusCode.OK, "Done!")
+        }
+
+        route("/enhetsregisteret") {
+            get("/mirror-med-fallback/{orgnr}") {
+                val orgnr = call.parameters["orgnr"]!!.trim()
+                val enhet = runCatching { enhetsregisteretService.hentOrganisasjonsenhet(orgnr) }.onFailure { e ->
+                    log.error(e) { "henting av organisasjonsenhet feilet" }
+                }.getOrNull() ?: return@get call.respond(HttpStatusCode.InternalServerError, "feilet i å hente organisasjonsenhet")
+                call.respond(enhet)
+            }
+            get("/slettet-eller-ei/{orgnr}") {
+                val orgnr = call.parameters["orgnr"]!!.trim()
+                val enhet = runCatching { enhetsregisteretService.organisasjonSlettet(orgnr) }.onFailure { e ->
+                    log.error(e) { "henting av organisasjons slettet feilet" }
+                }.getOrNull() ?: return@get call.respond(HttpStatusCode.InternalServerError, "feilet i å hente organisasjon slettet")
+                call.respond(enhet)
+            }
+            get("/slettet-dato/{orgnr}") {
+                val orgnr = call.parameters["orgnr"]!!.trim()
+                val enhet = runCatching { enhetsregisteretService.organisasjonSlettetNår(orgnr) }.onFailure { e ->
+                    log.error(e) { "henting av organisasjons slettet når feilet" }
+                }.getOrNull() ?: return@get call.respond(HttpStatusCode.InternalServerError, "feilet i å hente organisasjon slettet når")
+                call.respond(enhet)
+            }
         }
     }
 }
