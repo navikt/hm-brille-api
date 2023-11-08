@@ -59,7 +59,9 @@ class EnhetsregisteretService(
 
     suspend fun organisasjonSlettet(orgnr: String): Boolean {
         kotlin.runCatching {
-            val org = enhetsregisteretClient.hentEnhet(orgnr)
+            val org = runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
+                ?: enhetsregisteretClient.hentEnhet(orgnr)
+
             if (org != null) {
                 return org.slettedato != null
             }
@@ -73,7 +75,9 @@ class EnhetsregisteretService(
 
     suspend fun organisasjonSlettetNår(orgnr: String): LocalDate? {
         kotlin.runCatching {
-            val org = enhetsregisteretClient.hentEnhet(orgnr)
+            val org = runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
+                ?: enhetsregisteretClient.hentEnhet(orgnr)
+
             if (org != null) {
                 return org.slettedato
             }
