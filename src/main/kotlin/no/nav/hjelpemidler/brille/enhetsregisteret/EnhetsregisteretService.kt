@@ -19,7 +19,7 @@ class EnhetsregisteretService(
 
         val enhet = transaction(databaseContext) { ctx ->
             ctx.enhetsregisteretStore.hentEnhet(orgnr)
-        }
+        } ?: enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
 
         if (enhet != null) {
             log.info { "Hentet enhet/underenhet med orgnr: $orgnr fra mirror" }
@@ -42,6 +42,11 @@ class EnhetsregisteretService(
             ctx.enhetsregisteretStore.hentEnheter(orgnre)
         }.toMutableMap()
 
+        val enheterFraTilbakefallsLøsning = orgnre.filter { enheter.containsKey(it) }.mapNotNull { orgnr ->
+            enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
+        }.groupBy { it.orgnr }.mapValues { it.value.first() }
+        enheter.putAll(enheterFraTilbakefallsLøsning)
+
         if (Configuration.dev) {
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
             for (orgnr in orgnre) {
@@ -54,7 +59,7 @@ class EnhetsregisteretService(
 
     suspend fun organisasjonSlettet(orgnr: String): Boolean {
         kotlin.runCatching {
-            val org = kotlin.runCatching { hentOrganisasjonsenhet(orgnr) }.getOrNull()
+            val org = enhetsregisteretClient.hentEnhet(orgnr)
             if (org != null) {
                 return org.slettedato != null
             }
@@ -68,7 +73,7 @@ class EnhetsregisteretService(
 
     suspend fun organisasjonSlettetNår(orgnr: String): LocalDate? {
         kotlin.runCatching {
-            val org = kotlin.runCatching { hentOrganisasjonsenhet(orgnr) }.getOrNull()
+            val org = enhetsregisteretClient.hentEnhet(orgnr)
             if (org != null) {
                 return org.slettedato
             }

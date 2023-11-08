@@ -7,7 +7,9 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.HttpResponse
@@ -44,6 +46,12 @@ class EnhetsregisteretClient(
         expectSuccess = true
         install(HttpTimeout) {
             requestTimeoutMillis = 60 * 60 * 1000
+        }
+    }
+
+    suspend fun hentEnhet(orgnr: String): Organisasjonsenhet? {
+        return runCatching { httpClient.get("$baseUrl/enhetsregisteret/api/enheter/$orgnr").body<Organisasjonsenhet>() }.getOrElse {
+            runCatching { httpClient.get("$baseUrl/enhetsregisteret/api/underenheter/$orgnr").body<Organisasjonsenhet>() }.getOrNull()
         }
     }
 
