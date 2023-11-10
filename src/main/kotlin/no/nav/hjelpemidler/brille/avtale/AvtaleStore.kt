@@ -6,6 +6,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
 import no.nav.hjelpemidler.brille.store.query
+import no.nav.hjelpemidler.brille.store.update
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
@@ -33,6 +34,7 @@ interface AvtaleStore : Store {
     fun lagreAvtale(avtale: Avtale): Avtale
     fun godtaBruksvilkår(bruksvilkårGodtatt: BruksvilkårGodtatt): BruksvilkårGodtatt
     fun henBruksvilkårOrganisasjon(orgnr: String): BruksvilkårGodtatt?
+    fun deaktiverVirksomhet(orgnr: String)
 }
 
 data class Avtale(
@@ -113,6 +115,21 @@ class AvtaleStorePostgres(private val sessionFactory: () -> Session) : AvtaleSto
             row.long("id")
         }
         bruksvilkårGodtatt.copy(id = id?.toInt())
+    }
+
+    override fun deaktiverVirksomhet(orgnr: String): Unit = session {
+        @Language("PostgreSQL")
+        val sql = """
+            UPDATE virksomhet_v1
+            SET aktiv = false
+            WHERE orgnr = :orgnr
+        """.trimIndent()
+        it.update(
+            sql,
+            mapOf(
+                "orgnr" to orgnr,
+            ),
+        ).validate()
     }
 
     override fun henBruksvilkårOrganisasjon(orgnr: String): BruksvilkårGodtatt? = session {

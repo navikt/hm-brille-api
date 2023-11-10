@@ -12,6 +12,7 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
+import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -60,6 +61,7 @@ fun Route.integrasjonApi(
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     utbetalingService: UtbetalingService,
     slettVedtakService: SlettVedtakService,
+    avtaleService: AvtaleService,
     adminService: AdminService,
     kafkaService: KafkaService,
 ) {
@@ -112,6 +114,11 @@ fun Route.integrasjonApi(
             log.info("Søker etter $orgnr har aktiv NavAvtale: $harAktivNavAvtale")
             val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
+
+            // Fjerner eventuelle avtaler og bruksvilkår for slettet virksomhet
+            if (enhet.slettedato != null && enhet.slettedato.isBefore(LocalDate.now())) {
+                avtaleService.deaktiverVirksomhet(orgnr)
+            }
 
             val response = OrganisasjonMedBruksvilkår(
                 orgnr = enhet.orgnr,
