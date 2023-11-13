@@ -181,6 +181,13 @@ class AvtaleService(
         return BruksvilkårGodtattDto.fromBruksvilkårGodtatt(bruksvilkårGodtatt, organisasjonsenhet.navn)
     }
 
+    suspend fun deaktiverVirksomhet(orgnr: String) {
+        log.info { "Deaktiverer orgnr: $orgnr" }
+        transaction(databaseContext) { ctx ->
+            ctx.avtaleStore.deaktiverVirksomhet(orgnr)
+        }
+    }
+
     suspend fun oppdaterAvtale(fnrOppdatertAv: String, orgnr: String, oppdaterAvtale: OppdaterAvtale): IngåttAvtale {
         if (!altinnService.harTilgangTilOppgjørsavtale(fnrOppdatertAv, orgnr)) {
             throw AvtaleManglerTilgangException(orgnr)

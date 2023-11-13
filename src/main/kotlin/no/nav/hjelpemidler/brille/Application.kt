@@ -260,6 +260,7 @@ fun Application.setupRoutes() {
                     syfohelsenettproxyClient,
                     utbetalingService,
                     slettVedtakService,
+                    avtaleService,
                     adminService,
                     kafkaService,
                 )

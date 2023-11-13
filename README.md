@@ -22,7 +22,7 @@ Applikasjonen har klienter mot:
 
 ### Overordnet dokumentasjon
 
-Overordnet dokumentasjon av brillestøtte finnes [her](doc/%C3%98kosystem.md)
+Overordnet dokumentasjon av brillestøtte finnes [her](https://github.com/navikt/hm-brille/blob/main/doc/%C3%98kosystem.md)
 
 ### Henvendelser
 
