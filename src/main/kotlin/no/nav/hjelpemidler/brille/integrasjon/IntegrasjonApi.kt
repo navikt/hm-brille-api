@@ -269,6 +269,11 @@ fun Route.integrasjonApi(
                         .filter { vilkar -> vilkar.resultat != Resultat.JA }
                         .map { vilkar -> vilkar.begrunnelse }
 
+                    val haddeAvvisningsbrevFraFør = adminService.harAvvisningDeSiste7DageneFor(
+                        vilkårsgrunnlag.fnrBarn,
+                        vilkårsgrunnlag.orgnr,
+                    )
+
                     // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
                     adminService.lagreAvvisning(
                         vilkårsgrunnlag.fnrBarn,
@@ -278,11 +283,7 @@ fun Route.integrasjonApi(
                     )
 
                     // Journalfør avvisningsbrev i joark
-                    if (adminService.harAvvisningDeSiste7DageneFor(
-                            vilkårsgrunnlag.fnrBarn,
-                            vilkårsgrunnlag.orgnr,
-                        )
-                    ) {
+                    if (haddeAvvisningsbrevFraFør) {
                         log.info("Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene")
                         kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("integrasjon")
                     } else {
