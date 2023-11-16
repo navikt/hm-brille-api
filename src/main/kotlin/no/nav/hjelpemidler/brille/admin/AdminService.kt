@@ -27,9 +27,15 @@ class AdminService(
         }
     }
 
-    suspend fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>) {
+    suspend fun lagreAvvisning(
+        fnrBarn: String,
+        fnrInnsender: String,
+        orgnr: String,
+        butikkId: String?,
+        årsaker: List<String>,
+    ) {
         return transaction(databaseContext) { ctx ->
-            ctx.adminStore.lagreAvvisning(fnrBarn, fnrInnsender, orgnr, årsaker)
+            ctx.adminStore.lagreAvvisning(fnrBarn, fnrInnsender, orgnr, butikkId, årsaker)
         }
     }
 

@@ -1,0 +1,1 @@
+ALTER TABLE vedtak_v1 ADD COLUMN butikk_id TEXT NULL;

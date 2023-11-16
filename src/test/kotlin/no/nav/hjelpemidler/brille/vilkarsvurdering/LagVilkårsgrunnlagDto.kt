@@ -21,6 +21,7 @@ class VilkårsgrunnlagDtoBuilder : Builder<VilkårsgrunnlagDto> {
 
     override fun build(): VilkårsgrunnlagDto = VilkårsgrunnlagDto(
         orgnr = orgnr,
+        butikkId = null,
         fnrBarn = fnrBarn,
         brilleseddel = brilleseddel,
         bestillingsdato = bestillingsdato,

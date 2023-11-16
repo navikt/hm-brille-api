@@ -54,6 +54,7 @@ class VedtakService(
                     fnrInnsender = fnrInnsender,
                     navnInnsender = navnInnsender,
                     orgnr = vilkårsgrunnlag.orgnr,
+                    butikkId = vilkårsgrunnlag.butikkId,
                     bestillingsdato = vilkårsgrunnlag.bestillingsdato,
                     brillepris = brillepris,
                     bestillingsreferanse = krav.bestillingsreferanse,

@@ -22,7 +22,14 @@ import java.time.LocalDateTime
 interface AdminStore : Store {
     fun hentVedtakListe(fnr: String): List<VedtakListe>
     fun hentVedtak(vedtakId: Long): Vedtak?
-    fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>)
+    fun lagreAvvisning(
+        fnrBarn: String,
+        fnrInnsender: String,
+        orgnr: String,
+        butikkId: String?,
+        årsaker: List<String>,
+    )
+
     fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?): Avvisning?
     fun harAvvisningDeSiste7DageneFor(fnrBarn: String, orgnr: String): Boolean
     fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling>
@@ -63,7 +70,8 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 bestillingsdato = row.localDate("bestillingsdato"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalt = row.localDateTimeOrNull("utbetalingsdato"),
-                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
+                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
+                    ?.let { status -> UtbetalingStatus.valueOf(status) },
                 slettet = row.localDateTimeOrNull("slettet"),
             )
         }
@@ -113,7 +121,8 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 beløp = row.bigDecimal("belop"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
-                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")?.let { status -> UtbetalingStatus.valueOf(status) },
+                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
+                    ?.let { status -> UtbetalingStatus.valueOf(status) },
                 batchId = row.stringOrNull("batch_id"),
                 slettet = row.localDateTimeOrNull("slettet"),
                 slettetAv = row.stringOrNull("slettet_av_type")?.let {
@@ -129,10 +138,16 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         }
     }
 
-    override fun lagreAvvisning(fnrBarn: String, fnrInnsender: String, orgnr: String, årsaker: List<String>) = session {
+    override fun lagreAvvisning(
+        fnrBarn: String,
+        fnrInnsender: String,
+        orgnr: String,
+        butikkId: String?,
+        årsaker: List<String>,
+    ) = session {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO avviste_krav_v1 (fnrBarn, fnrInnsender, orgnr, begrunnelser, opprettet) VALUES (:fnrBarn, :fnrInnsender, :orgnr, :begrunnelser, NOW())
+            INSERT INTO avviste_krav_v1 (fnrBarn, fnrInnsender, orgnr, butikkId, begrunnelser, opprettet) VALUES (:fnrBarn, :fnrInnsender, :orgnr, :butikkId, :begrunnelser, NOW())
         """.trimIndent()
 
         it.update(
@@ -141,6 +156,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 "fnrBarn" to fnrBarn,
                 "fnrInnsender" to fnrInnsender,
                 "orgnr" to orgnr,
+                "butikkId" to butikkId,
                 "begrunnelser" to pgObjectOf(årsaker),
             ),
         ).validate()

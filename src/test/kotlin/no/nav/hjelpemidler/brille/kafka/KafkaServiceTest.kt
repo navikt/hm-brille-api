@@ -34,6 +34,7 @@ internal class KafkaServiceTest {
         val krav = KravDto(
             VilkårsgrunnlagDto(
                 orgnr = "067234162",
+                butikkId = null,
                 fnrBarn = "07083440346",
                 brilleseddel = Brilleseddel(
                     høyreSfære = 1.0,
@@ -55,6 +56,7 @@ internal class KafkaServiceTest {
             fnrInnsender = "28102525703",
             navnInnsender = "Kronjuvel Sedat",
             orgnr = krav.vilkårsgrunnlag.orgnr,
+            butikkId = null,
             bestillingsdato = krav.vilkårsgrunnlag.bestillingsdato,
             brillepris = krav.vilkårsgrunnlag.brillepris,
             bestillingsreferanse = krav.bestillingsreferanse,

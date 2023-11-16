@@ -198,6 +198,7 @@ fun Route.integrasjonApi(
                 val bestillingsdato: LocalDate,
                 val bestillingsreferanse: String,
                 val virksomhetOrgnr: String,
+                val virksomhetbutikkId: String? = null,
                 val ansvarligOptikersFnr: String,
                 val avsendersystemOrgNr: String,
             )
@@ -243,6 +244,7 @@ fun Route.integrasjonApi(
                 val krav = KravDto(
                     vilkårsgrunnlag = VilkårsgrunnlagDto(
                         orgnr = req.virksomhetOrgnr,
+                        butikkId = req.virksomhetbutikkId,
                         fnrBarn = req.fnrBarn,
                         brilleseddel = req.brilleseddel,
                         bestillingsdato = req.bestillingsdato,
@@ -286,6 +288,7 @@ fun Route.integrasjonApi(
                         vilkårsgrunnlag.fnrBarn,
                         req.ansvarligOptikersFnr,
                         vilkårsgrunnlag.orgnr,
+                        vilkårsgrunnlag.butikkId,
                         årsaker,
                     )
 

@@ -84,6 +84,7 @@ internal class KravApiTest {
 
     private val vilkårsgrunnlag = VilkårsgrunnlagDto(
         orgnr = "123456789",
+        butikkId = null,
         fnrBarn = "07480966982",
         brilleseddel = Brilleseddel(
             høyreSfære = 2.0,
@@ -101,6 +102,7 @@ internal class KravApiTest {
         fnrInnsender = "15084300133",
         navnInnsender = "Kronjuvel Sedat",
         orgnr = "123456789",
+        butikkId = null,
         bestillingsdato = LocalDate.now(),
         brillepris = SatsType.SATS_1.beløp(LocalDate.now()).toBigDecimal(),
         bestillingsreferanse = "test 2",

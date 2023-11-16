@@ -66,7 +66,13 @@ fun Route.vilkårApi(
                 )
 
                 // Lagre avvisningsårsaker, hvem og hvorfor. Brukes i brille-admin.
-                adminService.lagreAvvisning(vilkårsgrunnlag.fnrBarn, call.extractFnr(), vilkårsgrunnlag.orgnr, årsaker)
+                adminService.lagreAvvisning(
+                    vilkårsgrunnlag.fnrBarn,
+                    call.extractFnr(),
+                    vilkårsgrunnlag.orgnr,
+                    vilkårsgrunnlag.butikkId,
+                    årsaker,
+                )
 
                 // Journalfør avvisningsbrev i joark
                 if (haddeAvvisningsbrevFraFør) {

@@ -23,6 +23,7 @@ data class Vedtak<T>(
     val fnrInnsender: String,
     val navnInnsender: String,
     val orgnr: String,
+    val butikkId: String?,
     val bestillingsdato: LocalDate,
     val brillepris: BigDecimal,
     val bestillingsreferanse: String,
