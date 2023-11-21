@@ -49,7 +49,6 @@ internal class KafkaServiceTest {
             "test",
             "test",
             "test",
-            "test",
         )
         val vedtak = Vedtak<Vilkårsgrunnlag>(
             fnrBarn = krav.vilkårsgrunnlag.fnrBarn,
@@ -74,6 +73,7 @@ internal class KafkaServiceTest {
             service.vedtakFattet(
                 krav = krav,
                 vedtak = vedtak,
+                navnBarn = "Test Barn",
             )
         }
     }

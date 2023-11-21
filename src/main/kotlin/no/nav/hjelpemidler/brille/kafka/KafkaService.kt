@@ -127,7 +127,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
         )
     }
 
-    fun vedtakFattet(krav: KravDto, vedtak: Vedtak<Vilkårsgrunnlag>) {
+    fun vedtakFattet(krav: KravDto, vedtak: Vedtak<Vilkårsgrunnlag>, navnBarn: String) {
         val fnrBarn = vedtak.fnrBarn
         val brilleseddel = krav.vilkårsgrunnlag.brilleseddel
         // journalfør krav/vedtak som dokument i joark på barnet
@@ -136,7 +136,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
             VedtakOpprettet(
                 opprettetDato = vedtak.opprettet,
                 fnr = fnrBarn,
-                brukersNavn = krav.brukersNavn,
+                brukersNavn = navnBarn,
                 orgnr = vedtak.orgnr,
                 orgNavn = krav.orgNavn,
                 orgAdresse = krav.orgAdresse,

@@ -19,6 +19,7 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.pdl.PdlClient
+import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.pdl.lagMockPdlOppslag
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
@@ -45,6 +46,7 @@ internal class KravApiTest {
     private val utbetalingService = mockk<UtbetalingService>(relaxed = true)
     private val slettVedtakService = mockk<SlettVedtakService>(relaxed = true)
     private val redisClient = mockk<RedisClient>(relaxed = true)
+    private val pdlService = mockk<PdlService>(relaxed = true)
 
     val sessionContext = createDatabaseSessionContextWithMocks()
     val databaseContext = createDatabaseContext(sessionContext)
@@ -62,7 +64,7 @@ internal class KravApiTest {
 
     private val routing = TestRouting {
         authenticate("test") {
-            kravApi(vedtakService, auditService, slettVedtakService, utbetalingService, redisClient)
+            kravApi(vedtakService, auditService, slettVedtakService, utbetalingService, redisClient, pdlService)
         }
     }
 
@@ -75,7 +77,6 @@ internal class KravApiTest {
                     orgAdresse = "",
                     orgNavn = "",
                     bestillingsreferanse = "",
-                    brukersNavn = "",
                 ),
 
             )

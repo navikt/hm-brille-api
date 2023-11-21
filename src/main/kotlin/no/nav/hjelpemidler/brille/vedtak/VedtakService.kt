@@ -24,6 +24,7 @@ class VedtakService(
     suspend fun lagVedtak(
         fnrInnsender: String,
         navnInnsender: String,
+        navnBarn: String,
         krav: KravDto,
         kilde: KravKilde,
         avsendersystemOrgNr: String? = null,
@@ -69,7 +70,7 @@ class VedtakService(
                 ),
             )
             ctx.vedtakStore.lagreVedtakIKø(vedtak.id, vedtak.opprettet)
-            kafkaService.vedtakFattet(krav = krav, vedtak = vedtak)
+            kafkaService.vedtakFattet(krav = krav, vedtak = vedtak, navnBarn = navnBarn)
             vedtak
         }
 

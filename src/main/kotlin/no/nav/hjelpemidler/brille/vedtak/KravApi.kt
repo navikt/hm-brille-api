@@ -11,6 +11,8 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
+import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
+import no.nav.hjelpemidler.brille.pdl.PdlService
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 
@@ -22,6 +24,7 @@ internal fun Route.kravApi(
     slettVedtakService: SlettVedtakService,
     utbetalingService: UtbetalingService,
     redisClient: RedisClient,
+    pdlService: PdlService,
 ) {
     route("/krav") {
         post {
@@ -33,6 +36,12 @@ internal fun Route.kravApi(
             val fnrInnsender = call.extractFnr()
             val navnInnsender = redisClient.optikerNavn(fnrInnsender) ?: "<Ukjent>"
 
+            val barnPdl = pdlService.hentPerson(kravDto.vilkårsgrunnlag.fnrBarn)
+                ?: return@post call.respond(
+                    HttpStatusCode.InternalServerError,
+                    "Fant ikke barnet i pdl",
+                )
+
             require(kravDto.bestillingsreferanse.count() <= 100) { "Bestillingsreferansen kan ikke være over 100 karakterer lang" }
 
             auditService.lagreOppslag(
@@ -41,7 +50,7 @@ internal fun Route.kravApi(
                 oppslagBeskrivelse = "[POST] /krav - Innsending av krav",
             )
 
-            val vedtak = vedtakService.lagVedtak(fnrInnsender, navnInnsender, kravDto, KravKilde.KRAV_APP)
+            val vedtak = vedtakService.lagVedtak(fnrInnsender, navnInnsender, barnPdl.navn(), kravDto, KravKilde.KRAV_APP)
             call.respond(
                 HttpStatusCode.OK,
                 vedtak.toDto(),
@@ -60,7 +69,10 @@ internal fun Route.kravApi(
 
             val utbetaling = utbetalingService.hentUtbetalingForVedtak(vedtakId)
             if (utbetaling != null) {
-                return@delete call.respond(HttpStatusCode.Unauthorized, """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}""")
+                return@delete call.respond(
+                    HttpStatusCode.Unauthorized,
+                    """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}""",
+                )
             }
 
             auditService.lagreOppslag(

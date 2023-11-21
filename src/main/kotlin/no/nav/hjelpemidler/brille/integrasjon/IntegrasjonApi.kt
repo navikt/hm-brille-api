@@ -255,7 +255,6 @@ fun Route.integrasjonApi(
                         ),
                     ),
                     bestillingsreferanse = req.bestillingsreferanse,
-                    brukersNavn = barnPdl.navn(),
                     orgAdresse = enhetTilAdresseFor(enhet),
                     orgNavn = enhet.navn,
                 )
@@ -328,6 +327,7 @@ fun Route.integrasjonApi(
                     val vedtak = vedtakService.lagVedtak(
                         req.ansvarligOptikersFnr,
                         navnInnsender,
+                        navnBarn = barnPdl.navn(),
                         krav,
                         KravKilde.INTEGRASJON,
                         req.avsendersystemOrgNr,
