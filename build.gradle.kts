@@ -4,10 +4,10 @@ group = "no.nav.hjelpemidler"
 version = "1.0-SNAPSHOT"
 
 plugins {
-    kotlin("jvm") version "1.9.10"
-    id("io.ktor.plugin") version "2.3.5"
+    kotlin("jvm") version "1.9.21"
+    id("io.ktor.plugin") version "2.3.6"
     id("com.diffplug.spotless") version "6.16.0"
-    id("com.expediagroup.graphql") version "7.0.1"
+    id("com.expediagroup.graphql") version "7.0.2"
 }
 
 application {
@@ -19,23 +19,24 @@ dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
     implementation("com.natpryce:konfig:1.6.10.0")
-    implementation("io.micrometer:micrometer-registry-prometheus:1.11.4")
+    implementation("io.micrometer:micrometer-registry-prometheus:1.12.0")
     implementation("com.github.navikt:hm-rapids-and-rivers-v2-core:202210121657")
 
     // Database
-    implementation("org.postgresql:postgresql:42.5.4")
-    implementation("org.flywaydb:flyway-core:9.15.2")
-    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation("org.postgresql:postgresql:42.7.0")
+    implementation("org.flywaydb:flyway-core:10.1.0")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql:10.1.0")
+    implementation("com.zaxxer:HikariCP:5.1.0")
     implementation("com.github.seratch:kotliquery:1.9.0")
 
     // HTTP
-    implementation("no.nav.hjelpemidler:hm-http:0.1.4")
+    implementation("no.nav.hjelpemidler:hm-http:0.1.9")
 
     // NARE
-    implementation("no.nav.hjelpemidler:hm-nare:0.1.4")
+    implementation("no.nav.hjelpemidler:hm-nare:0.1.6")
 
     // Unleash
-    implementation("io.getunleash:unleash-client-java:8.3.1")
+    implementation("io.getunleash:unleash-client-java:9.1.1")
 
     // Ktor Shared
     fun ktor(name: String) = "io.ktor:ktor-$name"
@@ -52,7 +53,7 @@ dependencies {
     implementation(ktorServer("status-pages"))
 
     // GraphQL
-    val graphQLVersion = "7.0.1"
+    val graphQLVersion = "7.0.2"
     implementation("com.expediagroup:graphql-kotlin-ktor-client:$graphQLVersion") {
         exclude(group = "com.expediagroup", module = "graphql-kotlin-client-serialization")
         exclude(group = "io.ktor", module = "ktor-client-serialization")
@@ -71,20 +72,20 @@ dependencies {
     runtimeOnly("ch.qos.logback:logback-classic:1.4.11")
 
     // Redis
-    implementation("redis.clients:jedis:5.0.1")
+    implementation("redis.clients:jedis:5.1.0")
 
     // Postgres from naisjob
-    implementation("com.google.cloud.sql:postgres-socket-factory:1.11.0")
+    implementation("com.google.cloud.sql:postgres-socket-factory:1.15.0")
 
     // Testing
     testImplementation(kotlin("test"))
     testImplementation(ktorServer("test-host"))
     testImplementation("io.mockk:mockk:1.13.8")
-    val kotestVersion = "5.7.2"
+    val kotestVersion = "5.8.0"
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
-    testImplementation("org.testcontainers:postgresql:1.18.3")
+    testImplementation("org.testcontainers:postgresql:1.19.3")
     testImplementation("com.nimbusds:nimbus-jose-jwt:9.35")
 }
 
@@ -103,17 +104,9 @@ spotless {
     }
 }
 
-val jdkVersion = 17
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(jdkVersion))
-    }
-}
-
-kotlin {
-    jvmToolchain(jdkVersion)
-}
+val jdkVersion = JavaLanguageVersion.of(17)
+java { toolchain { languageVersion.set(jdkVersion) } }
+kotlin { jvmToolchain { languageVersion.set(jdkVersion) } }
 
 tasks.test {
     useJUnitPlatform()
