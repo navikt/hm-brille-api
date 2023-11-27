@@ -130,7 +130,7 @@ object Vilkårene {
                 "Barnet er antatt medlem i folketrygden basert på folkeregistrert adresse i Norge",
                 mapOf(
                     "bestillingsdato" to bestillingsdato.formatert(),
-                    "forenkletSjekkResultat" to "Oppfylt",
+                    "forenkletSjekkResultat" to "Uavklart medlemskap - må utredes av saksbehandler",
                 ),
             )
 
