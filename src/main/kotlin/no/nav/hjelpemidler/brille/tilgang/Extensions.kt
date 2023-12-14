@@ -10,7 +10,6 @@ import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.http.openid.AzureADEnvironmentVariable
 import no.nav.hjelpemidler.http.openid.TokenXEnvironmentVariable
 import java.net.URL
@@ -50,8 +49,6 @@ fun AuthenticationConfig.tokenXProvider(name: String) {
         }
         validate { credential ->
             val principal = JWTPrincipal(credential.payload)
-            if (Environment.current.tier.isDev)
-                log.info("DEBUGDEBUG: credential=$credential principal=$principal")
             val fnr = principal.mustGet(Configuration.tokenXProperties.userclaim)
             InnloggetBruker.TokenX.Bruker(fnr = fnr)
         }
