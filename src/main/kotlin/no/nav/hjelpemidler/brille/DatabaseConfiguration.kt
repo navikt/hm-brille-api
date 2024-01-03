@@ -53,7 +53,11 @@ class DatabaseConfiguration(private val props: Configuration.DatabaseProperties)
                 maxLifetime = 30001
             }
 
-            val flyway = Flyway.configure().dataSource(dataSource).load()
+            val flyway = Flyway
+                .configure()
+                .validateMigrationNaming(true)
+                .dataSource(dataSource)
+                .load()
             flyway.migrate()
 
             dataSource

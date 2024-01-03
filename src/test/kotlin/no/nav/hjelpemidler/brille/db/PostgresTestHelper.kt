@@ -65,7 +65,6 @@ internal object PostgresTestHelper {
 
     private fun runMigration(dataSource: DataSource, initSql: String? = null) =
         Flyway.configure()
-            .validateMigrationNaming(true)
             .dataSource(dataSource)
             .initSql(initSql)
             .load()
