@@ -38,6 +38,8 @@
         <appender-ref ref="auditLoggerAppender" />
     </logger>
 
+    <logger name="org.flywaydb" level="DEBUG" />
+
     <logger name="no.nav.hjelpemidler.brille.medlemskap" level="DEBUG" />
 
     <logger name="no.nav.hjelpemidler.brille.syfohelsenettproxy" level="DEBUG" />
