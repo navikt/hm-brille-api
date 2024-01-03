@@ -107,6 +107,6 @@ class UtbetalingsBatchTest {
         batch2.orgNr shouldBe "987654321"
         batch1.batchId shouldNotBe batch2.batchId
 
-        batch1.toUtbetalingsBatch().totalbeløp shouldBe "1540".toBigDecimal()
+        batch1.toUtbetalingsBatch().totalbeløp shouldBe "1600".toBigDecimal()
     }
 }
