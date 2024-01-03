@@ -65,25 +65,25 @@ enum class SatsType(
     ),
     ;
 
-    private val datoForNyeSatser = LocalDate.of(2023, Month.JULY, 1)
+    private val datoForNyeSatser = LocalDate.of(2024, Month.JANUARY, 1)
     fun beløp(bestillingsdato: LocalDate): Int = when (bestillingsdato.isBefore(datoForNyeSatser)) {
         // Gamle satser
         true -> when (this) {
-            SATS_1 -> 750
-            SATS_2 -> 1950
-            SATS_3 -> 2650
-            SATS_4 -> 3150
-            SATS_5 -> 4850
-            INGEN -> 0
-        }
-
-        // Nye satser
-        false -> when (this) {
             SATS_1 -> 770
             SATS_2 -> 2000
             SATS_3 -> 2715
             SATS_4 -> 3230
             SATS_5 -> 4975
+            INGEN -> 0
+        }
+
+        // Nye satser
+        false -> when (this) {
+            SATS_1 -> 800
+            SATS_2 -> 2075
+            SATS_3 -> 2820
+            SATS_4 -> 3355
+            SATS_5 -> 5165
             INGEN -> 0
         }
     }

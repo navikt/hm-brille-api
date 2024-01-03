@@ -64,18 +64,18 @@ internal class SatsApiTest {
         nyeSatser: Boolean,
     ) = routing.test {
         if (!nyeSatser) {
-            SatsType.SATS_1.beløp(dato) shouldBe 750
-            SatsType.SATS_2.beløp(dato) shouldBe 1950
-            SatsType.SATS_3.beløp(dato) shouldBe 2650
-            SatsType.SATS_4.beløp(dato) shouldBe 3150
-            SatsType.SATS_5.beløp(dato) shouldBe 4850
-            SatsType.INGEN.beløp(dato) shouldBe 0
-        } else {
             SatsType.SATS_1.beløp(dato) shouldBe 770
             SatsType.SATS_2.beløp(dato) shouldBe 2000
             SatsType.SATS_3.beløp(dato) shouldBe 2715
             SatsType.SATS_4.beløp(dato) shouldBe 3230
             SatsType.SATS_5.beløp(dato) shouldBe 4975
+            SatsType.INGEN.beløp(dato) shouldBe 0
+        } else {
+            SatsType.SATS_1.beløp(dato) shouldBe 800
+            SatsType.SATS_2.beløp(dato) shouldBe 2075
+            SatsType.SATS_3.beløp(dato) shouldBe 2820
+            SatsType.SATS_4.beløp(dato) shouldBe 3355
+            SatsType.SATS_5.beløp(dato) shouldBe 5165
             SatsType.INGEN.beløp(dato) shouldBe 0
         }
     }
