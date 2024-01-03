@@ -117,6 +117,10 @@ tasks.compileKotlin {
     dependsOn("spotlessCheck")
 }
 
+tasks.shadowJar {
+    mergeServiceFiles()
+}
+
 graphql {
     client {
         schemaFile = file("${project.projectDir}/src/main/resources/pdl/schema.graphql")

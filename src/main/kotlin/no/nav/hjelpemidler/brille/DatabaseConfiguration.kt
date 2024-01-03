@@ -55,9 +55,10 @@ class DatabaseConfiguration(private val props: Configuration.DatabaseProperties)
 
             val flyway = Flyway
                 .configure()
-                .validateMigrationNaming(true)
+                // .validateMigrationNaming(true)
                 .dataSource(dataSource)
                 .load()
+
             flyway.migrate()
 
             dataSource
