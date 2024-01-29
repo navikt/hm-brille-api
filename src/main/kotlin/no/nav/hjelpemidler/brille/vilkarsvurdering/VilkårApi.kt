@@ -75,28 +75,28 @@ fun Route.vilkårApi(
                 )
 
                 // Journalfør avvisningsbrev i joark
-                //if (haddeAvvisningsbrevFraFør) {
-                //    log.info("Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene")
-                //    kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("krav_app")
-                //} else {
-                val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
-                    .filter { vilkar -> vilkar.resultat != Resultat.JA }
-                    .map { vilkar -> vilkar.identifikator }
+                if (haddeAvvisningsbrevFraFør) {
+                    log.info("Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene")
+                    kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("krav_app")
+                } else {
+                    val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
+                        .filter { vilkar -> vilkar.resultat != Resultat.JA }
+                        .map { vilkar -> vilkar.identifikator }
 
-                val eksisterendeVedtakDato =
-                    vilkårsvurdering.grunnlag.senesteVedtak()?.vedtaksdato?.toLocalDate()
+                    val eksisterendeVedtakDato =
+                        vilkårsvurdering.grunnlag.senesteVedtak()?.vedtaksdato?.toLocalDate()
 
-                kafkaService.journalførAvvisning(
-                    vilkårsgrunnlag.fnrBarn,
-                    vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
-                    vilkårsgrunnlag.orgnr,
-                    vilkårsgrunnlag.extras.orgNavn,
-                    vilkårsgrunnlag.brilleseddel,
-                    vilkårsgrunnlag.bestillingsdato,
-                    eksisterendeVedtakDato,
-                    årsakerIdentifikator,
-                )
-                //}
+                    kafkaService.journalførAvvisning(
+                        vilkårsgrunnlag.fnrBarn,
+                        vilkårsvurdering.grunnlag.pdlOppslagBarn.data!!.navn(),
+                        vilkårsgrunnlag.orgnr,
+                        vilkårsgrunnlag.extras.orgNavn,
+                        vilkårsgrunnlag.brilleseddel,
+                        vilkårsgrunnlag.bestillingsdato,
+                        eksisterendeVedtakDato,
+                        årsakerIdentifikator,
+                    )
+                }
             }
 
             val beløp = minOf(sats.beløp(vilkårsgrunnlag.bestillingsdato).toBigDecimal(), vilkårsgrunnlag.brillepris)
