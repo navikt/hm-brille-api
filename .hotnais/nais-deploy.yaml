@@ -8,7 +8,6 @@ metadata:
     team: teamdigihot
 spec:
   image: {{ image }}
-  team: teamdigihot
   port: {{ port }}
   replicas:
     min: {{ min-replicas }}
@@ -93,7 +92,7 @@ spec:
         highAvailability: {{ db_high_availability }}
         diskSize: {{ db_size }}
         diskAutoresize: true
-        autoBackupTime: "03:00"
+        autoBackupHour: 3
         retainedBackups: {{ db_retained_backups }}
         databases:
           - name: {{ db_name }}
