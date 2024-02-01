@@ -43,7 +43,7 @@ class MedlemskapClient(
     ): JsonNode {
         val response = client.post(baseUrl) {
             timeout {
-                requestTimeoutMillis = 30_000
+                requestTimeoutMillis = 10_000
             }
             header("Nav-Call-Id", correlationId)
             header("X-Correlation-Id", correlationId)
