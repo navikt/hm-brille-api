@@ -14,7 +14,7 @@ enum class AmblyopiSatsType(
         sylinder = Diopter.MIN..4.00,
         add = 0.00..0.75,
         beskrivelse = "Briller med sfærisk styrke på minst ett glass ≥ 0,00D ≤ 3,75D",
-        beløp = 1230,
+        beløp = 1275,
     ),
     SATS_2(
         sats = 2,
@@ -22,7 +22,7 @@ enum class AmblyopiSatsType(
         sylinder = Diopter.MIN..4.00,
         add = 0.00..0.75,
         beskrivelse = "Briller med sfærisk styrke på minst ett glass ≥ 4,00D ≤ 6,00D",
-        beløp = 2460,
+        beløp = 2555,
     ),
     INDIVIDUELT(
         sats = 0,
