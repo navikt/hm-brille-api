@@ -15,6 +15,7 @@ import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.system.measureTimeMillis
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
@@ -31,7 +32,9 @@ class AvtaleService(
         }
 
     suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<IngåttAvtale> {
-        val avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste)
+        var avgivere: List<Avgiver>
+        val hentAvgivereElapsed = measureTimeMillis { avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste) }
+        log.info("hentAvtaler: altinnService.hentAvgivere elapsed=${hentAvgivereElapsed}ms")
 
         if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {
             val id = UUID.randomUUID()
@@ -39,7 +42,11 @@ class AvtaleService(
             Slack.post("Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (se mer i sikkerlogg med id=$id)")
         }
 
-        val enheter = enhetsregisteretService.hentOrganisasjonsenheter(avgivere.map { it.orgnr }.toSet())
+        var enheter: Map<String, Organisasjonsenhet>
+        val hentOrganisasjonsenheterElapsed = measureTimeMillis {
+            enheter = enhetsregisteretService.hentOrganisasjonsenheter(avgivere.map { it.orgnr }.toSet())
+        }
+        log.info("hentAvtaler: enhetsregisteretService.hentOrganisasjonsenheter elapsed=${hentOrganisasjonsenheterElapsed}ms")
 
         val avgivereFiltrert = avgivere.filter { avgiver ->
             val orgnr = avgiver.orgnr
@@ -66,11 +73,15 @@ class AvtaleService(
             "Filtrert avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivereFiltrert"
         }
 
-        val virksomheter = transaction(databaseContext) { ctx ->
-            ctx.virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert.map { it.orgnr }).associateBy {
-                it.orgnr
+        var virksomheter: Map<String, Virksomhet>
+        val hentVirksomheterForOrganisasjonerElapsed = measureTimeMillis {
+            virksomheter = transaction(databaseContext) { ctx ->
+                ctx.virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert.map { it.orgnr }).associateBy {
+                    it.orgnr
+                }
             }
         }
+        log.info("hentAvtaler: virksomhetStore.hentVirksomheterForOrganisasjoner elapsed=${hentVirksomheterForOrganisasjonerElapsed}ms")
 
         return avgivereFiltrert
             .map {

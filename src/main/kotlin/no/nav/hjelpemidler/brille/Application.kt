@@ -13,11 +13,7 @@ import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.callloging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
-import io.ktor.server.request.receive
-import io.ktor.server.response.respond
 import io.ktor.server.routing.IgnoreTrailingSlash
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
@@ -33,18 +29,14 @@ import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
-import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
-import no.nav.hjelpemidler.brille.avtale.IngåttAvtale
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
-import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretScheduler
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
-import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.featuretoggle.FeatureToggleService
 import no.nav.hjelpemidler.brille.featuretoggle.featureToggleApi
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
@@ -276,71 +268,9 @@ fun Application.setupRoutes() {
 
             // Admin apis
             // sjekkErOptiker(syfohelsenettproxyClient)
-            adminApier(enhetsregisteretService, databaseContext)
         }
     }
     applicationEvents(rapid)
-}
-
-fun Route.adminApier(enhetsregisteretService: EnhetsregisteretService, databaseContext: DatabaseContext) {
-    post("/admin/test-api-med-givere") {
-        data class Request(
-            val orgnre: List<String>,
-        )
-        val req = call.receive<Request>()
-
-        val tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT
-
-        val enheter = enhetsregisteretService.hentOrganisasjonsenheter(req.orgnre.toSet())
-
-        val avgivereFiltrert = req.orgnre.filter { orgnr ->
-            val enhet = enheter[orgnr]
-            if (enhet == null) {
-                false
-            } else {
-                log.info {
-                    "Hentet enhet med orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
-                }
-                setOf(
-                    Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER,
-                    Næringskode.BUTIKKHANDEL_MED_GULL_OG_SØLVVARER,
-                    Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
-                    Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
-                    Næringskode.ANDRE_HELSETJENESTER,
-                    Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
-                    Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE,
-                ).any { enhet.harNæringskode(it) }
-            }
-        }
-
-        log.info {
-            "Filtrert avgivere for fnr: <ukjent>, tjeneste: $tjeneste, avgivere: $avgivereFiltrert"
-        }
-
-        val virksomheter = transaction(databaseContext) { ctx ->
-            ctx.virksomhetStore.hentVirksomheterForOrganisasjoner(avgivereFiltrert).associateBy {
-                it.orgnr
-            }
-        }
-
-        val res = avgivereFiltrert
-            .map { orgnr ->
-                IngåttAvtale(
-                    orgnr = orgnr,
-                    navn = enheter[orgnr]?.navn ?: "<ukjent>",
-                    aktiv = virksomheter[orgnr]?.aktiv ?: false,
-                    kontonr = virksomheter[orgnr]?.kontonr,
-                    epost = virksomheter[orgnr]?.epost,
-                    avtaleversjon = virksomheter[orgnr]?.avtaleversjon,
-                    bruksvilkår = virksomheter[orgnr]?.bruksvilkår,
-                    bruksvilkårOpprettet = virksomheter[orgnr]?.bruksvilkårGodtattDato,
-                    opprettet = virksomheter[orgnr]?.opprettet,
-                    oppdatert = virksomheter[orgnr]?.oppdatert,
-                )
-            }
-
-        call.respond(res)
-    }
 }
 
 private fun createKafkaRapid(): KafkaRapid {

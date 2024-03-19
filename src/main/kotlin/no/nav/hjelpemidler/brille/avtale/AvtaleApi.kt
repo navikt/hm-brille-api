@@ -13,6 +13,7 @@ import io.ktor.server.routing.route
 import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.extractFnr
+import kotlin.system.measureTimeMillis
 
 private val log = KotlinLogging.logger { }
 
@@ -71,11 +72,15 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
             // Egne endepunkter for rettighet utbetalingsrapport
             route("/regna") {
                 get {
-                    val virksomheter = avtaleService.hentAvtaler(
-                        fnr = call.extractFnr(),
-                        tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT,
-                    )
-                    call.respond(HttpStatusCode.OK, virksomheter)
+                    log.info("Kall kom inn til endepunkt for rettighet utbetalignsrapport")
+                    val elapsed = measureTimeMillis {
+                        val virksomheter = avtaleService.hentAvtaler(
+                            fnr = call.extractFnr(),
+                            tjeneste = Avgiver.Tjeneste.UTBETALINGSRAPPORT,
+                        )
+                        call.respond(HttpStatusCode.OK, virksomheter)
+                    }
+                    log.info("Kall til endepunkt for rettighet utbetalignsrapport ble svart ut på ${elapsed}ms")
                 }
                 get("/{orgnr}") {
                     val orgnr = call.orgnr()
