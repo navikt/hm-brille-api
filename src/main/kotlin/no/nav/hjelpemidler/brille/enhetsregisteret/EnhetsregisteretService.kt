@@ -42,7 +42,14 @@ class EnhetsregisteretService(
             ctx.enhetsregisteretStore.hentEnheter(orgnre)
         }.toMutableMap()
 
-        val enheterFraTilbakefallsLøsning = orgnre.filter { enheter.containsKey(it) }.mapNotNull { orgnr ->
+        val manglendeEnheter = orgnre.filter { !enheter.containsKey(it) }.let { mangler ->
+            if (mangler.isNotEmpty()) {
+                ", men ${mangler.count()} enheter ble ikke funnet og blir derfor slått opp i enhetsregisterets api. Disse er: $mangler"
+            } else { "" }
+        }
+        log.info("Hentet ${enheter.count()} enheter fra enhetsregister-mirror$manglendeEnheter")
+
+        val enheterFraTilbakefallsLøsning = orgnre.filter { !enheter.containsKey(it) }.mapNotNull { orgnr ->
             enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
         }.groupBy { it.orgnr }.mapValues { it.value.first() }
         enheter.putAll(enheterFraTilbakefallsLøsning)
@@ -51,6 +58,12 @@ class EnhetsregisteretService(
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
             for (orgnr in orgnre) {
                 enheter.putAll(mapOf(orgnr to mockedOrg(orgnr)))
+            }
+        }
+
+        orgnre.filter { !enheter.containsKey(it) }.let { mangler ->
+            if (mangler.isNotEmpty()) {
+                log.warn("Noen orgnre ble aldri funnet: $mangler")
             }
         }
 
