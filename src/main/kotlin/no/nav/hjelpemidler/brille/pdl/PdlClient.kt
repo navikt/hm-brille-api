@@ -40,7 +40,7 @@ class PdlClient(
                 cache(leeway = 10.seconds)
             }
             defaultRequest {
-                header("Tema", "HJE")
+                header("behandlingsnummer", "B152")
                 header("X-Correlation-ID", UUID.randomUUID().toString())
             }
         },
