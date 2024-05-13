@@ -27,6 +27,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
 private val sikkerLog = KotlinLogging.logger("tjenestekall")
+private val behandlingsnummer = "B601,B110"
 
 class PdlClient(
     props: Configuration.PdlProperties,
@@ -40,8 +41,7 @@ class PdlClient(
                 cache(leeway = 10.seconds)
             }
             defaultRequest {
-                header("behandlingsnummer", "B601")
-                header("X-Correlation-ID", UUID.randomUUID().toString())
+                header("behandlingsnummer", behandlingsnummer)
             }
         },
         serializer = GraphQLClientJacksonSerializer(),
@@ -56,7 +56,9 @@ class PdlClient(
         request: GraphQLClientRequest<Request>,
         block: (Request) -> T,
     ): T {
-        val response = client.execute(request)
+        val response = client.execute(request) {
+            header("X-Correlation-ID", UUID.randomUUID().toString())
+        }
         val data = response.data
         val errors = response.errors
         return when {
@@ -97,7 +99,7 @@ class PdlClient(
         val throwAwayClient = HttpClient(engine) {
             expectSuccess = true
             defaultRequest {
-                header("Tema", "HJE")
+                header("behandlingsnummer", behandlingsnummer)
                 header(HttpHeaders.XCorrelationId, uid)
             }
         }
