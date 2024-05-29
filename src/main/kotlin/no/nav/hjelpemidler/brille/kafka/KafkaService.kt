@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille.kafka
 
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.annotation.JsonNaming
@@ -35,8 +35,8 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
 
     private val mapper = jacksonMapperBuilder()
         .addModule(JavaTimeModule())
+        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .serializationInclusion(JsonInclude.Include.NON_NULL)
         .build()
 
     fun avtaleOpprettet(avtale: IngåttAvtale) {
