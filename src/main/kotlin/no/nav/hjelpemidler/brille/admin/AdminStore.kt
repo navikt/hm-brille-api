@@ -5,7 +5,7 @@ import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
-import no.nav.hjelpemidler.brille.pdl.Person
+import no.nav.hjelpemidler.brille.pdl.PersonCompat
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.store.Store
 import no.nav.hjelpemidler.brille.store.TransactionalStore
@@ -63,10 +63,10 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             sql,
             mapOf("fnr" to fnr),
         ) { row ->
-            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
             VedtakListe(
                 vedtakId = row.long("id"),
-                barnsNavn = person.navn(),
+                barnsNavn = person.asPerson().navn(),
                 bestillingsdato = row.localDate("bestillingsdato"),
                 opprettet = row.localDateTime("opprettet"),
                 utbetalt = row.localDateTimeOrNull("utbetalingsdato"),
@@ -109,13 +109,13 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             sql,
             mapOf("vedtakId" to vedtakId),
         ) { row ->
-            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
             Vedtak(
                 vedtakId = row.long("id"),
                 orgnr = row.string("orgnr"),
                 innsenderFnr = row.string("fnr_innsender"),
                 innsenderNavn = row.string("navn_innsender"),
-                barnsNavn = person.navn(),
+                barnsNavn = person.asPerson().navn(),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
                 bestillingsdato = row.localDate("bestillingsdato"),
                 beløp = row.bigDecimal("belop"),
@@ -231,12 +231,12 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             sql,
             mapOf("utbetalingsRef" to utbetalingsRef),
         ) { row ->
-            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
             Utbetaling(
                 orgnr = row.string("orgnr"),
                 vedtakId = row.long("id"),
                 bestillingsreferanse = row.string("bestillingsreferanse"),
-                barnsNavn = person.navn(),
+                barnsNavn = person.asPerson().navn(),
                 beløp = row.bigDecimal("belop"),
                 slettet = row.localDateTimeOrNull("slettet"),
             )

@@ -1,7 +1,9 @@
 package no.nav.hjelpemidler.brille.pdl
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.pdl.generated.enums.AdressebeskyttelseGradering
+import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Adressebeskyttelse
 import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Foedselsdato
 import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Navn
 import java.time.LocalDate
@@ -11,6 +13,16 @@ import java.util.EnumSet
 
 typealias Person = no.nav.hjelpemidler.brille.pdl.generated.hentperson.Person
 typealias Barn = no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.Person
+
+// Støtt både gamle og nye pdl-datamodeller i databasen siden navnet på feltet foedselsdato har endret seg
+data class PersonCompat(
+    val navn: List<Navn>,
+    @JsonAlias("foedsel")
+    val foedselsdato: List<Foedselsdato>,
+    val adressebeskyttelse: List<Adressebeskyttelse>,
+) {
+    fun asPerson() = Person(this.navn, this.foedselsdato, this.adressebeskyttelse)
+}
 
 private fun <T> List<T>.firstOrDefault(default: T): T = firstOrNull() ?: default
 

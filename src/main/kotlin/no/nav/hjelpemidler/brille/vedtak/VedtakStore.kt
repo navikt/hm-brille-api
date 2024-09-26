@@ -7,7 +7,7 @@ import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alderPåDato
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
-import no.nav.hjelpemidler.brille.pdl.Person
+import no.nav.hjelpemidler.brille.pdl.PersonCompat
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.store.Store
@@ -130,15 +130,15 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 "vedtak_id" to vedtakId,
             ),
         ) { row ->
-            val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
 
             OversiktVedtak(
                 id = row.long("id"),
                 orgnavn = "",
                 orgnr = row.string("orgnr"),
-                barnsNavn = person.navn(),
+                barnsNavn = person.asPerson().navn(),
                 barnsFnr = row.string("fnr_barn"),
-                barnsAlder = person.alderPåDato(row.localDate("bestillingsdato")) ?: -1,
+                barnsAlder = person.asPerson().alderPåDato(row.localDate("bestillingsdato")) ?: -1,
                 høyreSfære = row.double("høyreSfære"),
                 høyreSylinder = row.double("høyreSylinder"),
                 venstreSfære = row.double("venstreSfære"),
@@ -205,13 +205,13 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                     "offset" to offset,
                 ),
             ) { row ->
-                val person: Person = jsonMapper.readValue(row.string("pdlOppslag"))
+                val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
 
                 OversiktVedtakListItem(
                     id = row.long("id"),
                     orgnavn = "",
                     orgnr = row.string("orgnr"),
-                    barnsNavn = person.navn(),
+                    barnsNavn = person.asPerson().navn(),
                     bestillingsreferanse = row.string("bestillingsreferanse"),
                     utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                     utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
