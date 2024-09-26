@@ -15,7 +15,10 @@ data class Behandler(
         if (parts.isEmpty()) {
             return "<Ukjent>"
         }
-        return parts.joinToString(separator = " ") { it.lowercase().capitalize() }
+        return parts.joinToString(separator = " ") {
+            it.lowercase()
+                .replaceFirstChar { it.uppercase() }
+        }
     }
 }
 

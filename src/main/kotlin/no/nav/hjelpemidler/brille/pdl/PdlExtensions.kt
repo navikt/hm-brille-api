@@ -2,7 +2,7 @@ package no.nav.hjelpemidler.brille.pdl
 
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.pdl.generated.enums.AdressebeskyttelseGradering
-import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Foedsel
+import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Foedselsdato
 import no.nav.hjelpemidler.brille.pdl.generated.hentperson.Navn
 import java.time.LocalDate
 import java.time.Month
@@ -46,7 +46,7 @@ fun List<AdressebeskyttelseGradering>.erFortrolig() = any { gradering ->
 
 object HentPersonExtensions {
     fun Person.fødselsdato(): LocalDate? {
-        val fødsel = foedsel.firstOrDefault(Foedsel())
+        val fødsel = foedselsdato.firstOrDefault(Foedselsdato())
         return when {
             fødsel.foedselsdato != null -> fødsel.foedselsdato
             fødsel.foedselsaar != null -> LocalDate.of(fødsel.foedselsaar, Month.DECEMBER, 31)
