@@ -1,30 +1,18 @@
-name: deploy-prod
+name: Deploy til prod-gcp
+
 on:
   release:
-    types: [published]
+    types:
+      - published
 
 jobs:
-  deploy-prod:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: get release tag
-        env:
-          VERSION_TAG: ${{ github.event.release.tag_name }}
-        run: |
-          APPLICATION=$(echo $GITHUB_REPOSITORY | cut -d "/" -f 2)
-          IMAGE=ghcr.io/$GITHUB_REPOSITORY/$APPLICATION:$GITHUB_SHA
-          echo "IMAGE=${IMAGE}" >> $GITHUB_ENV
-          echo $IMAGE
-      - uses: nais/deploy/actions/deploy@v1
-        name: deploy to prod-gcp
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: prod-gcp
-          RESOURCE: .hotnais/nais-deploy.yaml
-          VARS: .hotnais/prod/config.json
-          VAR: commit=${{ github.sha }}
-      - name: post-production
-        uses: navikt/digihot-deploy/actions/post-production@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploy:
+    name: Deploy til prod-gcp
+    permissions:
+      contents: read
+      id-token: write
+    uses: navikt/hm-workflows/.github/workflows/deploy-prod.yaml@main
+    with:
+      manifest: .hotnais/nais-deploy.yaml
+      vars:  .hotnais/prod/config.json
+    secrets: inherit

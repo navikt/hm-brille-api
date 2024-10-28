@@ -1,4 +1,5 @@
-name: build-deploy-dev
+name: Bygg, deploy til dev-gcp og lag release
+
 on:
   push:
     paths-ignore:
@@ -6,75 +7,18 @@ on:
       - ".gitignore"
       - "LICENCE"
       - "CODEOWNERS"
-      - '.hotnais/alerts/**'
-      - '.github/workflows/deploy-alerts-dev.yml'
     branches:
       - main
-      - pdl-behandlingsnummer
-env:
-  ghcr_image: ghcr.io/${{ github.repository }}/hm-brille-api:${{ github.sha }}
+
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+  build:
+    name: Bygg, deploy til dev-gcp og lag release
     permissions:
-      contents: "write"
-      id-token: "write"
-      packages: "write"
-    steps:
-      - name: Checkout latest code
-        uses: actions/checkout@v2
-      - name: Set up JDK
-        uses: actions/setup-java@v1
-        with:
-          java-version: 17
-      - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v1
-      - name: Setup gradle dependency cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
-      - name: Build and Run tests
-        run: ./gradlew clean build
-      - name: pre-deploy
-        uses: navikt/digihot-deploy/actions/pre-deploy@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: build and push docker image
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG_LATEST=`echo ${ghcr_image} | cut -d':' -f 1`":latest"
-          echo "IMAGE=${ghcr_image}" >> $GITHUB_ENV
-          docker build . --pull -t ${ghcr_image} -t $TAG_LATEST
-          docker login ghcr.io -u ${GITHUB_REPOSITORY} -p ${GITHUB_TOKEN}
-          docker push ${ghcr_image}
-          docker push $TAG_LATEST
-      - name: deploy to dev-gcp
-        uses: nais/deploy/actions/deploy@v1
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: dev-gcp
-          RESOURCE: .hotnais/nais-deploy.yaml
-          VARS: .hotnais/dev/config.json
-          VAR: commit=${{ github.sha }}
-      - name: post-deploy
-        if: github.ref == 'refs/heads/main'
-        uses: navikt/digihot-deploy/actions/post-deploy@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: draft release
-        if: github.ref == 'refs/heads/main'
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.VERSION_TAG }}
-          release_name: ${{ env.APPLICATION }} ${{ env.VERSION_TAG }}
-          body: ${{ env.CHANGE_LOG }}
-          draft: true
-          prerelease: false
+      packages: write
+      contents: write
+      id-token: write
+    uses: navikt/hm-workflows/.github/workflows/deploy-dev.yaml@main
+    with:
+      manifest: .hotnais/nais-deploy.yaml
+      vars: .hotnais/dev/config.json
+    secrets: inherit
