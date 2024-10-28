@@ -70,7 +70,7 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:3.0.5")
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:7.4")
     runtimeOnly("com.papertrailapp:logback-syslog4j:1.0.0") // auditlog https://github.com/navikt/naudit
-    runtimeOnly("ch.qos.logback:logback-classic:1.4.11")
+    runtimeOnly("ch.qos.logback:logback-classic:1.5.7")
 
     // Redis
     implementation("redis.clients:jedis:5.1.0")
