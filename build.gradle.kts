@@ -75,9 +75,6 @@ dependencies {
     // Redis
     implementation("redis.clients:jedis:5.1.0")
 
-    // Postgres from naisjob
-    implementation("com.google.cloud.sql:postgres-socket-factory:1.15.0")
-
     // Testing
     testImplementation(kotlin("test"))
     testImplementation(ktorServer("test-host"))

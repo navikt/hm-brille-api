@@ -27,9 +27,6 @@ object Configuration {
             "ALTINN_APIGW_APIKEY" to "",
             "UTBETALING_ENABLED" to "false",
             "ELECTOR_PATH" to "",
-            "cronjob.gcp.project" to "",
-            "cronjob.gcp.region" to "",
-            "cronjob.gcp.dbinstance" to "",
             "hotsak.apiUrl" to "http://host.docker.internal:8089/hotsak",
             "hotsak.apiScope" to "api://dev-gcp.hotsak.hotsak-api/.default",
         ),
@@ -83,9 +80,6 @@ object Configuration {
             "enhetsregisteret_base_url" to "http://hm-mocks",
             "altinn.altinnUrl" to "https://api-gw-q1.oera.no/ekstern/altinn/api/serviceowner",
             "altinn.proxyConsumerId" to "hjelpemidlerdigitalsoknad-api-dev",
-            "cronjob.gcp.project" to "teamdigihot-dev-9705",
-            "cronjob.gcp.region" to "europe-north1",
-            "cronjob.gcp.dbinstance" to "hm-brille-api-db-dev",
             "hotsak.apiUrl" to "http://hm-saksbehandling.teamdigihot.svc.cluster.local/api",
             "hotsak.apiScope" to "api://dev-gcp.teamdigihot.hm-saksbehandling/.default",
         ),
@@ -105,24 +99,8 @@ object Configuration {
             "enhetsregisteret_base_url" to "https://data.brreg.no",
             "altinn.altinnUrl" to "https://api-gw.oera.no/ekstern/altinn/api/serviceowner",
             "altinn.proxyConsumerId" to "hjelpemidlerdigitalsoknad-api-prod",
-            "cronjob.gcp.project" to "teamdigihot-prod-6f0d",
-            "cronjob.gcp.region" to "europe-north1",
-            "cronjob.gcp.dbinstance" to "hm-brille-api-db-prod",
             "hotsak.apiUrl" to "http://hm-saksbehandling.teamdigihot.svc.cluster.local/api",
             "hotsak.apiScope" to "api://prod-gcp.teamdigihot.hm-saksbehandling/.default",
-        ),
-    )
-
-    private val cronjobProperties = ConfigurationMap(
-        mapOf(
-            "TOKEN_X_CLIENT_ID" to "abc",
-            "TOKEN_X_WELL_KNOWN_URL" to "abc",
-
-            "DB_DATABASE" to System.getenv("DB_NAISJOB_DATABASE"),
-            "DB_USERNAME" to System.getenv("DB_NAISJOB_USERNAME"),
-            "DB_PASSWORD" to System.getenv("DB_NAISJOB_PASSWORD"),
-            "DB_HOST" to System.getenv("DB_NAISJOB_HOST"),
-            "DB_PORT" to System.getenv("DB_NAISJOB_PORT"),
         ),
     )
 
@@ -133,17 +111,13 @@ object Configuration {
             else -> localProperties
         }
 
-    private val config = when (System.getenv("CRONJOB_TYPE")) {
-        null -> systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
-        else -> systemProperties() overriding EnvironmentVariables() overriding cronjobProperties overriding resourceProperties overriding defaultProperties
-    }
+    private val config = systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
 
     val profile: Profile = this["application.profile"].let { Profile.valueOf(it) }
     val cluster: Cluster = this["application.cluster"].let { Cluster.valueOf(it) }
     val local: Boolean = profile == Profile.LOCAL
     val dev: Boolean = profile == Profile.DEV
     val prod: Boolean = profile == Profile.PROD
-    val cronjob: Boolean = System.getenv("CRONJOB_TYPE") != null
 
     val gitCommit: String = getOrNull("GIT_COMMIT") ?: "unknown"
 
@@ -171,10 +145,6 @@ object Configuration {
         val databasePassword: String = this["DB_PASSWORD"],
         val databaseHost: String = this["DB_HOST"],
         val databasePort: String = this["DB_PORT"],
-
-        val cronjobGcpProject: String = this["cronjob.gcp.project"],
-        val cronjobGcpRegion: String = this["cronjob.gcp.region"],
-        val cronjobGcpDbInstance: String = this["cronjob.gcp.dbinstance"],
     )
 
     data class KafkaProperties(

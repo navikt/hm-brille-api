@@ -21,7 +21,6 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
@@ -33,7 +32,6 @@ import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
 import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
-import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretScheduler
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -87,12 +85,7 @@ import kotlin.concurrent.thread
 
 private val log = KotlinLogging.logger {}
 
-fun main(args: Array<String>) {
-    when (System.getenv("CRONJOB_TYPE")) {
-        "SYNC_TSS" -> cronjobSyncTss()
-        else -> io.ktor.server.cio.EngineMain.main(args)
-    }
-}
+fun main(args: Array<String>) = io.ktor.server.cio.EngineMain.main(args)
 
 fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
     fun onStopPreparing() {
@@ -279,35 +272,6 @@ private fun createKafkaRapid(): KafkaRapid {
     val kafkaProps = Configuration.kafkaProperties
     val kafkaConfig = kafkaConfig(kafkaProps, instanceId)
     return KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
-}
-
-fun cronjobSyncTss() {
-    log.info("cronjob sync-tss: start")
-
-    val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
-
-    val rapid = createKafkaRapid()
-    val kafkaService = KafkaService(rapid)
-
-    runBlocking {
-        val virksomheter = transaction(databaseContext) { ctx ->
-            ctx.virksomhetStore.hentAlleVirksomheterMedKontonr()
-                .filter { it.aktiv } // Ignorer alle deaktiverte avtaler
-                .map {
-                    Pair(it.orgnr, it.kontonr)
-                }
-        }
-
-        virksomheter.forEach {
-            log.info("cronjob sync-tss: Oppdaterer tss med=$it")
-            kafkaService.oppdaterTSS(
-                orgnr = it.first,
-                kontonr = it.second,
-            )
-        }
-
-        log.info("cronjob sync-tss: Virksomheter er oppdatert i TSS!")
-    }
 }
 
 private fun kafkaConfig(
