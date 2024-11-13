@@ -8,7 +8,6 @@ metadata:
 spec:
   restartPolicy: Never
   image: {{ image }}
-  port: {{ port }}
   env:
   {{#each env}}
     - name: {{@key}}
@@ -27,26 +26,6 @@ spec:
   azure:
     application:
       enabled: true
-  accessPolicy:
-    inbound:
-      rules:
-      {{#each inbound-applications}}
-        - application: {{ this }}
-      {{/each}}
-    outbound:
-      rules:
-      {{#each outbound-applications}}
-        - application: {{ this }}
-      {{/each}}
-        - application: syfohelsenettproxy
-          namespace: teamsykmelding
-        - application: medlemskap-oppslag
-          namespace: medlemskap
-        - application: brille-redis
-      external:
-      {{#each external-hosts}}
-        - host: {{ this }}
-      {{/each}}
   kafka:
     pool: {{ kafka-cluster }}
   secureLogs:
