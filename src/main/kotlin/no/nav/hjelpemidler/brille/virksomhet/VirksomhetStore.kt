@@ -1,13 +1,9 @@
 package no.nav.hjelpemidler.brille.virksomhet
 
 import kotliquery.Row
-import kotliquery.Session
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.store.Store
-import no.nav.hjelpemidler.brille.store.TransactionalStore
-import no.nav.hjelpemidler.brille.store.query
-import no.nav.hjelpemidler.brille.store.queryList
-import no.nav.hjelpemidler.brille.store.update
+import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
@@ -36,37 +32,34 @@ data class Virksomhet(
     val oppdatert: LocalDateTime = opprettet,
 )
 
-class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : VirksomhetStore,
-    TransactionalStore(sessionFactory) {
-
-    override fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet? = session {
+class VirksomhetStorePostgres(private val tx: JdbcOperations) : VirksomhetStore {
+    override fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet? {
         @Language("PostgreSQL")
         val sql = """
-            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, a.opprettet as utvidet_opprettet, v.avtaleversjon, v.opprettet, v.oppdatert
+            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv AS hovedavtale_aktiv, a.aktiv AS utvidet_aktiv, a.opprettet AS utvidet_opprettet, v.avtaleversjon, v.opprettet, v.oppdatert
             FROM virksomhet_v1 v
             LEFT JOIN bruksvilkar_v1 a ON a.orgnr = v.orgnr AND a.bruksvilkardefinisjon_id = 1
             WHERE v.orgnr = :orgnr
         """.trimIndent()
-        it.query(sql, mapOf("orgnr" to orgnr), ::mapper)
+        return tx.singleOrNull(sql, mapOf("orgnr" to orgnr), ::mapper)
     }
 
-    override fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet> = session {
-        if (orgnr.isEmpty()) {
+    override fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet> {
+        return if (orgnr.isEmpty()) {
             emptyList()
         } else {
             @Language("PostgreSQL")
-            var sql = """
-            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, a.opprettet as utvidet_opprettet, v.avtaleversjon, v.opprettet, v.oppdatert
-            FROM virksomhet_v1 v
-            LEFT JOIN bruksvilkar_v1 a ON a.orgnr = v.orgnr AND a.bruksvilkardefinisjon_id = 1
-            WHERE v.orgnr in (?)
+            val sql = """
+                SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv AS hovedavtale_aktiv, a.aktiv AS utvidet_aktiv, a.opprettet AS utvidet_opprettet, v.avtaleversjon, v.opprettet, v.oppdatert
+                FROM virksomhet_v1 v
+                LEFT JOIN bruksvilkar_v1 a ON a.orgnr = v.orgnr AND a.bruksvilkardefinisjon_id = 1
+                WHERE v.orgnr = ANY (:orgnr)
             """.trimIndent()
-            sql = sql.replace("(?)", "(" + (0 until orgnr.count()).joinToString { "?" } + ")")
-            it.queryList(sql, orgnr, ::mapper)
+            tx.list(sql, mapOf("orgnr" to orgnr.toTypedArray()), ::mapper)
         }
     }
 
-    override fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet = session {
+    override fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO virksomhet_v1 (orgnr,
@@ -81,7 +74,7 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
             VALUES (:orgnr, :kontonr, :epost, :fnr_innsender, :navn_innsender, :aktiv, :avtaleversjon, :opprettet, :oppdatert)
             ON CONFLICT DO NOTHING
         """.trimIndent()
-        it.update(
+        tx.update(
             sql,
             mapOf(
                 "orgnr" to virksomhet.orgnr,
@@ -94,18 +87,18 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
                 "opprettet" to virksomhet.opprettet,
                 "oppdatert" to virksomhet.oppdatert,
             ),
-        ).validate()
-        virksomhet
+        ).expect(1)
+        return virksomhet
     }
 
-    override fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet = session {
+    override fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet {
         @Language("PostgreSQL")
         val sql = """
             UPDATE virksomhet_v1
             SET kontonr = :kontonr, epost = :epost, fnr_oppdatert_av = :fnr_oppdatert_av, oppdatert = :oppdatert
             WHERE orgnr = :orgnr
         """.trimIndent()
-        it.update(
+        tx.update(
             sql,
             mapOf(
                 "kontonr" to virksomhet.kontonr,
@@ -114,19 +107,19 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
                 "orgnr" to virksomhet.orgnr,
                 "oppdatert" to virksomhet.oppdatert,
             ),
-        ).validate()
-        virksomhet
+        ).expect(1)
+        return virksomhet
     }
 
-    override fun hentAlleVirksomheterMedKontonr(): List<Virksomhet> = session {
+    override fun hentAlleVirksomheterMedKontonr(): List<Virksomhet> {
         @Language("PostgreSQL")
-        var sql = """
-            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv as hovedavtale_aktiv, a.aktiv as utvidet_aktiv, a.opprettet as utvidet_opprettet, v.avtaleversjon, v.opprettet, v.oppdatert
+        val sql = """
+            SELECT v.orgnr, v.kontonr, v.epost, v.fnr_innsender, v.fnr_oppdatert_av, v.navn_innsender, v.aktiv AS hovedavtale_aktiv, a.aktiv AS utvidet_aktiv, a.opprettet AS utvidet_opprettet, v.avtaleversjon, v.opprettet, v.oppdatert
             FROM virksomhet_v1 v
             LEFT JOIN bruksvilkar_v1 a ON a.orgnr = v.orgnr AND a.bruksvilkardefinisjon_id = 1
             WHERE LENGTH(v.kontonr) > 1
         """.trimIndent()
-        it.queryList(sql, mapOf(), ::mapper)
+        return tx.list(sql, mapOf(), ::mapper)
     }
 
     private fun mapper(row: Row): Virksomhet = Virksomhet(

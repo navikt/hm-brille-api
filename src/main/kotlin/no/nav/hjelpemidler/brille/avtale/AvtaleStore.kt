@@ -1,12 +1,9 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import kotliquery.Row
-import kotliquery.Session
 import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.store.Store
-import no.nav.hjelpemidler.brille.store.TransactionalStore
-import no.nav.hjelpemidler.brille.store.query
-import no.nav.hjelpemidler.brille.store.update
+import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
@@ -58,22 +55,20 @@ data class BruksvilkårGodtatt(
     val oppdatert: LocalDateTime = opprettet,
 )
 
-class AvtaleStorePostgres(private val sessionFactory: () -> Session) : AvtaleStore,
-    TransactionalStore(sessionFactory) {
-
-    override fun lagreAvtale(avtale: Avtale): Avtale = session {
+class AvtaleStorePostgres(private val tx: JdbcOperations) : AvtaleStore {
+    override fun lagreAvtale(avtale: Avtale): Avtale {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO avtale_v1 (    orgnr,
-                                       fnr_innsender,
-                                       aktiv,
-                                       avtale_id,
-                                       opprettet,
-                                       oppdatert)
+            INSERT INTO avtale_v1 (orgnr,
+                                   fnr_innsender,
+                                   aktiv,
+                                   avtale_id,
+                                   opprettet,
+                                   oppdatert)
             VALUES (:orgnr, :fnr_innsender, :aktiv, :avtale_id, :opprettet, :oppdatert)
             RETURNING id
         """.trimIndent()
-        val id = it.query(
+        val id = tx.single(
             sql,
             mapOf(
                 "orgnr" to avtale.orgnr,
@@ -86,22 +81,22 @@ class AvtaleStorePostgres(private val sessionFactory: () -> Session) : AvtaleSto
         ) { row: Row ->
             row.long("id")
         }
-        avtale.copy(id = id?.toInt())
+        return avtale.copy(id = id.toInt())
     }
 
-    override fun godtaBruksvilkår(bruksvilkårGodtatt: BruksvilkårGodtatt): BruksvilkårGodtatt = session {
+    override fun godtaBruksvilkår(bruksvilkårGodtatt: BruksvilkårGodtatt): BruksvilkårGodtatt {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO bruksvilkar_v1 (    orgnr,
-                                       fnr_innsender,
-                                       aktiv,
-                                       bruksvilkardefinisjon_id,
-                                       opprettet,
-                                       oppdatert)
+            INSERT INTO bruksvilkar_v1 (orgnr,
+                                        fnr_innsender,
+                                        aktiv,
+                                        bruksvilkardefinisjon_id,
+                                        opprettet,
+                                        oppdatert)
             VALUES (:orgnr, :fnr_innsender, :aktiv, :bruksvilkardefinisjon_id, :opprettet, :oppdatert)
             RETURNING id
         """.trimIndent()
-        val id = it.query(
+        val id = tx.single(
             sql,
             mapOf(
                 "orgnr" to bruksvilkårGodtatt.orgnr,
@@ -114,35 +109,34 @@ class AvtaleStorePostgres(private val sessionFactory: () -> Session) : AvtaleSto
         ) { row: Row ->
             row.long("id")
         }
-        bruksvilkårGodtatt.copy(id = id?.toInt())
+        return bruksvilkårGodtatt.copy(id = id.toInt())
     }
 
-    override fun deaktiverVirksomhet(orgnr: String): Unit = session {
+    override fun deaktiverVirksomhet(orgnr: String) {
         @Language("PostgreSQL")
         val sql = """
             UPDATE virksomhet_v1
-            SET aktiv = false
+            SET aktiv = FALSE
             WHERE orgnr = :orgnr
         """.trimIndent()
-        it.update(
+        tx.update(
             sql,
-            mapOf(
-                "orgnr" to orgnr,
-            ),
-        ).validate()
+            mapOf("orgnr" to orgnr),
+        ).expect(1)
     }
 
-    override fun henBruksvilkårOrganisasjon(orgnr: String): BruksvilkårGodtatt? = session {
+    override fun henBruksvilkårOrganisasjon(orgnr: String): BruksvilkårGodtatt? {
         @Language("PostgreSQL")
         val sql = """
-            SELECT b.orgnr, b.aktiv, b, b.opprettet, b.oppdatert, b.fnr_innsender, b.fnr_oppdatert_av, b.bruksvilkardefinisjon_id
+            SELECT b.id, b.orgnr, b.aktiv, b, b.opprettet, b.oppdatert, b.fnr_innsender, b.fnr_oppdatert_av, b.bruksvilkardefinisjon_id
             FROM bruksvilkar_v1 b
             WHERE b.orgnr = :orgnr AND b.bruksvilkardefinisjon_id = 1
         """.trimIndent()
-        it.query(sql, mapOf("orgnr" to orgnr), ::mapper)
+        return tx.singleOrNull(sql, mapOf("orgnr" to orgnr), ::mapper)
     }
 
     private fun mapper(row: Row): BruksvilkårGodtatt = BruksvilkårGodtatt(
+        id = row.int("id"),
         orgnr = row.string("orgnr"),
         fnrInnsender = row.string("fnr_innsender"),
         fnrOppdatertAv = row.stringOrNull("fnr_oppdatert_av"),

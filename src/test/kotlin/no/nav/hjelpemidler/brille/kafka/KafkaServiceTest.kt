@@ -19,12 +19,12 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import java.math.BigDecimal
 import java.time.LocalDate
 
-internal class KafkaServiceTest {
+class KafkaServiceTest {
     private val kafkaRapid = mockk<KafkaRapid>()
     private val service = KafkaService(kafkaRapid)
 
     @Test
-    internal fun `vedtak fattet`() {
+    fun `vedtak fattet`() {
         every {
             kafkaRapid.publishWithTimeout(any(), any(), any())
             kafkaRapid.publishWithTimeout(any(), any())

@@ -1,11 +1,7 @@
 package no.nav.hjelpemidler.brille.tss
 
-import kotliquery.Session
-import no.nav.hjelpemidler.brille.store.Store
-import no.nav.hjelpemidler.brille.store.TransactionalStore
-import no.nav.hjelpemidler.brille.store.query
-import no.nav.hjelpemidler.brille.store.queryList
-import no.nav.hjelpemidler.brille.store.update
+import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 
 interface TssIdentStore : Store {
@@ -15,9 +11,9 @@ interface TssIdentStore : Store {
     fun hentAlleOrgnrSomManglerTssIdent(): List<String>
 }
 
-class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIdentStore, TransactionalStore(sessionFactory) {
-    override fun hentTssIdent(orgnr: String) = session {
-        it.query(
+class TssIdentStorePostgres(private val tx: JdbcOperations) : TssIdentStore {
+    override fun hentTssIdent(orgnr: String): String? {
+        return tx.singleOrNull(
             "SELECT tss_ident FROM tssident_v1 WHERE orgnr = :orgnr",
             mapOf("orgnr" to orgnr),
         ) {
@@ -25,39 +21,35 @@ class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIden
         }
     }
 
-    override fun settTssIdent(orgnr: String, tssIdent: String) = session {
+    override fun settTssIdent(orgnr: String, tssIdent: String) {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO tssident_v1 (orgnr, tss_ident, opprettet)
-            VALUES (:orgnr, :tssIdent, now())
+            VALUES (:orgnr, :tssIdent, NOW())
             ON CONFLICT (orgnr)
             DO UPDATE SET tss_ident = :tssIdent, opprettet = NOW()
         """.trimIndent()
 
-        it.update(
+        tx.update(
             sql,
             mapOf(
                 "orgnr" to orgnr,
                 "tssIdent" to tssIdent,
             ),
-        ).validate()
+        ).expect(1)
     }
 
-    override fun glemEksisterendeTssIdent(orgnr: String) = session {
+    override fun glemEksisterendeTssIdent(orgnr: String) {
         @Language("PostgreSQL")
         val sql = "DELETE FROM tssident_v1 WHERE orgnr = :orgnr"
 
-        it.update(
+        tx.update(
             sql,
-            mapOf(
-                "orgnr" to orgnr,
-            ),
+            mapOf("orgnr" to orgnr),
         )
-
-        Unit
     }
 
-    override fun hentAlleOrgnrSomManglerTssIdent() = session {
+    override fun hentAlleOrgnrSomManglerTssIdent(): List<String> {
         @Language("PostgreSQL")
         val sql = """
             SELECT orgnr
@@ -66,7 +58,7 @@ class TssIdentStorePostgres(private val sessionFactory: () -> Session) : TssIden
             ORDER BY orgnr ASC
         """.trimIndent()
 
-        it.queryList(sql, emptyMap()) { row ->
+        return tx.list(sql, emptyMap()) { row ->
             row.string("orgnr")
         }.toSet().toList()
     }

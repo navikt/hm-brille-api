@@ -1,10 +1,10 @@
 package no.nav.hjelpemidler.brille
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import kotlinx.coroutines.runBlocking
-import no.nav.hjelpemidler.brille.db.createDatabaseContext
-import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
+import kotlinx.coroutines.test.runTest
+import no.nav.hjelpemidler.brille.db.MockDatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
@@ -12,19 +12,18 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-internal class EnhetsregisterTest {
+class EnhetsregisteretTest {
     @Test
-    fun `Test mot prod enhetsregister`() {
+    fun `Test mot enhetsregisteret i prod`() = runTest {
         val props = Configuration.EnhetsregisteretProperties("https://data.brreg.no/enhetsregisteret/api")
-        val sessionContext = createDatabaseSessionContextWithMocks()
-        val databaseContext = createDatabaseContext(sessionContext)
+        val databaseContext = MockDatabaseContext()
         val enhetsregisteretClient = EnhetsregisteretClient(props, databaseContext)
         val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
 
         val orgnr = "889234962"
 
         every {
-            sessionContext.enhetsregisteretStore.hentEnhet(any())
+            databaseContext.enhetsregisteretStore.hentEnhet(any())
         } answers {
             Organisasjonsenhet(
                 orgnr = orgnr,
@@ -32,8 +31,9 @@ internal class EnhetsregisterTest {
             )
         }
 
-        val resultat = runBlocking { enhetsregisteretService.hentOrganisasjonsenhet(orgnr) }
-        println(resultat)
+        shouldNotThrowAny {
+            enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
+        }
     }
 
     @Test
@@ -43,9 +43,11 @@ internal class EnhetsregisterTest {
         timerSidenOppdatert shouldBe 24
     }
 
-    /* @Test
+    /*
+    @Test
     fun `se kravquery`() {
         val result = kravlinjeQuery(KravFilter.EGENDEFINERT, LocalDate.now(), "some", true)
         println(result)
-    } */
+    }
+     */
 }

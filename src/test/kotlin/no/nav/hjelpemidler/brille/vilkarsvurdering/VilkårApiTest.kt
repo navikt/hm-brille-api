@@ -11,8 +11,7 @@ import io.ktor.server.auth.authenticate
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.hjelpemidler.brille.db.createDatabaseContext
-import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
+import no.nav.hjelpemidler.brille.db.MockDatabaseContext
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.hotsak.HotsakVedtak
 import no.nav.hjelpemidler.brille.hotsak.lagHotsakVedtak
@@ -39,8 +38,7 @@ class VilkårApiTest {
     private val medlemskapBarn = mockk<MedlemskapBarn>()
     private val dagensDatoFactory = mockk<() -> LocalDate>()
 
-    private val sessionContext = createDatabaseSessionContextWithMocks()
-    private val databaseContext = createDatabaseContext(sessionContext)
+    private val databaseContext = MockDatabaseContext()
 
     private val vilkårsvurderingService = VilkårsvurderingService(
         databaseContext,
@@ -246,7 +244,7 @@ class VilkårApiTest {
 
         coEvery { hotsakClient.hentEksisterendeVedtak(any(), any()) } returns vedtakHotsak
 
-        every { sessionContext.vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn) } returns vedtak
+        every { databaseContext.vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn) } returns vedtak
 
         coEvery { pdlClient.hentPerson(vilkårsgrunnlag.fnrBarn) } returns lagMockPdlOppslag(fødselsdato.toString())
 

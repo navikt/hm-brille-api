@@ -2,7 +2,6 @@ package no.nav.hjelpemidler.brille.vedtak
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.Row
-import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alderPåDato
@@ -10,13 +9,10 @@ import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PersonCompat
 import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.brille.sats.SatsType
-import no.nav.hjelpemidler.brille.store.Store
-import no.nav.hjelpemidler.brille.store.TransactionalStore
-import no.nav.hjelpemidler.brille.store.query
-import no.nav.hjelpemidler.brille.store.queryList
-import no.nav.hjelpemidler.brille.store.update
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
+import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import kotlin.math.ceil
@@ -38,10 +34,8 @@ interface VedtakStore : Store {
     fun hentAntallVedtakIKø(): Int
 }
 
-class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakStore,
-    TransactionalStore(sessionFactory) {
-
-    override fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime) = transaction {
+class VedtakStorePostgres(private val tx: JdbcOperations) : VedtakStore {
+    override fun lagreVedtakIKø(vedtakId: Long, opprettet: LocalDateTime): Long {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO vedtak_ko_v1 (
@@ -54,7 +48,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             )
             RETURNING id
         """.trimIndent()
-        val id = it.query(
+        val id = tx.single(
             sql,
             mapOf(
                 "vedtakId" to vedtakId,
@@ -63,18 +57,17 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         ) { row ->
             row.long("id")
         }
-        requireNotNull(id) { "Lagring av vedtak feilet, id var null" }
-        id
+        return id
     }
 
-    override fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak> = session {
+    override fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak> {
         @Language("PostgreSQL")
         val sql = """
             SELECT id, fnr_barn, fnr_innsender, bestillingsdato, bestillingsreferanse, behandlingsresultat, opprettet
             FROM vedtak_v1
             WHERE fnr_barn = :fnr_barn 
         """.trimIndent()
-        it.queryList(sql, mapOf("fnr_barn" to fnrBarn)) { row ->
+        return tx.list(sql, mapOf("fnr_barn" to fnrBarn)) { row ->
             EksisterendeVedtak(
                 id = row.long("id"),
                 fnrBarn = row.string("fnr_barn"),
@@ -87,7 +80,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         }
     }
 
-    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak? = session {
+    override fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak? {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -119,11 +112,11 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             WHERE
                 (v.id = :vedtak_id OR vs.id = :vedtak_id) AND
                 (v.fnr_innsender = :fnr_innsender OR vs.fnr_innsender = :fnr_innsender) AND
-                (u1.utbetalingsdato IS NULL OR (u1.utbetalingsdato > NOW() - '28 days'::interval)) AND
-                (u2.utbetalingsdato IS NULL OR (u2.utbetalingsdato > NOW() - '28 days'::interval)) AND
-                (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::interval))
+                (u1.utbetalingsdato IS NULL OR (u1.utbetalingsdato > NOW() - '28 days'::INTERVAL)) AND
+                (u2.utbetalingsdato IS NULL OR (u2.utbetalingsdato > NOW() - '28 days'::INTERVAL)) AND
+                (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::INTERVAL))
         """.trimIndent()
-        it.query(
+        return tx.singleOrNull(
             sql,
             mapOf(
                 "fnr_innsender" to fnrInnsender,
@@ -161,75 +154,74 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         }
     }
 
-    override fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int): OversiktVedtakPaged =
-        session {
-            val offset = (page - 1) * itemsPerPage
+    override fun hentAlleVedtakForOptiker(fnrInnsender: String, page: Int, itemsPerPage: Int): OversiktVedtakPaged {
+        val offset = (page - 1) * itemsPerPage
 
-            @Language("PostgreSQL")
-            val sql = """
-                SELECT
-                    COALESCE(v.id, vs.id) AS id,
-                    COALESCE(v.orgnr, vs.orgnr) AS orgnr,
-                    COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
-                    COALESCE(v.opprettet, vs.opprettet) AS opprettet,
-                    COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
-                    COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
-                    COALESCE(u1.status, u2.status) AS utbetalingsstatus,
-                    vs.slettet
-                FROM vedtak_v1 v
-                FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
-                LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
-                LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
-                WHERE
-                    (v.fnr_innsender = :fnr_innsender OR vs.fnr_innsender = :fnr_innsender) AND
-                    (u1.utbetalingsdato IS NULL OR (u1.utbetalingsdato > NOW() - '28 days'::interval)) AND
-                    (u2.utbetalingsdato IS NULL OR (u2.utbetalingsdato > NOW() - '28 days'::interval)) AND
-                    (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::interval))
-                ORDER BY opprettet DESC
-            """.trimIndent()
+        @Language("PostgreSQL")
+        val sql = """
+            SELECT
+                COALESCE(v.id, vs.id) AS id,
+                COALESCE(v.orgnr, vs.orgnr) AS orgnr,
+                COALESCE(v.bestillingsreferanse, vs.bestillingsreferanse) AS bestillingsreferanse,
+                COALESCE(v.opprettet, vs.opprettet) AS opprettet,
+                COALESCE(v.vilkarsvurdering, vs.vilkarsvurdering) -> 'grunnlag' -> 'pdlOppslagBarn' ->> 'data' AS pdlOppslag,
+                COALESCE(u1.utbetalingsdato, u2.utbetalingsdato) AS utbetalingsdato,
+                COALESCE(u1.status, u2.status) AS utbetalingsstatus,
+                vs.slettet
+            FROM vedtak_v1 v
+            FULL OUTER JOIN vedtak_slettet_v1 vs ON v.id = vs.id
+            LEFT JOIN utbetaling_v1 u1 ON v.id = u1.vedtak_id
+            LEFT JOIN utbetaling_v1 u2 ON vs.id = u2.vedtak_id
+            WHERE
+                (v.fnr_innsender = :fnr_innsender OR vs.fnr_innsender = :fnr_innsender) AND
+                (u1.utbetalingsdato IS NULL OR (u1.utbetalingsdato > NOW() - '28 days'::INTERVAL)) AND
+                (u2.utbetalingsdato IS NULL OR (u2.utbetalingsdato > NOW() - '28 days'::INTERVAL)) AND
+                (vs.slettet IS NULL OR (vs.slettet > NOW() - '28 days'::INTERVAL))
+            ORDER BY opprettet DESC
+        """.trimIndent()
 
-            @Language("PostgreSQL")
-            val sqlTotal = """
+        @Language("PostgreSQL")
+        val sqlTotal = """
                 SELECT COUNT(subq.id) AS antall FROM ($sql) AS subq
-            """.trimIndent()
+        """.trimIndent()
 
-            val totaltAntall = sessionFactory().query(sqlTotal, mapOf("fnr_innsender" to fnrInnsender)) { row ->
-                row.int("antall")
-            } ?: 0
+        val totaltAntall = tx.singleOrNull(sqlTotal, mapOf("fnr_innsender" to fnrInnsender)) { row ->
+            row.int("antall")
+        } ?: 0
 
-            val items = it.queryList(
-                sql.plus(" LIMIT :limit OFFSET :offset"),
-                mapOf(
-                    "fnr_innsender" to fnrInnsender,
-                    "limit" to itemsPerPage,
-                    "offset" to offset,
-                ),
-            ) { row ->
-                val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
+        val items = tx.list(
+            sql.plus(" LIMIT :limit OFFSET :offset"),
+            mapOf(
+                "fnr_innsender" to fnrInnsender,
+                "limit" to itemsPerPage,
+                "offset" to offset,
+            ),
+        ) { row ->
+            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
 
-                OversiktVedtakListItem(
-                    id = row.long("id"),
-                    orgnavn = "",
-                    orgnr = row.string("orgnr"),
-                    barnsNavn = person.asPerson().navn(),
-                    bestillingsreferanse = row.string("bestillingsreferanse"),
-                    utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
-                    utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
-                        ?.let { status -> UtbetalingStatus.valueOf(status) },
-                    opprettet = row.localDateTime("opprettet"),
-                    slettet = row.localDateTimeOrNull("slettet"),
-                )
-            }
-
-            OversiktVedtakPaged(
-                numberOfPages = ceil(totaltAntall.toDouble() / itemsPerPage.toDouble()).toInt(),
-                itemsPerPage = itemsPerPage,
-                totalItems = totaltAntall,
-                items = items,
+            OversiktVedtakListItem(
+                id = row.long("id"),
+                orgnavn = "",
+                orgnr = row.string("orgnr"),
+                barnsNavn = person.asPerson().navn(),
+                bestillingsreferanse = row.string("bestillingsreferanse"),
+                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
+                utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
+                    ?.let { status -> UtbetalingStatus.valueOf(status) },
+                opprettet = row.localDateTime("opprettet"),
+                slettet = row.localDateTimeOrNull("slettet"),
             )
         }
 
-    override fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String> = session {
+        return OversiktVedtakPaged(
+            numberOfPages = ceil(totaltAntall.toDouble() / itemsPerPage.toDouble()).toInt(),
+            itemsPerPage = itemsPerPage,
+            totalItems = totaltAntall,
+            items = items,
+        )
+    }
+
+    override fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String> {
         @Language("PostgreSQL")
         val sql = """
             SELECT orgnr
@@ -239,12 +231,12 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 AND orgnr IN (SELECT orgnr FROM virksomhet_v1 WHERE aktiv)
             ORDER BY opprettet DESC
         """.trimIndent()
-        it.queryList(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
+        return tx.list(sql, mapOf("fnr_innsender" to fnrInnsender)) { row ->
             row.string("orgnr")
         }.toSet().toList()
     }
 
-    override fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T> = transaction {
+    override fun <T> lagreVedtak(vedtak: Vedtak<T>): Vedtak<T> {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO vedtak_v1 (
@@ -287,7 +279,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             )
             RETURNING id
         """.trimIndent()
-        val id = it.query(
+        val id = tx.single(
             sql,
             mapOf(
                 "fnr_barn" to vedtak.fnrBarn,
@@ -311,14 +303,13 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         ) { row ->
             row.long("id")
         }
-        requireNotNull(id) { "Lagring av vedtak feilet, id var null" }
-        vedtak.copy(id = id)
+        return vedtak.copy(id = id)
     }
 
     override fun <T> hentVedtakForUtbetaling(
         opprettet: LocalDateTime,
         behandlingsresultat: Behandlingsresultat,
-    ): List<Vedtak<T>> = session {
+    ): List<Vedtak<T>> {
         @Language("PostgreSQL")
         val sql = """
             SELECT 
@@ -350,7 +341,7 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
                 AND v.orgnr = t.orgnr
                 AND v.behandlingsresultat = :behandlingsresultat
         """.trimIndent()
-        sessionFactory().queryList<Vedtak<T>>(
+        return tx.list<Vedtak<T>>(
             sql,
             mapOf(
                 "opprettet" to opprettet,
@@ -380,15 +371,15 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
         avsendersystemOrgNr = row.stringOrNull("avsendersystem_org_nr"),
     )
 
-    override fun fjernFraVedTakKø(vedtakId: Long) = session {
+    override fun fjernFraVedTakKø(vedtakId: Long): Int {
         @Language("PostgreSQL")
         val sql = """
-                DELETE from vedtak_ko_v1 where id = :vedtakId
+                DELETE FROM vedtak_ko_v1 WHERE id = :vedtakId
         """.trimIndent()
-        sessionFactory().update(sql, mapOf("vedtakId" to vedtakId)).rowCount
+        return tx.update(sql, mapOf("vedtakId" to vedtakId)).actualRowCount
     }
 
-    override fun <T> hentVedtak(vedtakId: Long): Vedtak<T>? = session {
+    override fun <T> hentVedtak(vedtakId: Long): Vedtak<T>? {
         @Language("PostgreSQL")
         val sql = """
             SELECT 
@@ -413,18 +404,18 @@ class VedtakStorePostgres(private val sessionFactory: () -> Session) : VedtakSto
             FROM vedtak_v1
             WHERE id = :id
         """.trimIndent()
-        sessionFactory().query(sql, mapOf("id" to vedtakId)) { row ->
+        return tx.singleOrNull(sql, mapOf("id" to vedtakId)) { row ->
             mapVedtak(row)
         }
     }
 
-    override fun hentAntallVedtakIKø(): Int = session {
+    override fun hentAntallVedtakIKø(): Int {
         @Language("PostgreSQL")
         val sql = """
-            SELECT COUNT(*) as total FROM vedtak_ko_v1
+            SELECT COUNT(*) AS total FROM vedtak_ko_v1
         """.trimIndent()
-        sessionFactory().query(sql) { row ->
+        return tx.single(sql) { row ->
             row.int("total")
-        }!!
+        }
     }
 }

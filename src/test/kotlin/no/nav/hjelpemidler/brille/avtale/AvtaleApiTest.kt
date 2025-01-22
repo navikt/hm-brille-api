@@ -12,8 +12,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
-import no.nav.hjelpemidler.brille.db.createDatabaseContext
-import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
+import no.nav.hjelpemidler.brille.db.MockDatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.enhetsregisteret.Næringskode
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
@@ -23,14 +22,13 @@ import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-internal class AvtaleApiTest {
+class AvtaleApiTest {
     private val altinnService = mockk<AltinnService>()
     private val enhetsregisteretService = mockk<EnhetsregisteretService>()
     private val kafkaService = mockk<KafkaService>()
 
     private val routing = TestRouting {
-        val sessionContext = createDatabaseSessionContextWithMocks()
-        val databaseContext = createDatabaseContext(sessionContext)
+        val databaseContext = MockDatabaseContext()
 
         authenticate("test") {
             avtaleApi(AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService))
@@ -63,7 +61,7 @@ internal class AvtaleApiTest {
     )
 
     @BeforeTest
-    internal fun setUp() {
+    fun setUp() {
         coEvery {
             altinnService.hentAvgivere(fnrInnsender, Avgiver.Tjeneste.OPPGJØRSAVTALE)
         } returns listOf(avgiver)
@@ -102,19 +100,19 @@ internal class AvtaleApiTest {
     }
 
     @Test
-    internal fun `henter virksomheter med avtale`() = routing.test {
+    fun `henter virksomheter med avtale`() = routing.test {
         val response = client.get("/avtale/virksomheter")
         response.status shouldBe HttpStatusCode.OK
     }
 
     @Test
-    internal fun `henter virksomhet med avtale`() = routing.test {
+    fun `henter virksomhet med avtale`() = routing.test {
         val response = client.get("/avtale/virksomheter/${virksomhet.orgnr}")
         response.status shouldBe HttpStatusCode.OK
     }
 
     @Test
-    internal fun `oppretter ny avtale`() = routing.test {
+    fun `oppretter ny avtale`() = routing.test {
         harRettighetOppgjørsavtale(opprettAvtale.orgnr)
         val response = client.post("/avtale/virksomheter") {
             setBody(opprettAvtale)
@@ -123,7 +121,7 @@ internal class AvtaleApiTest {
     }
 
     @Test
-    internal fun `oppretter ny avtale uten tilgang`() = routing.test {
+    fun `oppretter ny avtale uten tilgang`() = routing.test {
         harIkkeRettighetOppgjørsavtale(opprettAvtale.orgnr)
         val response = client.post("/avtale/virksomheter") {
             setBody(opprettAvtale)
@@ -132,7 +130,7 @@ internal class AvtaleApiTest {
     }
 
     @Test
-    internal fun `redigerer avtale`() = routing.test {
+    fun `redigerer avtale`() = routing.test {
         harRettighetOppgjørsavtale(avgiver.orgnr)
         val response = client.put("/avtale/virksomheter/${avgiver.orgnr}") {
             setBody(oppdaterAvtale)
@@ -141,7 +139,7 @@ internal class AvtaleApiTest {
     }
 
     @Test
-    internal fun `redigerer avtale uten tilgang`() = routing.test {
+    fun `redigerer avtale uten tilgang`() = routing.test {
         harIkkeRettighetOppgjørsavtale(avgiver.orgnr)
         val response = client.put("/avtale/virksomheter/${avgiver.orgnr}") {
             setBody(oppdaterAvtale)

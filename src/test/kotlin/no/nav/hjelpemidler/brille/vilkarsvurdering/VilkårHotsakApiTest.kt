@@ -13,8 +13,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.hjelpemidler.brille.db.createDatabaseContext
-import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
+import no.nav.hjelpemidler.brille.db.MockDatabaseContext
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -51,8 +50,7 @@ class VilkårHotsakApiTest {
     private val dagensDatoFactory = mockk<() -> LocalDate>()
     private val kafkaService = mockk<KafkaService>()
 
-    private val sessionContext = createDatabaseSessionContextWithMocks()
-    private val databaseContext = createDatabaseContext(sessionContext)
+    private val databaseContext = MockDatabaseContext()
 
     private val vilkårsvurderingService = VilkårsvurderingService(
         databaseContext,
@@ -323,7 +321,7 @@ class VilkårHotsakApiTest {
     ) {
         every { dagensDatoFactory() } returns dagensDato
 
-        every { sessionContext.vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn) } returns vedtakForBruker
+        every { databaseContext.vedtakStore.hentVedtakForBarn(vilkårsgrunnlag.fnrBarn) } returns vedtakForBruker
 
         coEvery { pdlClient.hentPerson(vilkårsgrunnlag.fnrBarn) } returns lagMockPdlOppslag(fødselsdato.toString())
 

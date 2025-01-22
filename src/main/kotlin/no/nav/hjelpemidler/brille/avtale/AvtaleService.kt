@@ -33,7 +33,8 @@ class AvtaleService(
 
     suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<IngåttAvtale> {
         var avgivere: List<Avgiver>
-        val hentAvgivereElapsed = measureTimeMillis { avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste) }
+        val hentAvgivereElapsed =
+            measureTimeMillis { avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste) }
         log.info("hentAvtaler: altinnService.hentAvgivere elapsed=${hentAvgivereElapsed}ms")
 
         if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {

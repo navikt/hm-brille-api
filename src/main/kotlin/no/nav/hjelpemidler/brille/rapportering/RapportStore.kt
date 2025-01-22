@@ -1,18 +1,15 @@
 package no.nav.hjelpemidler.brille.rapportering
 
-import kotliquery.Session
 import no.nav.hjelpemidler.brille.rapportering.queries.kravlinjeQuery
-import no.nav.hjelpemidler.brille.store.Page
-import no.nav.hjelpemidler.brille.store.Store
-import no.nav.hjelpemidler.brille.store.TransactionalStore
-import no.nav.hjelpemidler.brille.store.queryList
-import no.nav.hjelpemidler.brille.store.queryPagedList
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
+import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Page
+import no.nav.hjelpemidler.database.PageRequest
+import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
 
 interface RapportStore : Store {
-
     fun hentKravlinjerForOrgNummer(
         orgNr: String,
         kravFilter: KravFilter?,
@@ -28,7 +25,7 @@ interface RapportStore : Store {
         tilDato: LocalDate?,
         referanseFilter: String?,
         limit: Int = 20,
-        offset: Int = 0,
+        page: Int = 0,
     ): Page<Kravlinje>
 
     fun hentUtbetalingKravlinjerForOrgNummer(
@@ -37,18 +34,17 @@ interface RapportStore : Store {
     ): List<Kravlinje>
 }
 
-internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStore, TransactionalStore(sessionFactory) {
-
+class RapportStorePostgres(private val tx: JdbcOperations) : RapportStore {
     override fun hentKravlinjerForOrgNummer(
         orgNr: String,
         kravFilter: KravFilter?,
         fraDato: LocalDate?,
         tilDato: LocalDate?,
         referanseFilter: String?,
-    ): List<Kravlinje> = session {
+    ): List<Kravlinje> {
         @Language("PostgreSQL")
         val sql = kravlinjeQuery(kravFilter, tilDato, null, referanseFilter)
-        it.queryList(
+        return tx.list(
             sql,
             mapOf(
                 "orgNr" to orgNr,
@@ -56,9 +52,7 @@ internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStor
                 "tilDato" to tilDato,
                 "referanseFilter" to "%$referanseFilter%",
             ),
-        ) { row ->
-            Kravlinje.fromRow(row)
-        }
+        ) { row -> Kravlinje.fromRow(row) }
     }
 
     override fun hentPagedKravlinjerForOrgNummer(
@@ -68,41 +62,36 @@ internal class RapportStorePostgres(sessionFactory: () -> Session) : RapportStor
         tilDato: LocalDate?,
         referanseFilter: String?,
         limit: Int,
-        offset: Int,
-    ): Page<Kravlinje> = session {
+        page: Int,
+    ): Page<Kravlinje> {
         @Language("PostgreSQL")
         val sql = kravlinjeQuery(kravFilter, tilDato, null, referanseFilter, paginert = true)
-        it.queryPagedList(
+        return tx.page(
             sql,
             mapOf(
                 "orgNr" to orgNr,
                 "limit" to limit,
-                "offset" to offset,
+                "offset" to page,
                 "fraDato" to fraDato,
                 "tilDato" to tilDato,
                 "referanseFilter" to "%$referanseFilter%",
             ),
-            limit,
-            offset,
-        ) { row ->
-            Kravlinje.fromRow(row)
-        }
+            PageRequest(page, limit),
+        ) { row -> Kravlinje.fromRow(row) }
     }
 
     override fun hentUtbetalingKravlinjerForOrgNummer(
         orgnr: String,
         avstemmingsreferanse: String,
-    ): List<Kravlinje> = session {
+    ): List<Kravlinje> {
         @Language("PostgreSQL")
         val sql = kravlinjeQuery(null, null, avstemmingsreferanse, null)
-        it.queryList(
+        return tx.list(
             sql,
             mapOf(
                 "orgNr" to orgnr,
                 "avstemmingsreferanse" to avstemmingsreferanse,
             ),
-        ) { row ->
-            Kravlinje.fromRow(row)
-        }
+        ) { row -> Kravlinje.fromRow(row) }
     }
 }

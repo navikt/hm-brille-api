@@ -21,6 +21,11 @@ dependencies {
     implementation(platform(libs.hotlibs.platform))
     implementation(libs.hotlibs.http)
     implementation(libs.hotlibs.nare)
+    implementation(libs.hotlibs.database) {
+        capabilities {
+            requireCapability("no.nav.hjelpemidler:database-postgresql")
+        }
+    }
 
     implementation(libs.konfig.deprecated)
     implementation(libs.micrometer.registry.prometheus)
@@ -65,6 +70,11 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.nimbus.jose.jwt)
     testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.hotlibs.database) {
+        capabilities {
+            requireCapability("no.nav.hjelpemidler:database-testcontainers")
+        }
+    }
 }
 
 spotless {

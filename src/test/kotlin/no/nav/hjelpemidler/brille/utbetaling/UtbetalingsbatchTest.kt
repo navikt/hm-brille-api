@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import no.nav.hjelpemidler.brille.sats.SatsType
@@ -12,8 +13,7 @@ import no.nav.hjelpemidler.nare.evaluering.Evalueringer
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class UtbetalingsBatchTest {
-
+class UtbetalingsbatchTest {
     @Test
     fun `lag utbetalingsbatch`() {
         val sats = SatsType.SATS_1
@@ -95,10 +95,10 @@ class UtbetalingsBatchTest {
             vedtak = etVedtak3.toDto(),
         )
 
-        val utbetalinger = listOf<Utbetaling>(ut1, ut2, ut3)
-        val batcher = utbetalinger.toUtbetalingsBatchList()
+        val utbetalinger = listOf(ut1, ut2, ut3)
+        val batcher = utbetalinger.toUtbetalingBatchList()
 
-        batcher.size shouldBe 2
+        batcher shouldHaveSize 2
         val batch1 = batcher[0]
         val batch2 = batcher[1]
         batch1.orgNr shouldBe "123456789"
@@ -107,6 +107,6 @@ class UtbetalingsBatchTest {
         batch2.orgNr shouldBe "987654321"
         batch1.batchId shouldNotBe batch2.batchId
 
-        batch1.toUtbetalingsBatch().totalbeløp shouldBe "1600".toBigDecimal()
+        batch1.toUtbetalingsbatch().totalbeløp shouldBe "1600".toBigDecimal()
     }
 }

@@ -44,7 +44,7 @@ class SendTilUtbetalingScheduler(
         ) // hent kun de som har blitt registrert minst x minutter siden.
         LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
         if (utbetalinger.isNotEmpty()) {
-            val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
+            val utbetalingsBatchList = utbetalinger.toUtbetalingBatchList()
             LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
             utbetalingsBatchList.forEach {
                 val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }

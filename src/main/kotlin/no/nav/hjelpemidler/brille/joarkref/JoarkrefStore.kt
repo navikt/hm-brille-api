@@ -1,12 +1,9 @@
 package no.nav.hjelpemidler.brille.joarkref
 
-import kotliquery.Session
 import no.nav.hjelpemidler.brille.jsonOrNull
 import no.nav.hjelpemidler.brille.pgObjectOf
-import no.nav.hjelpemidler.brille.store.Store
-import no.nav.hjelpemidler.brille.store.TransactionalStore
-import no.nav.hjelpemidler.brille.store.query
-import no.nav.hjelpemidler.brille.store.update
+import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 
 interface JoarkrefStore : Store {
@@ -14,8 +11,8 @@ interface JoarkrefStore : Store {
     fun hentJoarkRef(vedtakId: Long): Pair<Long, List<String>>?
 }
 
-class JoarkrefStorePostgres(private val sessionFactory: () -> Session) : JoarkrefStore, TransactionalStore(sessionFactory) {
-    override fun lagreJoarkRef(vedtakId: Long, joarkRef: Long, dokumentIder: List<String>) = session {
+class JoarkrefStorePostgres(private val tx: JdbcOperations) : JoarkrefStore {
+    override fun lagreJoarkRef(vedtakId: Long, joarkRef: Long, dokumentIder: List<String>) {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO joarkref_v1 (vedtak_id, joark_ref, dokument_ider)
@@ -23,7 +20,7 @@ class JoarkrefStorePostgres(private val sessionFactory: () -> Session) : Joarkre
             ON CONFLICT DO NOTHING
         """.trimIndent()
 
-        it.update(
+        tx.update(
             sql,
             mapOf(
                 "vedtakId" to vedtakId,
@@ -31,17 +28,15 @@ class JoarkrefStorePostgres(private val sessionFactory: () -> Session) : Joarkre
                 "dokumentIder" to pgObjectOf(dokumentIder),
             ),
         )
-
-        Unit
     }
 
-    override fun hentJoarkRef(vedtakId: Long) = session {
+    override fun hentJoarkRef(vedtakId: Long): Pair<Long, List<String>>? {
         @Language("PostgreSQL")
         val sql = """
             SELECT joark_ref, dokument_ider FROM joarkref_v1 WHERE vedtak_id = :vedtakId
         """.trimIndent()
 
-        it.query(
+        return tx.singleOrNull(
             sql,
             mapOf(
                 "vedtakId" to vedtakId,

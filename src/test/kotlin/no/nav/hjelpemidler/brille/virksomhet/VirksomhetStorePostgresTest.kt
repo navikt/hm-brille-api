@@ -1,15 +1,15 @@
 package no.nav.hjelpemidler.brille.virksomhet
 
 import io.kotest.matchers.shouldBe
-import no.nav.hjelpemidler.brille.db.PostgresTestHelper
-import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
+import kotlinx.coroutines.test.runTest
+import no.nav.hjelpemidler.brille.test.AbstractStoreTest
 import kotlin.test.Test
 
-internal class VirksomhetStorePostgresTest {
+class VirksomhetStorePostgresTest : AbstractStoreTest() {
     @Test
-    internal fun `lagrer og henter virksomhet`() = withMigratedDb {
-        with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
-            val lagretVirksomhet = lagreVirksomhet(
+    fun `lagrer og henter virksomhet`() = runTest {
+        transaction {
+            val lagretVirksomhet = virksomhetStore.lagreVirksomhet(
                 Virksomhet(
                     orgnr = "986165754",
                     kontonr = "55718628082",
@@ -19,16 +19,11 @@ internal class VirksomhetStorePostgresTest {
                     aktiv = true,
                 ),
             )
-            val hentetVirksomhetForOrganisasjon = hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
-            try {
-                val hentetVirksomhetForInnsender =
-                    hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
-                        .firstOrNull()
-                hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
-            } catch (e: Exception) {
-                System.out.println(e.message)
-                throw e
-            }
+            val hentetVirksomhetForOrganisasjon = virksomhetStore.hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
+            val hentetVirksomhetForInnsender = virksomhetStore
+                .hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
+                .firstOrNull()
+            hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
         }
     }
 }

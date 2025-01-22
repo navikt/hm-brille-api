@@ -27,7 +27,7 @@ class RekjorUtbetalingerScheduler(
             utbetalingService.hentUtbetalingerSomSkalRekjøres()
         LOG.info("Fant ${utbetalinger.size} utbetalinger som skal rekjøres.")
         if (utbetalinger.isNotEmpty()) {
-            val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
+            val utbetalingsBatchList = utbetalinger.toUtbetalingBatchList()
             LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
             utbetalingsBatchList.forEach {
                 if (it.utbetalinger.size > 100) {

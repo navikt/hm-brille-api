@@ -5,7 +5,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondOutputStream
@@ -53,7 +52,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                     tilDato = tilDato,
                     referanseFilter = referanseFilter,
                     limit = limit,
-                    offset = (page - 1) * limit,
+                    page = page,
                 )
             }.getOrElse { e ->
                 log.error(e) { "Feil med oppslag i rapporten" }
@@ -62,7 +61,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
             val pagedKravlinjeListe = PagedKravlinjeliste(
                 kravlinjer = kravlinjer,
-                totalCount = kravlinjer.total,
+                totalCount = kravlinjer.totalPages, // fixme
                 currentPage = page,
                 pageSize = limit,
             )
@@ -82,7 +81,12 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             }
 
             val avstemmingsreferanse = call.parameters["avstemmingsreferanse"]?.trim()
-            if (avstemmingsreferanse.isNullOrBlank()) return@get call.respond(HttpStatusCode.BadRequest, "ugyldig avstemmingsreferanse")
+            if (avstemmingsreferanse.isNullOrBlank()) {
+                return@get call.respond(
+                    HttpStatusCode.BadRequest,
+                    "ugyldig avstemmingsreferanse",
+                )
+            }
 
             val kravlinjer = runCatching {
                 rapportService.hentUtbetalingKravlinjer(
@@ -94,8 +98,11 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 throw e
             }
 
-            if (kravlinjer.count() == 0) {
-                return@get call.respond(HttpStatusCode.NotFound, "ingen krav funnet for utbetaling med avstemmingsreferanse")
+            if (kravlinjer.isEmpty()) {
+                return@get call.respond(
+                    HttpStatusCode.NotFound,
+                    "ingen krav funnet for utbetaling med avstemmingsreferanse",
+                )
             }
 
             call.response.header(

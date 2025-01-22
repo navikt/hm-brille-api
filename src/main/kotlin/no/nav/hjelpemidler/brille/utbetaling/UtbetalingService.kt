@@ -37,10 +37,10 @@ class UtbetalingService(
         }
     }
 
-    suspend fun rekjorBatchTilUtbetaling(utbetalingsBatchDTO: UtbetalingsBatchDTO, tssIdent: String) {
+    suspend fun rekjorBatchTilUtbetaling(utbetalingsbatchDTO: UtbetalingsbatchDTO, tssIdent: String) {
         transaction(databaseContext) { ctx ->
-            // ctx.utbetalingStore.lagreUtbetalingsBatch(utbetalingsBatchDTO.toUtbetalingsBatch())
-            utbetalingsBatchDTO.utbetalinger.forEach {
+            // ctx.utbetalingStore.lagreUtbetalingsbatch(utbetalingBatchDTO.toUtbetalingBatch())
+            utbetalingsbatchDTO.utbetalinger.forEach {
                 ctx.utbetalingStore.oppdaterStatus(
                     it.copy(
                         status = UtbetalingStatus.TIL_UTBETALING,
@@ -48,14 +48,14 @@ class UtbetalingService(
                     ),
                 )
             }
-            kafkaService.produceEvent(null, utbetalingsBatchDTO.lagMelding(tssIdent).toJson())
+            kafkaService.produceEvent(null, utbetalingsbatchDTO.lagUtbetalingsmelding(tssIdent).toJson())
         }
     }
 
-    suspend fun sendBatchTilUtbetaling(utbetalingsBatchDTO: UtbetalingsBatchDTO, tssIdent: String) {
+    suspend fun sendBatchTilUtbetaling(utbetalingsbatchDTO: UtbetalingsbatchDTO, tssIdent: String) {
         transaction(databaseContext) { ctx ->
-            ctx.utbetalingStore.lagreUtbetalingsBatch(utbetalingsBatchDTO.toUtbetalingsBatch())
-            utbetalingsBatchDTO.utbetalinger.forEach {
+            ctx.utbetalingStore.lagreUtbetalingsbatch(utbetalingsbatchDTO.toUtbetalingsbatch())
+            utbetalingsbatchDTO.utbetalinger.forEach {
                 ctx.utbetalingStore.oppdaterStatus(
                     it.copy(
                         status = UtbetalingStatus.TIL_UTBETALING,
@@ -63,7 +63,7 @@ class UtbetalingService(
                     ),
                 )
             }
-            kafkaService.produceEvent(null, utbetalingsBatchDTO.lagMelding(tssIdent).toJson())
+            kafkaService.produceEvent(null, utbetalingsbatchDTO.lagUtbetalingsmelding(tssIdent).toJson())
         }
     }
 
@@ -81,8 +81,7 @@ class UtbetalingService(
     }
 
     suspend fun hentUtbetalingerForOppdrag(batchDato: LocalDate, opprettetFor: Duration): List<Utbetaling> {
-        return transaction(databaseContext) {
-                ctx ->
+        return transaction(databaseContext) { ctx ->
             ctx.utbetalingStore.hentUtbetalingerMedStatusBatchDatoOpprettet(
                 batchDato = batchDato,
                 opprettet = LocalDateTime.now().minusMinutes(opprettetFor.inWholeMinutes),

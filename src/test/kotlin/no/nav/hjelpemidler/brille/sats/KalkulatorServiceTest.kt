@@ -10,7 +10,6 @@ import java.time.LocalDate
 import kotlin.test.BeforeTest
 
 class KalkulatorServiceTest {
-
     private val kafkaService = mockk<KafkaService>()
     private val kalkulatorService = KalkulatorService(kafkaService)
 

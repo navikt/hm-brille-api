@@ -1,19 +1,15 @@
 package no.nav.hjelpemidler.brille.admin
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import kotliquery.Session
 import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PersonCompat
 import no.nav.hjelpemidler.brille.pgObjectOf
-import no.nav.hjelpemidler.brille.store.Store
-import no.nav.hjelpemidler.brille.store.TransactionalStore
-import no.nav.hjelpemidler.brille.store.query
-import no.nav.hjelpemidler.brille.store.queryList
-import no.nav.hjelpemidler.brille.store.update
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
+import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -35,10 +31,8 @@ interface AdminStore : Store {
     fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling>
 }
 
-class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore,
-    TransactionalStore(sessionFactory) {
-
-    override fun hentVedtakListe(fnr: String): List<VedtakListe> = session {
+class AdminStorePostgres(private val tx: JdbcOperations) : AdminStore {
+    override fun hentVedtakListe(fnr: String): List<VedtakListe> {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -59,7 +53,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             ;
         """.trimIndent()
 
-        sessionFactory().queryList(
+        return tx.list(
             sql,
             mapOf("fnr" to fnr),
         ) { row ->
@@ -77,7 +71,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         }
     }
 
-    override fun hentVedtak(vedtakId: Long): Vedtak? = session {
+    override fun hentVedtak(vedtakId: Long): Vedtak? {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -105,7 +99,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             ;
         """.trimIndent()
 
-        sessionFactory().query(
+        return tx.singleOrNull(
             sql,
             mapOf("vedtakId" to vedtakId),
         ) { row ->
@@ -144,13 +138,13 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         orgnr: String,
         butikkId: String?,
         årsaker: List<String>,
-    ) = session {
+    ) {
         @Language("PostgreSQL")
         val sql = """
             INSERT INTO avviste_krav_v1 (fnrBarn, fnrInnsender, orgnr, butikkId, begrunnelser, opprettet) VALUES (:fnrBarn, :fnrInnsender, :orgnr, :butikkId, :begrunnelser, NOW())
         """.trimIndent()
 
-        it.update(
+        tx.update(
             sql,
             mapOf(
                 "fnrBarn" to fnrBarn,
@@ -159,10 +153,10 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 "butikkId" to butikkId,
                 "begrunnelser" to pgObjectOf(årsaker),
             ),
-        ).validate()
+        ).expect(1)
     }
 
-    override fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?) = session {
+    override fun hentAvvisning(fnrBarn: String, etterVedtak: VedtakListe?): Avvisning? {
         val AND_WHERE = if (etterVedtak != null) "AND opprettet > :vedtakOpprettet" else ""
 
         @Language("PostgreSQL")
@@ -170,7 +164,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             SELECT orgnr, begrunnelser, opprettet FROM avviste_krav_v1 WHERE fnrBarn = :fnrBarn $AND_WHERE ORDER BY opprettet DESC LIMIT 1
         """.trimIndent()
 
-        sessionFactory().query(
+        return tx.singleOrNull(
             sql,
             mapOf(
                 "fnrBarn" to fnrBarn,
@@ -186,7 +180,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
         }
     }
 
-    override fun harAvvisningDeSiste7DageneFor(fnrBarn: String, orgnr: String) = session {
+    override fun harAvvisningDeSiste7DageneFor(fnrBarn: String, orgnr: String): Boolean {
         @Language("PostgreSQL")
         val sql = """
             SELECT 1 FROM avviste_krav_v1
@@ -196,19 +190,17 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
                 opprettet > :innslagspunkt
         """.trimIndent()
 
-        sessionFactory().query(
+        return tx.singleOrNull(
             sql,
             mapOf(
                 "fnrBarn" to fnrBarn,
                 "orgnr" to orgnr,
                 "innslagspunkt" to LocalDateTime.now().minusDays(7),
             ),
-        ) {
-            true
-        } ?: false
+        ) { true } ?: false
     }
 
-    override fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling> = session {
+    override fun hentUtbetalinger(utbetalingsRef: String): List<Utbetaling> {
         @Language("PostgreSQL")
         val sql = """
             SELECT
@@ -227,7 +219,7 @@ class AdminStorePostgres(private val sessionFactory: () -> Session) : AdminStore
             ;
         """.trimIndent()
 
-        sessionFactory().queryList(
+        return tx.list(
             sql,
             mapOf("utbetalingsRef" to utbetalingsRef),
         ) { row ->
