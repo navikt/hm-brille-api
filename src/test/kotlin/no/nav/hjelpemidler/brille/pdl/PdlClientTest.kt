@@ -2,11 +2,11 @@ package no.nav.hjelpemidler.brille.pdl
 
 import com.expediagroup.graphql.client.jackson.types.JacksonGraphQLResponse
 import com.fasterxml.jackson.module.kotlin.readValue
-import io.kotest.common.runBlocking
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.headersOf
+import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
@@ -20,29 +20,29 @@ import java.util.UUID
 import kotlin.test.Test
 import kotlin.time.Duration.Companion.hours
 
-internal class PdlClientTest {
+class PdlClientTest {
     @Test
-    internal fun `happy case`() = test("/mock/pdl.json") { client ->
+    fun `happy case`() = test("/mock/pdl.json") { client ->
         val oppslag = client.hentPerson("07121410995")
         oppslag.shouldNotBeNull()
     }
 
     @Test
-    internal fun `not found`() = test("/mock/pdl_not_found.json") { client ->
+    fun `not found`() = test("/mock/pdl_not_found.json") { client ->
         assertThrows<PdlNotFoundException> {
             client.hentPerson("07121410995")
         }
     }
 
     @Test
-    internal fun `bad request`() = test("/mock/pdl_bad_request.json") { client ->
+    fun `bad request`() = test("/mock/pdl_bad_request.json") { client ->
         assertThrows<PdlBadRequestException> {
             client.hentPerson("07121410995")
         }
     }
 
     @Test
-    internal fun `person har adressebeskyttelse`() = test("/mock/pdl_har_adressebeskyttelse.json") { client ->
+    fun `person har adressebeskyttelse`() = test("/mock/pdl_har_adressebeskyttelse.json") { client ->
         assertThrows<PdlHarAdressebeskyttelseException> {
             client.hentPerson("07121410995")
         }

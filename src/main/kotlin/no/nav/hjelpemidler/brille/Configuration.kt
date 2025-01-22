@@ -198,7 +198,11 @@ object Configuration {
                 LocalDateTime.of(now.year, now.month, medlemskapBarnExpiryDayOfMonth, 0, 0)
             } else {
                 val mo = (now.month.value % 12) + 1 // Advance by 1, wrap around to january
-                val yr = if (now.month.value < mo) { now.year } else { now.year + 1 }
+                val yr = if (now.month.value < mo) {
+                    now.year
+                } else {
+                    now.year + 1
+                }
                 LocalDateTime.of(yr, mo, medlemskapBarnExpiryDayOfMonth, 0, 0)
             }
             now.until(dt, ChronoUnit.SECONDS)
@@ -218,11 +222,15 @@ object Configuration {
     )
 
     enum class Profile {
-        LOCAL, DEV, PROD
+        LOCAL,
+        DEV,
+        PROD,
     }
 
     enum class Cluster {
-        `PROD-GCP`, `DEV-GCP`, `LOCAL`
+        `PROD-GCP`,
+        `DEV-GCP`,
+        `LOCAL`,
     }
 
     val GRUPPE_TEAMDIGIHOT by EnvironmentVariable

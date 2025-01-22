@@ -16,7 +16,7 @@ import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.SignedJWT
 import no.nav.hjelpemidler.brille.tilgang.AzureAdGruppe
 import no.nav.hjelpemidler.brille.tilgang.AzureAdRolle
-import no.nav.hjelpemidler.http.openid.AzureADEnvironmentVariable
+import no.nav.hjelpemidler.configuration.EntraIDEnvironmentVariable
 import java.security.interfaces.RSAPrivateKey
 import java.util.Date
 import java.util.UUID
@@ -43,8 +43,8 @@ private val testAlgorithm: Algorithm =
 
 fun verifyToken(token: JWT, block: Verification.() -> Unit = {}): DecodedJWT =
     Jwt.require(testAlgorithm)
-        .withIssuer(AzureADEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER)
-        .withAudience(AzureADEnvironmentVariable.AZURE_APP_CLIENT_ID)
+        .withIssuer(EntraIDEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER)
+        .withAudience(EntraIDEnvironmentVariable.AZURE_APP_CLIENT_ID)
         .apply(block)
         .build()
         .verify(token.serialize())
@@ -61,9 +61,9 @@ fun JWTClaimsSet.toToken(): JWT {
 
 fun createToken(block: JWTClaimsSet.Builder.() -> Unit = {}): JWT =
     JWTClaimsSet.Builder()
-        .audience(AzureADEnvironmentVariable.AZURE_APP_CLIENT_ID)
+        .audience(EntraIDEnvironmentVariable.AZURE_APP_CLIENT_ID)
         .issueTime(Date())
-        .issuer(AzureADEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER)
+        .issuer(EntraIDEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER)
         .claim("oid", UUID.randomUUID())
         .apply(block)
         .build()

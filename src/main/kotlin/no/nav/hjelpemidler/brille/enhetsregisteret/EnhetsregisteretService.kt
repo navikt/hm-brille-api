@@ -45,7 +45,9 @@ class EnhetsregisteretService(
         val manglendeEnheter = orgnre.filter { !enheter.containsKey(it) }.let { mangler ->
             if (mangler.isNotEmpty()) {
                 ", men ${mangler.count()} enheter ble ikke funnet og blir derfor slått opp i enhetsregisterets api. Disse er: $mangler"
-            } else { "" }
+            } else {
+                ""
+            }
         }
         log.info("Hentet ${enheter.count()} enheter fra enhetsregister-mirror$manglendeEnheter")
 

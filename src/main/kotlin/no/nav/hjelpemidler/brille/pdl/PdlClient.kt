@@ -37,7 +37,7 @@ class PdlClient(
     private val client = GraphQLKtorClient(
         url = URL(baseUrl),
         httpClient = HttpClient(engine) {
-            azureAD(scope = props.scope) {
+            azureAD(scope = props.scope, engine = engine) {
                 cache(leeway = 10.seconds)
             }
             defaultRequest {

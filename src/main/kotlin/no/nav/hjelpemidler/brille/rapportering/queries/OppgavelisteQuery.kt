@@ -74,12 +74,18 @@ fun kravlinjeQuery(
         ), grupperte_resultater_pagination AS (
             -- Paginer resultatene
             SELECT batch_id, utbetalingsdato, vedtak_ids, $COLUMN_LABEL_TOTAL FROM grupperte_resultater
-            ${if (paginert) { "LIMIT :limit OFFSET :offset" } else { "" }}
+            ${if (paginert) {
+        "LIMIT :limit OFFSET :offset"
+    } else {
+        ""
+    }}
         )
         -- Ekspander de paginerte resultatene igjen til alle relevante vedtak
         SELECT * ${if (!referanseFilter.isNullOrBlank()) {
         ", (SELECT json_agg(ak) FROM alle_vedtak ak WHERE ak.batch_id IS NOT NULL AND ak.batch_id = v.batch_id) AS potensielt_bortfiltrerte_krav"
-    } else { ", NULL AS potensielt_bortfiltrerte_krav" }}
+    } else {
+        ", NULL AS potensielt_bortfiltrerte_krav"
+    }}
         FROM grupperte_resultater_pagination grp
         LEFT JOIN alle_vedtak_sok_filtrert v ON v.id = ANY(grp.vedtak_ids)
     """
