@@ -16,7 +16,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.nare.evaluering.Evalueringer
 import org.junit.jupiter.api.Test
-import org.postgresql.util.PSQLException
+import java.sql.SQLException
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -128,7 +128,7 @@ class UtbetalingStorePostgresTest : AbstractStoreTest() {
             )
             utbetalinger10MinSiden.size shouldBe 0
 
-            val duplicateException = shouldThrow<PSQLException> {
+            val duplicateException = shouldThrow<SQLException> {
                 utbetalingStore.lagreUtbetalingsbatch(batchRecord)
             }
             duplicateException.message shouldContain "duplicate key"

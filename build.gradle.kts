@@ -31,13 +31,6 @@ dependencies {
     implementation(libs.micrometer.registry.prometheus)
     implementation("com.github.navikt:hm-rapids-and-rivers-v2-core:202410290928")
 
-    // Database
-    implementation(libs.hikaricp)
-    implementation(libs.postgresql)
-    implementation(libs.kotliquery)
-    implementation(libs.flyway.core)
-    runtimeOnly(libs.flyway.database.postgresql)
-
     // Unleash
     implementation(libs.unleash)
 
@@ -61,20 +54,6 @@ dependencies {
 
     // Redis
     implementation(libs.jedis)
-
-    // Testing
-    testImplementation(libs.junit.jupiter.params)
-    testImplementation(libs.kotest.assertions.core)
-    testImplementation(libs.kotlin.test.junit5)
-    testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.mockk)
-    testImplementation(libs.nimbus.jose.jwt)
-    testImplementation(libs.testcontainers.postgresql)
-    testImplementation(libs.hotlibs.database) {
-        capabilities {
-            requireCapability("no.nav.hjelpemidler:database-testcontainers")
-        }
-    }
 }
 
 spotless {
@@ -97,8 +76,24 @@ spotless {
 
 java { toolchain { languageVersion.set(JavaLanguageVersion.of(21)) } }
 
-tasks.test {
-    useJUnitPlatform()
+@Suppress("UnstableApiUsage")
+testing {
+    suites {
+        val test by getting(JvmTestSuite::class) {
+            useKotlinTest(libs.versions.kotlin.asProvider())
+            dependencies {
+                implementation(libs.hotlibs.test)
+                implementation(libs.kotest.assertions.json)
+                implementation(libs.ktor.server.test.host)
+                implementation(libs.nimbus.jose.jwt)
+                implementation(libs.hotlibs.database) {
+                    capabilities {
+                        requireCapability("no.nav.hjelpemidler:database-testcontainers")
+                    }
+                }
+            }
+        }
+    }
 }
 
 tasks.compileKotlin {
