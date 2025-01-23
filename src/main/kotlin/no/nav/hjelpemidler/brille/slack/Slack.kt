@@ -1,14 +1,14 @@
 package no.nav.hjelpemidler.brille.slack
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
-import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
-private val log = LoggerFactory.getLogger("PostToSlack")
+private val log = KotlinLogging.logger {}
 
 object Slack {
     private val username = "hm-brille-api"
@@ -37,7 +37,7 @@ object Slack {
                 .build()
             client.send(request, HttpResponse.BodyHandlers.ofString())
         } catch (e: Exception) {
-            log.warn("Posting av varsel til slack feilet.", e)
+            log.warn(e) { "Posting av varsel til slack feilet." }
         }
     }
 }

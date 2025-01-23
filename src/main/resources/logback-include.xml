@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<included>
+    <appender name="auditLoggerAppender" class="com.papertrailapp.logback.Syslog4jAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%m%n%xEx</pattern>
+        </layout>
+        <syslogConfig class="org.productivity.java.syslog4j.impl.net.tcp.TCPNetSyslogConfig">
+            <host>audit.nais</host>
+            <port>6514</port>
+            <ident>hm_brille_admin_audit</ident>
+            <maxMessageLength>128000</maxMessageLength>
+        </syslogConfig>
+    </appender>
+
+    <logger level="DEBUG" name="auditLogger" additivity="false">
+        <appender-ref ref="auditLoggerAppender" />
+    </logger>
+
+    <logger name="no.nav.hjelpemidler.brille.medlemskap" level="DEBUG" />
+    <logger name="no.nav.hjelpemidler.brille.syfohelsenettproxy" level="DEBUG" />
+    <logger name="no.nav.hjelpemidler.http.openid" level="DEBUG" />
+</included>

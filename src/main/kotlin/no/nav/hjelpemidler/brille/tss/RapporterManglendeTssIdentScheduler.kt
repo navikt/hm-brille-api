@@ -1,14 +1,16 @@
 package no.nav.hjelpemidler.brille.tss
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
 import no.nav.hjelpemidler.brille.slack.Slack
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
+
+private val log = KotlinLogging.logger {}
 
 class RapporterManglendeTssIdentScheduler(
     private val tssIdentService: TssIdentService,
@@ -18,13 +20,8 @@ class RapporterManglendeTssIdentScheduler(
     delay: Duration = 24.hours,
     onlyWorkHours: Boolean = false,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
-
-    companion object {
-        private val LOG = LoggerFactory.getLogger(RapporterManglendeTssIdentScheduler::class.java)
-    }
-
     override suspend fun action() {
-        LOG.info("RapporterManglendeTssIdentScheduler: ser etter orgnr som mangler tss-ident")
+        log.info { "RapporterManglendeTssIdentScheduler: ser etter orgnr som mangler tss-ident" }
 
         val orgnre = tssIdentService.hentAlleOrgnrSomManglerTssIdent()
         if (orgnre.isEmpty()) return

@@ -1,12 +1,12 @@
 package no.nav.hjelpemidler.brille
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
-import mu.KotlinLogging
+import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.logging.secureLog
 import java.util.UUID
-
-private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>, fnrDetGjelder: String? = null) {
     val defaultParams: Map<String, String?> = mapOf(
@@ -22,13 +22,19 @@ fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>,
 
     val logMessage =
         "Admin api audit: $tag: ${jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allParams)}"
-    sikkerlogg.info(logMessage)
+    secureLog.info { logMessage }
 
     adminAuditLog(request.httpMethod.value, request.uri, params, extractNavIdent(), fnrDetGjelder)
 }
 
 private val adminAuditLogger = KotlinLogging.logger("auditLogger")
-private fun adminAuditLog(method: String, uri: String, params: Map<String, String?>, navIdent: String?, fnrDetGjelder: String?) {
+private fun adminAuditLog(
+    method: String,
+    uri: String,
+    params: Map<String, String?>,
+    navIdent: String?,
+    fnrDetGjelder: String?,
+) {
     val message = listOf(
         "CEF:0",
         "Hjelpemiddel",
@@ -57,9 +63,9 @@ private fun adminAuditLog(method: String, uri: String, params: Map<String, Strin
             }.joinToString(" "),
     ).joinToString("|")
 
-    if (Configuration.dev) {
-        sikkerlogg.info("adminAuditLog log message: $message")
+    if (Environment.current.isDev) {
+        secureLog.info { "adminAuditLog log message: $message" }
     }
 
-    adminAuditLogger.info(message)
+    adminAuditLogger.info { message }
 }

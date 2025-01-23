@@ -1,12 +1,12 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.hotsak.HotsakVedtak
 import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.jsonMapper

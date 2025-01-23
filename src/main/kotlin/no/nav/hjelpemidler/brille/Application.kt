@@ -3,6 +3,7 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
@@ -20,7 +21,6 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
-import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.admin.AdminService
@@ -88,14 +88,14 @@ fun main(args: Array<String>) = io.ktor.server.netty.EngineMain.main(args)
 
 fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
     fun onStopPreparing() {
-        log.info("Application is shutting down, stopping rapid app aswell!")
+        log.info { "Application is shutting down, stopping rapid app aswell!" }
         kafkaRapid.stop()
     }
     monitor.subscribe(ApplicationStopPreparing) { onStopPreparing() }
 }
 
 fun Application.module() {
-    log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
+    log.info { "hm-brille-api starting up (git_sha=${Configuration.gitCommit})" }
     configure()
     setupRoutes()
 }

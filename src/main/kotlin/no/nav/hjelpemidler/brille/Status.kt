@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -10,7 +11,6 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.avtale.AvtaleManglerTilgangException
 
 private val log = KotlinLogging.logger {}

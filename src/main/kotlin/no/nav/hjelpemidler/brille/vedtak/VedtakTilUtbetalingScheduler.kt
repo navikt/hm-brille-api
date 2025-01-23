@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Gauge
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -8,10 +9,11 @@ import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
 import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
-import org.slf4j.LoggerFactory
 import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+
+private val log = KotlinLogging.logger {}
 
 class VedtakTilUtbetalingScheduler(
     private val vedtakService: VedtakService,
@@ -30,16 +32,12 @@ class VedtakTilUtbetalingScheduler(
             .register(metricsConfig.registry)
     }
 
-    companion object {
-        private val LOG = LoggerFactory.getLogger(VedtakTilUtbetalingScheduler::class.java)
-    }
-
     override suspend fun action() {
         vedtakKo = vedtakService.hentAntallVedtakIKø().toDouble()
 
         val vedtakList =
             vedtakService.hentVedtakForUtbetaling(opprettet = LocalDate.now().minusDays(dager).atStartOfDay())
-        LOG.info("fant ${vedtakList.size} vedtak for utbetaling")
+        log.info { "fant ${vedtakList.size} vedtak for utbetaling" }
 
         val enhetsregisterCache = mutableMapOf<String, Boolean>()
         vedtakList.forEach {

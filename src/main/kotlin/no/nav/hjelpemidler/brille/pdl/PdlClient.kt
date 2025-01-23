@@ -10,7 +10,6 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
 import io.ktor.client.request.options
 import io.ktor.http.HttpHeaders
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.StubEngine
@@ -25,8 +24,6 @@ import java.net.URI
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
-private val log = KotlinLogging.logger { }
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 private val behandlingsnummer = "B601,B110"
 
 class PdlClient(

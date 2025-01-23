@@ -3,21 +3,21 @@ package no.nav.hjelpemidler.brille.tilgang
 import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.exceptions.JWTDecodeException
 import com.auth0.jwt.interfaces.Verification
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.configuration.EntraIDEnvironmentVariable
 import no.nav.hjelpemidler.configuration.TokenXEnvironmentVariable
+import no.nav.hjelpemidler.logging.secureWarn
 import java.net.URI
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 private val log = KotlinLogging.logger { }
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 fun ApplicationCall.innloggetBruker(): InnloggetBruker =
     principal() ?: InnloggetBruker.Ingen
@@ -91,7 +91,7 @@ fun AuthenticationConfig.azureAdProvider(
                     )
 
                 else -> {
-                    sikkerLog.warn {
+                    log.secureWarn {
                         "Validering av Azure AD-bruker feilet, objectId: $objectId, roller: $roller, grupper: $grupper"
                     }
                     null

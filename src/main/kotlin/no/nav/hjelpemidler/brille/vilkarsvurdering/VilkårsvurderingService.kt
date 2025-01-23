@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient

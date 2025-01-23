@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
@@ -18,7 +19,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentLength
 import io.ktor.utils.io.jvm.javaio.toInputStream
 import kotlinx.coroutines.runBlocking
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
@@ -50,14 +50,18 @@ class EnhetsregisteretClient(
     }
 
     suspend fun hentEnhet(orgnr: String): Organisasjonsenhet? {
-        return runCatching { httpClient.get("$baseUrl/enhetsregisteret/api/enheter/$orgnr").body<Organisasjonsenhet>() }.getOrElse {
-            runCatching { httpClient.get("$baseUrl/enhetsregisteret/api/underenheter/$orgnr").body<Organisasjonsenhet>() }.getOrNull()
+        return runCatching {
+            httpClient.get("$baseUrl/enhetsregisteret/api/enheter/$orgnr").body<Organisasjonsenhet>()
+        }.getOrElse {
+            runCatching {
+                httpClient.get("$baseUrl/enhetsregisteret/api/underenheter/$orgnr").body<Organisasjonsenhet>()
+            }.getOrNull()
         }
     }
 
     suspend fun oppdaterMirror() {
         var c = 0
-        log.info("Oppdater mirror - Henter hoved-/underenheter:")
+        log.info { "Oppdater mirror - Henter hoved-/underenheter:" }
         val elapsed = measureTimeMillis {
             transaction(databaseContext) {
                 it.enhetsregisteretStore.oppdaterEnheter { lagre ->
@@ -70,7 +74,7 @@ class EnhetsregisteretClient(
                             )
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhetChunk ->
-                                log.info("Lagrer batch av ${enhetChunk.count()} enheter")
+                                log.info { "Lagrer batch av ${enhetChunk.count()} enheter" }
                                 lagre(EnhetType.HOVEDENHET, enhetChunk)
                                 c += enhetChunk.count()
                             }
@@ -86,7 +90,7 @@ class EnhetsregisteretClient(
                             )
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhetChunk ->
-                                log.info("Lagrer batch av ${underenhetChunk.count()} underenheter")
+                                log.info { "Lagrer batch av ${underenhetChunk.count()} underenheter" }
                                 lagre(EnhetType.UNDERENHET, underenhetChunk)
                                 c += underenhetChunk.count()
                             }
@@ -95,13 +99,13 @@ class EnhetsregisteretClient(
                 }
             }
         }
-        log.info("Oppdater mirror - Ferdig med å lagre $c hoved-/underenheter - $elapsed ms brukt")
+        log.info { "Oppdater mirror - Ferdig med å lagre $c hoved-/underenheter - $elapsed ms brukt" }
     }
 
     private suspend inline fun <reified T> strømOgBlåsOpp(httpResponse: HttpResponse, block: (enhet: List<T>) -> Unit) {
         val contentLength = (httpResponse.contentLength() ?: -1)
         val contentLengthMB = contentLength / 1024 / 1024
-        log.info("Komprimert filstørrelse: $contentLengthMB MiB ($contentLength bytes)")
+        log.info { "Komprimert filstørrelse: $contentLengthMB MiB ($contentLength bytes)" }
 
         val gunzipStream = GZIPInputStream(httpResponse.bodyAsChannel().toInputStream())
         mapper.factory.createParser(gunzipStream).use { jsonParser ->

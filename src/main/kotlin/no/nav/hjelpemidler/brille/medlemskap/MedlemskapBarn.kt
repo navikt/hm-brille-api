@@ -2,7 +2,7 @@ package no.nav.hjelpemidler.brille.medlemskap
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -13,11 +13,11 @@ import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.DeltBosted
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.tid.mangler
 import no.nav.hjelpemidler.brille.writePrettyString
+import no.nav.hjelpemidler.logging.secureInfo
 import org.slf4j.MDC
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 data class MedlemskapResultat(
     val resultat: MedlemskapResultatResultat,
@@ -58,7 +58,7 @@ class MedlemskapBarn(
     private val kafkaService: KafkaService,
 ) {
     suspend fun sjekkMedlemskapBarn(fnrBarn: String, bestillingsdato: LocalDate): MedlemskapResultat {
-        log.info("Sjekker medlemskap for barn")
+        log.info { "Sjekker medlemskap for barn" }
 
         if (bestillingsdato.mangler()) {
             log.info { "Ukjent bestillingsdato, returnerer negativt medlemskapsresultat" }
@@ -82,15 +82,15 @@ class MedlemskapBarn(
         // Sjekk om vi nylig har gjort dette oppslaget (ikke i dev. da medlemskapBarn koden er i aktiv utvikling)
         val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsdato)
         if (medlemskapBarnCache != null) {
-            log.info("Resultat for medlemskapssjekk for barnet funnet i redis-cache")
-            sikkerLog.info("Funnet $fnrBarn i cache, returner: $medlemskapBarnCache")
+            log.info { "Resultat for medlemskapssjekk for barnet funnet i redis-cache" }
+            log.secureInfo { "Funnet $fnrBarn i cache, returner: $medlemskapBarnCache" }
             return medlemskapBarnCache
         }
 
         // Slå opp pdl informasjon om barnet
         val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
         if (pdlResponse.harAdressebeskyttelse()) {
-            sikkerLog.info {
+            log.secureInfo {
                 "Barn har adressebeskyttelse, returnerer positivt medlemskapsresultat"
             }
             val medlemskapResultat = MedlemskapResultat(
@@ -121,7 +121,7 @@ class MedlemskapBarn(
             // feks. fortsatt være utenlandskAdresse/ukjentBosted). Vi kan derfor ikke sjekke medlemskap i noe
             // register eller anta at man har medlemskap basert på at man har en norsk folkereg. adresse. Derfor
             // stopper vi opp behandling tidlig her!
-            log.info("Barnet har ikke folkeregistrert adresse i Norge og vi antar derfor at hen ikke er medlem i folketrygden")
+            log.info { "Barnet har ikke folkeregistrert adresse i Norge og vi antar derfor at hen ikke er medlem i folketrygden" }
             val medlemskapResultat = MedlemskapResultat(MedlemskapResultatResultat.NEI, saksgrunnlag)
             redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
             kafkaService.medlemskapFolketrygdenAvvist(fnrBarn)
@@ -168,7 +168,7 @@ class MedlemskapBarn(
                 )
                 redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultatLovMeMedRettSaksgrunnlag)
                 kafkaService.medlemskapFolketrygdenBevist(fnrBarn)
-                log.info("Barnets medlemskap verifisert igjennom LovMe-tjenesten (verges-/forelders medlemskap og bolig på samme adresse)")
+                log.info { "Barnets medlemskap verifisert igjennom LovMe-tjenesten (verges-/forelders medlemskap og bolig på samme adresse)" }
                 return medlemskapResultatLovMeMedRettSaksgrunnlag
             }
         }
@@ -183,7 +183,7 @@ class MedlemskapBarn(
             )
         redisClient.setMedlemskapBarn(fnrBarn, bestillingsdato, medlemskapResultat)
         kafkaService.medlemskapFolketrygdenAntatt(fnrBarn)
-        log.info("Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge")
+        log.info { "Barnets medlemskap er antatt pga. folkeregistrert adresse i Norge" }
         return medlemskapResultat
     }
 }
@@ -206,7 +206,7 @@ private fun sjekkFolkeregistrertAdresseINorge(
 
     try {
         if (!finnesFolkeregistrertAdresse) {
-            sikkerLog.info {
+            log.secureInfo {
                 "Fant ingen folkeregistrert adresse for barn:" +
                     " bostedsadresser=${jsonMapper.writePrettyString(bostedsadresser)} " +
                     " deltBostedBarn=${jsonMapper.writePrettyString(deltBostedBarn)} "
@@ -234,9 +234,9 @@ private fun slåSammenAktiveBosteder(
         delteBosted.filter {
             (it.startdatoForKontrakt.isEqual(bestillingsdato) || it.startdatoForKontrakt.isBefore(bestillingsdato)) &&
                 (
-                    it.sluttdatoForKontrakt == null || it.sluttdatoForKontrakt.isEqual(bestillingsdato) || it.sluttdatoForKontrakt.isAfter(
-                        bestillingsdato,
-                    )
+                    it.sluttdatoForKontrakt == null ||
+                        it.sluttdatoForKontrakt.isEqual(bestillingsdato) ||
+                        it.sluttdatoForKontrakt.isAfter(bestillingsdato)
                     )
         }.map {
             Bostedsadresse(

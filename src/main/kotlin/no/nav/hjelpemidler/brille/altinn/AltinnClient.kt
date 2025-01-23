@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.altinn
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.defaultRequest
@@ -12,12 +13,11 @@ import io.ktor.client.statement.request
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.http.createHttpClient
+import no.nav.hjelpemidler.logging.secureInfo
 
 private val log = KotlinLogging.logger { }
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 const val ALTINN_CLIENT_MAKS_ANTALL_RESULTATER = 1000
 
@@ -46,7 +46,7 @@ class AltinnClient(props: Configuration.AltinnProperties) {
                 parameters.append("\$top", ALTINN_CLIENT_MAKS_ANTALL_RESULTATER.toString()) // Default er mindre enn 200
             }
         }
-        sikkerLog.info { "Hentet avgivere med url: ${response.request.url} (status: ${response.status})" }
+        log.secureInfo { "Hentet avgivere med url: ${response.request.url} (status: ${response.status})" }
         if (response.status == HttpStatusCode.OK) {
             return response.body() ?: emptyList()
         }
@@ -63,7 +63,7 @@ class AltinnClient(props: Configuration.AltinnProperties) {
                 parameters.append("\$filter", Avgiver.Tjeneste.FILTER)
             }
         }
-        sikkerLog.info { "Hentet rettigheter med url: ${response.request.url}" }
+        log.secureInfo { "Hentet rettigheter med url: ${response.request.url}" }
         if (response.status == HttpStatusCode.OK) {
             return response.body<HentRettigheterResponse?>()?.tilSet() ?: emptySet()
         }

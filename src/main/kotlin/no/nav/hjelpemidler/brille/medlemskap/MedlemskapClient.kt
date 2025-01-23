@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.medlemskap
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
@@ -13,7 +14,6 @@ import io.ktor.client.statement.request
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StatusCodeException
 import no.nav.hjelpemidler.http.createHttpClient
@@ -62,8 +62,11 @@ class MedlemskapClient(
                 log.warn(it) { "Klarte ikke å hente response body som string" }
                 ""
             }
-            log.error("${response.request.method.value} ${response.request.url} ga status: ${response.status}")
-            throw StatusCodeException(HttpStatusCode.InternalServerError, "Kall til medlemskap-barn ga status ${response.status}: $message")
+            log.error { "${response.request.method.value} ${response.request.url} ga status: ${response.status}" }
+            throw StatusCodeException(
+                HttpStatusCode.InternalServerError,
+                "Kall til medlemskap-barn ga status ${response.status}: $message",
+            )
         }
     }
 }

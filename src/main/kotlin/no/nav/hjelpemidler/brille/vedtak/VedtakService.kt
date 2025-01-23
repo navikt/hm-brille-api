@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
@@ -10,11 +10,11 @@ import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingException
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
+import no.nav.hjelpemidler.logging.secureInfo
 import no.nav.hjelpemidler.nare.evaluering.Resultat
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class VedtakService(
     val databaseContext: DatabaseContext,
@@ -37,7 +37,7 @@ class VedtakService(
         )
 
         if (vilkårsvurdering.utfall != Resultat.JA) {
-            sikkerLog.info {
+            log.secureInfo {
                 "Vilkårsvurderingen ga uventet resultat:\n${vilkårsvurdering.toJson()}"
             }
             if (Configuration.prod) {

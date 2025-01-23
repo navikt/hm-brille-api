@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.BruksvilkårGodtatt
 import no.nav.hjelpemidler.brille.avtale.IngåttAvtale
@@ -52,7 +52,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
 
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
-            ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
+            ?: log.info { "TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen" }
     }
 
     fun bruksvilkårGodtatt(bruksvilkårGodtatt: BruksvilkårGodtatt, organisasjonsnavn: String) {
@@ -70,7 +70,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     fun avtaleOppdatert(avtale: IngåttAvtale) {
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
-            ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
+            ?: log.info { "TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen" }
     }
 
     fun vilkårVurdert() {
@@ -237,7 +237,10 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     }
 
     fun sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager(kilde: String) {
-        opprettHendelseV2Data("hm-brille-api.avvisning.sendte.ikke.brev.pga.tidligere.brev.7dager", mapOf("kilde" to kilde))
+        opprettHendelseV2Data(
+            "hm-brille-api.avvisning.sendte.ikke.brev.pga.tidligere.brev.7dager",
+            mapOf("kilde" to kilde),
+        )
     }
 
     fun opprettHendelseV2Data(navn: String, data: Map<String, Any>) {
@@ -259,7 +262,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
                 kafkaRapid.publishWithTimeout(message, 10)
             }
         } catch (e: Exception) {
-            log.error("We got error while sending to kafka", e)
+            log.error(e) { "We got error while sending to kafka" }
             throw KafkaException("Error while sending to kafka", e)
         }
     }

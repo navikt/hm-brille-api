@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
@@ -19,7 +19,8 @@ class EnhetsregisteretService(
 
         val enhet = transaction(databaseContext) { ctx ->
             ctx.enhetsregisteretStore.hentEnhet(orgnr)
-        } ?: enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
+        }
+            ?: enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
 
         if (enhet != null) {
             log.info { "Hentet enhet/underenhet med orgnr: $orgnr fra mirror" }
@@ -49,7 +50,7 @@ class EnhetsregisteretService(
                 ""
             }
         }
-        log.info("Hentet ${enheter.count()} enheter fra enhetsregister-mirror$manglendeEnheter")
+        log.info { "Hentet ${enheter.count()} enheter fra enhetsregister-mirror$manglendeEnheter" }
 
         val enheterFraTilbakefallsLøsning = orgnre.filter { !enheter.containsKey(it) }.mapNotNull { orgnr ->
             enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
@@ -65,7 +66,7 @@ class EnhetsregisteretService(
 
         orgnre.filter { !enheter.containsKey(it) }.let { mangler ->
             if (mangler.isNotEmpty()) {
-                log.warn("Noen orgnre ble aldri funnet: $mangler")
+                log.warn { "Noen orgnre ble aldri funnet: $mangler" }
             }
         }
 
@@ -74,8 +75,9 @@ class EnhetsregisteretService(
 
     suspend fun organisasjonSlettet(orgnr: String): Boolean {
         kotlin.runCatching {
-            val org = runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
-                ?: enhetsregisteretClient.hentEnhet(orgnr)
+            val org =
+                runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
+                    ?: enhetsregisteretClient.hentEnhet(orgnr)
 
             if (org != null) {
                 return org.slettedato != null
@@ -90,8 +92,9 @@ class EnhetsregisteretService(
 
     suspend fun organisasjonSlettetNår(orgnr: String): LocalDate? {
         kotlin.runCatching {
-            val org = runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
-                ?: enhetsregisteretClient.hentEnhet(orgnr)
+            val org =
+                runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
+                    ?: enhetsregisteretClient.hentEnhet(orgnr)
 
             if (org != null) {
                 return org.slettedato
@@ -109,7 +112,11 @@ class EnhetsregisteretService(
             it.enhetsregisteretStore.sistOppdatert()
         }
 
-        if (oppdaterUansett || sistOppdatert == null || sistOppdatert.until(LocalDateTime.now(), ChronoUnit.HOURS) > 20) {
+        if (oppdaterUansett || sistOppdatert == null || sistOppdatert.until(
+                LocalDateTime.now(),
+                ChronoUnit.HOURS,
+            ) > 20
+        ) {
             enhetsregisteretClient.oppdaterMirror()
         }
     }

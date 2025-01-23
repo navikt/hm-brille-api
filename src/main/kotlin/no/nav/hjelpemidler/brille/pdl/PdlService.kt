@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille.pdl
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.jsonMapper
 

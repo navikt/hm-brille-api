@@ -1,7 +1,7 @@
 package no.nav.hjelpemidler.brille.integrasjon
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -9,7 +9,6 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
@@ -44,12 +43,12 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.virksomhet.OrganisasjonMedBruksvilkår
 import no.nav.hjelpemidler.brille.virksomhet.enhetTilAdresseFor
+import no.nav.hjelpemidler.logging.secureInfo
 import no.nav.hjelpemidler.nare.evaluering.Resultat
 import java.math.BigDecimal
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 fun Route.integrasjonApi(
     vilkårsvurderingService: VilkårsvurderingService,
@@ -111,7 +110,7 @@ fun Route.integrasjonApi(
                 transaction(databaseContext) { ctx -> ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr) }
             val harAktivNavAvtale = virksomhet?.aktiv ?: false
             val harSignertBruksvilkår = virksomhet?.bruksvilkår ?: false
-            log.info("Søker etter $orgnr har aktiv NavAvtale: $harAktivNavAvtale")
+            log.info { "Søker etter $orgnr har aktiv NavAvtale: $harAktivNavAvtale" }
             val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
 
@@ -267,7 +266,7 @@ fun Route.integrasjonApi(
                 )
 
                 if (vilkårsvurdering.utfall != Resultat.JA) {
-                    sikkerLog.info {
+                    log.secureInfo {
                         "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                     }
 
@@ -293,7 +292,7 @@ fun Route.integrasjonApi(
 
                     // Journalfør avvisningsbrev i joark
                     if (haddeAvvisningsbrevFraFør) {
-                        log.info("Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene")
+                        log.info { "Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene" }
                         kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("integrasjon")
                     } else {
                         val årsakerIdentifikator = vilkårsvurdering.evaluering.barn

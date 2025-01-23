@@ -1,13 +1,15 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
-import org.slf4j.LoggerFactory
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+
+private val log = KotlinLogging.logger {}
 
 class RekjorUtbetalingerScheduler(
     private val utbetalingService: UtbetalingService,
@@ -17,21 +19,16 @@ class RekjorUtbetalingerScheduler(
     delay: Duration = 5.minutes,
     onlyWorkHours: Boolean = true,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
-
-    companion object {
-        private val LOG = LoggerFactory.getLogger(RekjorUtbetalingerScheduler::class.java)
-    }
-
     override suspend fun action() {
         val utbetalinger =
             utbetalingService.hentUtbetalingerSomSkalRekjøres()
-        LOG.info("Fant ${utbetalinger.size} utbetalinger som skal rekjøres.")
+        log.info { "Fant ${utbetalinger.size} utbetalinger som skal rekjøres." }
         if (utbetalinger.isNotEmpty()) {
             val utbetalingsBatchList = utbetalinger.toUtbetalingBatchList()
-            LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
+            log.info { "fordelt på ${utbetalingsBatchList.size} batch" }
             utbetalingsBatchList.forEach {
                 if (it.utbetalinger.size > 100) {
-                    LOG.warn("En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!")
+                    log.warn { "En batch ${it.batchId} har ${it.utbetalinger.size}} som er mer enn 100 utbetalinger!" }
                 }
                 val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
                     ?: throw RuntimeException("ingen tss ident tilgjengelig for batch (skal ikke skje)")

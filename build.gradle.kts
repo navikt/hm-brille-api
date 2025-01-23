@@ -19,8 +19,12 @@ application {
 dependencies {
     // hotlibs
     implementation(platform(libs.hotlibs.platform))
+
     implementation(libs.hotlibs.http)
+    implementation(libs.hotlibs.logging)
     implementation(libs.hotlibs.nare)
+    implementation(libs.hotlibs.serialization)
+
     implementation(libs.hotlibs.database) {
         capabilities {
             requireCapability("no.nav.hjelpemidler:database-postgresql")
@@ -48,8 +52,6 @@ dependencies {
     implementation(libs.bundles.jackson)
 
     // Logging
-    implementation(libs.kotlin.logging.deprecated)
-    runtimeOnly(libs.bundles.logging.runtime)
     runtimeOnly(libs.logback.syslog4j) // auditlog https://github.com/navikt/naudit
 
     // Redis
@@ -86,6 +88,7 @@ testing {
                 implementation(libs.kotest.assertions.json)
                 implementation(libs.ktor.server.test.host)
                 implementation(libs.nimbus.jose.jwt)
+
                 implementation(libs.hotlibs.database) {
                     capabilities {
                         requireCapability("no.nav.hjelpemidler:database-testcontainers")

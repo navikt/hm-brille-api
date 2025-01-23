@@ -1,7 +1,7 @@
 package no.nav.hjelpemidler.brille
 
 import com.zaxxer.hikari.HikariDataSource
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.flywaydb.core.Flyway
 import java.net.Socket
 import java.time.LocalDateTime
@@ -47,7 +47,7 @@ class DatabaseConfiguration(private val props: Configuration.DatabaseProperties)
                 Socket(props.databaseHost, props.databasePort.toInt())
                 return true
             } catch (e: Exception) {
-                log.info("Databasen er ikke tilgjengelig ennå, venter...")
+                log.info { "Databasen er ikke tilgjengelig ennå, venter..." }
                 Thread.sleep(2.seconds.inWholeMilliseconds)
             }
             if (LocalDateTime.now().isAfter(deadline)) break
