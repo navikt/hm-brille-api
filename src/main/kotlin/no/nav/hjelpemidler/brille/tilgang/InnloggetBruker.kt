@@ -1,9 +1,8 @@
 package no.nav.hjelpemidler.brille.tilgang
 
-import io.ktor.server.auth.Principal
 import java.util.UUID
 
-sealed interface InnloggetBruker : Principal {
+sealed interface InnloggetBruker {
     fun kanBehandlePersonerMedAdressebeskyttelse(): Boolean = false
 
     sealed interface TokenX : InnloggetBruker {

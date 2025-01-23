@@ -12,7 +12,7 @@ import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.configuration.EntraIDEnvironmentVariable
 import no.nav.hjelpemidler.configuration.TokenXEnvironmentVariable
-import java.net.URL
+import java.net.URI
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
@@ -27,19 +27,21 @@ private fun JWTPrincipal.mustGet(name: String): String =
         "'$name' mangler i token"
     }
 
-private val jwkProviderTokenX = JwkProviderBuilder(URL(TokenXEnvironmentVariable.TOKEN_X_JWKS_URI))
-    // cache up to 1000 JWKs for 24 hours
-    .cached(1000, 24, TimeUnit.HOURS)
-    // if not cached, only allow max 100 different keys per minute to be fetched from external provider
-    .rateLimited(100, 1, TimeUnit.MINUTES)
-    .build()
+private val jwkProviderTokenX =
+    JwkProviderBuilder(URI(TokenXEnvironmentVariable.TOKEN_X_JWKS_URI).toURL())
+        // cache up to 1000 JWKs for 24 hours
+        .cached(1000, 24, TimeUnit.HOURS)
+        // if not cached, only allow max 100 different keys per minute to be fetched from external provider
+        .rateLimited(100, 1, TimeUnit.MINUTES)
+        .build()
 
-private val jwkProviderAzureAd = JwkProviderBuilder(URL(EntraIDEnvironmentVariable.AZURE_OPENID_CONFIG_JWKS_URI))
-    // cache up to 1000 JWKs for 24 hours
-    .cached(1000, 24, TimeUnit.HOURS)
-    // if not cached, only allow max 100 different keys per minute to be fetched from external provider
-    .rateLimited(100, 1, TimeUnit.MINUTES)
-    .build()
+private val jwkProviderAzureAd =
+    JwkProviderBuilder(URI(EntraIDEnvironmentVariable.AZURE_OPENID_CONFIG_JWKS_URI).toURL())
+        // cache up to 1000 JWKs for 24 hours
+        .cached(1000, 24, TimeUnit.HOURS)
+        // if not cached, only allow max 100 different keys per minute to be fetched from external provider
+        .rateLimited(100, 1, TimeUnit.MINUTES)
+        .build()
 
 fun AuthenticationConfig.tokenXProvider(name: String) {
     jwt(name) {

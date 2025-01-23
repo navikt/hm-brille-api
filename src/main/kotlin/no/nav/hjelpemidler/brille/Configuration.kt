@@ -7,10 +7,10 @@ import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import no.nav.hjelpemidler.configuration.EnvironmentVariable
+import no.nav.hjelpemidler.localization.LOCALE_NORWEGIAN_BOKMÅL
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.Locale
 
 object Configuration {
     private val defaultProperties = ConfigurationMap(
@@ -111,7 +111,8 @@ object Configuration {
             else -> localProperties
         }
 
-    private val config = systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
+    private val config =
+        systemProperties() overriding EnvironmentVariables() overriding resourceProperties overriding defaultProperties
 
     val profile: Profile = this["application.profile"].let { Profile.valueOf(it) }
     val cluster: Cluster = this["application.cluster"].let { Cluster.valueOf(it) }
@@ -121,7 +122,7 @@ object Configuration {
 
     val gitCommit: String = getOrNull("GIT_COMMIT") ?: "unknown"
 
-    val locale = Locale("nb")
+    val locale = LOCALE_NORWEGIAN_BOKMÅL
 
     val dbProperties = DatabaseProperties()
     val kafkaProperties = KafkaProperties()

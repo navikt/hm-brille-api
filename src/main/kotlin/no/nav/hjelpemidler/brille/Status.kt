@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille
 
-import com.fasterxml.jackson.module.kotlin.MissingKotlinParameterException
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -25,7 +25,7 @@ fun Application.configureStatusPages() {
             log.warn { e.message }
             call.respond(HttpStatusCode.Forbidden, e.message ?: "")
         }
-        exception<MissingKotlinParameterException> { call, _ ->
+        exception<MismatchedInputException> { call, _ ->
             call.respond(HttpStatusCode.BadRequest)
         }
         exception<PersonFinnesIkkeIHPRException> { call, _ ->

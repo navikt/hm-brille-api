@@ -21,7 +21,7 @@ import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
 import no.nav.hjelpemidler.brille.tilgang.innloggetBruker
 import no.nav.hjelpemidler.http.openid.azureAD
 import org.slf4j.MDC
-import java.net.URL
+import java.net.URI
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
@@ -35,7 +35,7 @@ class PdlClient(
 ) {
     private val baseUrl = props.baseUrl
     private val client = GraphQLKtorClient(
-        url = URL(baseUrl),
+        url = URI(baseUrl).toURL(),
         httpClient = HttpClient(engine) {
             azureAD(scope = props.scope, engine = engine) {
                 cache(leeway = 10.seconds)

@@ -91,7 +91,7 @@ fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
         log.info("Application is shutting down, stopping rapid app aswell!")
         kafkaRapid.stop()
     }
-    environment.monitor.subscribe(ApplicationStopPreparing) { onStopPreparing() }
+    monitor.subscribe(ApplicationStopPreparing) { onStopPreparing() }
 }
 
 fun Application.module() {
