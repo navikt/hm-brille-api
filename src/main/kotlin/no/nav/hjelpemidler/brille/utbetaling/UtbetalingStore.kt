@@ -1,9 +1,10 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
 import kotliquery.Row
-import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.database.JdbcOperations
 import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.enum
+import no.nav.hjelpemidler.database.json
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
@@ -82,7 +83,7 @@ class UtbetalingStorePostgres(private val tx: JdbcOperations) : UtbetalingStore 
         opprettet = row.localDateTime("opprettet"),
         oppdatert = row.localDateTime("oppdatert"),
         vedtak = row.json("vedtak"),
-        status = UtbetalingStatus.valueOf(row.string("status")),
+        status = row.enum("status"),
         batchDato = row.localDate("batch_dato"),
         batchId = row.string("batch_id"),
     )

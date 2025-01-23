@@ -1,8 +1,8 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
-import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.database.JdbcOperations
 import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.json
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
