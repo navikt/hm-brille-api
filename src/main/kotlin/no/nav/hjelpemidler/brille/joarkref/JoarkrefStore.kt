@@ -1,9 +1,9 @@
 package no.nav.hjelpemidler.brille.joarkref
 
 import no.nav.hjelpemidler.brille.jsonOrNull
-import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.database.JdbcOperations
 import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 
 interface JoarkrefStore : Store {
@@ -25,7 +25,7 @@ class JoarkrefStorePostgres(private val tx: JdbcOperations) : JoarkrefStore {
             mapOf(
                 "vedtakId" to vedtakId,
                 "joarkRef" to joarkRef,
-                "dokumentIder" to pgObjectOf(dokumentIder),
+                "dokumentIder" to pgJsonbOf(dokumentIder),
             ),
         )
     }

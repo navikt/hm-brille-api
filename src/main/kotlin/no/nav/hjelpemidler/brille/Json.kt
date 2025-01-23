@@ -1,21 +1,12 @@
 package no.nav.hjelpemidler.brille
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.Row
-import org.postgresql.util.PGobject
 
-val jsonMapper: JsonMapper = jacksonMapperBuilder()
-    .addModule(JavaTimeModule())
-    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-    .build()
+val jsonMapper: ObjectMapper = no.nav.hjelpemidler.serialization.jackson.jsonMapper
 
-fun JsonMapper.writePrettyString(value: Any?): String = writerWithDefaultPrettyPrinter().writeValueAsString(value)
+fun ObjectMapper.writePrettyString(value: Any?): String = writerWithDefaultPrettyPrinter().writeValueAsString(value)
 
 inline fun <reified T> Row.json(columnLabel: String): T = string(columnLabel).let {
     jsonMapper.readValue(it)
@@ -23,9 +14,4 @@ inline fun <reified T> Row.json(columnLabel: String): T = string(columnLabel).le
 
 inline fun <reified T> Row.jsonOrNull(columnLabel: String): T? = stringOrNull(columnLabel)?.let {
     jsonMapper.readValue(it)
-}
-
-fun <T> pgObjectOf(value: T): PGobject = PGobject().apply {
-    type = "jsonb"
-    setValue(jsonMapper.writeValueAsString(value))
 }

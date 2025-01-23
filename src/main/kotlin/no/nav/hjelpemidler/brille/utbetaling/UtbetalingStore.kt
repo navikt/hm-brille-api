@@ -2,9 +2,9 @@ package no.nav.hjelpemidler.brille.utbetaling
 
 import kotliquery.Row
 import no.nav.hjelpemidler.brille.json
-import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.database.JdbcOperations
 import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -122,7 +122,7 @@ class UtbetalingStorePostgres(private val tx: JdbcOperations) : UtbetalingStore 
                 "utbetalingsdato" to utbetaling.utbetalingsdato,
                 "opprettet" to utbetaling.opprettet,
                 "oppdatert" to utbetaling.oppdatert,
-                "vedtak" to pgObjectOf(utbetaling.vedtak),
+                "vedtak" to pgJsonbOf(utbetaling.vedtak),
                 "status" to utbetaling.status.name,
                 "batch_dato" to utbetaling.batchDato,
                 "batch_id" to utbetaling.batchId,

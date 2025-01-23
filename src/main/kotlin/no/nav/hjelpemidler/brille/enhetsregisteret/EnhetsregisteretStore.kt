@@ -1,9 +1,9 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
 import no.nav.hjelpemidler.brille.json
-import no.nav.hjelpemidler.brille.pgObjectOf
 import no.nav.hjelpemidler.database.JdbcOperations
 import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
@@ -60,7 +60,7 @@ class EnhetsregisteretStorePostgres(private val tx: JdbcOperations) : Enhetsregi
                         "orgnr" to enhet.orgnr,
                         "opprettet" to opprettet,
                         "type" to type.name,
-                        "data" to pgObjectOf(enhet),
+                        "data" to pgJsonbOf(enhet),
                     )
                 },
             )
