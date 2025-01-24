@@ -6,6 +6,7 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
+import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.brille.jsonMapper
@@ -13,10 +14,10 @@ import java.net.InetAddress
 
 private val log = KotlinLogging.logger {}
 
-class LeaderElection(electorPath: String) {
+class LeaderElection {
     private val hostname = InetAddress.getLocalHost().hostName
     private var leader = ""
-    private val electorUri = "http://" + electorPath
+    private val electorUri = Configuration.ELECTOR_GET_URL
     private val engine: HttpClientEngine = engineFactory { StubEngine.leaderElection() }
 
     private val client = HttpClient(engine) {

@@ -29,10 +29,9 @@ import kotlin.system.measureTimeMillis
 private val log = KotlinLogging.logger { }
 
 class EnhetsregisteretClient(
-    props: Configuration.EnhetsregisteretProperties,
-    val databaseContext: DatabaseContext,
+    private val databaseContext: DatabaseContext,
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.ENHETSREGISTERET_API_URL
 
     private val mapper = ObjectMapper().let { mapper ->
         mapper.registerKotlinModule()

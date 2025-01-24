@@ -14,7 +14,7 @@ object Diopter {
     const val MIN_SFÆRE: Double = -12.0
     const val MIN_SYLINDER: Double = -99.0
 
-    private val format: NumberFormat = DecimalFormat("#0.00", DecimalFormatSymbols(Configuration.locale))
+    private val format: NumberFormat = DecimalFormat("#0.00", DecimalFormatSymbols(Configuration.LOCALE))
 
     fun formater(diopter: Double): String = format.format(diopter)
 }

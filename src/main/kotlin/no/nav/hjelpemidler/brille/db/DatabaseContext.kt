@@ -1,7 +1,5 @@
 package no.nav.hjelpemidler.brille.db
 
-import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.DatabaseConfiguration
 import no.nav.hjelpemidler.brille.admin.AdminStore
 import no.nav.hjelpemidler.brille.admin.AdminStorePostgres
 import no.nav.hjelpemidler.brille.audit.AuditStore
@@ -44,8 +42,7 @@ abstract class DatabaseContext : Transaction {
         }
 }
 
-class DefaultDatabaseContext(override val dataSource: DataSource = DatabaseConfiguration(Configuration.dbProperties).dataSource()) :
-    DatabaseContext()
+class DefaultDatabaseContext(override val dataSource: DataSource) : DatabaseContext()
 
 interface DatabaseTransactionContext {
     val adminStore: AdminStore

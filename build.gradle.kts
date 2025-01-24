@@ -31,15 +31,15 @@ dependencies {
         }
     }
 
-    implementation(libs.konfig.deprecated)
-    implementation(libs.micrometer.registry.prometheus)
-    implementation("com.github.navikt:hm-rapids-and-rivers-v2-core:202410290928")
-
-    // Unleash
-    implementation(libs.unleash)
-
-    // Ktor Server
+    // Ktor
     implementation(libs.bundles.ktor.server)
+
+    // other
+    implementation(libs.hmRapidsAndRiversV2Core)
+    implementation(libs.jedis)
+    implementation(libs.micrometer.registry.prometheus)
+    implementation(libs.unleash)
+    runtimeOnly(libs.logback.syslog4j) // auditlog https://github.com/navikt/naudit
 
     // GraphQL
     implementation(libs.graphql.ktor.client) {
@@ -47,15 +47,6 @@ dependencies {
         exclude(group = "io.ktor", module = "ktor-client-serialization")
     }
     implementation(libs.graphql.client.jackson)
-
-    // Jackson
-    implementation(libs.bundles.jackson)
-
-    // Logging
-    runtimeOnly(libs.logback.syslog4j) // auditlog https://github.com/navikt/naudit
-
-    // Redis
-    implementation(libs.jedis)
 }
 
 spotless {
@@ -84,7 +75,9 @@ testing {
         val test by getting(JvmTestSuite::class) {
             useKotlinTest(libs.versions.kotlin.asProvider())
             dependencies {
+                implementation(libs.handlebars)
                 implementation(libs.hotlibs.test)
+                implementation(libs.jackson.dataformat.yaml)
                 implementation(libs.kotest.assertions.json)
                 implementation(libs.ktor.server.test.host)
                 implementation(libs.nimbus.jose.jwt)
@@ -97,11 +90,6 @@ testing {
             }
         }
     }
-}
-
-tasks.compileKotlin {
-    // dependsOn("spotlessApply")
-    // dependsOn("spotlessCheck")
 }
 
 tasks.shadowJar {

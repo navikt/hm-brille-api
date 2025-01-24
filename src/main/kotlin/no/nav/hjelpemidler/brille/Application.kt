@@ -76,10 +76,15 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårHotsakApi
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.configuration.KafkaEnvironmentVariable
 import no.nav.hjelpemidler.configuration.LocalEnvironment
+import no.nav.hjelpemidler.database.PostgreSQL
+import no.nav.hjelpemidler.database.createDataSource
+import no.nav.hjelpemidler.database.migrate
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
+import javax.sql.DataSource
 import kotlin.concurrent.thread
 
 private val log = KotlinLogging.logger {}
@@ -95,7 +100,7 @@ fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
 }
 
 fun Application.module() {
-    log.info { "hm-brille-api starting up (git_sha=${Configuration.gitCommit})" }
+    log.info { "hm-brille-api starting up (git_sha=${Configuration.GIT_COMMIT})" }
     configure()
     setupRoutes()
 }
@@ -128,7 +133,8 @@ fun Application.configure() {
 // Wire up services and routes
 fun Application.setupRoutes() {
     // Database
-    val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
+    val dataSource = createDataSource(PostgreSQL) { envVarPrefix = "DB" }.also(DataSource::migrate)
+    val databaseContext = DefaultDatabaseContext(dataSource)
 
     // Kafka
     val rapid = createKafkaRapid()
@@ -136,15 +142,15 @@ fun Application.setupRoutes() {
 
     // Klienter
     val redisClient = RedisClient()
-    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties, databaseContext)
-    val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
-    val pdlClient = PdlClient(Configuration.pdlProperties)
-    val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
-    val hotsakClient = HotsakClient(Configuration.hotsakApiProperties)
+    val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
+    val syfohelsenettproxyClient = SyfohelsenettproxyClient()
+    val pdlClient = PdlClient()
+    val medlemskapClient = MedlemskapClient()
+    val hotsakClient = HotsakClient()
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
-    val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
+    val altinnService = AltinnService(AltinnClient())
     val pdlService = PdlService(pdlClient)
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
@@ -159,7 +165,7 @@ fun Application.setupRoutes() {
     val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)
-    val leaderElection = LeaderElection(Configuration.electorPath)
+    val leaderElection = LeaderElection()
     val kalkulatorService = KalkulatorService(kafkaService)
 
     val metrics = MetricsConfig(
@@ -178,7 +184,7 @@ fun Application.setupRoutes() {
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     EnhetsregisteretScheduler(enhetsregisteretService, leaderElection, metrics)
-    if (Configuration.prod) {
+    if (Environment.current.isProd) {
         RapporterManglendeTssIdentScheduler(
             tssIdentService,
             enhetsregisteretService,
@@ -268,20 +274,14 @@ fun Application.setupRoutes() {
 
 private fun createKafkaRapid(): KafkaRapid {
     val instanceId = InetAddress.getLocalHost().hostName
-    val kafkaProps = Configuration.kafkaProperties
-    val kafkaConfig = kafkaConfig(kafkaProps, instanceId)
-    return KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
+    val kafkaConfig = KafkaConfig(
+        bootstrapServers = KafkaEnvironmentVariable.KAFKA_BROKERS,
+        consumerGroupId = Configuration.KAFKA_CONSUMER_GROUP_ID,
+        clientId = instanceId,
+        truststore = KafkaEnvironmentVariable.KAFKA_TRUSTSTORE_PATH,
+        truststorePassword = KafkaEnvironmentVariable.KAFKA_CREDSTORE_PASSWORD,
+        keystoreLocation = KafkaEnvironmentVariable.KAFKA_KEYSTORE_PATH,
+        keystorePassword = KafkaEnvironmentVariable.KAFKA_CREDSTORE_PASSWORD,
+    )
+    return KafkaRapid.create(kafkaConfig, Configuration.KAFKA_TOPIC, emptyList())
 }
-
-private fun kafkaConfig(
-    kafkaProps: Configuration.KafkaProperties,
-    instanceId: String?,
-) = KafkaConfig(
-    bootstrapServers = kafkaProps.bootstrapServers,
-    consumerGroupId = kafkaProps.clientId,
-    clientId = instanceId,
-    truststore = kafkaProps.truststorePath,
-    truststorePassword = kafkaProps.truststorePassword,
-    keystoreLocation = kafkaProps.keystorePath,
-    keystorePassword = kafkaProps.keystorePassword,
-)

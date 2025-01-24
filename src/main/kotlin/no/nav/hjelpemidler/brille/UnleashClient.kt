@@ -4,21 +4,26 @@ import io.getunleash.DefaultUnleash
 import io.getunleash.Unleash
 import io.getunleash.strategy.Strategy
 import io.getunleash.util.UnleashConfig
+import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.configuration.GcpEnvironment
+import no.nav.hjelpemidler.configuration.LocalEnvironment
 
-object UnleashKlient {
+object UnleashClient {
     private val unleash: Unleash
 
     init {
-        val miljø = Configuration.cluster
+        val miljø = Environment.current
         unleash = when (miljø) {
-            Configuration.Cluster.`PROD-GCP`, Configuration.Cluster.`DEV-GCP`, Configuration.Cluster.LOCAL -> DefaultUnleash(
+            GcpEnvironment.DEV, GcpEnvironment.PROD, LocalEnvironment -> DefaultUnleash(
                 UnleashConfig.builder()
                     .appName("hm-brille-api")
-                    .instanceId("hm-brille.api" + "_" + miljø.name)
+                    .instanceId("hm-brille.api" + "_" + miljø.cluster)
                     .unleashAPI("https://unleash.nais.io/api/")
                     .build(),
                 ClusterStrategy(miljø),
             )
+
+            else -> TODO()
         }
     }
 
@@ -27,12 +32,12 @@ object UnleashKlient {
 
 object UnleashToggleKeys
 
-class ClusterStrategy(val miljø: Configuration.Cluster) : Strategy {
+class ClusterStrategy(val miljø: Environment) : Strategy {
     override fun getName() = "byCluster"
 
     override fun isEnabled(parameters: MutableMap<String, String>): Boolean {
         val clustersParameter = parameters["cluster"] ?: return false
         val alleClustere = clustersParameter.split(",").map { it.trim() }.map { it.lowercase() }.toList()
-        return alleClustere.contains(miljø.name.lowercase())
+        return alleClustere.contains(miljø.cluster.lowercase())
     }
 }

@@ -27,14 +27,13 @@ import kotlin.time.Duration.Companion.seconds
 private val behandlingsnummer = "B601,B110"
 
 class PdlClient(
-    props: Configuration.PdlProperties,
-    val engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
+    private val engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.PDL_API_URL
     private val client = GraphQLKtorClient(
         url = URI(baseUrl).toURL(),
         httpClient = HttpClient(engine) {
-            azureAD(scope = props.scope, engine = engine) {
+            azureAD(scope = Configuration.PDL_API_SCOPE, engine = engine) {
                 cache(leeway = 10.seconds)
             }
             defaultRequest {

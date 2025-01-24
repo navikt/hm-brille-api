@@ -28,13 +28,12 @@ import kotlin.time.Duration.Companion.seconds
 private val log = KotlinLogging.logger { }
 
 class HotsakClient(
-    props: Configuration.HotsakApiProperties,
     engine: HttpClientEngine = engineFactory { StubEngine.hotsak() },
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.HOTSAK_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = true
-        azureAD(scope = props.scope) {
+        azureAD(scope = Configuration.HOTSAK_API_SCOPE) {
             cache(leeway = 10.seconds)
         }
     }

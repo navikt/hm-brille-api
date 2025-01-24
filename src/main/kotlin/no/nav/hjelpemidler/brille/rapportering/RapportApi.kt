@@ -61,7 +61,7 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
 
             val pagedKravlinjeListe = PagedKravlinjeliste(
                 kravlinjer = kravlinjer,
-                totalCount = kravlinjer.totalPages, // fixme
+                totalCount = kravlinjer.totalElements,
                 currentPage = page,
                 pageSize = limit,
             )
@@ -224,7 +224,7 @@ private fun ApplicationCall.orgnr(): String = requireNotNull(parameters["orgnr"]
 
 data class PagedKravlinjeliste(
     val kravlinjer: List<Kravlinje>,
-    val totalCount: Int,
+    val totalCount: Long,
     val currentPage: Int,
     val pageSize: Int,
 )

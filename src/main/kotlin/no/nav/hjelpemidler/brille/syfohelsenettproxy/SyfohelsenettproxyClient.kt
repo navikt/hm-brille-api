@@ -27,13 +27,12 @@ import kotlin.time.Duration.Companion.seconds
 private val log = KotlinLogging.logger { }
 
 class SyfohelsenettproxyClient(
-    props: Configuration.SyfohelsenettproxyProperties,
     engine: HttpClientEngine = engineFactory { StubEngine.syfohelsenettproxy() },
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.SYFOHELSENETTPROXY_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = true
-        azureAD(scope = props.scope) {
+        azureAD(scope = Configuration.SYFOHELSENETTPROXY_API_SCOPE) {
             cache(leeway = 10.seconds)
         }
     }

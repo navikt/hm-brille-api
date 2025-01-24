@@ -1,9 +1,9 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
+import no.nav.hjelpemidler.configuration.Environment
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -27,7 +27,7 @@ class EnhetsregisteretService(
             return enhet
         }
 
-        if (Configuration.dev) {
+        if (Environment.current.isDev) {
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
             return mockedOrg(orgnr)
         }
@@ -57,7 +57,7 @@ class EnhetsregisteretService(
         }.groupBy { it.orgnr }.mapValues { it.value.first() }
         enheter.putAll(enheterFraTilbakefallsLøsning)
 
-        if (Configuration.dev) {
+        if (Environment.current.isDev) {
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
             for (orgnr in orgnre) {
                 enheter.putAll(mapOf(orgnr to mockedOrg(orgnr)))

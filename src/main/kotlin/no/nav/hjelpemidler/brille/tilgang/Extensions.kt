@@ -9,8 +9,9 @@ import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
-import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.configuration.ClusterEnvironment
 import no.nav.hjelpemidler.configuration.EntraIDEnvironmentVariable
+import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.TokenXEnvironmentVariable
 import no.nav.hjelpemidler.logging.secureWarn
 import java.net.URI
@@ -44,6 +45,11 @@ private val jwkProviderAzureAd =
         .build()
 
 fun AuthenticationConfig.tokenXProvider(name: String) {
+    val fnrClaim = if (Environment.current is ClusterEnvironment) {
+        "pid"
+    } else {
+        "sub"
+    }
     jwt(name) {
         verifier(jwkProviderTokenX, TokenXEnvironmentVariable.TOKEN_X_ISSUER) {
             withAudience(TokenXEnvironmentVariable.TOKEN_X_CLIENT_ID)
@@ -51,7 +57,7 @@ fun AuthenticationConfig.tokenXProvider(name: String) {
         }
         validate { credential ->
             val principal = JWTPrincipal(credential.payload)
-            val fnr = principal.mustGet(Configuration.tokenXProperties.userclaim)
+            val fnr = principal.mustGet(fnrClaim)
             InnloggetBruker.TokenX.Bruker(fnr = fnr)
         }
     }

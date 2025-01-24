@@ -1,19 +1,12 @@
 package no.nav.hjelpemidler.brille
 
-import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import no.nav.hjelpemidler.http.createHttpClient
+import no.nav.hjelpemidler.configuration.Environment
 
-object HttpClientConfig {
-    fun httpClient(engine: HttpClientEngine = CIO.create()): HttpClient = createHttpClient(engine) {
-        expectSuccess = true
-        install(HttpTimeout)
+fun engineFactory(block: () -> HttpClientEngine): HttpClientEngine =
+    if (Environment.current.isLocal) {
+        block()
+    } else {
+        CIO.create()
     }
-}
-
-fun engineFactory(block: () -> HttpClientEngine): HttpClientEngine = when (Configuration.profile) {
-    Configuration.Profile.LOCAL -> block()
-    else -> CIO.create()
-}

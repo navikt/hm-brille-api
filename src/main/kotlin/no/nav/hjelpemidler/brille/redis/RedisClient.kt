@@ -4,15 +4,17 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
+import no.nav.hjelpemidler.configuration.Environment
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig
 import redis.clients.jedis.JedisPooled
 import redis.clients.jedis.commands.StringCommands
 import java.time.LocalDate
 
 class RedisClient(private val redisProps: Configuration.RedisProperties = Configuration.redisProperties) {
-    private val jedis: StringCommands = when (Configuration.profile) {
-        Configuration.Profile.LOCAL -> JedisMock()
-        else -> JedisPooled(
+    private val jedis: StringCommands = if (Environment.current.isLocal) {
+        JedisMock()
+    } else {
+        JedisPooled(
             GenericObjectPoolConfig(),
             redisProps.host,
             redisProps.port,

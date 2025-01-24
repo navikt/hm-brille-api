@@ -12,7 +12,7 @@ data class Vilkårsvurdering<T>(
     val evaluering: Evaluering,
 ) {
     val utfall: Resultat get() = evaluering.resultat
-    val programvareVersjon: String get() = Configuration.gitCommit
+    val programvareVersjon: String get() = Configuration.GIT_COMMIT
 
     @JsonIgnore
     fun toJson(): String = jsonMapper.writePrettyString(this)

@@ -2,12 +2,12 @@ package no.nav.hjelpemidler.brille.utbetaling
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Gauge
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
+import no.nav.hjelpemidler.configuration.Environment
 import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -20,7 +20,7 @@ class SendTilUtbetalingScheduler(
     private val databaseContext: DatabaseContext,
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
-    delay: Duration = if (Configuration.dev) 3.minutes else 1.hours,
+    delay: Duration = if (Environment.current.isDev) 3.minutes else 1.hours,
     private val dager: Long = 15,
     onlyWorkHours: Boolean = true,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {

@@ -24,13 +24,12 @@ import kotlin.time.Duration.Companion.seconds
 private val log = KotlinLogging.logger {}
 
 class MedlemskapClient(
-    props: Configuration.MedlemskapOppslagProperties,
     engine: HttpClientEngine = CIO.create(),
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.MEDLEMSKAP_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = false
-        azureAD(scope = props.scope) {
+        azureAD(scope = Configuration.MEDLEMSKAP_API_SCOPE) {
             cache(leeway = 10.seconds)
         }
         install(HttpTimeout)

@@ -7,7 +7,6 @@ import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
@@ -79,7 +78,6 @@ class PdlClientTest {
             withTilgangContext(TilgangContextElement(currentUser)) {
                 block(
                     PdlClient(
-                        props = Configuration.PdlProperties("http://localhost:1234", "test"),
                         engine = javaClass.getResourceAsStream(name).use {
                             val response = requireNotNull(it).bufferedReader().readText()
                             MockEngine {

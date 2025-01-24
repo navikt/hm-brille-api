@@ -15,9 +15,8 @@ import java.time.temporal.ChronoUnit
 class EnhetsregisteretTest {
     @Test
     fun `Test mot enhetsregisteret i prod`() = runTest {
-        val props = Configuration.EnhetsregisteretProperties("https://data.brreg.no/enhetsregisteret/api")
         val databaseContext = MockDatabaseContext()
-        val enhetsregisteretClient = EnhetsregisteretClient(props, databaseContext)
+        val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
         val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
 
         val orgnr = "889234962"

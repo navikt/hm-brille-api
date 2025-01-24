@@ -21,19 +21,19 @@ private val log = KotlinLogging.logger { }
 
 const val ALTINN_CLIENT_MAKS_ANTALL_RESULTATER = 1000
 
-class AltinnClient(props: Configuration.AltinnProperties) {
+class AltinnClient {
     private val client: HttpClient = createHttpClient {
         defaultRequest {
             headers {
                 accept(ContentType.Application.Json)
                 contentType(ContentType.Application.Json)
-                header("X-Consumer-ID", props.proxyConsumerId)
-                header("X-NAV-APIKEY", props.apiGWKey)
-                header("APIKEY", props.apiKey)
+                header("X-Consumer-ID", Configuration.ALTINN_APIGW_CONSUMER_ID)
+                header("X-NAV-APIKEY", Configuration.ALTINN_APIGW_APIKEY)
+                header("APIKEY", Configuration.ALTINN_APIKEY)
             }
         }
     }
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.ALTINN_APIGW_URL
 
     suspend fun hentAvgivere(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avgiver> {
         val response = client.get("$baseUrl/reportees") {

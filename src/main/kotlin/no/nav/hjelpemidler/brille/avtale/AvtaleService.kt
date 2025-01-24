@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.altinn.ALTINN_CLIENT_MAKS_ANTALL_RESULTATER
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
@@ -13,6 +12,8 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
+import no.nav.hjelpemidler.configuration.ClusterEnvironment
+import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.logging.secureInfo
 import no.nav.hjelpemidler.logging.secureLog
 import no.nav.hjelpemidler.logging.secureWarn
@@ -155,7 +156,7 @@ class AvtaleService(
         }
         kafkaService.avtaleOpprettet(avtale)
 
-        if (Configuration.dev || Configuration.prod) {
+        if (Environment.current is ClusterEnvironment) {
             Slack.post("AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana ved å søke: `Kontonr synkronisert til TSS: orgnr=$orgnr`")
         }
 
@@ -188,7 +189,7 @@ class AvtaleService(
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
         kafkaService.bruksvilkårGodtatt(bruksvilkårGodtatt, organisasjonsenhet.navn)
 
-        if (Configuration.dev || Configuration.prod) {
+        if (Environment.current is ClusterEnvironment) {
             Slack.post("AvtaleService: Bruksvilkår godtatt for orgnr=$orgnr.")
         }
 
