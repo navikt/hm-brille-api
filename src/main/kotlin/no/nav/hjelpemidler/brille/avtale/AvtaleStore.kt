@@ -94,9 +94,9 @@ class AvtaleStorePostgres(private val tx: JdbcOperations) : AvtaleStore {
                                         opprettet,
                                         oppdatert)
             VALUES (:orgnr, :fnr_innsender, :aktiv, :bruksvilkardefinisjon_id, :opprettet, :oppdatert)
-            RETURNING id
+            RETURNING id, opprettet, oppdatert
         """.trimIndent()
-        val id = tx.single(
+        return tx.single(
             sql,
             mapOf(
                 "orgnr" to bruksvilkårGodtatt.orgnr,
@@ -107,9 +107,12 @@ class AvtaleStorePostgres(private val tx: JdbcOperations) : AvtaleStore {
                 "oppdatert" to bruksvilkårGodtatt.oppdatert,
             ),
         ) { row: Row ->
-            row.long("id")
+            bruksvilkårGodtatt.copy(
+                id = row.long("id").toInt(),
+                opprettet = row.localDateTime("opprettet"),
+                oppdatert = row.localDateTime("oppdatert"),
+            )
         }
-        return bruksvilkårGodtatt.copy(id = id.toInt())
     }
 
     override fun deaktiverVirksomhet(orgnr: String) {
