@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.coroutines.withLoggingContextAsync
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
@@ -62,7 +63,11 @@ class VilkårsvurderingService(
         )
 
         if (Environment.current == GcpEnvironment.DEV) {
-            log.info { "Resultat av vilkårsvurdering: ${vilkårsvurdering.toJson()}" }
+            withLoggingContextAsync(
+                "vilkårsvurdering" to vilkårsvurdering.toJson(),
+            ) {
+                log.info { "Resultat av vilkårsvurdering: ${vilkårsvurdering.utfall}" }
+            }
         }
 
         return vilkårsvurdering
