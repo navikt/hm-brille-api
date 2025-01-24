@@ -26,7 +26,7 @@ class LeaderElection {
     }
 
     init {
-        log.info { "leader election initialized this hostname is $hostname" }
+        log.info { "Leader election initialized, hostname: $hostname" }
     }
 
     suspend fun isLeader(): Boolean {

@@ -66,7 +66,7 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptiker
 import no.nav.hjelpemidler.brille.tss.RapporterManglendeTssIdentScheduler
 import no.nav.hjelpemidler.brille.tss.TssIdentRiver
 import no.nav.hjelpemidler.brille.tss.TssIdentService
-import no.nav.hjelpemidler.brille.utbetaling.RekjorUtbetalingerScheduler
+import no.nav.hjelpemidler.brille.utbetaling.RekjørUtbetalingerScheduler
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
@@ -197,7 +197,7 @@ fun Application.setupRoutes() {
 
     VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
-    RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
+    RekjørUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     EnhetsregisteretScheduler(enhetsregisteretService, leaderElection, metrics)
     if (Environment.current.isProd) {
         RapporterManglendeTssIdentScheduler(

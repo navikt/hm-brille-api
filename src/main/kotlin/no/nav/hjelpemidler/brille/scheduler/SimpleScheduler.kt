@@ -32,14 +32,14 @@ abstract class SimpleScheduler(
     private val mySchedulerName: String = this.javaClass.simpleName
 
     init {
-        log.info { "starting scheduler: $mySchedulerName with a delay of $delay" }
+        log.info { "Starting scheduler: $mySchedulerName with a delay of $delay" }
         if (onlyWorkHours) log.info { "$mySchedulerName task will only be launched during working hours." }
         job = CoroutineScope(Dispatchers.Default).launch {
             runTask()
         }
     }
 
-    suspend fun runTask() = coroutineScope {
+    private suspend fun runTask() = coroutineScope {
         while (true) {
             delay(delay)
             val leader = leaderElection.isLeader()
@@ -53,7 +53,7 @@ abstract class SimpleScheduler(
                         metricsConfig.registry.counter("scheduler_duration_seconds", "name", mySchedulerName)
                             .increment(duration.toDouble(DurationUnit.SECONDS))
                         if (duration > delay) {
-                            log.warn { "$mySchedulerName spent $duration ms which is greater than delayTime: $delay" }
+                            log.warn { "$mySchedulerName spent ${duration}ms which is greater than delayTime: $delay" }
                         }
                     } catch (e: Exception) {
                         log.error(e) { "Scheduler $mySchedulerName has failed with an exception, the scheduler will be stopped" }
@@ -62,10 +62,9 @@ abstract class SimpleScheduler(
                 }
             } else {
                 log.info {
-                    "NOT running $mySchedulerName: isLeader: $leader" +
-                        ", onlyWorkHours: $onlyWorkHours, isWorkingHours: ${
-                            LocalDateTime.now().isWorkingHours()
-                        }"
+                    "NOT running $mySchedulerName: isLeader: $leader, onlyWorkHours: $onlyWorkHours, isWorkingHours: ${
+                        LocalDateTime.now().isWorkingHours()
+                    }"
                 }
             }
         }
@@ -74,7 +73,7 @@ abstract class SimpleScheduler(
     abstract suspend fun action()
 
     fun cancel() {
-        log.info { "cancel job $mySchedulerName" }
+        log.info { "Cancelling job: $mySchedulerName" }
         job.cancel()
     }
 }

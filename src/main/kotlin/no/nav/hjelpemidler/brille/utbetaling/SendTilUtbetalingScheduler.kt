@@ -39,13 +39,13 @@ class SendTilUtbetalingScheduler(
             batchDato = LocalDate.now().minusDays(dager),
             opprettetFor = 2.minutes,
         ) // hent kun de som har blitt registrert minst x minutter siden.
-        log.info { "Fant ${utbetalinger.size} utbetalinger som skal sendes over." }
+        log.info { "Fant ${utbetalinger.size} utbetalinger som skal sendes over" }
         if (utbetalinger.isNotEmpty()) {
-            val utbetalingsBatchList = utbetalinger.toUtbetalingBatchList()
-            log.info { "fordelt på ${utbetalingsBatchList.size} batch" }
-            utbetalingsBatchList.forEach {
+            val batch = utbetalinger.toUtbetalingBatchList()
+            log.info { "fordelt på ${batch.size} batch" }
+            batch.forEach {
                 val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
-                    ?: throw RuntimeException("ingen tss ident tilgjengelig for batch (skal ikke skje)")
+                    ?: error("Ingen TSS-ident tilgjengelig for batch (skal ikke skje)")
                 utbetalingService.sendBatchTilUtbetaling(it, tssIdent)
                 val antUtbetalinger = it.utbetalinger.size
                 if (maxUtbetalinger < antUtbetalinger) {

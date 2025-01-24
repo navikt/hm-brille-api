@@ -16,12 +16,12 @@ class RapporterManglendeTssIdentScheduler(
     private val tssIdentService: TssIdentService,
     private val enhetsregisteretService: EnhetsregisteretService,
     leaderElection: LeaderElection,
-    private val metricsConfig: MetricsConfig,
+    metricsConfig: MetricsConfig,
     delay: Duration = 24.hours,
     onlyWorkHours: Boolean = false,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
     override suspend fun action() {
-        log.info { "RapporterManglendeTssIdentScheduler: ser etter orgnr som mangler tss-ident" }
+        log.info { "RapporterManglendeTssIdentScheduler: Ser etter orgnr som mangler TSS-ident" }
 
         val orgnre = tssIdentService.hentAlleOrgnrSomManglerTssIdent()
         if (orgnre.isEmpty()) return
