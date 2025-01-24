@@ -29,7 +29,7 @@ jobs:
       - name: Sett opp Java
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ inputs.java-version }}
+          java-version: 21
           distribution: temurin
 
       - name: Sett opp Gradle
