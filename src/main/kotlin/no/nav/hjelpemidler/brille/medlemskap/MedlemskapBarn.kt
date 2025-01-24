@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.Barn
 import no.nav.hjelpemidler.brille.pdl.PdlClient
@@ -69,7 +68,7 @@ class MedlemskapBarn(
         val saksgrunnlag = mutableListOf(
             Saksgrunnlag(
                 kilde = SaksgrunnlagKilde.MEDLEMSKAP_BARN,
-                saksgrunnlag = jsonMapper.valueToTree(
+                saksgrunnlag = no.nav.hjelpemidler.serialization.jackson.jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
                         "bestillingsdato" to bestillingsdato,
@@ -106,7 +105,7 @@ class MedlemskapBarn(
         saksgrunnlag.add(
             Saksgrunnlag(
                 kilde = SaksgrunnlagKilde.PDL,
-                saksgrunnlag = jsonMapper.valueToTree(
+                saksgrunnlag = no.nav.hjelpemidler.serialization.jackson.jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
                         "pdl" to pdlResponse.rawData,
@@ -139,7 +138,7 @@ class MedlemskapBarn(
             saksgrunnlag.add(
                 Saksgrunnlag(
                     kilde = SaksgrunnlagKilde.LOV_ME,
-                    saksgrunnlag = jsonMapper.valueToTree(
+                    saksgrunnlag = no.nav.hjelpemidler.serialization.jackson.jsonMapper.valueToTree(
                         mapOf(
                             "note" to "failed to check relation membership",
                             "exception" to e.stackTraceToString(),
@@ -161,7 +160,8 @@ class MedlemskapBarn(
                 ),
             )
 
-            val medlemskapResultatLovMe: MedlemskapResultat = jsonMapper.treeToValue(medlemskapResultLovMeJson)
+            val medlemskapResultatLovMe: MedlemskapResultat =
+                no.nav.hjelpemidler.serialization.jackson.jsonMapper.treeToValue(medlemskapResultLovMeJson)
             if (medlemskapResultatLovMe.resultat == MedlemskapResultatResultat.JA) {
                 val medlemskapResultatLovMeMedRettSaksgrunnlag = medlemskapResultatLovMe.copy(
                     saksgrunnlag = saksgrunnlag, // Sakgrunnlaget vårt inneholder LovMe sitt grunnlag rekursivt, samt vårt egent
@@ -208,8 +208,16 @@ private fun sjekkFolkeregistrertAdresseINorge(
         if (!finnesFolkeregistrertAdresse) {
             log.secureInfo {
                 "Fant ingen folkeregistrert adresse for barn:" +
-                    " bostedsadresser=${jsonMapper.writePrettyString(bostedsadresser)} " +
-                    " deltBostedBarn=${jsonMapper.writePrettyString(deltBostedBarn)} "
+                    " bostedsadresser=${
+                        no.nav.hjelpemidler.serialization.jackson.jsonMapper.writePrettyString(
+                            bostedsadresser,
+                        )
+                    } " +
+                    " deltBostedBarn=${
+                        no.nav.hjelpemidler.serialization.jackson.jsonMapper.writePrettyString(
+                            deltBostedBarn,
+                        )
+                    } "
             }
         }
     } catch (e: Exception) {

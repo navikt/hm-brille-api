@@ -1,12 +1,7 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
 import com.fasterxml.jackson.core.JsonToken
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
@@ -23,6 +18,7 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.http.createHttpClient
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.util.zip.GZIPInputStream
 import kotlin.system.measureTimeMillis
 
@@ -32,14 +28,6 @@ class EnhetsregisteretClient(
     private val databaseContext: DatabaseContext,
 ) {
     private val baseUrl = Configuration.ENHETSREGISTERET_API_URL
-
-    private val mapper = ObjectMapper().let { mapper ->
-        mapper.registerKotlinModule()
-        mapper.registerModule(JavaTimeModule())
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        mapper
-    }
 
     private val httpClient = createHttpClient {
         expectSuccess = true
@@ -107,7 +95,7 @@ class EnhetsregisteretClient(
         log.info { "Komprimert filstørrelse: $contentLengthMB MiB ($contentLength bytes)" }
 
         val gunzipStream = GZIPInputStream(httpResponse.bodyAsChannel().toInputStream())
-        mapper.factory.createParser(gunzipStream).use { jsonParser ->
+        jsonMapper.factory.createParser(gunzipStream).use { jsonParser ->
             // Check the first token
             check(jsonParser.nextToken() === JsonToken.START_ARRAY) { "Expected content to be an array" }
 
@@ -115,7 +103,7 @@ class EnhetsregisteretClient(
             val chunk = mutableListOf<T>()
             while (jsonParser.nextToken() !== JsonToken.END_ARRAY) {
                 // Read an Organisasjonsenhet instance using ObjectMapper and do something with it
-                val enhet: T = mapper.readValue(jsonParser)
+                val enhet: T = jsonMapper.readValue(jsonParser)
                 chunk.add(enhet)
                 if (chunk.count() == 10000) {
                     block(chunk)

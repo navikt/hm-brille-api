@@ -6,6 +6,7 @@ import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.logging.secureLog
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.util.UUID
 
 fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>, fnrDetGjelder: String? = null) {
@@ -21,7 +22,10 @@ fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>,
     allParams.putAll(params)
 
     val logMessage =
-        "Admin api audit: $tag: ${jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allParams)}"
+        "Admin api audit: $tag: ${
+            jsonMapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(allParams)
+        }"
     secureLog.info { logMessage }
 
     adminAuditLog(request.httpMethod.value, request.uri, params, extractNavIdent(), fnrDetGjelder)

@@ -14,12 +14,12 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
 import no.nav.hjelpemidler.brille.tilgang.innloggetBruker
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
 import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.slf4j.MDC
 import java.net.URI
 import java.util.UUID

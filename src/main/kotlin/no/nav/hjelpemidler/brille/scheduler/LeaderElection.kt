@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.scheduler
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -9,7 +10,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
-import no.nav.hjelpemidler.brille.jsonMapper
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.net.InetAddress
 
 private val log = KotlinLogging.logger {}
@@ -35,9 +36,9 @@ class LeaderElection {
     private suspend fun getLeader(): String {
         val response = client.get(electorUri)
         if (response.status == HttpStatusCode.OK) {
-            val elector = jsonMapper.readValue(response.bodyAsText(), Elector::class.java)
+            val elector = jsonMapper.readValue<Elector>(response.bodyAsText())
             leader = elector.name
-            log.debug { "${"Running leader election getLeader is {} "} $leader" }
+            log.debug { "Running leader election, leader: $leader" }
         }
         return leader
     }

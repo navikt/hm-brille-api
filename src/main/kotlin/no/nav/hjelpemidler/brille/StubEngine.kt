@@ -19,6 +19,7 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Godkjenning
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Kode
 import no.nav.hjelpemidler.http.openid.TokenSet
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.net.InetAddress
 import kotlin.time.Duration.Companion.hours
 

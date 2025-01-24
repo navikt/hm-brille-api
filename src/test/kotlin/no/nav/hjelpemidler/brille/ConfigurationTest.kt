@@ -8,6 +8,7 @@ import com.github.jknack.handlebars.io.FileTemplateLoader
 import io.kotest.matchers.maps.shouldHaveKeys
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.environmentVariablesIn
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import no.nav.hjelpemidler.serialization.jackson.readValue
 import org.junit.jupiter.api.Test
 import java.nio.file.Path

@@ -6,12 +6,12 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import kotlinx.coroutines.test.runTest
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.test.TestTokenSetProvider
 import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
 import no.nav.hjelpemidler.brille.tilgang.TilgangContextElement
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID

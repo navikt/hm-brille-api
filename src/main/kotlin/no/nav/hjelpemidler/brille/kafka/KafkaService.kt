@@ -1,11 +1,7 @@
 package no.nav.hjelpemidler.brille.kafka
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.annotation.JsonNaming
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.BruksvilkårGodtatt
@@ -23,6 +19,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.vilkarsvurdering.harResultatJaForVilkår
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -32,12 +29,6 @@ import kotlin.reflect.full.findAnnotation
 private val log = KotlinLogging.logger {}
 
 class KafkaService(private val kafkaRapid: KafkaRapid) {
-    private val mapper = jacksonMapperBuilder()
-        .addModule(JavaTimeModule())
-        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .build()
-
     fun avtaleOpprettet(avtale: IngåttAvtale) {
         // Metrics
         sendTilBigQuery(
@@ -254,7 +245,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
 
     fun <T> produceEvent(key: String?, event: T) {
         try {
-            val message = mapper.writeValueAsString(event)
+            val message = jsonMapper.writeValueAsString(event)
             if (key != null) {
                 kafkaRapid.publishWithTimeout(key, message, 10)
             } else {

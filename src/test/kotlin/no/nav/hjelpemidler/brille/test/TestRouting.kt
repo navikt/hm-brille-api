@@ -10,9 +10,9 @@ import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplication
 import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.configure
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
 import no.nav.hjelpemidler.http.jackson
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.util.UUID
 
 class TestRouting(configuration: Routing.() -> Unit) {

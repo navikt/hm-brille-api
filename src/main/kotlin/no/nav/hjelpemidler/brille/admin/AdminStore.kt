@@ -1,7 +1,5 @@
 package no.nav.hjelpemidler.brille.admin
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PersonCompat
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
@@ -57,7 +55,7 @@ class AdminStorePostgres(private val tx: JdbcOperations) : AdminStore {
             sql,
             mapOf("fnr" to fnr),
         ) { row ->
-            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
+            val person: PersonCompat = row.json("pdlOppslag")
             VedtakListe(
                 vedtakId = row.long("id"),
                 barnsNavn = person.asPerson().navn(),
@@ -103,7 +101,7 @@ class AdminStorePostgres(private val tx: JdbcOperations) : AdminStore {
             sql,
             mapOf("vedtakId" to vedtakId),
         ) { row ->
-            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
+            val person: PersonCompat = row.json("pdlOppslag")
             Vedtak(
                 vedtakId = row.long("id"),
                 orgnr = row.string("orgnr"),
@@ -223,7 +221,7 @@ class AdminStorePostgres(private val tx: JdbcOperations) : AdminStore {
             sql,
             mapOf("utbetalingsRef" to utbetalingsRef),
         ) { row ->
-            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
+            val person: PersonCompat = row.json("pdlOppslag")
             Utbetaling(
                 orgnr = row.string("orgnr"),
                 vedtakId = row.long("id"),

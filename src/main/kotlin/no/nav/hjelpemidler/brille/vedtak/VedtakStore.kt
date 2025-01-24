@@ -1,8 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.Row
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alderPåDato
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PersonCompat
@@ -123,8 +121,7 @@ class VedtakStorePostgres(private val tx: JdbcOperations) : VedtakStore {
                 "vedtak_id" to vedtakId,
             ),
         ) { row ->
-            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
-
+            val person: PersonCompat = row.json("pdlOppslag")
             OversiktVedtak(
                 id = row.long("id"),
                 orgnavn = "",
@@ -197,8 +194,7 @@ class VedtakStorePostgres(private val tx: JdbcOperations) : VedtakStore {
                 "offset" to offset,
             ),
         ) { row ->
-            val person: PersonCompat = jsonMapper.readValue(row.string("pdlOppslag"))
-
+            val person: PersonCompat = row.json("pdlOppslag")
             OversiktVedtakListItem(
                 id = row.long("id"),
                 orgnavn = "",

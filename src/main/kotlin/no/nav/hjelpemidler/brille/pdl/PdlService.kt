@@ -1,8 +1,8 @@
 package no.nav.hjelpemidler.brille.pdl
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 
 private val log = KotlinLogging.logger {}
 
