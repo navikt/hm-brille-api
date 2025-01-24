@@ -7,6 +7,7 @@ import no.nav.hjelpemidler.database.createDataSource
 import no.nav.hjelpemidler.database.createRole
 import no.nav.hjelpemidler.database.migrate
 import no.nav.hjelpemidler.database.transactionAsync
+import java.io.Closeable
 
 object TestDatabaseContext : DatabaseContext() {
     override val dataSource by lazy {
@@ -18,6 +19,10 @@ object TestDatabaseContext : DatabaseContext() {
                 createRole("naisjob")
             }
         }
+    }
+
+    override fun close() {
+        (dataSource as? Closeable)?.close()
     }
 }
 

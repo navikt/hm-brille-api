@@ -30,6 +30,9 @@ class MockDatabaseContext : DatabaseContext(), DatabaseTransactionContext {
 
     override fun databaseTransactionContext(tx: JdbcOperations): DatabaseTransactionContext = this
 
+    override fun close() {
+    }
+
     override val adminStore: AdminStore = mockk(relaxed = true)
     override val auditStore: AuditStore = mockk(relaxed = true)
     override val avtaleStore: AvtaleStore = mockk(relaxed = true)

@@ -26,11 +26,12 @@ import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import no.nav.hjelpemidler.database.JdbcOperations
 import no.nav.hjelpemidler.database.transactionAsync
+import java.io.Closeable
 import javax.sql.DataSource
 
 typealias Transaction = no.nav.hjelpemidler.database.Transaction<DatabaseTransactionContext>
 
-abstract class DatabaseContext : Transaction {
+abstract class DatabaseContext : Transaction, Closeable {
     abstract val dataSource: DataSource
 
     open fun databaseTransactionContext(tx: JdbcOperations): DatabaseTransactionContext =
@@ -42,7 +43,11 @@ abstract class DatabaseContext : Transaction {
         }
 }
 
-class DefaultDatabaseContext(override val dataSource: DataSource) : DatabaseContext()
+class DefaultDatabaseContext(override val dataSource: DataSource) : DatabaseContext(), Closeable {
+    override fun close() {
+        (dataSource as? Closeable)?.close()
+    }
+}
 
 interface DatabaseTransactionContext {
     val adminStore: AdminStore

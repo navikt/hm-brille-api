@@ -6,7 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationStopPreparing
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.embeddedServer
@@ -32,6 +32,7 @@ import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
+import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretScheduler
@@ -96,11 +97,11 @@ fun main() {
 }
 
 fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
-    fun onStopPreparing() {
-        log.info { "Application is shutting down, stopping rapid app aswell!" }
+    monitor.subscribe(ApplicationStopping) {
+        log.info { "Applikasjoner stopper, stopper KafkaRapid også" }
         kafkaRapid.stop()
+        monitor.unsubscribe(ApplicationStopping) {}
     }
-    monitor.subscribe(ApplicationStopPreparing) { onStopPreparing() }
 }
 
 fun Application.module() {
@@ -138,7 +139,12 @@ fun Application.configure() {
 fun Application.setupRoutes() {
     // Database
     val dataSource = createDataSource(PostgreSQL) { envVarPrefix = "DB" }.also(DataSource::migrate)
-    val databaseContext = DefaultDatabaseContext(dataSource)
+    val databaseContext: DatabaseContext = DefaultDatabaseContext(dataSource)
+    monitor.subscribe(ApplicationStopping) {
+        log.info { "Applikasjoner stopper, stopper DatabaseContext også" }
+        databaseContext.close()
+        monitor.unsubscribe(ApplicationStopping) {}
+    }
 
     // Kafka
     val rapid = createKafkaRapid()
