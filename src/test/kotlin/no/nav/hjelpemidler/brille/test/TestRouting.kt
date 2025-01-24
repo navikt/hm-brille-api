@@ -5,7 +5,6 @@ import io.ktor.client.request.accept
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.server.auth.authentication
-import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.TestApplication
@@ -18,9 +17,6 @@ import java.util.UUID
 
 class TestRouting(configuration: Routing.() -> Unit) {
     private val application = TestApplication {
-        environment {
-            config = MapApplicationConfig() // for at application.conf ikke skal leses
-        }
         application {
             configure()
             authentication {

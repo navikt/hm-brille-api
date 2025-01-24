@@ -9,6 +9,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -89,7 +91,9 @@ import kotlin.concurrent.thread
 
 private val log = KotlinLogging.logger {}
 
-fun main(args: Array<String>) = io.ktor.server.netty.EngineMain.main(args)
+fun main() {
+    embeddedServer(Netty, 9090, module = Application::module).start(wait = true)
+}
 
 fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
     fun onStopPreparing() {
