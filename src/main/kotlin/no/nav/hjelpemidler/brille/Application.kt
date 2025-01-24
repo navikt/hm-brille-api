@@ -84,11 +84,13 @@ import no.nav.hjelpemidler.configuration.LocalEnvironment
 import no.nav.hjelpemidler.database.PostgreSQL
 import no.nav.hjelpemidler.database.createDataSource
 import no.nav.hjelpemidler.database.migrate
+import no.nav.hjelpemidler.http.openid.azureADClient
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
 import javax.sql.DataSource
 import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
 
@@ -151,12 +153,15 @@ fun Application.setupRoutes() {
     val kafkaService = KafkaService(rapid)
 
     // Klienter
-    val redisClient = RedisClient()
     val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
-    val syfohelsenettproxyClient = SyfohelsenettproxyClient()
-    val pdlClient = PdlClient()
-    val medlemskapClient = MedlemskapClient()
-    val hotsakClient = HotsakClient()
+    val redisClient = RedisClient()
+
+    val azureADClient = azureADClient { cache(leeway = 10.seconds) }
+    val hotsakClient = HotsakClient(azureADClient.withScope(Configuration.HOTSAK_API_SCOPE))
+    val medlemskapClient = MedlemskapClient(azureADClient.withScope(Configuration.MEDLEMSKAP_API_SCOPE))
+    val pdlClient = PdlClient(azureADClient.withScope(Configuration.PDL_API_SCOPE))
+    val syfohelsenettproxyClient =
+        SyfohelsenettproxyClient(azureADClient.withScope(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
@@ -165,13 +170,13 @@ fun Application.setupRoutes() {
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
     val rapportService = RapportService(databaseContext)
-    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
+    val enhetsregisteretService = EnhetsregisteretService(databaseContext, enhetsregisteretClient)
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, hotsakClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val joarkrefService = JoarkrefService(databaseContext)
-    val slettVedtakService = SlettVedtakService(utbetalingService, joarkrefService, kafkaService, databaseContext)
+    val slettVedtakService = SlettVedtakService(databaseContext, joarkrefService, kafkaService)
     val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)

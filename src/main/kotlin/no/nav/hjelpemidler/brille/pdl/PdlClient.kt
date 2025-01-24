@@ -18,24 +18,23 @@ import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
 import no.nav.hjelpemidler.brille.tilgang.innloggetBruker
-import no.nav.hjelpemidler.http.openid.azureAD
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
 import org.slf4j.MDC
 import java.net.URI
 import java.util.UUID
-import kotlin.time.Duration.Companion.seconds
 
 private val behandlingsnummer = "B601,B110"
 
 class PdlClient(
-    private val engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
+    tokenSetProvider: TokenSetProvider,
+    private val engine: HttpClientEngine = engineFactory(StubEngine::pdl),
 ) {
     private val baseUrl = Configuration.PDL_API_URL
     private val client = GraphQLKtorClient(
         url = URI(baseUrl).toURL(),
         httpClient = HttpClient(engine) {
-            azureAD(scope = Configuration.PDL_API_SCOPE, engine = engine) {
-                cache(leeway = 10.seconds)
-            }
+            openID(tokenSetProvider)
             defaultRequest {
                 header("behandlingsnummer", behandlingsnummer)
             }

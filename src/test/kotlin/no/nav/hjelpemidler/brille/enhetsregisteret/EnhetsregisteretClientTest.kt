@@ -11,7 +11,7 @@ import kotlin.test.Test
 class EnhetsregisteretClientTest {
     private val databaseContext = MockDatabaseContext()
     private val client = EnhetsregisteretClient(databaseContext)
-    private val service = EnhetsregisteretService(client, databaseContext)
+    private val service = EnhetsregisteretService(databaseContext, client)
 
     @Test
     fun `henter organisasjonsenhet`() = runTest {

@@ -32,7 +32,6 @@ import kotlin.reflect.full.findAnnotation
 private val log = KotlinLogging.logger {}
 
 class KafkaService(private val kafkaRapid: KafkaRapid) {
-
     private val mapper = jacksonMapperBuilder()
         .addModule(JavaTimeModule())
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)

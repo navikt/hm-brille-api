@@ -17,7 +17,7 @@ class EnhetsregisteretTest {
     fun `Test mot enhetsregisteret i prod`() = runTest {
         val databaseContext = MockDatabaseContext()
         val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
-        val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
+        val enhetsregisteretService = EnhetsregisteretService(databaseContext, enhetsregisteretClient)
 
         val orgnr = "889234962"
 

@@ -18,24 +18,23 @@ import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
-import no.nav.hjelpemidler.http.openid.azureAD
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
 import no.nav.hjelpemidler.logging.secureInfo
 import org.slf4j.MDC
 import java.time.Instant
 import java.time.LocalDate
-import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
 
 class HotsakClient(
-    engine: HttpClientEngine = engineFactory { StubEngine.hotsak() },
+    tokenSetProvider: TokenSetProvider,
+    engine: HttpClientEngine = engineFactory(StubEngine::hotsak),
 ) {
     private val baseUrl = Configuration.HOTSAK_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = true
-        azureAD(scope = Configuration.HOTSAK_API_SCOPE) {
-            cache(leeway = 10.seconds)
-        }
+        openID(tokenSetProvider)
     }
 
     suspend fun hentEksisterendeVedtak(fnr: String, bestillingsdato: LocalDate): List<HotsakVedtak> {

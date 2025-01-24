@@ -5,19 +5,17 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
-import io.ktor.http.headersOf
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
+import no.nav.hjelpemidler.brille.test.TestTokenSetProvider
 import no.nav.hjelpemidler.brille.tilgang.InnloggetBruker
 import no.nav.hjelpemidler.brille.tilgang.TilgangContextElement
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
-import no.nav.hjelpemidler.http.openid.TokenSet
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 import kotlin.test.Test
-import kotlin.time.Duration.Companion.hours
 
 class PdlClientTest {
     @Test
@@ -74,21 +72,15 @@ class PdlClientTest {
         currentUser: InnloggetBruker = InnloggetBruker.Ingen,
         block: suspend (PdlClient) -> Unit,
     ) {
-        runBlocking {
+        runTest {
             withTilgangContext(TilgangContextElement(currentUser)) {
                 block(
                     PdlClient(
+                        TestTokenSetProvider(),
                         engine = javaClass.getResourceAsStream(name).use {
                             val response = requireNotNull(it).bufferedReader().readText()
                             MockEngine {
-                                when {
-                                    it.url.toString().endsWith("/token") -> respond(
-                                        jsonMapper.writeValueAsString(TokenSet.bearer(1.hours, "")),
-                                        headers = headersOf("Content-Type", "application/json"),
-                                    )
-
-                                    else -> respond(response)
-                                }
+                                respond(response)
                             }
                         },
                     ),

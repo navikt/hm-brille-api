@@ -11,8 +11,8 @@ import java.time.temporal.ChronoUnit
 private val log = KotlinLogging.logger { }
 
 class EnhetsregisteretService(
-    private val enhetsregisteretClient: EnhetsregisteretClient,
     private val databaseContext: DatabaseContext,
+    private val enhetsregisteretClient: EnhetsregisteretClient,
 ) {
     suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet? {
         log.info { "Henter organisasjonsenhet med orgnr: $orgnr" }

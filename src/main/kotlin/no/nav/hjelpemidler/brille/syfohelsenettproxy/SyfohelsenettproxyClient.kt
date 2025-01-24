@@ -19,22 +19,21 @@ import no.nav.hjelpemidler.brille.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
-import no.nav.hjelpemidler.http.openid.azureAD
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
 import no.nav.hjelpemidler.logging.secureInfo
 import org.slf4j.MDC
-import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
 
 class SyfohelsenettproxyClient(
-    engine: HttpClientEngine = engineFactory { StubEngine.syfohelsenettproxy() },
+    tokenSetProvider: TokenSetProvider,
+    engine: HttpClientEngine = engineFactory(StubEngine::syfohelsenettproxy),
 ) {
     private val baseUrl = Configuration.SYFOHELSENETTPROXY_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = true
-        azureAD(scope = Configuration.SYFOHELSENETTPROXY_API_SCOPE) {
-            cache(leeway = 10.seconds)
-        }
+        openID(tokenSetProvider)
     }
 
     suspend fun ping() {

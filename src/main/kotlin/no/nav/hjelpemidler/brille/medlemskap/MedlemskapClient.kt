@@ -17,21 +17,20 @@ import io.ktor.http.contentType
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StatusCodeException
 import no.nav.hjelpemidler.http.createHttpClient
-import no.nav.hjelpemidler.http.openid.azureAD
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
 import java.time.LocalDate
-import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
 
 class MedlemskapClient(
+    tokenSetProvider: TokenSetProvider,
     engine: HttpClientEngine = CIO.create(),
 ) {
     private val baseUrl = Configuration.MEDLEMSKAP_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = false
-        azureAD(scope = Configuration.MEDLEMSKAP_API_SCOPE) {
-            cache(leeway = 10.seconds)
-        }
+        openID(tokenSetProvider)
         install(HttpTimeout)
     }
 
