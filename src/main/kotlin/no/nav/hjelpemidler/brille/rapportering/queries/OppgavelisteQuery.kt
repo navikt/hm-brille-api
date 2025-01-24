@@ -4,7 +4,7 @@ import no.nav.hjelpemidler.brille.rapportering.KravFilter
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
 
-const val COLUMN_LABEL_TOTAL = "total"
+const val COLUMN_LABEL_TOTAL = "total_elements"
 
 fun kravlinjeQuery(
     kravFilter: KravFilter?,

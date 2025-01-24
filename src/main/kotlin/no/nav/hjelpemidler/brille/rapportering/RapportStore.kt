@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.rapportering
 
+import no.nav.hjelpemidler.brille.rapportering.queries.COLUMN_LABEL_TOTAL
 import no.nav.hjelpemidler.brille.rapportering.queries.kravlinjeQuery
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import no.nav.hjelpemidler.database.JdbcOperations
@@ -67,8 +68,8 @@ class RapportStorePostgres(private val tx: JdbcOperations) : RapportStore {
         @Language("PostgreSQL")
         val sql = kravlinjeQuery(kravFilter, tilDato, null, referanseFilter, paginert = true)
         return tx.page(
-            sql,
-            mapOf(
+            sql = sql,
+            queryParameters = mapOf(
                 "orgNr" to orgNr,
                 "limit" to limit,
                 "offset" to page,
@@ -76,7 +77,8 @@ class RapportStorePostgres(private val tx: JdbcOperations) : RapportStore {
                 "tilDato" to tilDato,
                 "referanseFilter" to "%$referanseFilter%",
             ),
-            PageRequest(page, limit),
+            pageRequest = PageRequest(page, limit),
+            totalElementsLabel = COLUMN_LABEL_TOTAL,
         ) { row -> Kravlinje.fromRow(row) }
     }
 
