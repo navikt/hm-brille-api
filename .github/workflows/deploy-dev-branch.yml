@@ -38,6 +38,15 @@ jobs:
       - name: Bygg applikasjon
         run: ./gradlew clean build
 
+      - name: Last opp testrapport
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testrapport
+          path: |
+            **/build/reports/
+            **/build/test-results/
+
       - name: Før deploy
         uses: navikt/digihot-deploy/actions/pre-deploy@v3
         env:
