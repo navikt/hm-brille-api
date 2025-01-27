@@ -75,13 +75,7 @@ fun kravlinjeQuery(
         ), grupperte_resultater_pagination AS (
             -- Paginer resultatene
             SELECT batch_id, utbetalingsdato, vedtak_ids, $COLUMN_LABEL_TOTAL FROM grupperte_resultater
-            ${
-        if (paginert) {
-            "LIMIT :limit OFFSET :offset"
-        } else {
-            ""
-        }
-    }
+            ${if (paginert) "LIMIT :limit OFFSET :offset" else ""}
         )
         -- Ekspander de paginerte resultatene igjen til alle relevante vedtak
         SELECT * ${
@@ -92,7 +86,7 @@ fun kravlinjeQuery(
         }
     }
         FROM grupperte_resultater_pagination grp
-        LEFT JOIN alle_vedtak_sok_filtrert v ON v.id = ANY(grp.vedtak_ids)
+        LEFT JOIN alle_vedtak_sok_filtrert v ON v.id = ANY (grp.vedtak_ids)
     """
 
     if (tilDato != null && kravFilter?.equals(KravFilter.EGENDEFINERT) == true) {
@@ -155,6 +149,5 @@ fun kravlinjeQuery(
     // Hvis søk-placeholder teksten fortsatt er her, da fjerner vi den bare
     sql = sql.replace("{{SEARCH_PLACEHOLDER}}", "")
 
-    //language=PostgreSQL
     return sql.trimIndent()
 }

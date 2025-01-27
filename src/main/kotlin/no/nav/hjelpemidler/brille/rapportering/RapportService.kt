@@ -34,8 +34,8 @@ class RapportService(
         fraDato: LocalDate? = null,
         tilDato: LocalDate? = null,
         referanseFilter: String? = "",
-        limit: Int = 10,
-        page: Int = 0,
+        pageNumber: Int = 1,
+        pageSize: Int = 20,
     ): Page<Kravlinje> {
         val kravlinjer = transaction(databaseContext) { ctx ->
             ctx.rapportStore.hentPagedKravlinjerForOrgNummer(
@@ -44,8 +44,8 @@ class RapportService(
                 fraDato = fraDato,
                 tilDato = tilDato,
                 referanseFilter = referanseFilter,
-                limit = limit,
-                page = page,
+                pageNumber = pageNumber,
+                pageSize = pageSize,
             )
         }
         return kravlinjer

@@ -7,6 +7,7 @@ import no.nav.hjelpemidler.database.JdbcOperations
 import no.nav.hjelpemidler.database.Page
 import no.nav.hjelpemidler.database.PageRequest
 import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.pageOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
 
@@ -25,8 +26,8 @@ interface RapportStore : Store {
         fraDato: LocalDate?,
         tilDato: LocalDate?,
         referanseFilter: String?,
-        limit: Int = 20,
-        page: Int = 0,
+        pageNumber: Int = 0,
+        pageSize: Int = 20,
     ): Page<Kravlinje>
 
     fun hentUtbetalingKravlinjerForOrgNummer(
@@ -62,24 +63,24 @@ class RapportStorePostgres(private val tx: JdbcOperations) : RapportStore {
         fraDato: LocalDate?,
         tilDato: LocalDate?,
         referanseFilter: String?,
-        limit: Int,
-        page: Int,
+        pageNumber: Int,
+        pageSize: Int,
     ): Page<Kravlinje> {
-        @Language("PostgreSQL")
         val sql = kravlinjeQuery(kravFilter, tilDato, null, referanseFilter, paginert = true)
+        val pageRequest = PageRequest(pageNumber, pageSize)
         return tx.page(
             sql = sql,
             queryParameters = mapOf(
                 "orgNr" to orgNr,
-                "limit" to limit,
-                "offset" to page,
+                "limit" to pageRequest.limit,
+                "offset" to pageRequest.offset,
                 "fraDato" to fraDato,
                 "tilDato" to tilDato,
                 "referanseFilter" to "%$referanseFilter%",
             ),
-            pageRequest = PageRequest(page, limit),
+            pageRequest = PageRequest.ALL, // limit/offset gjøres i kravlinjeQuery
             totalElementsLabel = COLUMN_LABEL_TOTAL,
-        ) { row -> Kravlinje.fromRow(row) }
+        ) { row -> Kravlinje.fromRow(row) }.let { pageOf(it.content, it.totalElements, pageRequest) }
     }
 
     override fun hentUtbetalingKravlinjerForOrgNummer(
