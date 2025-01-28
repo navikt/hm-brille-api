@@ -153,7 +153,17 @@ class AvtaleService(
         kafkaService.avtaleOpprettet(avtale)
 
         if (Configuration.dev || Configuration.prod) {
-            Slack.post("AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana ved å søke: `Kontonr synkronisert til TSS: orgnr=$orgnr`")
+            Slack.post(
+                "AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan ikke finnes i kibana lengre, slå opp i database med:" +
+                    "```" +
+                    "-- Hent ut tss-ident for virksomhet med ny avtale for å sende denne over til\n" +
+                    "-- po utbetaling/UR\n" +
+                    "SELECT v.orgnr, t.tss_ident, v.oppdatert\n" +
+                    "FROM virksomhet_v1 v\n" +
+                    "LEFT JOIN tssident_v1 t ON t.orgnr = v.orgnr\n" +
+                    "WHERE v.orgnr = '$orgnr'" +
+                    "```",
+            )
         }
 
         return avtale
