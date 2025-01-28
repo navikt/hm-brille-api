@@ -73,7 +73,7 @@ class EnhetsregisteretStorePostgres(private val tx: JdbcOperations) : Enhetsregi
 
     override fun sistOppdatert(): LocalDateTime? {
         return tx.singleOrNull("SELECT MAX(opprettet) FROM enhetsregisteret_v1") {
-            it.localDateTime("opprettet")
+            it.localDateTime(1)
         }
     }
 }
