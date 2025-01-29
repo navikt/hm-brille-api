@@ -3,6 +3,7 @@ package no.nav.hjelpemidler.brille.tss
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
@@ -20,6 +21,7 @@ class TssIdentRiver(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(TssIdentRiver::class.java)
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 
     init {
@@ -47,11 +49,12 @@ class TssIdentRiver(
     private val JsonMessage.opprettet get() = this["opprettet"].textValue()!!
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        LOG.info("Kvittering for oppdatering av TSS mottatt: eventId=${packet.eventId}, orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, opprettet=${packet.opprettet}")
+        LOG.info("Kvittering for oppdatering av TSS mottatt: eventId=${packet.eventId}, orgnr=${packet.orgnr}, opprettet=${packet.opprettet}")
         runBlocking {
             withContext(Dispatchers.IO) {
                 tssIdentService.settTssIdent(packet.orgnr, packet.kontonr, packet.tssIdent)
-                LOG.info("Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, kvittert=${packet.opprettet}")
+                LOG.info("Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kvittert=${packet.opprettet}")
+                sikkerlogg.info("Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, kvittert=${packet.opprettet}")
             }
         }
     }
