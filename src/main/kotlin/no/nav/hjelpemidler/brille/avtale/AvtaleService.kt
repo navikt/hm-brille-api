@@ -154,7 +154,7 @@ class AvtaleService(
 
         if (Configuration.dev || Configuration.prod) {
             Slack.post(
-                "AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan ikke finnes i kibana lengre, slå opp i database med:" +
+                "AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana secureLog (søk: `Kontonr synkronisert til TSS: orgnr=$orgnr`), eller ved å slå opp i database med:" +
                     "```" +
                     "-- Hent ut tss-ident for virksomhet med ny avtale for å sende denne over til\n" +
                     "-- po utbetaling/UR\n" +
