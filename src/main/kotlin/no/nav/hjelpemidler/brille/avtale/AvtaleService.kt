@@ -218,17 +218,21 @@ class AvtaleService(
         sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
+            val opprinneligVirksomhet = requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
+                "Fant ikke virksomhet med orgnr: $orgnr"
+            }
             val virksomhet = ctx.virksomhetStore.oppdaterVirksomhet(
-                requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
-                    "Fant ikke virksomhet med orgnr: $orgnr"
-                }.copy(
+                opprinneligVirksomhet.copy(
                     kontonr = oppdaterAvtale.kontonr,
                     epost = oppdaterAvtale.epost,
                     fnrOppdatertAv = fnrOppdatertAv,
                     oppdatert = LocalDateTime.now(),
                 ),
             )
-
+            // Hvis kontonr faktisk ble endret, så legger vi det i endringsloggen i databasen
+            if (opprinneligVirksomhet.kontonr != virksomhet.kontonr) {
+                ctx.virksomhetStore.opprettEndringsloggInnslag(orgnr, fnrOppdatertAv, oppdaterAvtale.kontonr)
+            }
             virksomhet
         }
 

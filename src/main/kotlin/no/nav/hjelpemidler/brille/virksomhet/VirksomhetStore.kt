@@ -18,6 +18,7 @@ interface VirksomhetStore : Store {
     fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet
     fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet
+    fun opprettEndringsloggInnslag(orgnr: String, fnrOppdatertAv: String, kontonr: String)
     fun hentAlleVirksomheterMedKontonr(): List<Virksomhet>
 }
 
@@ -116,6 +117,22 @@ class VirksomhetStorePostgres(private val sessionFactory: () -> Session) : Virks
             ),
         ).validate()
         virksomhet
+    }
+
+    override fun opprettEndringsloggInnslag(orgnr: String, fnrOppdatertAv: String, kontonr: String) = session {
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO kontonr_endringslogg_v1 (orgnr, fnr_oppdatert_av, kontonr)
+            VALUES (:orgnr, :fnr_oppdatert_av, :kontonr);
+        """.trimIndent()
+        it.update(
+            sql,
+            mapOf(
+                "orgnr" to orgnr,
+                "fnr_oppdatert_av" to fnrOppdatertAv,
+                "kontonr" to kontonr,
+            ),
+        ).validate()
     }
 
     override fun hentAlleVirksomheterMedKontonr(): List<Virksomhet> = session {
