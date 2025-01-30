@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS kontonr_endringslogg_v1
 (
     id                BIGSERIAL NOT NULL PRIMARY KEY,
     orgnr             ORGNR     NOT NULL REFERENCES virksomhet_v1 (orgnr),
-    fnr_oppdatert_av  FNR       NOT NULL,
+    fnr_oppdatert_av  FNR,
     kontonr           KONTONR   NOT NULL,
     opprettet         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
