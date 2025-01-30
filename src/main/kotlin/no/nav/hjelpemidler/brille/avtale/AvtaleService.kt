@@ -130,6 +130,7 @@ class AvtaleService(
                     avtaleversjon = null,
                 ),
             )
+            ctx.virksomhetStore.opprettEndringsloggInnslag(orgnr, fnrInnsender, opprettAvtale.kontonr)
             ctx.avtaleStore.lagreAvtale(
                 Avtale(
                     orgnr = orgnr,
