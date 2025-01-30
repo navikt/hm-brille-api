@@ -14,6 +14,7 @@ interface VirksomhetStore : Store {
     fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet
     fun oppdaterVirksomhet(virksomhet: Virksomhet): Virksomhet
+    fun opprettEndringsloggInnslag(orgnr: String, fnrOppdatertAv: String, kontonr: String)
     fun hentAlleVirksomheterMedKontonr(): List<Virksomhet>
 }
 
@@ -109,6 +110,22 @@ class VirksomhetStorePostgres(private val tx: JdbcOperations) : VirksomhetStore 
             ),
         ).expect(1)
         return virksomhet
+    }
+
+    override fun opprettEndringsloggInnslag(orgnr: String, fnrOppdatertAv: String, kontonr: String) {
+        @Language("PostgreSQL")
+        val sql = """
+            INSERT INTO kontonr_endringslogg_v1 (orgnr, fnr_oppdatert_av, kontonr)
+            VALUES (:orgnr, :fnr_oppdatert_av, :kontonr);
+        """.trimIndent()
+        tx.update(
+            sql,
+            mapOf(
+                "orgnr" to orgnr,
+                "fnr_oppdatert_av" to fnrOppdatertAv,
+                "kontonr" to kontonr,
+            ),
+        ).expect(1)
     }
 
     override fun hentAlleVirksomheterMedKontonr(): List<Virksomhet> {

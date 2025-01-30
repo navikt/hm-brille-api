@@ -134,6 +134,7 @@ class AvtaleService(
                     avtaleversjon = null,
                 ),
             )
+            ctx.virksomhetStore.opprettEndringsloggInnslag(orgnr, fnrInnsender, opprettAvtale.kontonr)
             ctx.avtaleStore.lagreAvtale(
                 Avtale(
                     orgnr = orgnr,
@@ -157,7 +158,17 @@ class AvtaleService(
         kafkaService.avtaleOpprettet(avtale)
 
         if (Environment.current is ClusterEnvironment) {
-            Slack.post("AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana ved å søke: `Kontonr synkronisert til TSS: orgnr=$orgnr`")
+            Slack.post(
+                "AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana secureLog (søk: `Kontonr synkronisert til TSS: orgnr=$orgnr`), eller ved å slå opp i database med:" +
+                    "```" +
+                    "-- Hent ut tss-ident for virksomhet med ny avtale for å sende denne over til\n" +
+                    "-- po utbetaling/UR\n" +
+                    "SELECT v.orgnr, t.tss_ident, v.oppdatert\n" +
+                    "FROM virksomhet_v1 v\n" +
+                    "LEFT JOIN tssident_v1 t ON t.orgnr = v.orgnr\n" +
+                    "WHERE v.orgnr = '$orgnr'" +
+                    "```",
+            )
         }
 
         return avtale
@@ -212,17 +223,21 @@ class AvtaleService(
         log.secureInfo { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
+            val opprinneligVirksomhet = requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
+                "Fant ikke virksomhet med orgnr: $orgnr"
+            }
             val virksomhet = ctx.virksomhetStore.oppdaterVirksomhet(
-                requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
-                    "Fant ikke virksomhet med orgnr: $orgnr"
-                }.copy(
+                opprinneligVirksomhet.copy(
                     kontonr = oppdaterAvtale.kontonr,
                     epost = oppdaterAvtale.epost,
                     fnrOppdatertAv = fnrOppdatertAv,
                     oppdatert = LocalDateTime.now(),
                 ),
             )
-
+            // Hvis kontonr faktisk ble endret, så legger vi det i endringsloggen i databasen
+            if (opprinneligVirksomhet.kontonr != virksomhet.kontonr) {
+                ctx.virksomhetStore.opprettEndringsloggInnslag(orgnr, fnrOppdatertAv, oppdaterAvtale.kontonr)
+            }
             virksomhet
         }
 
