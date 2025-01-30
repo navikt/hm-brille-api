@@ -5,9 +5,11 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
 import no.nav.hjelpemidler.configuration.Environment
-import no.nav.hjelpemidler.logging.secureLog
+import no.nav.hjelpemidler.logging.secureInfo
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>, fnrDetGjelder: String? = null) {
     val defaultParams: Map<String, String?> = mapOf(
@@ -26,7 +28,7 @@ fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>,
             jsonMapper.writerWithDefaultPrettyPrinter()
                 .writeValueAsString(allParams)
         }"
-    secureLog.info { logMessage }
+    log.secureInfo { logMessage }
 
     adminAuditLog(request.httpMethod.value, request.uri, params, extractNavIdent(), fnrDetGjelder)
 }
@@ -68,7 +70,7 @@ private fun adminAuditLog(
     ).joinToString("|")
 
     if (Environment.current.isDev) {
-        secureLog.info { "adminAuditLog log message: $message" }
+        log.secureInfo { "adminAuditLog log message: $message" }
     }
 
     adminAuditLogger.info { message }

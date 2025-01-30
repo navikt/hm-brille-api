@@ -15,7 +15,6 @@ import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.configuration.ClusterEnvironment
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.logging.secureInfo
-import no.nav.hjelpemidler.logging.secureLog
 import no.nav.hjelpemidler.logging.secureWarn
 import java.time.LocalDateTime
 import java.util.UUID
@@ -42,7 +41,7 @@ class AvtaleService(
 
         if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {
             val id = UUID.randomUUID()
-            secureLog.info { "Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (fnr=$fnr, tjeneste=$tjeneste, id=$id)" }
+            log.secureInfo { "Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (fnr=$fnr, tjeneste=$tjeneste, id=$id)" }
             Slack.post("Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (se mer i sikkerlogg med id=$id)")
         }
 
@@ -73,7 +72,7 @@ class AvtaleService(
             }
         }
 
-        secureLog.info {
+        log.secureInfo {
             "Filtrert avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivereFiltrert"
         }
 
@@ -160,14 +159,14 @@ class AvtaleService(
         if (Environment.current is ClusterEnvironment) {
             Slack.post(
                 "AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana secureLog (søk: `Kontonr synkronisert til TSS: orgnr=$orgnr`), eller ved å slå opp i database med:" +
-                    "```" +
-                    "-- Hent ut tss-ident for virksomhet med ny avtale for å sende denne over til\n" +
-                    "-- po utbetaling/UR\n" +
-                    "SELECT v.orgnr, t.tss_ident, v.oppdatert\n" +
-                    "FROM virksomhet_v1 v\n" +
-                    "LEFT JOIN tssident_v1 t ON t.orgnr = v.orgnr\n" +
-                    "WHERE v.orgnr = '$orgnr'" +
-                    "```",
+                        "```" +
+                        "-- Hent ut tss-ident for virksomhet med ny avtale for å sende denne over til\n" +
+                        "-- po utbetaling/UR\n" +
+                        "SELECT v.orgnr, t.tss_ident, v.oppdatert\n" +
+                        "FROM virksomhet_v1 v\n" +
+                        "LEFT JOIN tssident_v1 t ON t.orgnr = v.orgnr\n" +
+                        "WHERE v.orgnr = '$orgnr'" +
+                        "```",
             )
         }
 
