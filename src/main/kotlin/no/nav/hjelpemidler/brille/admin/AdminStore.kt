@@ -186,6 +186,7 @@ class AdminStorePostgres(private val tx: JdbcOperations) : AdminStore {
                 fnrBarn = :fnrBarn AND
                 orgnr = :orgnr AND
                 opprettet > :innslagspunkt
+            LIMIT 1
         """.trimIndent()
 
         return tx.singleOrNull(
