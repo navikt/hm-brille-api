@@ -4,12 +4,15 @@ import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
+import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentLength
 import io.ktor.utils.io.jvm.javaio.toInputStream
@@ -26,10 +29,11 @@ private val log = KotlinLogging.logger { }
 
 class EnhetsregisteretClient(
     private val databaseContext: DatabaseContext,
+    engine: HttpClientEngine = CIO.create(),
 ) {
     private val baseUrl = Configuration.ENHETSREGISTERET_API_URL
 
-    private val httpClient = createHttpClient {
+    private val httpClient = createHttpClient(engine) {
         expectSuccess = true
         install(HttpTimeout) {
             requestTimeoutMillis = 60 * 60 * 1000
@@ -55,10 +59,8 @@ class EnhetsregisteretClient(
                     // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#enheter-lastned
                     runBlocking {
                         httpClient.prepareGet("$baseUrl/enhetsregisteret/api/enheter/lastned") {
-                            header(
-                                HttpHeaders.Accept,
-                                "application/vnd.brreg.enhetsregisteret.enhet.v2+gzip;charset=UTF-8",
-                            )
+                            header(HttpHeaders.Accept, CONTENT_TYPE_ENHET_GZIP)
+                            header(HttpHeaders.AcceptEncoding, "gzip")
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { enhetChunk ->
                                 log.info { "Lagrer batch av ${enhetChunk.count()} enheter" }
@@ -71,10 +73,8 @@ class EnhetsregisteretClient(
                     // API docs: https://data.brreg.no/enhetsregisteret/api/docs/index.html#underenheter-lastned
                     runBlocking {
                         httpClient.prepareGet("$baseUrl/enhetsregisteret/api/underenheter/lastned") {
-                            header(
-                                HttpHeaders.Accept,
-                                "application/vnd.brreg.enhetsregisteret.underenhet.v2+gzip;charset=UTF-8",
-                            )
+                            header(HttpHeaders.Accept, CONTENT_TYPE_UNDERENHET_GZIP)
+                            header(HttpHeaders.AcceptEncoding, "gzip")
                         }.execute { httpResponse ->
                             strømOgBlåsOpp<Organisasjonsenhet>(httpResponse) { underenhetChunk ->
                                 log.info { "Lagrer batch av ${underenhetChunk.count()} underenheter" }
@@ -112,5 +112,12 @@ class EnhetsregisteretClient(
             }
             if (chunk.isNotEmpty()) block(chunk)
         }
+    }
+
+    companion object {
+        val CONTENT_TYPE_ENHET_GZIP =
+            ContentType.parse("application/vnd.brreg.enhetsregisteret.enhet.v2+gzip;charset=UTF-8")
+        val CONTENT_TYPE_UNDERENHET_GZIP =
+            ContentType.parse("application/vnd.brreg.enhetsregisteret.underenhet.v2+gzip;charset=UTF-8")
     }
 }

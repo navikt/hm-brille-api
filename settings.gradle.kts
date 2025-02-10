@@ -19,6 +19,8 @@ dependencyResolutionManagement {
         create("libs") {
             from("no.nav.hjelpemidler:katalog:25.028.124726")
             library("hmRapidsAndRiversV2Core", "com.github.navikt:hm-rapids-and-rivers-v2-core:202410290928")
+            library("ktor-client-encoding", "io.ktor", "ktor-client-encoding").versionRef("ktor")
+            library("ktor-server-compression", "io.ktor", "ktor-server-compression").versionRef("ktor")
             version("spotless", "6.25.0")
         }
     }

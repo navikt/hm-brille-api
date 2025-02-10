@@ -5,6 +5,7 @@ import no.nav.hjelpemidler.database.Store
 import no.nav.hjelpemidler.database.json
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
+import java.sql.Statement
 import java.time.LocalDateTime
 
 interface EnhetsregisteretStore : Store {
@@ -64,7 +65,8 @@ class EnhetsregisteretStorePostgres(private val tx: JdbcOperations) : Enhetsregi
                     )
                 },
             )
-            if (rowsUpdated.count { it > 0 } != enhetChunk.count()) error("en eller flere rowsUpdated i batch var 0")
+            // NB! reWriteBatchedInserts=true gir Statement.SUCCESS_NO_INFO i noen tilfeller
+            if (rowsUpdated.count { it > 0 || it == Statement.SUCCESS_NO_INFO } != enhetChunk.count()) error("En eller flere batcher feilet")
         }
 
         // Slett de gamle enhetene som nå er utdaterte
@@ -73,7 +75,7 @@ class EnhetsregisteretStorePostgres(private val tx: JdbcOperations) : Enhetsregi
 
     override fun sistOppdatert(): LocalDateTime? {
         return tx.singleOrNull("SELECT MAX(opprettet) FROM enhetsregisteret_v1") {
-            it.localDateTime(1)
+            it.localDateTimeOrNull(1)
         }
     }
 }

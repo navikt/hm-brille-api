@@ -33,6 +33,8 @@ dependencies {
 
     // Ktor
     implementation(libs.bundles.ktor.server)
+    implementation(libs.ktor.client.encoding)
+    implementation(libs.ktor.server.compression)
 
     // other
     implementation(libs.hmRapidsAndRiversV2Core)
