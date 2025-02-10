@@ -13,6 +13,7 @@ import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.tid.mangler
 import no.nav.hjelpemidler.brille.writePrettyString
 import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.slf4j.MDC
 import java.time.LocalDate
 
@@ -68,7 +69,7 @@ class MedlemskapBarn(
         val saksgrunnlag = mutableListOf(
             Saksgrunnlag(
                 kilde = SaksgrunnlagKilde.MEDLEMSKAP_BARN,
-                saksgrunnlag = no.nav.hjelpemidler.serialization.jackson.jsonMapper.valueToTree(
+                saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
                         "bestillingsdato" to bestillingsdato,
@@ -105,7 +106,7 @@ class MedlemskapBarn(
         saksgrunnlag.add(
             Saksgrunnlag(
                 kilde = SaksgrunnlagKilde.PDL,
-                saksgrunnlag = no.nav.hjelpemidler.serialization.jackson.jsonMapper.valueToTree(
+                saksgrunnlag = jsonMapper.valueToTree(
                     mapOf(
                         "fnr" to fnrBarn,
                         "pdl" to pdlResponse.rawData,
@@ -138,7 +139,7 @@ class MedlemskapBarn(
             saksgrunnlag.add(
                 Saksgrunnlag(
                     kilde = SaksgrunnlagKilde.LOV_ME,
-                    saksgrunnlag = no.nav.hjelpemidler.serialization.jackson.jsonMapper.valueToTree(
+                    saksgrunnlag = jsonMapper.valueToTree(
                         mapOf(
                             "note" to "failed to check relation membership",
                             "exception" to e.stackTraceToString(),
@@ -161,7 +162,7 @@ class MedlemskapBarn(
             )
 
             val medlemskapResultatLovMe: MedlemskapResultat =
-                no.nav.hjelpemidler.serialization.jackson.jsonMapper.treeToValue(medlemskapResultLovMeJson)
+                jsonMapper.treeToValue(medlemskapResultLovMeJson)
             if (medlemskapResultatLovMe.resultat == MedlemskapResultatResultat.JA) {
                 val medlemskapResultatLovMeMedRettSaksgrunnlag = medlemskapResultatLovMe.copy(
                     saksgrunnlag = saksgrunnlag, // Sakgrunnlaget vårt inneholder LovMe sitt grunnlag rekursivt, samt vårt egent
@@ -209,12 +210,12 @@ private fun sjekkFolkeregistrertAdresseINorge(
             log.secureInfo {
                 "Fant ingen folkeregistrert adresse for barn:" +
                     " bostedsadresser=${
-                        no.nav.hjelpemidler.serialization.jackson.jsonMapper.writePrettyString(
+                        jsonMapper.writePrettyString(
                             bostedsadresser,
                         )
                     } " +
                     " deltBostedBarn=${
-                        no.nav.hjelpemidler.serialization.jackson.jsonMapper.writePrettyString(
+                        jsonMapper.writePrettyString(
                             deltBostedBarn,
                         )
                     } "
