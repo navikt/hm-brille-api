@@ -1,43 +1,31 @@
 package no.nav.hjelpemidler.brille.slack
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import no.nav.hjelpemidler.brille.Configuration
-import org.slf4j.LoggerFactory
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
+import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.http.slack.slack
+import no.nav.hjelpemidler.http.slack.slackIconEmoji
 
-private val log = LoggerFactory.getLogger("PostToSlack")
+private val log = KotlinLogging.logger {}
 
 object Slack {
-    private val username = "hm-brille-api"
-    private val environment = Configuration.slackProperties.environment
-    private val hookUrl = Configuration.slackProperties.slackHook
-    private val channelProd = "#digihot-barnebriller-alerts"
-    private val channelDev = "#digihot-alerts-dev"
+    private const val USERNAME = "hm-brille-api"
+    private const val CHANNEL_DEV = "#digihot-alerts-dev"
+    private const val CHANNEL_PROD = "#digihot-barnebriller-alerts"
 
-    fun post(message: String) {
+    private val tier = Environment.current.tier
+
+    private val client = slack()
+
+    suspend fun post(message: String) {
         try {
-            val slackMessage = "${environment.uppercase()} - $message"
-            val values = mapOf(
-                "text" to slackMessage,
-                "channel" to if (Configuration.prod) channelProd else channelDev,
-                "username" to username,
+            client.sendMessage(
+                username = USERNAME,
+                icon = slackIconEmoji(":fire:"),
+                channel = if (tier.isProd) CHANNEL_PROD else CHANNEL_DEV,
+                message = "$tier - $message",
             )
-
-            val objectMapper = ObjectMapper()
-            val requestBody: String = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(values)
-
-            val client = HttpClient.newBuilder().build()
-            val request = HttpRequest.newBuilder()
-                .uri(URI.create(hookUrl))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build()
-            client.send(request, HttpResponse.BodyHandlers.ofString())
         } catch (e: Exception) {
-            log.warn("Posting av varsel til slack feilet.", e)
+            log.warn(e) { "Posting av varsel til slack feilet." }
         }
     }
 }

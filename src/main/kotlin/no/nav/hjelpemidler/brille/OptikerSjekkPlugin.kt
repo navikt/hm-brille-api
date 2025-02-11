@@ -1,12 +1,11 @@
 package no.nav.hjelpemidler.brille
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.createRouteScopedPlugin
-import io.ktor.server.application.install
 import io.ktor.server.auth.AuthenticationChecked
 import io.ktor.server.auth.AuthenticationRouteSelector
 import io.ktor.server.routing.Route
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.SyfohelsenettproxyClient
 
@@ -42,7 +41,7 @@ val SjekkOptikerPlugin = createRouteScopedPlugin(
 
         val behandler =
             runCatching { syfohelsenettproxyClient.hentBehandler(fnrOptiker) }.getOrElse {
-                log.error("Feil oppstod ved kall mot HPR", it)
+                log.error(it) { "Feil oppstod ved kall mot HPR" }
                 throw SjekkOptikerPluginException(
                     HttpStatusCode.InternalServerError,
                     "Kunne ikke hente data fra syfohelsenettproxyClient: $it",

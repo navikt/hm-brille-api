@@ -20,7 +20,7 @@ import java.time.Month
 import kotlin.math.abs
 import kotlin.test.BeforeTest
 
-internal class SatsApiTest {
+class SatsApiTest {
     private val kafkaService = mockk<KafkaService>()
     private val kalkulatorService = KalkulatorService(kafkaService)
     private val routing = TestRouting {
@@ -28,7 +28,7 @@ internal class SatsApiTest {
     }
 
     @BeforeTest
-    internal fun setup() {
+    fun setup() {
         every { kafkaService.kalkulertBrillestøtte(any()) } returns Unit
     }
 

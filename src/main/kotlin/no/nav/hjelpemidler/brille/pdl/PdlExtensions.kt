@@ -29,9 +29,9 @@ private fun <T> List<T>.firstOrDefault(default: T): T = firstOrNull() ?: default
 private fun String.capitalizeWord(): String = this
     .split(" ")
     .joinToString(" ") { word ->
-        word.lowercase(Configuration.locale)
+        word.lowercase(Configuration.LOCALE)
             .replaceFirstChar { letter ->
-                letter.titlecase(Configuration.locale)
+                letter.titlecase(Configuration.LOCALE)
             }
     }
 

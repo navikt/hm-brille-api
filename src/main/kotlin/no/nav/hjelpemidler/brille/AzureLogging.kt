@@ -1,12 +1,15 @@
 package no.nav.hjelpemidler.brille
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
-import mu.KotlinLogging
+import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.util.UUID
 
-private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+private val log = KotlinLogging.logger {}
 
 fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>, fnrDetGjelder: String? = null) {
     val defaultParams: Map<String, String?> = mapOf(
@@ -21,14 +24,23 @@ fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>,
     allParams.putAll(params)
 
     val logMessage =
-        "Admin api audit: $tag: ${jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(allParams)}"
-    sikkerlogg.info(logMessage)
+        "Admin api audit: $tag: ${
+            jsonMapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(allParams)
+        }"
+    log.secureInfo { logMessage }
 
     adminAuditLog(request.httpMethod.value, request.uri, params, extractNavIdent(), fnrDetGjelder)
 }
 
 private val adminAuditLogger = KotlinLogging.logger("auditLogger")
-private fun adminAuditLog(method: String, uri: String, params: Map<String, String?>, navIdent: String?, fnrDetGjelder: String?) {
+private fun adminAuditLog(
+    method: String,
+    uri: String,
+    params: Map<String, String?>,
+    navIdent: String?,
+    fnrDetGjelder: String?,
+) {
     val message = listOf(
         "CEF:0",
         "Hjelpemiddel",
@@ -57,9 +69,9 @@ private fun adminAuditLog(method: String, uri: String, params: Map<String, Strin
             }.joinToString(" "),
     ).joinToString("|")
 
-    if (Configuration.dev) {
-        sikkerlogg.info("adminAuditLog log message: $message")
+    if (Environment.current.isDev) {
+        log.secureInfo { "adminAuditLog log message: $message" }
     }
 
-    adminAuditLogger.info(message)
+    adminAuditLogger.info { message }
 }

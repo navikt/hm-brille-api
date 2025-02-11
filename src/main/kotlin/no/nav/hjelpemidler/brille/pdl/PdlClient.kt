@@ -10,36 +10,31 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
 import io.ktor.client.request.options
 import io.ktor.http.HttpHeaders
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
-import no.nav.hjelpemidler.brille.jsonMapper
 import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
 import no.nav.hjelpemidler.brille.tilgang.innloggetBruker
-import no.nav.hjelpemidler.http.openid.azureAD
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.slf4j.MDC
-import java.net.URL
+import java.net.URI
 import java.util.UUID
-import kotlin.time.Duration.Companion.seconds
 
-private val log = KotlinLogging.logger { }
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 private val behandlingsnummer = "B601,B110"
 
 class PdlClient(
-    props: Configuration.PdlProperties,
-    val engine: HttpClientEngine = engineFactory { StubEngine.pdl() },
+    tokenSetProvider: TokenSetProvider,
+    private val engine: HttpClientEngine = engineFactory(StubEngine::pdl),
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.PDL_API_URL
     private val client = GraphQLKtorClient(
-        url = URL(baseUrl),
+        url = URI(baseUrl).toURL(),
         httpClient = HttpClient(engine) {
-            azureAD(scope = props.scope) {
-                cache(leeway = 10.seconds)
-            }
+            openID(tokenSetProvider)
             defaultRequest {
                 header("behandlingsnummer", behandlingsnummer)
             }

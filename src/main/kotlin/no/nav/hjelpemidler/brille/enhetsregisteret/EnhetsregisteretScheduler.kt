@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
@@ -11,6 +11,8 @@ import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
+private val log = KotlinLogging.logger {}
+
 class EnhetsregisteretScheduler(
     private val enhetsregisteretService: EnhetsregisteretService,
     leaderElection: LeaderElection,
@@ -18,11 +20,6 @@ class EnhetsregisteretScheduler(
     delay: Duration = 1.hours,
     onlyWorkHours: Boolean = false,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
-
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
-
     override suspend fun action() {
         // Prøv en til to ganger per natt, merk: Filen produseres hver natt, cirka klokken 05:00.
         val now = LocalDateTime.now(ZoneId.of("Europe/Oslo"))

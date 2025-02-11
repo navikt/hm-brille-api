@@ -62,6 +62,7 @@ class JedisMock : StringCommands {
         TODO("Not yet implemented")
     }
 
+    @Deprecated("Deprecated in Java")
     override fun getSet(key: String?, value: String?): String {
         TODO("Not yet implemented")
     }

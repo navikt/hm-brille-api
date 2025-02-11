@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.avtale
 
-import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.ALTINN_CLIENT_MAKS_ANTALL_RESULTATER
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
@@ -13,12 +12,15 @@ import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
+import no.nav.hjelpemidler.configuration.ClusterEnvironment
+import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.secureWarn
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.system.measureTimeMillis
 
 private val log = KotlinLogging.logger { }
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class AvtaleService(
     val databaseContext: DatabaseContext,
@@ -33,12 +35,13 @@ class AvtaleService(
 
     suspend fun hentAvtaler(fnr: String, tjeneste: Avgiver.Tjeneste): List<IngåttAvtale> {
         var avgivere: List<Avgiver>
-        val hentAvgivereElapsed = measureTimeMillis { avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste) }
-        log.info("hentAvtaler: altinnService.hentAvgivere elapsed=${hentAvgivereElapsed}ms")
+        val hentAvgivereElapsed =
+            measureTimeMillis { avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste) }
+        log.info { "hentAvtaler: altinnService.hentAvgivere elapsed=${hentAvgivereElapsed}ms" }
 
         if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {
             val id = UUID.randomUUID()
-            sikkerLog.info("Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (fnr=$fnr, tjeneste=$tjeneste, id=$id)")
+            log.secureInfo { "Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (fnr=$fnr, tjeneste=$tjeneste, id=$id)" }
             Slack.post("Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (se mer i sikkerlogg med id=$id)")
         }
 
@@ -46,7 +49,7 @@ class AvtaleService(
         val hentOrganisasjonsenheterElapsed = measureTimeMillis {
             enheter = enhetsregisteretService.hentOrganisasjonsenheter(avgivere.map { it.orgnr }.toSet())
         }
-        log.info("hentAvtaler: enhetsregisteretService.hentOrganisasjonsenheter elapsed=${hentOrganisasjonsenheterElapsed}ms")
+        log.info { "hentAvtaler: enhetsregisteretService.hentOrganisasjonsenheter elapsed=${hentOrganisasjonsenheterElapsed}ms" }
 
         val avgivereFiltrert = avgivere.filter { avgiver ->
             val orgnr = avgiver.orgnr
@@ -69,7 +72,7 @@ class AvtaleService(
             }
         }
 
-        sikkerLog.info {
+        log.secureInfo {
             "Filtrert avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivereFiltrert"
         }
 
@@ -81,7 +84,7 @@ class AvtaleService(
                 }
             }
         }
-        log.info("hentAvtaler: virksomhetStore.hentVirksomheterForOrganisasjoner elapsed=${hentVirksomheterForOrganisasjonerElapsed}ms")
+        log.info { "hentAvtaler: virksomhetStore.hentVirksomheterForOrganisasjoner elapsed=${hentVirksomheterForOrganisasjonerElapsed}ms" }
 
         return avgivereFiltrert
             .map {
@@ -116,7 +119,7 @@ class AvtaleService(
         }
 
         log.info { "Oppretter avtale for orgnr: $orgnr" }
-        sikkerLog.info { "fnrInnsender: $fnrInnsender, opprettAvtale: $opprettAvtale" }
+        log.secureInfo { "fnrInnsender: $fnrInnsender, opprettAvtale: $opprettAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
             val virksomhet = ctx.virksomhetStore.lagreVirksomhet(
@@ -153,7 +156,7 @@ class AvtaleService(
         }
         kafkaService.avtaleOpprettet(avtale)
 
-        if (Configuration.dev || Configuration.prod) {
+        if (Environment.current is ClusterEnvironment) {
             Slack.post(
                 "AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana secureLog (søk: `Kontonr synkronisert til TSS: orgnr=$orgnr`), eller ved å slå opp i database med:" +
                     "```" +
@@ -179,7 +182,7 @@ class AvtaleService(
         }
 
         log.info { "Registrerer at bruksvilkår for api er godtatt for orgnr: $orgnr" }
-        sikkerLog.info { "fnrInnsender: $fnrInnsender, bruksvilkår for api godtatt for orgnr: $orgnr" }
+        log.secureInfo { "fnrInnsender: $fnrInnsender, bruksvilkår for api godtatt for orgnr: $orgnr" }
 
         val bruksvilkårGodtatt = transaction(databaseContext) { ctx ->
             val bruksvilkårGodtatt = ctx.avtaleStore.godtaBruksvilkår(
@@ -196,7 +199,7 @@ class AvtaleService(
         val organisasjonsenhet = hentOrganisasjonsenhet(orgnr)
         kafkaService.bruksvilkårGodtatt(bruksvilkårGodtatt, organisasjonsenhet.navn)
 
-        if (Configuration.dev || Configuration.prod) {
+        if (Environment.current is ClusterEnvironment) {
             Slack.post("AvtaleService: Bruksvilkår godtatt for orgnr=$orgnr.")
         }
 
@@ -216,7 +219,7 @@ class AvtaleService(
         }
 
         log.info { "Oppdaterer avtale for orgnr: $orgnr" }
-        sikkerLog.info { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
+        log.secureInfo { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
             val opprinneligVirksomhet = requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
@@ -238,7 +241,7 @@ class AvtaleService(
         }
 
         if (virksomhet.fnrInnsender != virksomhet.fnrOppdatertAv) {
-            sikkerLog.warn {
+            log.secureWarn {
                 "Avtalen ble oppdatert av en annen en innsender, fnrInnsender: ${virksomhet.fnrInnsender}, fnrOppdatertAv: ${virksomhet.fnrOppdatertAv}"
             }
         }

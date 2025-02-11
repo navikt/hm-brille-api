@@ -3,17 +3,9 @@ rootProject.name = "hm-brille-api"
 dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
     repositories {
-        mavenLocal()
         mavenCentral()
         maven {
-            url = uri("https://maven.pkg.github.com/navikt/hm-http")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
-        maven {
-            url = uri("https://maven.pkg.github.com/navikt/hm-nare")
+            url = uri("https://maven.pkg.github.com/navikt/*")
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")
@@ -21,6 +13,15 @@ dependencyResolutionManagement {
         }
         maven {
             url = uri("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+        }
+    }
+    versionCatalogs {
+        create("libs") {
+            from("no.nav.hjelpemidler:katalog:25.028.124726")
+            library("hmRapidsAndRiversV2Core", "com.github.navikt:hm-rapids-and-rivers-v2-core:202410290928")
+            library("ktor-client-encoding", "io.ktor", "ktor-client-encoding").versionRef("ktor")
+            library("ktor-server-compression", "io.ktor", "ktor-server-compression").versionRef("ktor")
+            version("spotless", "6.25.0")
         }
     }
 }

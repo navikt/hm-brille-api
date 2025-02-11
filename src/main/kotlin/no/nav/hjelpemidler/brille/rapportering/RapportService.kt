@@ -2,8 +2,8 @@ package no.nav.hjelpemidler.brille.rapportering
 
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
-import no.nav.hjelpemidler.brille.store.Page
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
+import no.nav.hjelpemidler.database.Page
 import java.time.LocalDate
 
 class RapportService(
@@ -34,8 +34,8 @@ class RapportService(
         fraDato: LocalDate? = null,
         tilDato: LocalDate? = null,
         referanseFilter: String? = "",
-        limit: Int = 10,
-        offset: Int = 0,
+        pageNumber: Int = 1,
+        pageSize: Int = 20,
     ): Page<Kravlinje> {
         val kravlinjer = transaction(databaseContext) { ctx ->
             ctx.rapportStore.hentPagedKravlinjerForOrgNummer(
@@ -44,17 +44,18 @@ class RapportService(
                 fraDato = fraDato,
                 tilDato = tilDato,
                 referanseFilter = referanseFilter,
-                limit = limit,
-                offset = offset,
+                pageNumber = pageNumber,
+                pageSize = pageSize,
             )
         }
         return kravlinjer
     }
 
-    suspend fun hentUtbetalingKravlinjer(orgnr: String, avstemmingsreferanse: String) = transaction(databaseContext) { ctx ->
-        ctx.rapportStore.hentUtbetalingKravlinjerForOrgNummer(
-            orgnr,
-            avstemmingsreferanse,
-        )
-    }
+    suspend fun hentUtbetalingKravlinjer(orgnr: String, avstemmingsreferanse: String) =
+        transaction(databaseContext) { ctx ->
+            ctx.rapportStore.hentUtbetalingKravlinjerForOrgNummer(
+                orgnr,
+                avstemmingsreferanse,
+            )
+        }
 }

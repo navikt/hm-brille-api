@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.medlemskap
 
 import com.fasterxml.jackson.databind.JsonNode
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
@@ -13,26 +14,23 @@ import io.ktor.client.statement.request
 import io.ktor.http.ContentType.Application.Json
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StatusCodeException
 import no.nav.hjelpemidler.http.createHttpClient
-import no.nav.hjelpemidler.http.openid.azureAD
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
 import java.time.LocalDate
-import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
 
 class MedlemskapClient(
-    props: Configuration.MedlemskapOppslagProperties,
+    tokenSetProvider: TokenSetProvider,
     engine: HttpClientEngine = CIO.create(),
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.MEDLEMSKAP_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = false
-        azureAD(scope = props.scope) {
-            cache(leeway = 10.seconds)
-        }
+        openID(tokenSetProvider)
         install(HttpTimeout)
     }
 
@@ -62,8 +60,11 @@ class MedlemskapClient(
                 log.warn(it) { "Klarte ikke å hente response body som string" }
                 ""
             }
-            log.error("${response.request.method.value} ${response.request.url} ga status: ${response.status}")
-            throw StatusCodeException(HttpStatusCode.InternalServerError, "Kall til medlemskap-barn ga status ${response.status}: $message")
+            log.error { "${response.request.method.value} ${response.request.url} ga status: ${response.status}" }
+            throw StatusCodeException(
+                HttpStatusCode.InternalServerError,
+                "Kall til medlemskap-barn ga status ${response.status}: $message",
+            )
         }
     }
 }

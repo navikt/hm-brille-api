@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.hotsak
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
@@ -12,31 +13,28 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
-import no.nav.hjelpemidler.http.openid.azureAD
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.logging.secureInfo
 import org.slf4j.MDC
 import java.time.Instant
 import java.time.LocalDate
-import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class HotsakClient(
-    props: Configuration.HotsakApiProperties,
-    engine: HttpClientEngine = engineFactory { StubEngine.hotsak() },
+    tokenSetProvider: TokenSetProvider,
+    engine: HttpClientEngine = engineFactory(StubEngine::hotsak),
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.HOTSAK_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = true
-        azureAD(scope = props.scope) {
-            cache(leeway = 10.seconds)
-        }
+        openID(tokenSetProvider)
     }
 
     suspend fun hentEksisterendeVedtak(fnr: String, bestillingsdato: LocalDate): List<HotsakVedtak> {
@@ -56,7 +54,7 @@ class HotsakClient(
             when (response.status) {
                 HttpStatusCode.OK -> {
                     val vedtak = response.body<HentEksisterendeVedtakResponse>()
-                    sikkerLog.info { "Fikk svar fra hm-saksbehandling: $vedtak" }
+                    log.secureInfo { "Fikk svar fra hm-saksbehandling: $vedtak" }
                     return vedtak.vedtak ?: listOfNotNull(vedtak.vedtaksdato).map {
                         HotsakVedtak(
                             sakId = "",

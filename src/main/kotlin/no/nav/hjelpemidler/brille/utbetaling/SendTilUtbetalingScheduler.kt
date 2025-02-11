@@ -1,28 +1,29 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.Gauge
-import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
-import org.slf4j.LoggerFactory
+import no.nav.hjelpemidler.configuration.Environment
 import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+
+private val log = KotlinLogging.logger {}
 
 class SendTilUtbetalingScheduler(
     private val utbetalingService: UtbetalingService,
     private val databaseContext: DatabaseContext,
     leaderElection: LeaderElection,
     private val metricsConfig: MetricsConfig,
-    delay: Duration = if (Configuration.dev) 3.minutes else 1.hours,
+    delay: Duration = if (Environment.current.isDev) 3.minutes else 1.hours,
     private val dager: Long = 15,
     onlyWorkHours: Boolean = true,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
-
     private var maxUtbetalinger: Double = 0.0
     private var tilUtbetaling: Double = 0.0
 
@@ -33,29 +34,25 @@ class SendTilUtbetalingScheduler(
             .register(metricsConfig.registry)
     }
 
-    companion object {
-        private val LOG = LoggerFactory.getLogger(SendTilUtbetalingScheduler::class.java)
-    }
-
     override suspend fun action() {
         val utbetalinger = utbetalingService.hentUtbetalingerForOppdrag(
             batchDato = LocalDate.now().minusDays(dager),
             opprettetFor = 2.minutes,
         ) // hent kun de som har blitt registrert minst x minutter siden.
-        LOG.info("Fant ${utbetalinger.size} utbetalinger som skal sendes over.")
+        log.info { "Fant ${utbetalinger.size} utbetalinger som skal sendes over" }
         if (utbetalinger.isNotEmpty()) {
-            val utbetalingsBatchList = utbetalinger.toUtbetalingsBatchList()
-            LOG.info("fordelt på ${utbetalingsBatchList.size} batch")
-            utbetalingsBatchList.forEach {
+            val batch = utbetalinger.toUtbetalingBatchList()
+            log.info { "fordelt på ${batch.size} batch" }
+            batch.forEach {
                 val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
-                    ?: throw RuntimeException("ingen tss ident tilgjengelig for batch (skal ikke skje)")
+                    ?: error("Ingen TSS-ident tilgjengelig for batch (skal ikke skje)")
                 utbetalingService.sendBatchTilUtbetaling(it, tssIdent)
                 val antUtbetalinger = it.utbetalinger.size
                 if (maxUtbetalinger < antUtbetalinger) {
                     maxUtbetalinger = antUtbetalinger.toDouble()
                 }
                 if (antUtbetalinger > 100) {
-                    LOG.warn("En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!")
+                    log.warn { "En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!" }
                 }
             }
         }

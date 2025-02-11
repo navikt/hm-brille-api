@@ -1,12 +1,11 @@
 package no.nav.hjelpemidler.brille.virksomhet
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClientException
@@ -59,7 +58,7 @@ fun Route.virksomhetApi(
             val virksomhet =
                 transaction(databaseContext) { ctx -> ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr) }
             val harAktivNavAvtale = virksomhet?.aktiv ?: false
-            log.info("Søker etter $orgnr har aktiv NavAvtale: $harAktivNavAvtale")
+            log.info { "Søker etter $orgnr har aktiv NavAvtale: $harAktivNavAvtale" }
             val enhet = enhetsregisteretService.hentOrganisasjonsenhet(orgnr)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Fant ikke organisasjonsenhet for orgnr: $orgnr")
 

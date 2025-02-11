@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.syfohelsenettproxy
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
@@ -8,35 +9,31 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.SjekkOptikerPluginException
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
-import no.nav.hjelpemidler.http.openid.azureAD
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.logging.secureInfo
 import org.slf4j.MDC
-import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger { }
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
 
 class SyfohelsenettproxyClient(
-    props: Configuration.SyfohelsenettproxyProperties,
-    engine: HttpClientEngine = engineFactory { StubEngine.syfohelsenettproxy() },
+    tokenSetProvider: TokenSetProvider,
+    engine: HttpClientEngine = engineFactory(StubEngine::syfohelsenettproxy),
 ) {
-    private val baseUrl = props.baseUrl
+    private val baseUrl = Configuration.SYFOHELSENETTPROXY_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = true
-        azureAD(scope = props.scope) {
-            cache(leeway = 10.seconds)
-        }
+        openID(tokenSetProvider)
     }
 
     suspend fun ping() {
@@ -68,7 +65,7 @@ class SyfohelsenettproxyClient(
             when (response.status) {
                 HttpStatusCode.OK -> {
                     val behandler = response.body<Behandler>()
-                    sikkerLog.info { "Fikk svar fra HPR: $behandler" }
+                    log.secureInfo { "Fikk svar fra HPR: $behandler" }
                     return behandler
                 }
             }

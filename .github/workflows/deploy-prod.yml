@@ -13,6 +13,6 @@ jobs:
       id-token: write
     uses: navikt/hm-workflows/.github/workflows/deploy-prod.yaml@main
     with:
-      manifest: .hotnais/nais-deploy.yaml
-      vars:  .hotnais/prod/config.json
+      manifest: .nais/nais-deploy.yaml
+      vars: .nais/prod/config.json
     secrets: inherit

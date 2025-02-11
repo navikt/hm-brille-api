@@ -1,17 +1,16 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import io.kotest.matchers.shouldBe
-import no.nav.hjelpemidler.brille.db.PostgresTestHelper
-import no.nav.hjelpemidler.brille.db.PostgresTestHelper.withMigratedDb
+import kotlinx.coroutines.test.runTest
+import no.nav.hjelpemidler.brille.test.AbstractStoreTest
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
-import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import kotlin.test.Test
 
-internal class AvtaleStorePostgresTest {
+class AvtaleStorePostgresTest : AbstractStoreTest() {
     @Test
-    internal fun `lagrer og henter hovedavtale`() = withMigratedDb {
-        with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
-            val lagretVirksomhet = lagreVirksomhet(
+    fun `lagrer og henter hovedavtale`() = runTest {
+        val lagretVirksomhet = transaction {
+            virksomhetStore.lagreVirksomhet(
                 Virksomhet(
                     orgnr = "986165759",
                     kontonr = "55718628082",
@@ -22,36 +21,30 @@ internal class AvtaleStorePostgresTest {
                     bruksvilkår = false,
                 ),
             )
+            avtaleStore.lagreAvtale(
+                Avtale(
+                    id = 1,
+                    orgnr = "986165759",
+                    fnrInnsender = "27121346260",
+                    aktiv = true,
+                    avtaleId = 1,
+                ),
+            )
+        }
 
-            with(AvtaleStorePostgres(PostgresTestHelper.sessionFactory)) {
-                lagreAvtale(
-                    Avtale(
-                        id = 1,
-                        orgnr = "986165759",
-                        fnrInnsender = "27121346260",
-                        aktiv = true,
-                        avtaleId = 1,
-                    ),
-                )
-            }
-
-            val hentetVirksomhetForOrganisasjon = hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
-            try {
-                val hentetVirksomhetForInnsender =
-                    hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
-                        .firstOrNull()
-                hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
-            } catch (e: Exception) {
-                System.out.println(e.message)
-                throw e
-            }
+        transaction {
+            val hentetVirksomhetForOrganisasjon = virksomhetStore.hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
+            val hentetVirksomhetForInnsender = virksomhetStore
+                .hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
+                .firstOrNull()
+            hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
         }
     }
 
     @Test
-    internal fun `lagrer, oppdaterer og henter virksomhet med godtatte bruksvilkår for API`() = withMigratedDb {
-        with(VirksomhetStorePostgres(PostgresTestHelper.sessionFactory)) {
-            val lagretVirksomhet = lagreVirksomhet(
+    fun `lagrer, oppdaterer og henter virksomhet med godtatte bruksvilkår for API`() = runTest {
+        val lagretVirksomhet = transaction {
+            virksomhetStore.lagreVirksomhet(
                 Virksomhet(
                     orgnr = "986165760",
                     kontonr = "55718628082",
@@ -62,42 +55,39 @@ internal class AvtaleStorePostgresTest {
                     bruksvilkår = true,
                 ),
             )
+        }
 
-            with(AvtaleStorePostgres(PostgresTestHelper.sessionFactory)) {
-                val avtale = lagreAvtale(
-                    Avtale(
-                        id = null,
-                        orgnr = "986165760",
-                        fnrInnsender = "27121346260",
-                        aktiv = true,
-                        avtaleId = 1,
-                    ),
-                )
+        transaction {
+            avtaleStore.lagreAvtale(
+                Avtale(
+                    id = null,
+                    orgnr = "986165760",
+                    fnrInnsender = "27121346260",
+                    aktiv = true,
+                    avtaleId = 1,
+                ),
+            )
 
-                val bruksvilkår = godtaBruksvilkår(
-                    BruksvilkårGodtatt(
-                        id = null,
-                        orgnr = "986165760",
-                        fnrInnsender = "27121346260",
-                        aktiv = true,
-                        bruksvilkårDefinisjonId = 1,
-                    ),
-                )
+            val bruksvilkårGodtatt = avtaleStore.godtaBruksvilkår(
+                BruksvilkårGodtatt(
+                    id = null,
+                    orgnr = "986165760",
+                    fnrInnsender = "27121346260",
+                    aktiv = true,
+                    bruksvilkårDefinisjonId = 1,
+                ),
+            )
 
-                val bruksvilkårHentet = henBruksvilkårOrganisasjon("986165760")
-            }
+            avtaleStore.henBruksvilkårOrganisasjon("986165760") shouldBe bruksvilkårGodtatt
+        }
 
-            val hentetVirksomhetForOrganisasjon = hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
-            try {
-                val hentetVirksomhetForInnsender =
-                    hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
-                        .firstOrNull()
-                hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
-                hentetVirksomhetForOrganisasjon?.bruksvilkår shouldBe true
-            } catch (e: Exception) {
-                System.out.println(e.message)
-                throw e
-            }
+        transaction {
+            val hentetVirksomhetForOrganisasjon = virksomhetStore.hentVirksomhetForOrganisasjon(lagretVirksomhet.orgnr)
+            val hentetVirksomhetForInnsender = virksomhetStore
+                .hentVirksomheterForOrganisasjoner(listOf(lagretVirksomhet.orgnr))
+                .firstOrNull()
+            hentetVirksomhetForOrganisasjon shouldBe hentetVirksomhetForInnsender
+            hentetVirksomhetForOrganisasjon?.bruksvilkår shouldBe true
         }
     }
 }

@@ -1,0 +1,58 @@
+{
+  "appnavn": "hm-brille-api",
+  "inbound-applications": [
+    "hm-brille-frontend",
+    "hm-brilleavtale-frontend",
+    "hm-brillerapport",
+    "hm-brillekalkulator",
+    "hm-brillekalkulator-preview",
+    "hm-brille-admin",
+    "hm-brille-integrasjon",
+    "hm-saksbehandling",
+    "hotsak-frontend"
+  ],
+  "azure-group-ids": [
+    "2f632b40-4730-4692-9c7c-fb744e2d33e1",
+    "d6f989d6-59a9-4d18-9cd1-f1372dcccfe5"
+  ],
+  "port": 9090,
+  "db_tier": "db-custom-1-3840",
+  "db_high_availability": true,
+  "db_size": 20,
+  "db_instance_name": "hm-brille-api-db-prod",
+  "db_retained_backups": 30,
+  "db_name": "brilleapidb",
+  "external-hosts": [
+    "data.brreg.no",
+    "pdl-api.prod-fss-pub.nais.io",
+    "hooks.slack.com",
+    "api-gw.oera.no"
+  ],
+  "outbound-applications": [
+    "hm-saksbehandling"
+  ],
+  "kafka-cluster": "nav-prod",
+  "min-replicas": 2,
+  "max-replicas": 4,
+  "env": {
+    "ALTINN_APIGW_CONSUMER_ID": "hjelpemidlerdigitalsoknad-api-prod",
+    "ALTINN_APIGW_URL": "https://api-gw.oera.no/ekstern/altinn/api/serviceowner",
+    "CLIENT_ID_AZURE_TOKEN_GENERATOR": "00000000-0000-0000-0000-000000000000",
+    "CLIENT_ID_BRILLE_INTEGRASJON": "5caedb6c-34ef-4252-af8c-a755755e402e",
+    "CLIENT_ID_SAKSBEHANDLING": "1a4ed5f2-4fa5-4e5a-b537-555609bfdb0a",
+    "ENHETSREGISTERET_API_URL": "https://data.brreg.no",
+    "GRUPPE_BRILLEADMIN_BRUKERE": "d6f989d6-59a9-4d18-9cd1-f1372dcccfe5",
+    "GRUPPE_TEAMDIGIHOT": "2f632b40-4730-4692-9c7c-fb744e2d33e1",
+    "HOTSAK_API_SCOPE": "api://prod-gcp.teamdigihot.hm-saksbehandling/.default",
+    "HOTSAK_API_URL": "http://hm-saksbehandling.teamdigihot.svc.cluster.local/api",
+    "KAFKA_CONSUMER_GROUP_ID": "hm-brille-api-v1",
+    "KAFKA_TOPIC": "teamdigihot.hm-soknadsbehandling-v1",
+    "MEDLEMSKAP_API_SCOPE": "api://prod-gcp.medlemskap.medlemskap-barn/.default",
+    "MEDLEMSKAP_API_URL": "http://medlemskap-barn.medlemskap.svc.cluster.local/",
+    "PDL_API_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
+    "PDL_API_URL": "https://pdl-api.prod-fss-pub.nais.io/graphql",
+    "REDIS_HOST": "brille-redis.teamdigihot.svc.cluster.local",
+    "SYFOHELSENETTPROXY_API_SCOPE": "api://prod-gcp.teamsykmelding.syfohelsenettproxy/.default",
+    "SYFOHELSENETTPROXY_API_URL": "http://syfohelsenettproxy.teamsykmelding.svc.cluster.local"
+  }
+}

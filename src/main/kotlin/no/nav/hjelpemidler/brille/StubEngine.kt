@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
@@ -12,13 +13,13 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.scheduler.Elector
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Behandler
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Godkjenning
 import no.nav.hjelpemidler.brille.syfohelsenettproxy.Kode
 import no.nav.hjelpemidler.http.openid.TokenSet
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.net.InetAddress
 import kotlin.time.Duration.Companion.hours
 
@@ -72,7 +73,7 @@ object StubEngine {
 
     fun azureAd(): HttpClientEngine = mockEngine {
         post("/default/token") {
-            respond(TokenSet.bearer(1.hours, ""))
+            respond(TokenSet.bearer(1.hours, "token"))
         }
     }
 

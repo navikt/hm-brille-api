@@ -3,13 +3,13 @@ package no.nav.hjelpemidler.brille.vilkarsvurdering
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.sats.mangler
 import no.nav.hjelpemidler.brille.tid.mangler
+import no.nav.hjelpemidler.localization.LOCALE_NORWEGIAN_BOKMÅL
 import no.nav.hjelpemidler.nare.evaluering.Årsak
 import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import java.util.Locale
 
 val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 
@@ -242,5 +242,5 @@ object Vilkårene {
         )
 
     private fun LocalDate.formatert(): String =
-        this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(Locale("nb")))
+        this.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withLocale(LOCALE_NORWEGIAN_BOKMÅL))
 }

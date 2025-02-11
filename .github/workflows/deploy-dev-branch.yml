@@ -23,10 +23,31 @@ jobs:
       version_tag: ${{ steps.version-tag.outputs.VERSION_TAG}}
 
     steps:
-      - name: Checkout code
+      - name: Sjekk ut koden
         uses: actions/checkout@v4
 
-      - name: pre-deploy
+      - name: Sett opp Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Sett opp Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Bygg applikasjon
+        run: ./gradlew clean build
+
+      - name: Last opp testrapport
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testrapport
+          path: |
+            **/build/reports/
+            **/build/test-results/
+
+      - name: Før deploy
         uses: navikt/digihot-deploy/actions/pre-deploy@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,7 +80,6 @@ jobs:
         uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: dev-gcp
-          RESOURCE: .hotnais/nais-dev.yaml
-          VARS: .hotnais/dev/config.json
+          RESOURCE: .nais/nais-deploy.yaml
+          VARS: .nais/dev/config.json
           IMAGE: ${{ needs.build.outputs.docker_image }}
-

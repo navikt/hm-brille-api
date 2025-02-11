@@ -1,8 +1,8 @@
 package no.nav.hjelpemidler.brille.pdl
 
-import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
-import no.nav.hjelpemidler.brille.jsonMapper
+import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 
 private val log = KotlinLogging.logger {}
 
@@ -13,7 +13,7 @@ class PdlService(private val pdlClient: PdlClient) {
             if (pdlOppslag.harAdressebeskyttelse()) {
                 throw PdlHarAdressebeskyttelseException()
             }
-            if (Configuration.dev) {
+            if (Environment.current.isDev) {
                 log.info {
                     "DEBUG: PDL raw result: ${jsonMapper.writeValueAsString(pdlOppslag)}"
                 }

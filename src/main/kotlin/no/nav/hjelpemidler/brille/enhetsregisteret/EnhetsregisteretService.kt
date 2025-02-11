@@ -1,9 +1,9 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
-import mu.KotlinLogging
-import no.nav.hjelpemidler.brille.Configuration
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
+import no.nav.hjelpemidler.configuration.Environment
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
@@ -11,22 +11,23 @@ import java.time.temporal.ChronoUnit
 private val log = KotlinLogging.logger { }
 
 class EnhetsregisteretService(
-    private val enhetsregisteretClient: EnhetsregisteretClient,
     private val databaseContext: DatabaseContext,
+    private val enhetsregisteretClient: EnhetsregisteretClient,
 ) {
     suspend fun hentOrganisasjonsenhet(orgnr: String): Organisasjonsenhet? {
         log.info { "Henter organisasjonsenhet med orgnr: $orgnr" }
 
         val enhet = transaction(databaseContext) { ctx ->
             ctx.enhetsregisteretStore.hentEnhet(orgnr)
-        } ?: enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
+        }
+            ?: enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
 
         if (enhet != null) {
             log.info { "Hentet enhet/underenhet med orgnr: $orgnr fra mirror" }
             return enhet
         }
 
-        if (Configuration.dev) {
+        if (Environment.current.isDev) {
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
             return mockedOrg(orgnr)
         }
@@ -45,16 +46,18 @@ class EnhetsregisteretService(
         val manglendeEnheter = orgnre.filter { !enheter.containsKey(it) }.let { mangler ->
             if (mangler.isNotEmpty()) {
                 ", men ${mangler.count()} enheter ble ikke funnet og blir derfor slått opp i enhetsregisterets api. Disse er: $mangler"
-            } else { "" }
+            } else {
+                ""
+            }
         }
-        log.info("Hentet ${enheter.count()} enheter fra enhetsregister-mirror$manglendeEnheter")
+        log.info { "Hentet ${enheter.count()} enheter fra enhetsregister-mirror$manglendeEnheter" }
 
         val enheterFraTilbakefallsLøsning = orgnre.filter { !enheter.containsKey(it) }.mapNotNull { orgnr ->
             enhetsregisteretClient.hentEnhet(orgnr) // Fall tilbake på web apiet: enhetsregister-mirror inneholder feks. ikke slettede enheter
         }.groupBy { it.orgnr }.mapValues { it.value.first() }
         enheter.putAll(enheterFraTilbakefallsLøsning)
 
-        if (Configuration.dev) {
+        if (Environment.current.isDev) {
             // Mock alle mulige organisasjoner som hm-mocks brukte å gjøre
             for (orgnr in orgnre) {
                 enheter.putAll(mapOf(orgnr to mockedOrg(orgnr)))
@@ -63,7 +66,7 @@ class EnhetsregisteretService(
 
         orgnre.filter { !enheter.containsKey(it) }.let { mangler ->
             if (mangler.isNotEmpty()) {
-                log.warn("Noen orgnre ble aldri funnet: $mangler")
+                log.warn { "Noen orgnre ble aldri funnet: $mangler" }
             }
         }
 
@@ -72,8 +75,9 @@ class EnhetsregisteretService(
 
     suspend fun organisasjonSlettet(orgnr: String): Boolean {
         kotlin.runCatching {
-            val org = runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
-                ?: enhetsregisteretClient.hentEnhet(orgnr)
+            val org =
+                runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
+                    ?: enhetsregisteretClient.hentEnhet(orgnr)
 
             if (org != null) {
                 return org.slettedato != null
@@ -88,8 +92,9 @@ class EnhetsregisteretService(
 
     suspend fun organisasjonSlettetNår(orgnr: String): LocalDate? {
         kotlin.runCatching {
-            val org = runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
-                ?: enhetsregisteretClient.hentEnhet(orgnr)
+            val org =
+                runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
+                    ?: enhetsregisteretClient.hentEnhet(orgnr)
 
             if (org != null) {
                 return org.slettedato
@@ -107,7 +112,11 @@ class EnhetsregisteretService(
             it.enhetsregisteretStore.sistOppdatert()
         }
 
-        if (oppdaterUansett || sistOppdatert == null || sistOppdatert.until(LocalDateTime.now(), ChronoUnit.HOURS) > 20) {
+        if (oppdaterUansett || sistOppdatert == null || sistOppdatert.until(
+                LocalDateTime.now(),
+                ChronoUnit.HOURS,
+            ) > 20
+        ) {
             enhetsregisteretClient.oppdaterMirror()
         }
     }

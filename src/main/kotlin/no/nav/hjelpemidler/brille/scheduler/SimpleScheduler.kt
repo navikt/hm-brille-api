@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.scheduler
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -7,7 +8,6 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
-import org.slf4j.LoggerFactory
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -15,6 +15,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.DurationUnit
+
+private val log = KotlinLogging.logger {}
 
 /**
  * A very simple implementation of a scheduler using coroutines and leaderElection
@@ -29,23 +31,20 @@ abstract class SimpleScheduler(
     private val job: Job
     private val mySchedulerName: String = this.javaClass.simpleName
 
-    companion object {
-        private val LOG = LoggerFactory.getLogger(SimpleScheduler::class.java)
-    }
-
     init {
-        LOG.info("starting scheduler: $mySchedulerName with a delay of $delay")
-        if (onlyWorkHours) LOG.info("$mySchedulerName task will only be launched during working hours.")
+        log.info { "Starting scheduler: $mySchedulerName with a delay of $delay" }
+        if (onlyWorkHours) log.info { "$mySchedulerName task will only be launched during working hours." }
         job = CoroutineScope(Dispatchers.Default).launch {
             runTask()
         }
     }
 
-    suspend fun runTask() = coroutineScope {
+    private suspend fun runTask() = coroutineScope {
         while (true) {
             delay(delay)
-            if (leaderElection.isLeader() && (!onlyWorkHours || LocalDateTime.now().isWorkingHours())) {
-                LOG.info("Running $mySchedulerName")
+            val leader = leaderElection.isLeader()
+            if (leader && (!onlyWorkHours || LocalDateTime.now().isWorkingHours())) {
+                log.info { "Running $mySchedulerName" }
                 launch {
                     try {
                         val time = System.currentTimeMillis()
@@ -54,20 +53,19 @@ abstract class SimpleScheduler(
                         metricsConfig.registry.counter("scheduler_duration_seconds", "name", mySchedulerName)
                             .increment(duration.toDouble(DurationUnit.SECONDS))
                         if (duration > delay) {
-                            LOG.warn("$mySchedulerName spent $duration ms which is greater than delayTime: $delay")
+                            log.warn { "$mySchedulerName spent ${duration}ms which is greater than delayTime: $delay" }
                         }
                     } catch (e: Exception) {
-                        LOG.error("Scheduler $mySchedulerName has failed with an exception, the scheduler will be stopped", e)
+                        log.error(e) { "Scheduler $mySchedulerName has failed with an exception, the scheduler will be stopped" }
                         throw e
                     }
                 }
             } else {
-                LOG.info(
-                    "NOT running $mySchedulerName: isLeader: ${leaderElection.isLeader()}" +
-                        ", onlyWorkHours: $onlyWorkHours, isWorkingHours: ${
-                            LocalDateTime.now().isWorkingHours()
-                        }",
-                )
+                log.info {
+                    "NOT running $mySchedulerName: isLeader: $leader, onlyWorkHours: $onlyWorkHours, isWorkingHours: ${
+                        LocalDateTime.now().isWorkingHours()
+                    }"
+                }
             }
         }
     }
@@ -75,7 +73,7 @@ abstract class SimpleScheduler(
     abstract suspend fun action()
 
     fun cancel() {
-        LOG.info("cancel job $mySchedulerName")
+        log.info { "Cancelling job: $mySchedulerName" }
         job.cancel()
     }
 }

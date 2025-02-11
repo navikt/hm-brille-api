@@ -1,14 +1,11 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import kotliquery.Row
-import kotliquery.Session
-import no.nav.hjelpemidler.brille.json
 import no.nav.hjelpemidler.brille.sats.SatsType
-import no.nav.hjelpemidler.brille.store.Store
-import no.nav.hjelpemidler.brille.store.TransactionalStore
-import no.nav.hjelpemidler.brille.store.query
-import no.nav.hjelpemidler.brille.store.update
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
+import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.json
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -19,94 +16,90 @@ interface SlettVedtakStore : Store {
     fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType = SlettetAvType.INNSENDER): Int?
 }
 
-class SlettVedtakStorePostgres(private val sessionFactory: () -> Session) : SlettVedtakStore,
-    TransactionalStore(sessionFactory) {
-    override fun hentVedtakSlettet(vedtakId: Long): VedtakSlettet? = session {
+class SlettVedtakStorePostgres(private val tx: JdbcOperations) : SlettVedtakStore {
+    override fun hentVedtakSlettet(vedtakId: Long): VedtakSlettet? {
         @Language("PostgreSQL")
         val sql = """
-            SELECT 
-                id,
-                fnr_barn,
-                fnr_innsender,
-                orgnr,
-                bestillingsdato,
-                brillepris,
-                bestillingsreferanse,
-                vilkarsvurdering,
-                behandlingsresultat,
-                sats,
-                sats_belop,
-                sats_beskrivelse,
-                belop,
-                opprettet, 
-                slettet FROM vedtak_slettet_v1 WHERE id =:id
+            SELECT id,
+                   fnr_barn,
+                   fnr_innsender,
+                   orgnr,
+                   bestillingsdato,
+                   brillepris,
+                   bestillingsreferanse,
+                   vilkarsvurdering,
+                   behandlingsresultat,
+                   sats,
+                   sats_belop,
+                   sats_beskrivelse,
+                   belop,
+                   opprettet,
+                   slettet
+            FROM vedtak_slettet_v1
+            WHERE id = :id
         """.trimIndent()
-        sessionFactory().query(sql, mapOf("id" to vedtakId)) {
-                row ->
+        return tx.singleOrNull(sql, mapOf("id" to vedtakId)) { row ->
             mapVedtakSlettet(row)
         }
     }
 
-    override fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType) = session {
+    override fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType): Int? {
         @Language("PostgreSQL")
         val sql = """
-            INSERT INTO vedtak_slettet_v1 (
-                id,
-                fnr_barn,
-                fnr_innsender,
-                navn_innsender,
-                orgnr,
-                bestillingsdato,
-                brillepris,
-                bestillingsreferanse,
-                vilkarsvurdering,
-                behandlingsresultat,
-                sats,
-                sats_belop,
-                sats_beskrivelse,
-                belop,
-                opprettet,
-                kilde
-            )
-            SELECT
-                id,
-                fnr_barn,
-                fnr_innsender,
-                navn_innsender,
-                orgnr,
-                bestillingsdato,
-                brillepris,
-                bestillingsreferanse,
-                vilkarsvurdering,
-                behandlingsresultat,
-                sats,
-                sats_belop,
-                sats_beskrivelse,
-                belop,
-                opprettet,
-                kilde
+            INSERT INTO vedtak_slettet_v1 (id,
+                                           fnr_barn,
+                                           fnr_innsender,
+                                           navn_innsender,
+                                           orgnr,
+                                           bestillingsdato,
+                                           brillepris,
+                                           bestillingsreferanse,
+                                           vilkarsvurdering,
+                                           behandlingsresultat,
+                                           sats,
+                                           sats_belop,
+                                           sats_beskrivelse,
+                                           belop,
+                                           opprettet,
+                                           kilde)
+            SELECT id,
+                   fnr_barn,
+                   fnr_innsender,
+                   navn_innsender,
+                   orgnr,
+                   bestillingsdato,
+                   brillepris,
+                   bestillingsreferanse,
+                   vilkarsvurdering,
+                   behandlingsresultat,
+                   sats,
+                   sats_belop,
+                   sats_beskrivelse,
+                   belop,
+                   opprettet,
+                   kilde
             FROM vedtak_v1
-            WHERE id =:id;
-            DELETE FROM vedtak_v1 where id =:id;
+            WHERE id = :id;
+            DELETE
+            FROM vedtak_v1
+            WHERE id = :id
         """.trimIndent()
 
-        sessionFactory().update(sql, mapOf("id" to vedtakId)).rowCount
-            ?: return@session null
+        tx.update(sql, mapOf("id" to vedtakId)).actualRowCount.takeIf { it > 0 } ?: return null
 
         val sql2 = """
             UPDATE vedtak_slettet_v1
             SET slettet_av = :slettetAv, slettet_av_type = :slettetAvType
             WHERE id = :id
-            ;
         """.trimIndent()
-        sessionFactory().update(
+        return tx.update(
             sql2,
             mapOf(
                 "id" to vedtakId,
                 "slettetAv" to slettetAv,
                 "slettetAvType" to slettetAvType.toString(),
             ),
-        ).rowCount
+        ).actualRowCount
     }
 
     private fun mapVedtakSlettet(row: Row) = VedtakSlettet(

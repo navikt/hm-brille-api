@@ -1,31 +1,26 @@
 package no.nav.hjelpemidler.brille.tss
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.hjelpemidler.brille.utbetaling.PacketListenerWithOnError
-import org.slf4j.LoggerFactory
+import no.nav.hjelpemidler.logging.secureInfo
 import java.util.UUID
+
+private val log = KotlinLogging.logger {}
 
 class TssIdentRiver(
     rapidsConnection: RapidsConnection,
     private val tssIdentService: TssIdentService,
 ) : PacketListenerWithOnError {
-
     private val eventName = "hm-utbetaling-tss-optiker-svar"
 
-    companion object {
-        private val LOG = LoggerFactory.getLogger(TssIdentRiver::class.java)
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
-    }
-
     init {
-        LOG.info("registering ${this.javaClass.simpleName}")
+        log.info { "registering ${this.javaClass.simpleName}" }
         River(rapidsConnection).apply {
             validate {
                 it.demandValue("eventName", eventName)
@@ -49,13 +44,11 @@ class TssIdentRiver(
     private val JsonMessage.opprettet get() = this["opprettet"].textValue()!!
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
-        LOG.info("Kvittering for oppdatering av TSS mottatt: eventId=${packet.eventId}, orgnr=${packet.orgnr}, opprettet=${packet.opprettet}")
-        runBlocking {
-            withContext(Dispatchers.IO) {
-                tssIdentService.settTssIdent(packet.orgnr, packet.kontonr, packet.tssIdent)
-                LOG.info("Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kvittert=${packet.opprettet}")
-                sikkerlogg.info("Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, kvittert=${packet.opprettet}")
-            }
+        log.info { "Kvittering for oppdatering av TSS mottatt: eventId=${packet.eventId}, orgnr=${packet.orgnr}, opprettet=${packet.opprettet}" }
+        runBlocking(Dispatchers.IO) {
+            tssIdentService.settTssIdent(packet.orgnr, packet.kontonr, packet.tssIdent)
+            log.info { "Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kvittert=${packet.opprettet}" }
+            log.secureInfo { "Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, kvittert=${packet.opprettet}" }
         }
     }
 }

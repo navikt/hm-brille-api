@@ -1,12 +1,11 @@
 package no.nav.hjelpemidler.brille.vilkarsvurdering
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.extractFnr
@@ -16,11 +15,11 @@ import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
+import no.nav.hjelpemidler.logging.secureInfo
 import no.nav.hjelpemidler.nare.evaluering.Resultat
 
-private val sikkerLog = KotlinLogging.logger("tjenestekall")
+private val log = KotlinLogging.logger {}
 
-private val log = KotlinLogging.logger { }
 fun Route.vilkårApi(
     vilkårsvurderingService: VilkårsvurderingService,
     adminService: AdminService,
@@ -50,7 +49,7 @@ fun Route.vilkårApi(
             }
 
             if (vilkårsvurdering.utfall != Resultat.JA) {
-                sikkerLog.info {
+                log.secureInfo {
                     "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                 }
 
@@ -76,7 +75,7 @@ fun Route.vilkårApi(
 
                 // Journalfør avvisningsbrev i joark
                 if (haddeAvvisningsbrevFraFør) {
-                    log.info("Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene")
+                    log.info { "Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene" }
                     kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("krav_app")
                 } else {
                     val årsakerIdentifikator = vilkårsvurdering.evaluering.barn

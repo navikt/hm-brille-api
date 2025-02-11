@@ -3,14 +3,16 @@ package no.nav.hjelpemidler.brille
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.call
+import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callid.callIdMdc
-import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.path
 import io.ktor.server.routing.IgnoreTrailingSlash
@@ -21,7 +23,6 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.logging.LogbackMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
-import mu.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.admin.AdminService
@@ -31,6 +32,7 @@ import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
 import no.nav.hjelpemidler.brille.avtale.avtaleApi
+import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.DefaultDatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretClient
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretScheduler
@@ -64,7 +66,7 @@ import no.nav.hjelpemidler.brille.syfohelsenettproxy.sjekkErOptiker
 import no.nav.hjelpemidler.brille.tss.RapporterManglendeTssIdentScheduler
 import no.nav.hjelpemidler.brille.tss.TssIdentRiver
 import no.nav.hjelpemidler.brille.tss.TssIdentService
-import no.nav.hjelpemidler.brille.utbetaling.RekjorUtbetalingerScheduler
+import no.nav.hjelpemidler.brille.utbetaling.RekjørUtbetalingerScheduler
 import no.nav.hjelpemidler.brille.utbetaling.SendTilUtbetalingScheduler
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingsKvitteringRiver
@@ -77,26 +79,35 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårApi
 import no.nav.hjelpemidler.brille.vilkarsvurdering.vilkårHotsakApi
 import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import no.nav.hjelpemidler.configuration.Environment
+import no.nav.hjelpemidler.configuration.KafkaEnvironmentVariable
 import no.nav.hjelpemidler.configuration.LocalEnvironment
+import no.nav.hjelpemidler.database.PostgreSQL
+import no.nav.hjelpemidler.database.createDataSource
+import no.nav.hjelpemidler.database.migrate
+import no.nav.hjelpemidler.http.openid.azureADClient
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
+import javax.sql.DataSource
 import kotlin.concurrent.thread
+import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
 
-fun main(args: Array<String>) = io.ktor.server.cio.EngineMain.main(args)
+fun main() {
+    embeddedServer(Netty, 9090, module = Application::module).start(wait = true)
+}
 
 fun Application.applicationEvents(kafkaRapid: KafkaRapid) {
-    fun onStopPreparing() {
-        log.info("Application is shutting down, stopping rapid app aswell!")
+    monitor.subscribe(ApplicationStopping) {
+        log.info { "Applikasjoner stopper, stopper KafkaRapid også" }
         kafkaRapid.stop()
+        monitor.unsubscribe(ApplicationStopping) {}
     }
-    environment.monitor.subscribe(ApplicationStopPreparing) { onStopPreparing() }
 }
 
 fun Application.module() {
-    log.info("hm-brille-api starting up (git_sha=${Configuration.gitCommit})")
+    log.info { "hm-brille-api starting up (git_sha=${Configuration.GIT_COMMIT})" }
     configure()
     setupRoutes()
 }
@@ -129,38 +140,47 @@ fun Application.configure() {
 // Wire up services and routes
 fun Application.setupRoutes() {
     // Database
-    val databaseContext = DefaultDatabaseContext(DatabaseConfiguration(Configuration.dbProperties).dataSource())
+    val dataSource = createDataSource(PostgreSQL) { envVarPrefix = "DB" }.also(DataSource::migrate)
+    val databaseContext: DatabaseContext = DefaultDatabaseContext(dataSource)
+    monitor.subscribe(ApplicationStopping) {
+        log.info { "Applikasjoner stopper, stopper DatabaseContext også" }
+        databaseContext.close()
+        monitor.unsubscribe(ApplicationStopping) {}
+    }
 
     // Kafka
     val rapid = createKafkaRapid()
     val kafkaService = KafkaService(rapid)
 
     // Klienter
+    val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
     val redisClient = RedisClient()
-    val enhetsregisteretClient = EnhetsregisteretClient(Configuration.enhetsregisteretProperties, databaseContext)
-    val syfohelsenettproxyClient = SyfohelsenettproxyClient(Configuration.syfohelsenettproxyProperties)
-    val pdlClient = PdlClient(Configuration.pdlProperties)
-    val medlemskapClient = MedlemskapClient(Configuration.medlemskapOppslagProperties)
-    val hotsakClient = HotsakClient(Configuration.hotsakApiProperties)
+
+    val azureADClient = azureADClient { cache(leeway = 10.seconds) }
+    val hotsakClient = HotsakClient(azureADClient.withScope(Configuration.HOTSAK_API_SCOPE))
+    val medlemskapClient = MedlemskapClient(azureADClient.withScope(Configuration.MEDLEMSKAP_API_SCOPE))
+    val pdlClient = PdlClient(azureADClient.withScope(Configuration.PDL_API_SCOPE))
+    val syfohelsenettproxyClient =
+        SyfohelsenettproxyClient(azureADClient.withScope(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
-    val altinnService = AltinnService(AltinnClient(Configuration.altinnProperties))
+    val altinnService = AltinnService(AltinnClient())
     val pdlService = PdlService(pdlClient)
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
     val rapportService = RapportService(databaseContext)
-    val enhetsregisteretService = EnhetsregisteretService(enhetsregisteretClient, databaseContext)
+    val enhetsregisteretService = EnhetsregisteretService(databaseContext, enhetsregisteretClient)
     val vilkårsvurderingService = VilkårsvurderingService(databaseContext, pdlClient, hotsakClient, medlemskapBarn)
     val utbetalingService = UtbetalingService(databaseContext, kafkaService)
     val vedtakService = VedtakService(databaseContext, vilkårsvurderingService, kafkaService)
     val avtaleService = AvtaleService(databaseContext, altinnService, enhetsregisteretService, kafkaService)
     val joarkrefService = JoarkrefService(databaseContext)
-    val slettVedtakService = SlettVedtakService(utbetalingService, joarkrefService, kafkaService, databaseContext)
+    val slettVedtakService = SlettVedtakService(databaseContext, joarkrefService, kafkaService)
     val tssIdentService = TssIdentService(databaseContext)
     val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)
-    val leaderElection = LeaderElection(Configuration.electorPath)
+    val leaderElection = LeaderElection()
     val kalkulatorService = KalkulatorService(kafkaService)
 
     val metrics = MetricsConfig(
@@ -177,9 +197,9 @@ fun Application.setupRoutes() {
 
     VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
     SendTilUtbetalingScheduler(utbetalingService, databaseContext, leaderElection, metrics)
-    RekjorUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
+    RekjørUtbetalingerScheduler(utbetalingService, databaseContext, leaderElection, metrics)
     EnhetsregisteretScheduler(enhetsregisteretService, leaderElection, metrics)
-    if (Configuration.prod) {
+    if (Environment.current.isProd) {
         RapporterManglendeTssIdentScheduler(
             tssIdentService,
             enhetsregisteretService,
@@ -269,20 +289,14 @@ fun Application.setupRoutes() {
 
 private fun createKafkaRapid(): KafkaRapid {
     val instanceId = InetAddress.getLocalHost().hostName
-    val kafkaProps = Configuration.kafkaProperties
-    val kafkaConfig = kafkaConfig(kafkaProps, instanceId)
-    return KafkaRapid.create(kafkaConfig, kafkaProps.topic, emptyList())
+    val kafkaConfig = KafkaConfig(
+        bootstrapServers = KafkaEnvironmentVariable.KAFKA_BROKERS,
+        consumerGroupId = Configuration.KAFKA_CONSUMER_GROUP_ID,
+        clientId = instanceId,
+        truststore = KafkaEnvironmentVariable.KAFKA_TRUSTSTORE_PATH,
+        truststorePassword = KafkaEnvironmentVariable.KAFKA_CREDSTORE_PASSWORD,
+        keystoreLocation = KafkaEnvironmentVariable.KAFKA_KEYSTORE_PATH,
+        keystorePassword = KafkaEnvironmentVariable.KAFKA_CREDSTORE_PASSWORD,
+    )
+    return KafkaRapid.create(kafkaConfig, Configuration.KAFKA_TOPIC, emptyList())
 }
-
-private fun kafkaConfig(
-    kafkaProps: Configuration.KafkaProperties,
-    instanceId: String?,
-) = KafkaConfig(
-    bootstrapServers = kafkaProps.bootstrapServers,
-    consumerGroupId = kafkaProps.clientId,
-    clientId = instanceId,
-    truststore = kafkaProps.truststorePath,
-    truststorePassword = kafkaProps.truststorePassword,
-    keystoreLocation = kafkaProps.keystorePath,
-    keystorePassword = kafkaProps.keystorePassword,
-)

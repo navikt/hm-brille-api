@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille.vedtak
 
-import io.kotest.common.runBlocking
 import io.kotest.matchers.shouldBe
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -11,9 +10,9 @@ import io.ktor.server.auth.authenticate
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import no.nav.hjelpemidler.brille.audit.AuditService
-import no.nav.hjelpemidler.brille.db.createDatabaseContext
-import no.nav.hjelpemidler.brille.db.createDatabaseSessionContextWithMocks
+import no.nav.hjelpemidler.brille.db.MockDatabaseContext
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapBarn
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
@@ -36,8 +35,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
 
-internal class KravApiTest {
-
+class KravApiTest {
     private val pdlClient = mockk<PdlClient>()
     private val hotsakClient = mockk<HotsakClient>()
     private val medlemskapBarn = mockk<MedlemskapBarn>()
@@ -48,8 +46,7 @@ internal class KravApiTest {
     private val redisClient = mockk<RedisClient>(relaxed = true)
     private val pdlService = mockk<PdlService>(relaxed = true)
 
-    val sessionContext = createDatabaseSessionContextWithMocks()
-    val databaseContext = createDatabaseContext(sessionContext)
+    private val databaseContext = MockDatabaseContext()
 
     private val vilkårsvurderingService = VilkårsvurderingService(
         databaseContext,
@@ -69,7 +66,7 @@ internal class KravApiTest {
     }
 
     @Test
-    internal fun `happy day`() {
+    fun `happy day`() {
         runBlocking {
             kjørTest(
                 krav = KravDto(
@@ -127,7 +124,7 @@ internal class KravApiTest {
         dagensDato: LocalDate = DATO_ORDNINGEN_STARTET,
     ) {
         every {
-            sessionContext.vedtakStore.hentVedtakForBarn(krav.vilkårsgrunnlag.fnrBarn)
+            databaseContext.vedtakStore.hentVedtakForBarn(krav.vilkårsgrunnlag.fnrBarn)
         } returns vedtakForBruker
 
         coEvery {
@@ -135,11 +132,11 @@ internal class KravApiTest {
         } returns emptyList()
 
         every {
-            sessionContext.vedtakStore.hentVedtak<Any>(any())
+            databaseContext.vedtakStore.hentVedtak<Any>(any())
         } returns mockedVedtak
 
         every {
-            sessionContext.vedtakStore.lagreVedtak<Any>(any())
+            databaseContext.vedtakStore.lagreVedtak<Any>(any())
         } answers {
             mockedVedtak
         }

@@ -1,14 +1,12 @@
 package no.nav.hjelpemidler.brille.tss
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
-import org.slf4j.LoggerFactory
+
+private val log = KotlinLogging.logger {}
 
 class TssIdentService(val databaseContext: DatabaseContext) {
-    companion object {
-        private val LOG = LoggerFactory.getLogger(TssIdentRiver::class.java)
-    }
-
     suspend fun settTssIdent(orgnr: String, kontonr: String, tssIdent: String) {
         transaction(databaseContext) { ctx ->
             // Sjekk at ønsket kontonr fortsatt stemmer med kvitteringen (i tilfelle man endret flere ganger på rad, ungå race condition)
@@ -16,7 +14,7 @@ class TssIdentService(val databaseContext: DatabaseContext) {
                 ?: error("Mottok kvittering på tss-oppdatering fra ukjent orgnr")
 
             if (virksomhet.kontonr != kontonr) {
-                LOG.info("Mottok kvittering på tss-oppdatering som gjaldt utdatert kontonr, ignorerer")
+                log.info { "Mottok kvittering på tss-oppdatering som gjaldt utdatert kontonr, ignorerer" }
                 return@transaction
             }
 

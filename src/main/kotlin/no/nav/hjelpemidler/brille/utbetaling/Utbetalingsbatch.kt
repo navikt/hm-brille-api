@@ -5,14 +5,14 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-data class UtbetalingsBatch(
+data class Utbetalingsbatch(
     val batchId: String,
     val totalbeløp: BigDecimal,
     val antallUtbetalinger: Int,
     val opprettet: LocalDateTime = LocalDateTime.now(),
 )
 
-data class UtbetalingsBatchDTO(
+data class UtbetalingsbatchDTO(
     val utbetalinger: List<Utbetaling>,
     val orgNr: String = utbetalinger[0].vedtak.orgnr,
     val batchId: String = utbetalinger[0].batchId,
@@ -21,9 +21,23 @@ data class UtbetalingsBatchDTO(
         check(utbetalinger.all { it.vedtak.orgnr == orgNr })
         check(utbetalinger.all { it.batchId == batchId })
     }
+
+    fun toUtbetalingsbatch(): Utbetalingsbatch = Utbetalingsbatch(
+        batchId = batchId,
+        antallUtbetalinger = utbetalinger.size,
+        totalbeløp = utbetalinger.sumOf { it.vedtak.beløp },
+    )
+
+    fun lagUtbetalingsmelding(tssIdent: String): Utbetalingsmelding = Utbetalingsmelding(
+        opprettetDato = LocalDateTime.now(),
+        orgNr = orgNr,
+        tssIdent = tssIdent,
+        batchId = batchId,
+        utbetalingslinjer = utbetalinger.map { it.toUtbetalingslinje() },
+    )
 }
 
-data class UtbetalingsLinje(
+data class Utbetalingslinje(
     val delytelseId: Long,
     val endringskode: String,
     val klassekode: String,
@@ -34,17 +48,17 @@ data class UtbetalingsLinje(
     val saksbehandler: String,
 )
 
-data class UtbetalingsMelding(
+data class Utbetalingsmelding(
     val eventName: String = "hm-barnebrille-utbetaling",
     val type: String = "Batch",
     val opprettetDato: LocalDateTime,
     val orgNr: String,
     val tssIdent: String,
     val batchId: String,
-    val utbetalingslinjer: List<UtbetalingsLinje>,
+    val utbetalingslinjer: List<Utbetalingslinje>,
 
 ) {
-    internal fun toJson() = mapOf(
+    fun toJson() = mapOf(
         "eventName" to this.eventName,
         "eventId" to UUID.randomUUID(),
         "opprettetDato" to LocalDateTime.now(),
@@ -58,7 +72,6 @@ data class UtbetalingsMelding(
             mottaker = orgNr,
             linjer = utbetalingslinjer,
         ),
-
     )
 
     data class Utbetaling(
@@ -66,34 +79,9 @@ data class UtbetalingsMelding(
         val endringskode: String,
         val saksbehandler: String,
         val mottaker: String,
-        val linjer: List<UtbetalingsLinje>,
+        val linjer: List<Utbetalingslinje>,
     )
 }
 
-fun Utbetaling.toUtbetalingsLinje(): UtbetalingsLinje = UtbetalingsLinje(
-    delytelseId = vedtakId,
-    endringskode = "NY",
-    klassekode = "BARNEBRILLER",
-    fom = LocalDate.now(),
-    tom = LocalDate.now(),
-    sats = vedtak.beløp.toInt(),
-    satstype = "ENG",
-    saksbehandler = "BB",
-)
-
-fun UtbetalingsBatchDTO.lagMelding(tssIdent: String): UtbetalingsMelding = UtbetalingsMelding(
-    opprettetDato = LocalDateTime.now(),
-    orgNr = orgNr,
-    tssIdent = tssIdent,
-    batchId = batchId,
-    utbetalingslinjer = utbetalinger.map { it.toUtbetalingsLinje() },
-)
-
-fun List<Utbetaling>.toUtbetalingsBatchList(): List<UtbetalingsBatchDTO> =
-    groupBy { it.batchId }.map { UtbetalingsBatchDTO(utbetalinger = it.value) }
-
-fun UtbetalingsBatchDTO.toUtbetalingsBatch(): UtbetalingsBatch = UtbetalingsBatch(
-    batchId = batchId,
-    antallUtbetalinger = utbetalinger.size,
-    totalbeløp = utbetalinger.sumOf { it.vedtak.beløp },
-)
+fun List<Utbetaling>.toUtbetalingBatchList(): List<UtbetalingsbatchDTO> =
+    groupBy { it.batchId }.map { UtbetalingsbatchDTO(utbetalinger = it.value) }

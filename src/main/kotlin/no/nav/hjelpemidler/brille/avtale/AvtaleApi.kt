@@ -1,8 +1,8 @@
 package no.nav.hjelpemidler.brille.avtale
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -10,7 +10,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.extractFnr
 import kotlin.system.measureTimeMillis
@@ -72,7 +71,7 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
             // Egne endepunkter for rettighet utbetalingsrapport
             route("/regna") {
                 get {
-                    log.info("Kall kom inn til endepunkt for rettighet utbetalignsrapport")
+                    log.info { "Kall kom inn til endepunkt for rettighet utbetalignsrapport" }
                     val elapsed = measureTimeMillis {
                         val virksomheter = avtaleService.hentAvtaler(
                             fnr = call.extractFnr(),
@@ -80,7 +79,7 @@ fun Route.avtaleApi(avtaleService: AvtaleService) {
                         )
                         call.respond(HttpStatusCode.OK, virksomheter)
                     }
-                    log.info("Kall til endepunkt for rettighet utbetalignsrapport ble svart ut på ${elapsed}ms")
+                    log.info { "Kall til endepunkt for rettighet utbetalignsrapport ble svart ut på ${elapsed}ms" }
                 }
                 get("/{orgnr}") {
                     val orgnr = call.orgnr()

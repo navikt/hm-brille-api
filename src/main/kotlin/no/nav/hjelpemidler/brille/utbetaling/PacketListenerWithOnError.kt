@@ -1,17 +1,16 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.MessageProblems
 import no.nav.helse.rapids_rivers.River
+import no.nav.hjelpemidler.logging.secureInfo
 
-private val sikkerlogg = KotlinLogging.logger("tjenestekall")
-
-class RiverRequiredKeyMissingException(msg: String) : Exception(msg)
+private val log = KotlinLogging.logger {}
 
 interface PacketListenerWithOnError : River.PacketListener {
     override fun onError(problems: MessageProblems, context: MessageContext) {
-        sikkerlogg.info("River required keys had problems in parsing message from rapid: ${problems.toExtendedReport()}")
-        throw RiverRequiredKeyMissingException("River required keys had problems in parsing message from rapid, see Kibana index tjenestekall-* (sikkerlogg) for details")
+        log.secureInfo { "Feil under validering av melding: '${problems.toExtendedReport()}'" }
+        error("Feil under validering av melding, se secureLog for detaljer")
     }
 }

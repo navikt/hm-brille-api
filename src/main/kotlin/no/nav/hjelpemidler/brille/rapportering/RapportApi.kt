@@ -1,18 +1,17 @@
 package no.nav.hjelpemidler.brille.rapportering
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.ApplicationCall
-import io.ktor.server.application.call
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondOutputStream
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
-import mu.KotlinLogging
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.extractFnr
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
@@ -35,8 +34,8 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 call.respond(HttpStatusCode.Unauthorized)
                 return@get
             }
-            val limit = call.request.queryParameters["limit"]?.toInt() ?: 10
-            val page = call.request.queryParameters["page"]?.toInt() ?: 1
+            val pageNumber = call.request.queryParameters["page"]?.toInt() ?: 1
+            val pageSize = call.request.queryParameters["limit"]?.toInt() ?: 10
 
             val kravFilter = call.request.queryParameters["periode"]?.let { KravFilter.valueOf(it) }
 
@@ -52,8 +51,8 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                     fraDato = fraDato,
                     tilDato = tilDato,
                     referanseFilter = referanseFilter,
-                    limit = limit,
-                    offset = (page - 1) * limit,
+                    pageNumber = pageNumber,
+                    pageSize = pageSize,
                 )
             }.getOrElse { e ->
                 log.error(e) { "Feil med oppslag i rapporten" }
@@ -61,10 +60,10 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             }
 
             val pagedKravlinjeListe = PagedKravlinjeliste(
-                kravlinjer = kravlinjer,
-                totalCount = kravlinjer.total,
-                currentPage = page,
-                pageSize = limit,
+                kravlinjer = kravlinjer.content,
+                totalCount = kravlinjer.totalElements,
+                currentPage = pageNumber,
+                pageSize = pageSize,
             )
 
             call.respond(HttpStatusCode.OK, pagedKravlinjeListe)
@@ -82,7 +81,12 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
             }
 
             val avstemmingsreferanse = call.parameters["avstemmingsreferanse"]?.trim()
-            if (avstemmingsreferanse.isNullOrBlank()) return@get call.respond(HttpStatusCode.BadRequest, "ugyldig avstemmingsreferanse")
+            if (avstemmingsreferanse.isNullOrBlank()) {
+                return@get call.respond(
+                    HttpStatusCode.BadRequest,
+                    "ugyldig avstemmingsreferanse",
+                )
+            }
 
             val kravlinjer = runCatching {
                 rapportService.hentUtbetalingKravlinjer(
@@ -94,8 +98,11 @@ fun Route.rapportApi(rapportService: RapportService, altinnService: AltinnServic
                 throw e
             }
 
-            if (kravlinjer.count() == 0) {
-                return@get call.respond(HttpStatusCode.NotFound, "ingen krav funnet for utbetaling med avstemmingsreferanse")
+            if (kravlinjer.isEmpty()) {
+                return@get call.respond(
+                    HttpStatusCode.NotFound,
+                    "ingen krav funnet for utbetaling med avstemmingsreferanse",
+                )
             }
 
             call.response.header(
@@ -217,7 +224,7 @@ private fun ApplicationCall.orgnr(): String = requireNotNull(parameters["orgnr"]
 
 data class PagedKravlinjeliste(
     val kravlinjer: List<Kravlinje>,
-    val totalCount: Int,
+    val totalCount: Long,
     val currentPage: Int,
     val pageSize: Int,
 )

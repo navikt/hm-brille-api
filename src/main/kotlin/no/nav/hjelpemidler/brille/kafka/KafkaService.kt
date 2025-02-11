@@ -1,12 +1,8 @@
 package no.nav.hjelpemidler.brille.kafka
 
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.annotation.JsonNaming
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.BruksvilkårGodtatt
 import no.nav.hjelpemidler.brille.avtale.IngåttAvtale
@@ -23,6 +19,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.vilkarsvurdering.harResultatJaForVilkår
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -32,13 +29,6 @@ import kotlin.reflect.full.findAnnotation
 private val log = KotlinLogging.logger {}
 
 class KafkaService(private val kafkaRapid: KafkaRapid) {
-
-    private val mapper = jacksonMapperBuilder()
-        .addModule(JavaTimeModule())
-        .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        .build()
-
     fun avtaleOpprettet(avtale: IngåttAvtale) {
         // Metrics
         sendTilBigQuery(
@@ -52,7 +42,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
 
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
-            ?: log.info("TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen")
+            ?: log.info { "TSS ikke oppdatert ved opprettelse av oppgave da kontonr mangler i datamodellen" }
     }
 
     fun bruksvilkårGodtatt(bruksvilkårGodtatt: BruksvilkårGodtatt, organisasjonsnavn: String) {
@@ -70,7 +60,7 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     fun avtaleOppdatert(avtale: IngåttAvtale) {
         // Oppdater TSS-registeret med kontonr slik at betaling kan finne frem til dette
         avtale.kontonr?.let { oppdaterTSS(avtale.orgnr, avtale.kontonr) }
-            ?: log.info("TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen")
+            ?: log.info { "TSS ikke oppdatert ved oppdatering av oppgave da kontonr mangler i datamodellen" }
     }
 
     fun vilkårVurdert() {
@@ -237,7 +227,10 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
     }
 
     fun sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager(kilde: String) {
-        opprettHendelseV2Data("hm-brille-api.avvisning.sendte.ikke.brev.pga.tidligere.brev.7dager", mapOf("kilde" to kilde))
+        opprettHendelseV2Data(
+            "hm-brille-api.avvisning.sendte.ikke.brev.pga.tidligere.brev.7dager",
+            mapOf("kilde" to kilde),
+        )
     }
 
     fun opprettHendelseV2Data(navn: String, data: Map<String, Any>) {
@@ -252,14 +245,14 @@ class KafkaService(private val kafkaRapid: KafkaRapid) {
 
     fun <T> produceEvent(key: String?, event: T) {
         try {
-            val message = mapper.writeValueAsString(event)
+            val message = jsonMapper.writeValueAsString(event)
             if (key != null) {
                 kafkaRapid.publishWithTimeout(key, message, 10)
             } else {
                 kafkaRapid.publishWithTimeout(message, 10)
             }
         } catch (e: Exception) {
-            log.error("We got error while sending to kafka", e)
+            log.error(e) { "We got error while sending to kafka" }
             throw KafkaException("Error while sending to kafka", e)
         }
     }
