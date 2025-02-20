@@ -100,5 +100,12 @@ spec:
             users:
               - name: naisjob
         cascadingDelete: false
+        flags:
+          - name: "cloudsql.enable_pgaudit"
+            value: "on"
+          - name: "pgaudit.log"
+            value: "write"
+          - name: "pgaudit.log_parameter"
+            value: "on"
   secureLogs:
     enabled: true
