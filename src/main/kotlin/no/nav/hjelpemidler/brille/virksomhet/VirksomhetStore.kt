@@ -41,6 +41,8 @@ class VirksomhetStorePostgres(private val tx: JdbcOperations) : VirksomhetStore 
             FROM virksomhet_v1 v
             LEFT JOIN bruksvilkar_v1 a ON a.orgnr = v.orgnr AND a.bruksvilkardefinisjon_id = 1
             WHERE v.orgnr = :orgnr
+            ORDER BY a.opprettet DESC
+            LIMIT 1
         """.trimIndent()
         return tx.singleOrNull(sql, mapOf("orgnr" to orgnr), ::mapper)
     }
