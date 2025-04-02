@@ -25,7 +25,8 @@
     "data.brreg.no",
     "pdl-api.dev-fss-pub.nais.io",
     "hooks.slack.com",
-    "api-gw-q1.oera.no"
+    "api-gw-q1.oera.no",
+    "platform.tt02.altinn.no"
   ],
   "outbound-applications": [
     "hm-mocks",

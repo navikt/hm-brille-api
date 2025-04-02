@@ -26,7 +26,8 @@
     "data.brreg.no",
     "pdl-api.prod-fss-pub.nais.io",
     "hooks.slack.com",
-    "api-gw.oera.no"
+    "api-gw.oera.no",
+    "altinn.no"
   ],
   "outbound-applications": [
     "hm-saksbehandling"
