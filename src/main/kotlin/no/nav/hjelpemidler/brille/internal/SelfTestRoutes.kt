@@ -125,7 +125,7 @@ fun Route.internalRoutes(
             }
         }
 
-        post("/test-altinn2") {
+        post("/test-altinn3") {
             data class Request(
                 val fnr: String,
             )

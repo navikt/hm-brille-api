@@ -32,7 +32,7 @@ fun maskinportenEnvironmentConfiguration(): OpenIDConfiguration = DefaultOpenIDC
     tokenEndpoint = MaskinportenEnvironmentVariable.MASKINPORTEN_TOKEN_ENDPOINT,
     // Merk: Disse er ikke relevante for maskinporten backend'en, men kreves av hotlibs-http sin openid client
     clientId = MaskinportenEnvironmentVariable.MASKINPORTEN_CLIENT_ID,
-    clientSecret = "",
+    clientSecret = "<n/a>",
 )
 
 fun maskinportenClient(
