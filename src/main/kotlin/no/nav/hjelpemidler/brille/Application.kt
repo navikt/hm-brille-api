@@ -27,6 +27,7 @@ import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
+import no.nav.hjelpemidler.brille.altinn.Altinn3Client
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
@@ -193,6 +194,8 @@ fun Application.setupRoutes() {
         ) + rapid.getMetrics(),
     )
 
+    val altinn3Client = Altinn3Client()
+
     setupMetrics(metrics)
 
     VedtakTilUtbetalingScheduler(vedtakService, leaderElection, utbetalingService, enhetsregisteretService, metrics)
@@ -226,6 +229,7 @@ fun Application.setupRoutes() {
             pdlService,
             syfohelsenettproxyClient,
             enhetsregisteretService,
+            altinn3Client,
         )
 
         route("/api") {

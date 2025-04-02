@@ -2,12 +2,14 @@ package no.nav.hjelpemidler.brille.internal
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import no.nav.hjelpemidler.brille.altinn.Altinn3Client
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
@@ -24,6 +26,7 @@ fun Route.internalRoutes(
     pdlService: PdlService,
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     enhetsregisteretService: EnhetsregisteretService,
+    altinn3Client: Altinn3Client,
 ) {
     route("/internal") {
         get("/is-alive") {
@@ -120,6 +123,13 @@ fun Route.internalRoutes(
                 }.getOrNull() ?: return@get call.respond(HttpStatusCode.InternalServerError, "feilet i å hente organisasjon slettet når")
                 call.respond(enhet)
             }
+        }
+
+        post("/test-altinn2") {
+            data class Request(
+                val fnr: String,
+            )
+            altinn3Client.test(call.receive<Request>().fnr)
         }
     }
 }

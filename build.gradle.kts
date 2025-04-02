@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.ktor.server.compression)
 
     // other
+    implementation(libs.nimbus.jose.jwt)
     implementation(libs.hmRapidsAndRiversV2Core)
     implementation(libs.jedis)
     implementation(libs.micrometer.registry.prometheus)

@@ -20,6 +20,8 @@ object Configuration {
     val ALTINN_APIGW_CONSUMER_ID by EnvironmentVariable
     val ALTINN_APIGW_URL by EnvironmentVariable
 
+    val ALTINN_URL by EnvironmentVariable
+
     val CLIENT_ID_AZURE_TOKEN_GENERATOR by EnvironmentVariable
     val CLIENT_ID_BRILLE_INTEGRASJON by EnvironmentVariable
     val CLIENT_ID_SAKSBEHANDLING by EnvironmentVariable
