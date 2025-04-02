@@ -11,7 +11,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingException
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.logging.secureInfo
-import no.nav.hjelpemidler.nare.evaluering.Resultat
+import no.nav.hjelpemidler.nare.regel.Regelutfall
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
@@ -36,7 +36,7 @@ class VedtakService(
             vilkårsgrunnlag.bestillingsdato,
         )
 
-        if (vilkårsvurdering.utfall != Resultat.JA) {
+        if (vilkårsvurdering.utfall != Regelutfall.JA) {
             log.secureInfo {
                 "Vilkårsvurderingen ga uventet resultat:\n${vilkårsvurdering.toJson()}"
             }

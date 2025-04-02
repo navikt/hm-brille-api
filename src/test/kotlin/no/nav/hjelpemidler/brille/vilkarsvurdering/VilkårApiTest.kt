@@ -27,7 +27,7 @@ import no.nav.hjelpemidler.brille.test.`år på`
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.lagEksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.toList
-import no.nav.hjelpemidler.nare.evaluering.Resultat
+import no.nav.hjelpemidler.nare.regel.Regelutfall
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -55,7 +55,7 @@ class VilkårApiTest {
     }
 
     @Test
-    fun `happy case`() = kjørTest(forventetResultat = Resultat.JA)
+    fun `happy case`() = kjørTest(forventetResultat = Regelutfall.JA)
 
     @Test
     fun `har vedtak i kalenderåret`() {
@@ -67,7 +67,7 @@ class VilkårApiTest {
             vedtak = lagEksisterendeVedtak {
                 this.bestillingsdato = bestillingsdato
             }.toList(),
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -81,7 +81,7 @@ class VilkårApiTest {
             vedtakHotsak = lagHotsakVedtak {
                 this.bestillingsdato = bestillingsdato
             }.toList(),
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -96,7 +96,7 @@ class VilkårApiTest {
                 this.bestillingsdato = bestillingsdato
                 this.fnrInnsender = "15084300133"
             }.toList(),
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -110,7 +110,7 @@ class VilkårApiTest {
             vedtak = lagEksisterendeVedtak {
                 this.bestillingsdato = bestillingsdato.minusYears(1)
             }.toList(),
-            forventetResultat = Resultat.JA,
+            forventetResultat = Regelutfall.JA,
         )
     }
 
@@ -122,7 +122,7 @@ class VilkårApiTest {
                 this.bestillingsdato = bestillingsdato
             },
             fødselsdato = 18 `år på` bestillingsdato,
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -134,7 +134,7 @@ class VilkårApiTest {
                 this.bestillingsdato = bestillingsdato
             },
             fødselsdato = (18 `år på` bestillingsdato).plusDays(1),
-            forventetResultat = Resultat.JA,
+            forventetResultat = Regelutfall.JA,
         )
     }
 
@@ -146,7 +146,7 @@ class VilkårApiTest {
                 this.bestillingsdato = bestillingsdato
             },
             fødselsdato = (18 `år på` bestillingsdato).minusDays(1),
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -156,7 +156,7 @@ class VilkårApiTest {
             resultat = MedlemskapResultatResultat.NEI,
             saksgrunnlag = emptyList(),
         ),
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     )
 
     @Test
@@ -165,7 +165,7 @@ class VilkårApiTest {
             resultat = MedlemskapResultatResultat.UAVKLART,
             saksgrunnlag = emptyList(),
         ),
-        forventetResultat = Resultat.JA,
+        forventetResultat = Regelutfall.JA,
     )
 
     @Test
@@ -178,7 +178,7 @@ class VilkårApiTest {
                 venstreSylinder = 0.0
             }
         },
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     )
 
     @Test
@@ -188,7 +188,7 @@ class VilkårApiTest {
                 høyreSylinder = 2.0
             }
         },
-        forventetResultat = Resultat.JA,
+        forventetResultat = Regelutfall.JA,
     )
 
     @Test
@@ -198,7 +198,7 @@ class VilkårApiTest {
                 venstreSfære = 3.0
             }
         },
-        forventetResultat = Resultat.JA,
+        forventetResultat = Regelutfall.JA,
     )
 
     @Test
@@ -208,7 +208,7 @@ class VilkårApiTest {
                 venstreSylinder = 1.0
             }
         },
-        forventetResultat = Resultat.JA,
+        forventetResultat = Regelutfall.JA,
     )
 
     @Test
@@ -217,7 +217,7 @@ class VilkårApiTest {
             bestillingsdato = LocalDate.now()
         },
         dagensDato = LocalDate.now().minusDays(1),
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     )
 
     @Test
@@ -225,7 +225,7 @@ class VilkårApiTest {
         vilkårsgrunnlag = lagVilkårsgrunnlagDto {
             bestillingsdato = LocalDate.now().minusMonths(6).minusDays(1)
         },
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     )
 
     private fun kjørTest(
@@ -238,7 +238,7 @@ class VilkårApiTest {
             resultat = MedlemskapResultatResultat.JA,
             saksgrunnlag = emptyList(),
         ),
-        forventetResultat: Resultat,
+        forventetResultat: Regelutfall,
     ) {
         every { dagensDatoFactory() } returns dagensDato
 
@@ -263,7 +263,7 @@ class VilkårApiTest {
             vilkårsvurdering.resultat shouldBe forventetResultat
 
             when (vilkårsvurdering.resultat) {
-                Resultat.NEI -> vilkårsvurdering.sats shouldBe SatsType.INGEN
+                Regelutfall.NEI -> vilkårsvurdering.sats shouldBe SatsType.INGEN
 
                 else -> {
                     vilkårsvurdering.sats shouldNotBe SatsType.INGEN
