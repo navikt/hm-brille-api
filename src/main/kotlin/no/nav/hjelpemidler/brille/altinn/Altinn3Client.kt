@@ -80,7 +80,7 @@ class Altinn3Client {
         val avgivere = orgs.map {
             Avgiver(
                 navn = it.first.name,
-                orgnr = it.first.partyUuid,
+                orgnr = it.first.organizationNumber!!,
                 parentOrgnr = it.second,
             )
         }
