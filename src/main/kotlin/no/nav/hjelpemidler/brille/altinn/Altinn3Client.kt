@@ -36,7 +36,7 @@ class Altinn3Client {
         )
 
         log.info { "Requesting resources for $fnr" }
-        val result = client.post("/accessmanagement/api/v1/resourceowner/authorizedparties?inkludeAltinn2=true") {
+        val result = client.post("/accessmanagement/api/v1/resourceowner/authorizedparties?includeAltinn2=true") {
             setBody(Reqeust(value = fnr))
         }
         log.info { "Result: ${result.status}" }
