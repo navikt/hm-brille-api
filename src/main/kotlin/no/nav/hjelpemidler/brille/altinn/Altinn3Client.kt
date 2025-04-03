@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.altinn
 
+import com.fasterxml.jackson.databind.JsonNode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.plugins.defaultRequest
@@ -9,7 +10,6 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.headers
-import kotlinx.serialization.json.JsonArray
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.http.correlationId
@@ -45,7 +45,7 @@ class Altinn3Client {
         val name: String,
         val isDeleted: Boolean,
         val onlyHierarchyElementWithNoAccess: Boolean,
-        val authorizedResources: JsonArray,
+        val authorizedResources: JsonNode,
         val authorizedRoles: List<String>,
         val subunits: List<ResponseObject>,
     )
