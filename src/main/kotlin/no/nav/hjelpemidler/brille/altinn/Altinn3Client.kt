@@ -165,7 +165,7 @@ class Altinn3Client {
             }
             // Filtrer ut den enheten eller underenheten som matcher gitt orgnr
             .find { it.organizationNumber == orgnr }
-
+            // Oversett roller og tilgangspakker til et sett av tjeneste-typen som inneholder de som man har tilgang til
             ?.let { enhet ->
                 // TODO: Støtt tilgangspakker / access packages i fremtiden!
                 val enhetRollerPersonHar = enhet.authorizedRoles.map { it.lowercase() }.toSet()
