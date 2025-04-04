@@ -10,6 +10,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.altinn.Altinn3Client
+import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
@@ -130,6 +131,24 @@ fun Route.internalRoutes(
                 val fnr: String,
             )
             altinn3Client.test(call.receive<Request>().fnr)
+        }
+
+        post("/test-altinn3/hent-avgivere") {
+            data class Request(
+                val fnr: String,
+                val tjeneste: Avgiver.Tjeneste,
+            )
+            val req = call.receive<Request>()
+            altinn3Client.hentAvgivere(req.fnr, req.tjeneste)
+        }
+
+        post("/test-altinn3/hent-rettigheter") {
+            data class Request(
+                val fnr: String,
+                val orgnr: String,
+            )
+            val req = call.receive<Request>()
+            altinn3Client.hentRettigheter(req.fnr, req.orgnr)
         }
     }
 }
