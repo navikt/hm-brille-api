@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille.altinn
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
@@ -12,9 +13,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.headers
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.cache.createCache
+import no.nav.hjelpemidler.cache.getAsync
 import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
+import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger {}
 
@@ -42,6 +46,10 @@ class Altinn3Client {
         }
     }
 
+    private val policySubjectsCache = createCache {
+        expireAfterWrite = 1.hours
+    }.buildAsync<String, List<PolicySubjects.Subject>>()
+
     private enum class Resource(val resourceKey: String) {
         Utbertalingsrapport("nav_barnebriller_utbetalingsrapport"),
         OpprettAvtale("nav_barnebriller_opprette-avtale"),
@@ -49,7 +57,10 @@ class Altinn3Client {
 
     private class PolicySubjects {
         enum class Type(val text: String) {
+            @JsonProperty("urn:altinn:rolecode")
             RoleCode("urn:altinn:rolecode"),
+
+            @JsonProperty("urn:altinn:accesspackage")
             AccessPackage("urn:altinn:accesspackage"),
         }
 
@@ -74,10 +85,12 @@ class Altinn3Client {
             Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
             Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
         }
-        val response = publicClient.get("/resourceregistry/api/v1/resource/$resourceKey/policy/subjects")
-        val body: PolicySubjects.Response = response.body()
-        return body.data.map {
-            PolicySubjects.Subject(type = it.type, value = it.value)
+        return policySubjectsCache.getAsync(resourceKey) {
+            val response = publicClient.get("/resourceregistry/api/v1/resource/$resourceKey/policy/subjects")
+            val body: PolicySubjects.Response = response.body()
+            body.data.map {
+                PolicySubjects.Subject(type = it.type, value = it.value)
+            }
         }
     }
 
