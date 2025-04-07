@@ -7,7 +7,7 @@ import no.nav.hjelpemidler.logging.secureInfo
 
 private val log = KotlinLogging.logger {}
 
-class AltinnService(private val altinnClient: AltinnClient) {
+class AltinnService(private val altinnClient: Altinn3Client) {
     suspend fun hentAvgivere(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avgiver> =
         withContext(Dispatchers.IO) {
             val avgivere = altinnClient.hentAvgivere(fnr = fnr, tjeneste = tjeneste)

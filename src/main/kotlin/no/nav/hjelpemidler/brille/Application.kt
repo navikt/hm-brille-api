@@ -166,8 +166,8 @@ fun Application.setupRoutes() {
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
-    val altinnClient = AltinnClient()
-    val altinnService = AltinnService(altinnClient)
+    val altinn3Client = Altinn3Client()
+    val altinnService = AltinnService(altinn3Client)
     val pdlService = PdlService(pdlClient)
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
@@ -194,8 +194,6 @@ fun Application.setupRoutes() {
             LogbackMetrics(),
         ) + rapid.getMetrics(),
     )
-
-    val altinn3Client = Altinn3Client()
 
     setupMetrics(metrics)
 
@@ -230,7 +228,7 @@ fun Application.setupRoutes() {
             pdlService,
             syfohelsenettproxyClient,
             enhetsregisteretService,
-            altinnClient,
+            AltinnClient(),
             altinn3Client,
         )
 
