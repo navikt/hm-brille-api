@@ -86,6 +86,7 @@ class Altinn3Client {
             Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
         }
         return policySubjectsCache.getAsync(resourceKey) {
+            log.info { "Henter policy subjects for resourceKey=$resourceKey og legger de i cache" }
             val response = publicClient.get("/resourceregistry/api/v1/resource/$resourceKey/policy/subjects")
             val body: PolicySubjects.Response = response.body()
             body.data.map {

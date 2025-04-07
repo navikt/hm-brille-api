@@ -139,7 +139,8 @@ fun Route.internalRoutes(
                 val tjeneste: Avgiver.Tjeneste,
             )
             val req = call.receive<Request>()
-            altinn3Client.hentAvgivere(req.fnr, req.tjeneste)
+            val avgivere = altinn3Client.hentAvgivere(req.fnr, req.tjeneste)
+            call.respond(avgivere)
         }
 
         post("/test-altinn3/hent-rettigheter") {
@@ -148,7 +149,8 @@ fun Route.internalRoutes(
                 val orgnr: String,
             )
             val req = call.receive<Request>()
-            altinn3Client.hentRettigheter(req.fnr, req.orgnr)
+            val rettigheter = altinn3Client.hentRettigheter(req.fnr, req.orgnr)
+            call.respond(rettigheter)
         }
     }
 }
