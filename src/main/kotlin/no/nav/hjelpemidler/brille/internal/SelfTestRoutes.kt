@@ -10,6 +10,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.altinn.Altinn3Client
+import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -27,6 +28,7 @@ fun Route.internalRoutes(
     pdlService: PdlService,
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     enhetsregisteretService: EnhetsregisteretService,
+    altinn2Client: AltinnClient,
     altinn3Client: Altinn3Client,
 ) {
     route("/internal") {
@@ -133,6 +135,16 @@ fun Route.internalRoutes(
             altinn3Client.test(call.receive<Request>().fnr)
         }
 
+        post("/test-altinn2/hent-avgivere") {
+            data class Request(
+                val fnr: String,
+                val tjeneste: Avgiver.Tjeneste,
+            )
+            val req = call.receive<Request>()
+            val avgivere = altinn2Client.hentAvgivere(req.fnr, req.tjeneste)
+            call.respond(avgivere)
+        }
+
         post("/test-altinn3/hent-avgivere") {
             data class Request(
                 val fnr: String,
@@ -141,6 +153,16 @@ fun Route.internalRoutes(
             val req = call.receive<Request>()
             val avgivere = altinn3Client.hentAvgivere(req.fnr, req.tjeneste)
             call.respond(avgivere)
+        }
+
+        post("/test-altinn2/hent-rettigheter") {
+            data class Request(
+                val fnr: String,
+                val orgnr: String,
+            )
+            val req = call.receive<Request>()
+            val rettigheter = altinn2Client.hentRettigheter(req.fnr, req.orgnr)
+            call.respond(rettigheter)
         }
 
         post("/test-altinn3/hent-rettigheter") {
