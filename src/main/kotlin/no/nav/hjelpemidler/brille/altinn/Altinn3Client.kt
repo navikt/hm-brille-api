@@ -149,6 +149,8 @@ class Altinn3Client {
                     Pair(it.copy(subunits = emptyList()), null),
                 )
             }
+            // Filtrer ut slettede enheter
+            .filter { !it.first.isDeleted }
             // Bare inkluder resultater hvor vi har en rolle eller (TODO:) tilgangspakke i policy subjects ressursen som matcher
             .filter {
                 it.first.authorizedRoles.find { it0 ->
@@ -177,6 +179,8 @@ class Altinn3Client {
                     it.copy(subunits = emptyList()),
                 )
             }
+            // Filtrer ut slettede enheter
+            .filter { !it.isDeleted }
             // Filtrer ut den enheten eller underenheten som matcher gitt orgnr
             .find { it.organizationNumber == orgnr }
             // Oversett roller og tilgangspakker til et sett av tjeneste-typen som inneholder de som man har tilgang til
