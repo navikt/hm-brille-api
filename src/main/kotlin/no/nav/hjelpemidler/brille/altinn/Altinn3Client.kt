@@ -144,9 +144,10 @@ class Altinn3Client {
             // Flat ut underenheter slik at vi matcher oppsettet fra Altinn2, og ta vare på parentOrgnr for underenheter
             .flatMap {
                 // Pakk ut underenheter ala. gammel implementasjon
+                val underenheter = it.subunits.map { innerIt -> Pair(innerIt, it.organizationNumber) }.toTypedArray()
                 listOf(
-                    *it.subunits.map { innerIt -> Pair(innerIt, it.organizationNumber) }.toTypedArray(),
                     Pair(it.copy(subunits = emptyList()), null),
+                    *underenheter,
                 )
             }
             // Filtrer ut slettede enheter
