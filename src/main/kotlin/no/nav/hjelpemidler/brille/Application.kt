@@ -166,8 +166,10 @@ fun Application.setupRoutes() {
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
+    val altinn2Client = AltinnClient()
     val altinn3Client = Altinn3Client()
-    val altinnService = AltinnService(altinn3Client)
+    val featureToggleService = FeatureToggleService()
+    val altinnService = AltinnService(altinn2Client, altinn3Client, featureToggleService)
     val pdlService = PdlService(pdlClient)
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
@@ -180,7 +182,6 @@ fun Application.setupRoutes() {
     val joarkrefService = JoarkrefService(databaseContext)
     val slettVedtakService = SlettVedtakService(databaseContext, joarkrefService, kafkaService)
     val tssIdentService = TssIdentService(databaseContext)
-    val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)
     val leaderElection = LeaderElection()
     val kalkulatorService = KalkulatorService(kafkaService)
@@ -228,7 +229,7 @@ fun Application.setupRoutes() {
             pdlService,
             syfohelsenettproxyClient,
             enhetsregisteretService,
-            AltinnClient(),
+            altinn2Client,
             altinn3Client,
         )
 
