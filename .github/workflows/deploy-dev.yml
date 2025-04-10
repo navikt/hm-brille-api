@@ -9,6 +9,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
+      - altinn3
 
 jobs:
   build:
@@ -22,3 +23,20 @@ jobs:
       manifest: .nais/nais-deploy.yaml
       vars: .nais/dev/config.json
     secrets: inherit
+
+  unleash:
+    name: Deploy Unleash secrets
+    permissions:
+      packages: write
+      contents: write
+      id-token: write
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/altinn3'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sjekk ut koden
+        uses: actions/checkout@v4
+      - name: Deploy Unleash secrets
+        uses: nais/deploy/actions/deploy@v2
+        env:
+          CLUSTER: dev-gcp
+          RESOURCE: .nais/unleash-apitoken-dev.yaml

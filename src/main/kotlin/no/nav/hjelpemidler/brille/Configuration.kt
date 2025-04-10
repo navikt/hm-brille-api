@@ -20,6 +20,8 @@ object Configuration {
     val ALTINN_APIGW_CONSUMER_ID by EnvironmentVariable
     val ALTINN_APIGW_URL by EnvironmentVariable
 
+    val ALTINN_URL by EnvironmentVariable
+
     val CLIENT_ID_AZURE_TOKEN_GENERATOR by EnvironmentVariable
     val CLIENT_ID_BRILLE_INTEGRASJON by EnvironmentVariable
     val CLIENT_ID_SAKSBEHANDLING by EnvironmentVariable
@@ -55,6 +57,15 @@ object Configuration {
 
     val SYFOHELSENETTPROXY_API_SCOPE by EnvironmentVariable
     val SYFOHELSENETTPROXY_API_URL by EnvironmentVariable
+
+    @External
+    val UNLEASH_SERVER_API_URL by EnvironmentVariable
+
+    @External
+    val UNLEASH_SERVER_API_TOKEN by EnvironmentVariable
+
+    // @External
+    // val UNLEASH_SERVER_API_ENV by EnvironmentVariable
 
     val redisProperties = RedisProperties()
 

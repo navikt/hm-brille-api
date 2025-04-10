@@ -7,6 +7,7 @@ import io.getunleash.util.UnleashConfig
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.GcpEnvironment
 import no.nav.hjelpemidler.configuration.LocalEnvironment
+import no.nav.hjelpemidler.configuration.NaisEnvironmentVariable
 
 object UnleashClient {
     private val unleash: Unleash
@@ -16,11 +17,11 @@ object UnleashClient {
         unleash = when (miljø) {
             GcpEnvironment.DEV, GcpEnvironment.PROD, LocalEnvironment -> DefaultUnleash(
                 UnleashConfig.builder()
-                    .appName("hm-brille-api")
-                    .instanceId("hm-brille.api" + "_" + miljø.cluster)
-                    .unleashAPI("https://unleash.nais.io/api/")
+                    .appName(NaisEnvironmentVariable.NAIS_APP_NAME)
+                    .unleashAPI("${Configuration.UNLEASH_SERVER_API_URL}/api")
+                    .apiKey(Configuration.UNLEASH_SERVER_API_TOKEN)
+                    .synchronousFetchOnInitialisation(true)
                     .build(),
-                ClusterStrategy(miljø),
             )
 
             else -> TODO()
