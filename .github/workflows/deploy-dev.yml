@@ -30,7 +30,7 @@ jobs:
       packages: write
       contents: write
       id-token: write
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/altinn3'
     runs-on: ubuntu-latest
     steps:
       - name: Sjekk ut koden
