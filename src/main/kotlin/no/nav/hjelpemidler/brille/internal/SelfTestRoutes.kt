@@ -11,6 +11,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import no.nav.hjelpemidler.brille.altinn.Altinn3Client
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
+import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
@@ -28,6 +29,7 @@ fun Route.internalRoutes(
     pdlService: PdlService,
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     enhetsregisteretService: EnhetsregisteretService,
+    altinnService: AltinnService,
     altinn2Client: AltinnClient,
     altinn3Client: Altinn3Client,
 ) {
@@ -173,6 +175,32 @@ fun Route.internalRoutes(
             val req = call.receive<Request>()
             val rettigheter = altinn3Client.hentRettigheter(req.fnr, req.orgnr)
             call.respond(rettigheter)
+        }
+
+        post("/test-altinn-service/hent-avgivere") {
+            data class Request(
+                val fnr: String,
+                val tjeneste: Avgiver.Tjeneste,
+            )
+            val req = call.receive<Request>()
+            val rettigheter = altinnService.hentAvgivere(req.fnr, req.tjeneste)
+            call.respond(rettigheter)
+        }
+
+        post("/test-altinn-service/hent-rettigheter") {
+            data class Request(
+                val fnr: String,
+                val orgnr: String,
+            )
+            val req = call.receive<Request>()
+            val oppgjørsavtale = altinnService.harTilgangTilOppgjørsavtale(req.fnr, req.orgnr)
+            val utbetalingsrapport = altinnService.harTilgangTilUtbetalingsrapport(req.fnr, req.orgnr)
+            call.respond(
+                mapOf(
+                    "oppgjørsavtale" to oppgjørsavtale,
+                    "utbetalingsrapport" to utbetalingsrapport,
+                ),
+            )
         }
     }
 }

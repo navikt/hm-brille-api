@@ -229,6 +229,7 @@ fun Application.setupRoutes() {
             pdlService,
             syfohelsenettproxyClient,
             enhetsregisteretService,
+            altinnService,
             altinn2Client,
             altinn3Client,
         )
