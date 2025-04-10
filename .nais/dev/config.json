@@ -26,7 +26,8 @@
     "pdl-api.dev-fss-pub.nais.io",
     "hooks.slack.com",
     "api-gw-q1.oera.no",
-    "platform.tt02.altinn.no"
+    "platform.tt02.altinn.no",
+    "teamdigihot-unleash-api.nav.cloud.nais.io"
   ],
   "outbound-applications": [
     "hm-mocks",

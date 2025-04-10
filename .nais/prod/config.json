@@ -27,7 +27,8 @@
     "pdl-api.prod-fss-pub.nais.io",
     "hooks.slack.com",
     "api-gw.oera.no",
-    "altinn.no"
+    "altinn.no",
+    "teamdigihot-unleash-api.nav.cloud.nais.io"
   ],
   "outbound-applications": [
     "hm-saksbehandling"

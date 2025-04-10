@@ -58,6 +58,15 @@ object Configuration {
     val SYFOHELSENETTPROXY_API_SCOPE by EnvironmentVariable
     val SYFOHELSENETTPROXY_API_URL by EnvironmentVariable
 
+    @External
+    val UNLEASH_SERVER_API_URL by EnvironmentVariable
+
+    @External
+    val UNLEASH_SERVER_API_TOKEN by EnvironmentVariable
+
+    // @External
+    // val UNLEASH_SERVER_API_ENV by EnvironmentVariable
+
     val redisProperties = RedisProperties()
 
     data class RedisProperties(
