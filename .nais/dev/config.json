@@ -25,7 +25,9 @@
     "data.brreg.no",
     "pdl-api.dev-fss-pub.nais.io",
     "hooks.slack.com",
-    "api-gw-q1.oera.no"
+    "api-gw-q1.oera.no",
+    "platform.tt02.altinn.no",
+    "teamdigihot-unleash-api.nav.cloud.nais.io"
   ],
   "outbound-applications": [
     "hm-mocks",
@@ -37,6 +39,7 @@
   "env": {
     "ALTINN_APIGW_CONSUMER_ID": "hjelpemidlerdigitalsoknad-api-dev",
     "ALTINN_APIGW_URL": "https://api-gw-q1.oera.no/ekstern/altinn/api/serviceowner",
+    "ALTINN_URL": "https://platform.tt02.altinn.no",
     "CLIENT_ID_AZURE_TOKEN_GENERATOR": "5f28c10f-ecd5-45ef-96b8-db4311802e89",
     "CLIENT_ID_BRILLE_INTEGRASJON": "23076526-5550-4ac5-8048-baf02fc80889",
     "CLIENT_ID_SAKSBEHANDLING": "ca022110-eb9d-4963-8619-2d237da0684c",

@@ -2,12 +2,17 @@ package no.nav.hjelpemidler.brille.internal
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
+import no.nav.hjelpemidler.brille.altinn.Altinn3Client
+import no.nav.hjelpemidler.brille.altinn.AltinnClient
+import no.nav.hjelpemidler.brille.altinn.AltinnService
+import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.enhetsregisteret.EnhetsregisteretService
 import no.nav.hjelpemidler.brille.hotsak.HotsakClient
@@ -24,6 +29,9 @@ fun Route.internalRoutes(
     pdlService: PdlService,
     syfohelsenettproxyClient: SyfohelsenettproxyClient,
     enhetsregisteretService: EnhetsregisteretService,
+    altinnService: AltinnService,
+    altinn2Client: AltinnClient,
+    altinn3Client: Altinn3Client,
 ) {
     route("/internal") {
         get("/is-alive") {
@@ -120,6 +128,79 @@ fun Route.internalRoutes(
                 }.getOrNull() ?: return@get call.respond(HttpStatusCode.InternalServerError, "feilet i å hente organisasjon slettet når")
                 call.respond(enhet)
             }
+        }
+
+        post("/test-altinn3") {
+            data class Request(
+                val fnr: String,
+            )
+            altinn3Client.test(call.receive<Request>().fnr)
+        }
+
+        post("/test-altinn2/hent-avgivere") {
+            data class Request(
+                val fnr: String,
+                val tjeneste: Avgiver.Tjeneste,
+            )
+            val req = call.receive<Request>()
+            val avgivere = altinn2Client.hentAvgivere(req.fnr, req.tjeneste)
+            call.respond(avgivere)
+        }
+
+        post("/test-altinn3/hent-avgivere") {
+            data class Request(
+                val fnr: String,
+                val tjeneste: Avgiver.Tjeneste,
+            )
+            val req = call.receive<Request>()
+            val avgivere = altinn3Client.hentAvgivere(req.fnr, req.tjeneste)
+            call.respond(avgivere)
+        }
+
+        post("/test-altinn2/hent-rettigheter") {
+            data class Request(
+                val fnr: String,
+                val orgnr: String,
+            )
+            val req = call.receive<Request>()
+            val rettigheter = altinn2Client.hentRettigheter(req.fnr, req.orgnr)
+            call.respond(rettigheter)
+        }
+
+        post("/test-altinn3/hent-rettigheter") {
+            data class Request(
+                val fnr: String,
+                val orgnr: String,
+            )
+            val req = call.receive<Request>()
+            val rettigheter = altinn3Client.hentRettigheter(req.fnr, req.orgnr)
+            call.respond(rettigheter)
+        }
+
+        post("/test-altinn-service/hent-avgivere") {
+            data class Request(
+                val fnr: String,
+                val tjeneste: Avgiver.Tjeneste,
+            )
+            val req = call.receive<Request>()
+            val rettigheter = altinnService.hentAvgivere(req.fnr, req.tjeneste)
+            call.respond(rettigheter)
+        }
+
+        post("/test-altinn-service/hent-rettigheter") {
+            data class Request(
+                val fnr: String,
+                val orgnr: String,
+            )
+            val req = call.receive<Request>()
+            val oppgjørsavtale = altinnService.harTilgangTilOppgjørsavtale(req.fnr, req.orgnr)
+            val utbetalingsrapport = altinnService.harTilgangTilUtbetalingsrapport(req.fnr, req.orgnr)
+            call.respond(
+                mapOf(
+                    "oppgjørsavtale" to oppgjørsavtale,
+                    "utbetalingsrapport" to utbetalingsrapport,
+                ),
+            )
         }
     }
 }

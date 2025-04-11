@@ -27,6 +27,7 @@ import no.nav.helse.rapids_rivers.KafkaConfig
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
+import no.nav.hjelpemidler.brille.altinn.Altinn3Client
 import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
@@ -165,7 +166,10 @@ fun Application.setupRoutes() {
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
-    val altinnService = AltinnService(AltinnClient())
+    val altinn2Client = AltinnClient()
+    val altinn3Client = Altinn3Client()
+    val featureToggleService = FeatureToggleService()
+    val altinnService = AltinnService(altinn2Client, altinn3Client, featureToggleService)
     val pdlService = PdlService(pdlClient)
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
@@ -178,7 +182,6 @@ fun Application.setupRoutes() {
     val joarkrefService = JoarkrefService(databaseContext)
     val slettVedtakService = SlettVedtakService(databaseContext, joarkrefService, kafkaService)
     val tssIdentService = TssIdentService(databaseContext)
-    val featureToggleService = FeatureToggleService()
     val adminService = AdminService(databaseContext)
     val leaderElection = LeaderElection()
     val kalkulatorService = KalkulatorService(kafkaService)
@@ -226,6 +229,9 @@ fun Application.setupRoutes() {
             pdlService,
             syfohelsenettproxyClient,
             enhetsregisteretService,
+            altinnService,
+            altinn2Client,
+            altinn3Client,
         )
 
         route("/api") {
