@@ -35,9 +35,9 @@ import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.lagEksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.toList
-import no.nav.hjelpemidler.nare.evaluering.Evaluering
-import no.nav.hjelpemidler.nare.evaluering.Resultat
-import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
+import no.nav.hjelpemidler.nare.regel.Regel
+import no.nav.hjelpemidler.nare.regel.Regelevaluering
+import no.nav.hjelpemidler.nare.regel.Regelutfall
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test
@@ -77,7 +77,7 @@ class VilkårHotsakApiTest {
     }
 
     @Test
-    fun `happy case`() = kjørTest(forventetResultat = Resultat.JA)
+    fun `happy case`() = kjørTest(forventetResultat = Regelutfall.JA)
 
     @Test
     fun `har vedtak i kalenderåret`() {
@@ -89,7 +89,7 @@ class VilkårHotsakApiTest {
             vedtakForBruker = lagEksisterendeVedtak {
                 this.bestillingsdato = bestillingsdato
             }.toList(),
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -104,7 +104,7 @@ class VilkårHotsakApiTest {
                     this.bestillingsdato = bestillingsdato
                 }
             },
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -118,7 +118,7 @@ class VilkårHotsakApiTest {
             vedtakForBruker = lagEksisterendeVedtak {
                 this.bestillingsdato = bestillingsdato.minusYears(1)
             }.toList(),
-            forventetResultat = Resultat.JA,
+            forventetResultat = Regelutfall.JA,
         )
     }
 
@@ -130,7 +130,7 @@ class VilkårHotsakApiTest {
                 this.bestillingsdato = bestillingsdato
             },
             fødselsdato = 18 `år på` bestillingsdato,
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -142,7 +142,7 @@ class VilkårHotsakApiTest {
                 this.bestillingsdato = bestillingsdato
             },
             fødselsdato = (18 `år på` bestillingsdato).plusDays(1),
-            forventetResultat = Resultat.JA,
+            forventetResultat = Regelutfall.JA,
         )
     }
 
@@ -154,7 +154,7 @@ class VilkårHotsakApiTest {
                 this.bestillingsdato = bestillingsdato
             },
             fødselsdato = (18 `år på` bestillingsdato).minusDays(1),
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         )
     }
 
@@ -164,7 +164,7 @@ class VilkårHotsakApiTest {
             resultat = MedlemskapResultatResultat.NEI,
             saksgrunnlag = emptyList(),
         ),
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     )
 
     @Test
@@ -173,7 +173,7 @@ class VilkårHotsakApiTest {
             resultat = MedlemskapResultatResultat.UAVKLART,
             saksgrunnlag = emptyList(),
         ),
-        forventetResultat = Resultat.JA,
+        forventetResultat = Regelutfall.JA,
     )
 
     @Test
@@ -186,7 +186,7 @@ class VilkårHotsakApiTest {
                 venstreSylinder = 0.0
             }
         },
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     )
 
     @Test
@@ -196,7 +196,7 @@ class VilkårHotsakApiTest {
                 høyreSylinder = 1.0
             }
         },
-        forventetResultat = Resultat.JA,
+        forventetResultat = Regelutfall.JA,
     )
 
     @Test
@@ -206,7 +206,7 @@ class VilkårHotsakApiTest {
                 venstreSfære = 1.0
             }
         },
-        forventetResultat = Resultat.JA,
+        forventetResultat = Regelutfall.JA,
     )
 
     @Test
@@ -216,7 +216,7 @@ class VilkårHotsakApiTest {
                 venstreSylinder = 1.0
             }
         },
-        forventetResultat = Resultat.JA,
+        forventetResultat = Regelutfall.JA,
     )
 
     @Test
@@ -224,7 +224,7 @@ class VilkårHotsakApiTest {
         vilkårsgrunnlag = lagVilkårsgrunnlagHotsakDto {
             bestillingsdato = LocalDate.now().plusDays(1)
         },
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     )
 
     @Test
@@ -234,7 +234,7 @@ class VilkårHotsakApiTest {
             mottaksdato = Instant.now()
         },
         dagensDato = LocalDate.now(),
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     )
 
     @Test
@@ -246,7 +246,7 @@ class VilkårHotsakApiTest {
             },
             fødselsdato = (18 `år på` dagensDato).plusDays(1),
             dagensDato = dagensDato,
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         ) {
             verifiser(Vilkårene.HarIkkeVedtakIKalenderåret) { skalVærePositiv() }
             verifiser(Vilkårene.Under18ÅrPåBestillingsdato) { skalVærePositiv() }
@@ -265,7 +265,7 @@ class VilkårHotsakApiTest {
                 this.mottaksdato = mottaksdato
             },
             fødselsdato = (18 `år på` mottaksdato.toLocalDate()).plusDays(1),
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         ) {
             verifiser(Vilkårene.HarIkkeVedtakIKalenderåret) { skalVærePositiv() }
             verifiser(Vilkårene.Under18ÅrPåBestillingsdato) { skalVærePositiv() }
@@ -285,7 +285,7 @@ class VilkårHotsakApiTest {
             },
             fødselsdato = 18 `år på` dagensDato,
             dagensDato = dagensDato,
-            forventetResultat = Resultat.NEI,
+            forventetResultat = Regelutfall.NEI,
         ) {
             verifiser(Vilkårene.HarIkkeVedtakIKalenderåret) { skalVærePositiv() }
             verifiser(Vilkårene.Under18ÅrPåBestillingsdato) { skalVærePositiv() }
@@ -300,7 +300,7 @@ class VilkårHotsakApiTest {
         vilkårsgrunnlag = lagVilkårsgrunnlagHotsakDto {
             brilleseddel = null
         },
-        forventetResultat = Resultat.NEI,
+        forventetResultat = Regelutfall.NEI,
     ) {
         verifiser(Vilkårene.Brillestyrke) { skalMangleDokumentasjon() }
     }
@@ -316,7 +316,7 @@ class VilkårHotsakApiTest {
             resultat = MedlemskapResultatResultat.JA,
             saksgrunnlag = emptyList(),
         ),
-        forventetResultat: Resultat,
+        forventetResultat: Regelutfall,
         assertions: VilkårsvurderingHotsakDto.(VilkårsvurderingHotsakDto) -> Unit = {},
     ) {
         every { dagensDatoFactory() } returns dagensDato
@@ -349,8 +349,8 @@ class VilkårHotsakApiTest {
         verify { hotsakClient wasNot Called }
     }
 
-    private fun <T> VilkårsvurderingHotsakDto.verifiser(
-        spesifikasjon: Spesifikasjon<T>,
-        matcher: Evaluering.() -> Unit,
+    private fun <T : Any> VilkårsvurderingHotsakDto.verifiser(
+        spesifikasjon: Regel<T>,
+        matcher: Regelevaluering.() -> Unit,
     ) = evaluering.verifiser(spesifikasjon, matcher)
 }

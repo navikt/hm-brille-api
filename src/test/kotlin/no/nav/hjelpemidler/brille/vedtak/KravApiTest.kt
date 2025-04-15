@@ -30,7 +30,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
-import no.nav.hjelpemidler.nare.evaluering.Evalueringer
+import no.nav.hjelpemidler.nare.regel.Regelevaluering
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -104,7 +104,7 @@ class KravApiTest {
         bestillingsdato = LocalDate.now(),
         brillepris = SatsType.SATS_1.beløp(LocalDate.now()).toBigDecimal(),
         bestillingsreferanse = "test 2",
-        vilkårsvurdering = Vilkårsvurdering("test 2 ", Evalueringer().ja("test 2")),
+        vilkårsvurdering = Vilkårsvurdering("test 2 ", Regelevaluering.ja("test 2")),
         behandlingsresultat = Behandlingsresultat.INNVILGET,
         sats = SatsType.SATS_1,
         satsBeløp = SatsType.SATS_1.beløp(LocalDate.now()),

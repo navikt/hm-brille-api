@@ -2,6 +2,7 @@ package no.nav.hjelpemidler.brille
 
 import io.getunleash.DefaultUnleash
 import io.getunleash.Unleash
+import io.getunleash.UnleashContext
 import io.getunleash.strategy.Strategy
 import io.getunleash.util.UnleashConfig
 import no.nav.hjelpemidler.configuration.Environment
@@ -36,7 +37,7 @@ object UnleashToggleKeys
 class ClusterStrategy(val miljø: Environment) : Strategy {
     override fun getName() = "byCluster"
 
-    override fun isEnabled(parameters: MutableMap<String, String>): Boolean {
+    override fun isEnabled(parameters: MutableMap<String, String>, context: UnleashContext): Boolean {
         val clustersParameter = parameters["cluster"] ?: return false
         val alleClustere = clustersParameter.split(",").map { it.trim() }.map { it.lowercase() }.toList()
         return alleClustere.contains(miljø.cluster.lowercase())

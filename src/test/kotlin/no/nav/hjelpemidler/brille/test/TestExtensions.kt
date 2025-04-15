@@ -2,24 +2,26 @@ package no.nav.hjelpemidler.brille.test
 
 import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
-import no.nav.hjelpemidler.nare.evaluering.Evaluering
-import no.nav.hjelpemidler.nare.evaluering.Resultat
-import no.nav.hjelpemidler.nare.evaluering.Årsak
-import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
+import no.nav.hjelpemidler.nare.regel.Regel
+import no.nav.hjelpemidler.nare.regel.Regelevaluering
+import no.nav.hjelpemidler.nare.regel.Regelutfall
+import no.nav.hjelpemidler.nare.regel.Årsak
 import java.time.LocalDate
 
-fun Evaluering.toList(): List<Evaluering> = when {
-    barn.isEmpty() -> listOf(this)
-    else -> barn.flatMap(Evaluering::toList)
-}
+fun Regelevaluering.liste(): List<Regelevaluering> =
+    if (barn.isEmpty()) {
+        listOf(this)
+    } else {
+        barn.flatMap(Regelevaluering::liste)
+    }
 
-fun <T> Evaluering.verifiser(spesifikasjon: Spesifikasjon<T>, matcher: Evaluering.() -> Unit) =
-    toList().single { it.identifikator == spesifikasjon.identifikator }.should(matcher)
+fun <T : Any> Regelevaluering.verifiser(spesifikasjon: Regel<T>, matcher: Regelevaluering.() -> Unit) =
+    liste().single { it.id == spesifikasjon.id }.should(matcher)
 
-fun Evaluering.skalVærePositiv() = resultat shouldBe Resultat.JA
-fun Evaluering.skalVæreNegativ() = resultat shouldBe Resultat.NEI
+fun Regelevaluering.skalVærePositiv() = resultat shouldBe Regelutfall.JA
+fun Regelevaluering.skalVæreNegativ() = resultat shouldBe Regelutfall.NEI
 
-fun Evaluering.skalMangleDokumentasjon() = should {
+fun Regelevaluering.skalMangleDokumentasjon() = should {
     skalVæreNegativ()
     årsak shouldBe Årsak.DOKUMENTASJON_MANGLER
 }

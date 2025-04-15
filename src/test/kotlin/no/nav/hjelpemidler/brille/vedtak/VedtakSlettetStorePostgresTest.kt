@@ -7,7 +7,7 @@ import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.test.AbstractStoreTest
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
-import no.nav.hjelpemidler.nare.evaluering.Evalueringer
+import no.nav.hjelpemidler.nare.regel.Regelevaluering
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -38,7 +38,7 @@ class VedtakSlettetStorePostgresTest : AbstractStoreTest() {
                     bestillingsdato = LocalDate.now(),
                     brillepris = sats.beløp(LocalDate.now()).toBigDecimal(),
                     bestillingsreferanse = "test",
-                    vilkårsvurdering = Vilkårsvurdering("test", Evalueringer().ja("test")),
+                    vilkårsvurdering = Vilkårsvurdering("test", Regelevaluering.ja("test")),
                     behandlingsresultat = Behandlingsresultat.INNVILGET,
                     sats = sats,
                     satsBeløp = sats.beløp(LocalDate.now()),

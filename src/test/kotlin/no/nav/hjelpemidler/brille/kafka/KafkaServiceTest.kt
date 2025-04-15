@@ -13,7 +13,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
-import no.nav.hjelpemidler.nare.evaluering.Evalueringer
+import no.nav.hjelpemidler.nare.regel.Regelevaluering
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import java.math.BigDecimal
@@ -59,7 +59,7 @@ class KafkaServiceTest {
             bestillingsdato = krav.vilkårsgrunnlag.bestillingsdato,
             brillepris = krav.vilkårsgrunnlag.brillepris,
             bestillingsreferanse = krav.bestillingsreferanse,
-            vilkårsvurdering = Vilkårsvurdering(mockk(relaxed = true), Evalueringer().ja("test")),
+            vilkårsvurdering = Vilkårsvurdering(mockk(relaxed = true), Regelevaluering.ja("test")),
             behandlingsresultat = Behandlingsresultat.INNVILGET,
             sats = sats,
             satsBeløp = sats.beløp(LocalDate.now()),

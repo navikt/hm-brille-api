@@ -6,7 +6,7 @@ import no.nav.hjelpemidler.brille.pdl.PdlOppslag
 import no.nav.hjelpemidler.brille.pdl.Person
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.tid.alderPå
-import no.nav.hjelpemidler.nare.evaluering.Resultat
+import no.nav.hjelpemidler.nare.regel.Regelutfall
 import java.time.Instant
 import java.time.LocalDate
 
@@ -46,4 +46,4 @@ data class Vilkårsgrunnlag(
 fun Int?.erUnder18(): Boolean = this != null && this < 18
 
 fun Vilkårsvurdering<Vilkårsgrunnlag>.harResultatJaForVilkår(identifikator: String): Boolean =
-    this.evaluering.barn.find { it.identifikator.startsWith(identifikator) }!!.resultat == Resultat.JA
+    this.evaluering.barn.find { it.id.startsWith(identifikator) }!!.resultat == Regelutfall.JA

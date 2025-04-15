@@ -4,8 +4,11 @@ import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultatResultat
 import no.nav.hjelpemidler.brille.sats.mangler
 import no.nav.hjelpemidler.brille.tid.mangler
 import no.nav.hjelpemidler.localization.LOCALE_NORWEGIAN_BOKMÅL
-import no.nav.hjelpemidler.nare.evaluering.Årsak
-import no.nav.hjelpemidler.nare.spesifikasjon.Spesifikasjon
+import no.nav.hjelpemidler.nare.regel.Lovreferanse
+import no.nav.hjelpemidler.nare.regel.Regel
+import no.nav.hjelpemidler.nare.regel.Regelevaluering.Companion.ja
+import no.nav.hjelpemidler.nare.regel.Regelevaluering.Companion.nei
+import no.nav.hjelpemidler.nare.regel.Årsak
 import java.time.LocalDate
 import java.time.Month
 import java.time.format.DateTimeFormatter
@@ -14,11 +17,13 @@ import java.time.format.FormatStyle
 val DATO_ORDNINGEN_STARTET: LocalDate = LocalDate.of(2022, Month.AUGUST, 1)
 
 object Vilkårene {
-    val HarIkkeVedtakIKalenderåret = Spesifikasjon<Vilkårsgrunnlag>(
+    val HarIkkeVedtakIKalenderåret = Regel<Vilkårsgrunnlag>(
         beskrivelse = "Barnet kan kun få tilskudd én gang i året",
-        identifikator = "HarIkkeVedtakIKalenderåret",
-        lovreferanse = "§ 3",
-        lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        id = "HarIkkeVedtakIKalenderåret",
+        lovreferanse = Lovreferanse(
+            "§ 3",
+            "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        ),
     ) { grunnlag ->
         val bestillingsdato = grunnlag.bestillingsdato
         val eksisterendeVedtakDato = grunnlag.vedtakBarn
@@ -32,7 +37,7 @@ object Vilkårene {
 
             bestillingsdato.mangler() -> nei(
                 "Bestillingsdato mangler, kan ikke vurdere om barnet allerede har vedtak om brille i kalenderåret",
-                Årsak.DOKUMENTASJON_MANGLER,
+                årsak = Årsak.DOKUMENTASJON_MANGLER,
             )
 
             eksisterendeVedtakDato != null -> nei(
@@ -50,11 +55,13 @@ object Vilkårene {
         }
     }
 
-    val Under18ÅrPåBestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
+    val Under18ÅrPåBestillingsdato = Regel<Vilkårsgrunnlag>(
         beskrivelse = "Barnet må være under 18 år på bestillingsdato",
-        identifikator = "Under18ÅrPåBestillingsdato",
-        lovreferanse = "§ 2",
-        lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        id = "Under18ÅrPåBestillingsdato",
+        lovreferanse = Lovreferanse(
+            "§ 2",
+            "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        ),
     ) { grunnlag ->
         val barnetsFødselsdato = grunnlag.barnetsFødselsdato
         val barnetsAlderPåBestillingsdato = grunnlag.barnetsAlderPåBestillingsdato
@@ -89,7 +96,7 @@ object Vilkårene {
 
             bestillingsdato.mangler() -> nei(
                 "Bestillingsdato mangler, kan ikke vurdere om barnet var under 18 år på bestillingsdato",
-                Årsak.DOKUMENTASJON_MANGLER,
+                årsak = Årsak.DOKUMENTASJON_MANGLER,
             )
 
             else -> nei(
@@ -102,17 +109,19 @@ object Vilkårene {
         }
     }
 
-    val MedlemAvFolketrygden = Spesifikasjon<Vilkårsgrunnlag>(
+    val MedlemAvFolketrygden = Regel<Vilkårsgrunnlag>(
         beskrivelse = "Medlem av folketrygden",
-        identifikator = "MedlemAvFolketrygden",
-        lovreferanse = "ftrl. § 10-7 a",
-        lovdataUrl = "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a",
+        id = "MedlemAvFolketrygden",
+        lovreferanse = Lovreferanse(
+            "ftrl. § 10-7 a",
+            "https://lovdata.no/dokument/NL/lov/1997-02-28-19/KAPITTEL_5-6#%C2%A710-7a",
+        ),
     ) { grunnlag ->
         val bestillingsdato = grunnlag.bestillingsdato
         if (bestillingsdato.mangler()) {
-            return@Spesifikasjon nei(
+            return@Regel nei(
                 "Bestillingsdato mangler, kan ikke vurdere om barnet er medlem i folketrygden",
-                Årsak.DOKUMENTASJON_MANGLER,
+                årsak = Årsak.DOKUMENTASJON_MANGLER,
             )
         }
 
@@ -144,11 +153,13 @@ object Vilkårene {
         }
     }
 
-    val Brillestyrke = Spesifikasjon<Vilkårsgrunnlag>(
+    val Brillestyrke = Regel<Vilkårsgrunnlag>(
         beskrivelse = "Brillestyrken er innenfor fastsatte styrker",
-        identifikator = "Brillestyrke",
-        lovreferanse = "§ 2",
-        lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        id = "Brillestyrke",
+        lovreferanse = Lovreferanse(
+            "§ 2",
+            "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        ),
     ) { grunnlag ->
         val minsteSfære = grunnlag.minsteSfære
         val minsteSylinder = grunnlag.minsteSylinder
@@ -163,7 +174,7 @@ object Vilkårene {
         when {
             brilleseddel.mangler() -> nei(
                 "Brilleseddel mangler, kan ikke vurdere om brillestyrken er innenfor fastsatte styrker",
-                Årsak.DOKUMENTASJON_MANGLER,
+                årsak = Årsak.DOKUMENTASJON_MANGLER,
             )
 
             brilleseddel.høyreSfære >= minsteSfære -> ja(
@@ -186,15 +197,20 @@ object Vilkårene {
                 brillestyrkeGrunnlag,
             )
 
-            else -> nei("Vilkår om brillestyrke og/eller sylinderstyrke er ikke oppfylt", brillestyrkeGrunnlag)
+            else -> nei(
+                "Vilkår om brillestyrke og/eller sylinderstyrke er ikke oppfylt",
+                brillestyrkeGrunnlag,
+            )
         }
     }
 
-    val Bestillingsdato = Spesifikasjon<Vilkårsgrunnlag>(
+    val Bestillingsdato = Regel<Vilkårsgrunnlag>(
         beskrivelse = "Bestillingsdato må være innenfor gyldig periode",
-        identifikator = "Bestillingsdato",
-        lovreferanse = "§ 6",
-        lovdataUrl = "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        id = "Bestillingsdato",
+        lovreferanse = Lovreferanse(
+            "§ 6",
+            "https://lovdata.no/dokument/LTI/forskrift/2023-06-26-1129",
+        ),
     ) { grunnlag ->
         val bestillingsdato = grunnlag.bestillingsdato
         val dagensDato = grunnlag.dagensDato
@@ -204,7 +220,7 @@ object Vilkårene {
         when {
             bestillingsdato.mangler() -> nei(
                 "Bestillingsdato mangler, kan ikke vurdere om den er innenfor gyldig periode",
-                Årsak.DOKUMENTASJON_MANGLER,
+                årsak = Årsak.DOKUMENTASJON_MANGLER,
             )
 
             bestillingsdato.isAfter(dagensDato) -> nei(
@@ -235,9 +251,9 @@ object Vilkårene {
         }
     }
 
-    val Brille: Spesifikasjon<Vilkårsgrunnlag> =
+    val Brille: Regel<Vilkårsgrunnlag> =
         (HarIkkeVedtakIKalenderåret og Under18ÅrPåBestillingsdato og MedlemAvFolketrygden og Brillestyrke og Bestillingsdato).med(
-            identifikator = "Brille",
+            id = "Brille",
             beskrivelse = "Personen oppfyller vilkår for krav om barnebriller",
         )
 

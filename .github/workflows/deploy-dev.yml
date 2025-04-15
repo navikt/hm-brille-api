@@ -9,7 +9,7 @@ on:
       - "CODEOWNERS"
     branches:
       - main
-      - altinn3
+      - hotlibs
 
 jobs:
   build:

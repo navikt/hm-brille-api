@@ -44,7 +44,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.virksomhet.OrganisasjonMedBruksvilkår
 import no.nav.hjelpemidler.brille.virksomhet.enhetTilAdresseFor
 import no.nav.hjelpemidler.logging.secureInfo
-import no.nav.hjelpemidler.nare.evaluering.Resultat
+import no.nav.hjelpemidler.nare.regel.Regelutfall
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -160,7 +160,7 @@ fun Route.integrasjonApi(
             )
 
             data class Response(
-                val resultat: Resultat,
+                val resultat: Regelutfall,
                 val sats: SatsType,
                 val satsBeløp: BigDecimal,
             )
@@ -203,7 +203,7 @@ fun Route.integrasjonApi(
             )
 
             data class Response(
-                val resultat: Resultat,
+                val resultat: Regelutfall,
                 val sats: SatsType,
                 val satsBeløp: BigDecimal,
                 val navReferanse: Long? = null,
@@ -265,7 +265,7 @@ fun Route.integrasjonApi(
                     vilkårsgrunnlag.bestillingsdato,
                 )
 
-                if (vilkårsvurdering.utfall != Resultat.JA) {
+                if (vilkårsvurdering.utfall != Regelutfall.JA) {
                     log.secureInfo {
                         "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                     }
@@ -273,7 +273,7 @@ fun Route.integrasjonApi(
                     kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkårsvurdering)
 
                     val årsaker = vilkårsvurdering.evaluering.barn
-                        .filter { vilkar -> vilkar.resultat != Resultat.JA }
+                        .filter { vilkar -> vilkar.resultat != Regelutfall.JA }
                         .map { vilkar -> vilkar.begrunnelse }
 
                     val haddeAvvisningsbrevFraFør = adminService.harAvvisningDeSiste7DageneFor(
@@ -296,8 +296,8 @@ fun Route.integrasjonApi(
                         kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("integrasjon")
                     } else {
                         val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
-                            .filter { vilkar -> vilkar.resultat != Resultat.JA }
-                            .map { vilkar -> vilkar.identifikator }
+                            .filter { vilkar -> vilkar.resultat != Regelutfall.JA }
+                            .map { vilkar -> vilkar.id }
 
                         val eksisterendeVedtakDato =
                             vilkårsvurdering.grunnlag.senesteVedtak()?.vedtaksdato?.toLocalDate()
@@ -317,7 +317,7 @@ fun Route.integrasjonApi(
                     // Svar ut spørringen
                     call.respond(
                         Response(
-                            resultat = Resultat.NEI,
+                            resultat = Regelutfall.NEI,
                             sats = SatsType.INGEN,
                             satsBeløp = BigDecimal.ZERO,
                         ),
@@ -336,9 +336,9 @@ fun Route.integrasjonApi(
                     call.respond(
                         Response(
                             resultat = if (vedtakDto.behandlingsresultat == Behandlingsresultat.INNVILGET) {
-                                Resultat.JA
+                                Regelutfall.JA
                             } else {
-                                Resultat.NEI
+                                Regelutfall.NEI
                             },
                             sats = vedtakDto.sats,
                             satsBeløp = vedtakDto.beløp,

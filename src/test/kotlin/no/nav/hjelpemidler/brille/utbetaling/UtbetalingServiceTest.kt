@@ -11,7 +11,7 @@ import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.KravKilde
 import no.nav.hjelpemidler.brille.vedtak.Vedtak
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
-import no.nav.hjelpemidler.nare.evaluering.Evalueringer
+import no.nav.hjelpemidler.nare.regel.Regelevaluering
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -44,7 +44,7 @@ class UtbetalingServiceTest {
             bestillingsdato = LocalDate.now(),
             brillepris = sats.beløp(LocalDate.now()).toBigDecimal(),
             bestillingsreferanse = "test",
-            vilkårsvurdering = Vilkårsvurdering("test", Evalueringer().ja("test")),
+            vilkårsvurdering = Vilkårsvurdering("test", Regelevaluering.ja("test")),
             behandlingsresultat = Behandlingsresultat.INNVILGET,
             sats = sats,
             satsBeløp = sats.beløp(LocalDate.now()),

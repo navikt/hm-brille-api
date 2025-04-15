@@ -16,7 +16,7 @@ import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.logging.secureInfo
-import no.nav.hjelpemidler.nare.evaluering.Resultat
+import no.nav.hjelpemidler.nare.regel.Regelutfall
 
 private val log = KotlinLogging.logger {}
 
@@ -44,11 +44,11 @@ fun Route.vilkårApi(
                 vilkårsgrunnlag.bestillingsdato,
             )
             val sats = when (vilkårsvurdering.utfall) {
-                Resultat.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
+                Regelutfall.JA -> SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
                 else -> SatsType.INGEN
             }
 
-            if (vilkårsvurdering.utfall != Resultat.JA) {
+            if (vilkårsvurdering.utfall != Regelutfall.JA) {
                 log.secureInfo {
                     "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                 }
@@ -56,7 +56,7 @@ fun Route.vilkårApi(
                 kafkaService.vilkårIkkeOppfylt(vilkårsgrunnlag, vilkårsvurdering)
 
                 val årsaker = vilkårsvurdering.evaluering.barn
-                    .filter { vilkar -> vilkar.resultat != Resultat.JA }
+                    .filter { vilkar -> vilkar.resultat != Regelutfall.JA }
                     .map { vilkar -> vilkar.begrunnelse }
 
                 val haddeAvvisningsbrevFraFør = adminService.harAvvisningDeSiste7DageneFor(
@@ -79,8 +79,8 @@ fun Route.vilkårApi(
                     kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("krav_app")
                 } else {
                     val årsakerIdentifikator = vilkårsvurdering.evaluering.barn
-                        .filter { vilkar -> vilkar.resultat != Resultat.JA }
-                        .map { vilkar -> vilkar.identifikator }
+                        .filter { vilkar -> vilkar.resultat != Regelutfall.JA }
+                        .map { vilkar -> vilkar.id }
 
                     val eksisterendeVedtakDato =
                         vilkårsvurdering.grunnlag.senesteVedtak()?.vedtaksdato?.toLocalDate()
