@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.altinn
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.JsonNode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.plugins.defaultRequest
@@ -80,11 +79,7 @@ class Altinn3Client {
         )
     }
 
-    private suspend fun getPolicySubjectsFor(tjeneste: Avgiver.Tjeneste): List<PolicySubjects.Subject> {
-        val resourceKey = when (tjeneste) {
-            Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
-            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
-        }
+    private suspend fun getPolicySubjectsFor(resourceKey: String): List<PolicySubjects.Subject> {
         return policySubjectsCache.getAsync(resourceKey) {
             log.info { "Henter policy subjects for resourceKey=$resourceKey og legger de i cache" }
             val response = publicClient.get("/resourceregistry/api/v1/resource/$resourceKey/policy/subjects")
@@ -116,7 +111,7 @@ class Altinn3Client {
             val name: String,
             val isDeleted: Boolean,
             val onlyHierarchyElementWithNoAccess: Boolean,
-            val authorizedResources: JsonNode,
+            val authorizedResources: List<String>,
             val authorizedRoles: List<String>,
             val subunits: List<Response>,
         )
@@ -137,7 +132,11 @@ class Altinn3Client {
 
     suspend fun hentAvgivere(fnr: String, tjeneste: Avgiver.Tjeneste): List<Avgiver> {
         // Hent relevante policy subjects for tjenesten sin ressurs
-        val policySubjects = getPolicySubjectsFor(tjeneste)
+        val resourceKey = when (tjeneste) {
+            Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
+            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
+        }
+        val policySubjects = getPolicySubjectsFor(resourceKey)
         return authorizedParties(fnr)
             // Bare se på organisasjoner
             .filter { runCatching { AuthorizedParties.Type.valueOf(it.type) }.getOrNull() == AuthorizedParties.Type.Organization }
@@ -154,9 +153,14 @@ class Altinn3Client {
             .filter { !it.first.isDeleted }
             // Bare inkluder resultater hvor vi har en rolle eller (TODO:) tilgangspakke i policy subjects ressursen som matcher
             .filter {
-                it.first.authorizedRoles.find { it0 ->
-                    policySubjects.find { it1 -> it1.type == PolicySubjects.Type.RoleCode && it1.value.lowercase() == it0.lowercase() } != null
-                } != null
+                if (resourceKey in it.first.authorizedResources) {
+                    log.info { "Altinn3 tilgang gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
+                    true
+                } else {
+                    it.first.authorizedRoles.find { it0 ->
+                        policySubjects.find { it1 -> it1.type == PolicySubjects.Type.RoleCode && it1.value.lowercase() == it0.lowercase() } != null
+                    } != null
+                }
             }
             // Gjenbruk gammel type
             .map {
@@ -189,11 +193,20 @@ class Altinn3Client {
                 // TODO: Støtt tilgangspakker / access packages i fremtiden!
                 val enhetRollerPersonHar = enhet.authorizedRoles.map { it.lowercase() }.toSet()
                 val harTjenesteRolleEllerNull: suspend(Avgiver.Tjeneste) -> Avgiver.Tjeneste? = { tj: Avgiver.Tjeneste ->
-                    getPolicySubjectsFor(tj)
-                        .filter { it.type == PolicySubjects.Type.RoleCode }
-                        .map { it.value.lowercase() }
-                        .find { enhetRollerPersonHar.contains(it) }
-                        ?.let { tj }
+                    val resourceKey = when (tj) {
+                        Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
+                        Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
+                    }
+                    if (resourceKey in enhet.authorizedResources) {
+                        log.info { "Altinn3 rettighet gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
+                        tj
+                    } else {
+                        getPolicySubjectsFor(resourceKey)
+                            .filter { it.type == PolicySubjects.Type.RoleCode }
+                            .map { it.value.lowercase() }
+                            .find { enhetRollerPersonHar.contains(it) }
+                            ?.let { tj }
+                    }
                 }
                 setOf(
                     // Hent policy subject for tjenesten Oppgjørsavtale, og sjekk om rollene person har gir tilgang
