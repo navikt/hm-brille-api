@@ -17,7 +17,7 @@ import no.nav.hjelpemidler.cache.getAsync
 import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger {}
 
@@ -46,7 +46,7 @@ class Altinn3Client {
     }
 
     private val policySubjectsCache = createCache {
-        expireAfterWrite = 15.minutes
+        expireAfterWrite = 1.hours
     }.buildAsync<String, List<PolicySubjects.Subject>>()
 
     private enum class Resource(val resourceKey: String) {
@@ -153,9 +153,14 @@ class Altinn3Client {
             .filter { !it.first.isDeleted }
             // Bare inkluder resultater hvor vi har en rolle eller (TODO:) tilgangspakke i policy subjects ressursen som matcher
             .filter {
-                it.first.authorizedRoles.find { it0 ->
-                    policySubjects.find { it1 -> it1.type == PolicySubjects.Type.RoleCode && it1.value.lowercase() == it0.lowercase() } != null
-                } != null || resourceKey in it.first.authorizedResources
+                if (resourceKey in it.first.authorizedResources) {
+                    log.info { "Altinn3 tilgang gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
+                    true
+                } else {
+                    it.first.authorizedRoles.find { it0 ->
+                        policySubjects.find { it1 -> it1.type == PolicySubjects.Type.RoleCode && it1.value.lowercase() == it0.lowercase() } != null
+                    } != null
+                }
             }
             // Gjenbruk gammel type
             .map {
@@ -193,6 +198,7 @@ class Altinn3Client {
                         Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
                     }
                     if (resourceKey in enhet.authorizedResources) {
+                        log.info { "Altinn3 rettighet gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
                         tj
                     } else {
                         getPolicySubjectsFor(resourceKey)
