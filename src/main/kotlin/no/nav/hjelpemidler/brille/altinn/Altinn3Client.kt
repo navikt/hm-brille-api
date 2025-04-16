@@ -17,6 +17,7 @@ import no.nav.hjelpemidler.cache.getAsync
 import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
+import no.nav.hjelpemidler.http.openid.maskinporten
 import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger {}
