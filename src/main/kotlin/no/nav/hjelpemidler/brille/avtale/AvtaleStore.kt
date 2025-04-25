@@ -94,6 +94,7 @@ class AvtaleStorePostgres(private val tx: JdbcOperations) : AvtaleStore {
                                         opprettet,
                                         oppdatert)
             VALUES (:orgnr, :fnr_innsender, :aktiv, :bruksvilkardefinisjon_id, :opprettet, :oppdatert)
+            ON CONFLICT DO NOTHING
             RETURNING id, opprettet, oppdatert
         """.trimIndent()
         return tx.single(
