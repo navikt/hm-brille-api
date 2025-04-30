@@ -94,7 +94,7 @@ class AvtaleStorePostgres(private val tx: JdbcOperations) : AvtaleStore {
                                         opprettet,
                                         oppdatert)
             VALUES (:orgnr, :fnr_innsender, :aktiv, :bruksvilkardefinisjon_id, :opprettet, :oppdatert)
-            ON CONFLICT DO NOTHING
+            ON CONFLICT DO UPDATE SET oppdatert = NOW() -- "returning" fungerer ikke uten en oppdatering...
             RETURNING id, opprettet, oppdatert
         """.trimIndent()
         return tx.single(
