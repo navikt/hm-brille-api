@@ -11,15 +11,6 @@ import kotlin.time.Duration.Companion.hours
 object Configuration {
     val LOCALE = LOCALE_NORWEGIAN_BOKMÅL
 
-    @External(secret = "hm-soknad-api-secret")
-    val ALTINN_APIKEY by EnvironmentVariable
-
-    @External(secret = "hm-soknad-api-secret")
-    val ALTINN_APIGW_APIKEY by EnvironmentVariable
-
-    val ALTINN_APIGW_CONSUMER_ID by EnvironmentVariable
-    val ALTINN_APIGW_URL by EnvironmentVariable
-
     val ALTINN_URL by EnvironmentVariable
 
     val CLIENT_ID_AZURE_TOKEN_GENERATOR by EnvironmentVariable

@@ -37,8 +37,6 @@
   "min-replicas": 1,
   "max-replicas": 1,
   "env": {
-    "ALTINN_APIGW_CONSUMER_ID": "hjelpemidlerdigitalsoknad-api-dev",
-    "ALTINN_APIGW_URL": "https://api-gw-q1.oera.no/ekstern/altinn/api/serviceowner",
     "ALTINN_URL": "https://platform.tt02.altinn.no",
     "CLIENT_ID_AZURE_TOKEN_GENERATOR": "5f28c10f-ecd5-45ef-96b8-db4311802e89",
     "CLIENT_ID_BRILLE_INTEGRASJON": "23076526-5550-4ac5-8048-baf02fc80889",
