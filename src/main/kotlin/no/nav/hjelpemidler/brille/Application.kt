@@ -28,7 +28,6 @@ import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.admin.AdminService
 import no.nav.hjelpemidler.brille.admin.adminApi
 import no.nav.hjelpemidler.brille.altinn.Altinn3Client
-import no.nav.hjelpemidler.brille.altinn.AltinnClient
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.audit.AuditService
 import no.nav.hjelpemidler.brille.avtale.AvtaleService
@@ -166,10 +165,9 @@ fun Application.setupRoutes() {
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
-    val altinn2Client = AltinnClient()
     val altinn3Client = Altinn3Client()
     val featureToggleService = FeatureToggleService()
-    val altinnService = AltinnService(altinn2Client, altinn3Client, featureToggleService)
+    val altinnService = AltinnService(altinn3Client)
     val pdlService = PdlService(pdlClient)
     val auditService = AuditService(databaseContext)
     val innsenderService = InnsenderService(databaseContext)
@@ -230,7 +228,6 @@ fun Application.setupRoutes() {
             syfohelsenettproxyClient,
             enhetsregisteretService,
             altinnService,
-            altinn2Client,
             altinn3Client,
         )
 

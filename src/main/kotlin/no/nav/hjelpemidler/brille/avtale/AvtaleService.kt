@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.avtale
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.hjelpemidler.brille.altinn.ALTINN_CLIENT_MAKS_ANTALL_RESULTATER
 import no.nav.hjelpemidler.brille.altinn.AltinnService
 import no.nav.hjelpemidler.brille.altinn.Avgiver
 import no.nav.hjelpemidler.brille.db.DatabaseContext
@@ -17,7 +16,6 @@ import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.logging.secureInfo
 import no.nav.hjelpemidler.logging.secureWarn
 import java.time.LocalDateTime
-import java.util.UUID
 import kotlin.system.measureTimeMillis
 
 private val log = KotlinLogging.logger { }
@@ -38,12 +36,6 @@ class AvtaleService(
         val hentAvgivereElapsed =
             measureTimeMillis { avgivere = altinnService.hentAvgivere(fnr = fnr, tjeneste = tjeneste) }
         log.info { "hentAvtaler: altinnService.hentAvgivere elapsed=${hentAvgivereElapsed}ms" }
-
-        if (avgivere.count() >= ALTINN_CLIENT_MAKS_ANTALL_RESULTATER) {
-            val id = UUID.randomUUID()
-            log.secureInfo { "Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (fnr=$fnr, tjeneste=$tjeneste, id=$id)" }
-            Slack.post("Hentet avtaler for en person med flere avgivere i altinn enn vi ber om fra altinn (se mer i sikkerlogg med id=$id)")
-        }
 
         var enheter: Map<String, Organisasjonsenhet>
         val hentOrganisasjonsenheterElapsed = measureTimeMillis {
