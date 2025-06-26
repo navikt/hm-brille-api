@@ -57,6 +57,7 @@ class AvtaleService(
                     Næringskode.BUTIKKHANDEL_MED_GULL_OG_SØLVVARER,
                     Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
                     Næringskode.BUTIKKHANDEL_MED_HELSEKOST,
+                    Næringskode.POSTORDRE_INTERNETTHANDEL_MED_ANNET_SPESIALISERT_VAREUTVALG,
                     Næringskode.ANDRE_HELSETJENESTER,
                     Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
                     Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE,
