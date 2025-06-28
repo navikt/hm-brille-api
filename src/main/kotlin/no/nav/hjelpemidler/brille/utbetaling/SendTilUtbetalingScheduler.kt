@@ -22,7 +22,7 @@ class SendTilUtbetalingScheduler(
     private val metricsConfig: MetricsConfig,
     delay: Duration = if (Environment.current.isDev) 3.minutes else 1.hours,
     private val dager: Long = 15,
-    onlyWorkHours: Boolean = true,
+    onlyWorkHours: Boolean = false, // FIXME: true
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
     private var maxUtbetalinger: Double = 0.0
     private var tilUtbetaling: Double = 0.0
