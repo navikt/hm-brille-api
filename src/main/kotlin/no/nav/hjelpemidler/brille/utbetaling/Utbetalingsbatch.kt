@@ -43,7 +43,7 @@ data class Utbetalingslinje(
     val klassekode: String,
     val fom: LocalDate,
     val tom: LocalDate,
-    val sats: Int,
+    val sats: BigDecimal,
     val satstype: String,
     val saksbehandler: String,
 )
