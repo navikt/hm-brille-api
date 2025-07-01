@@ -23,7 +23,7 @@ data class Utbetaling(
         klassekode = "BARNEBRILLER",
         fom = LocalDate.now(),
         tom = LocalDate.now(),
-        sats = vedtak.beløp,
+        sats = vedtak.beløp.toInt(),
         satstype = "ENG",
         saksbehandler = "BB",
     )
