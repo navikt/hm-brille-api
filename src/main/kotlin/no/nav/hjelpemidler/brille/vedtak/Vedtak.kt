@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.vedtak
 
 import com.fasterxml.jackson.databind.JsonNode
-import kotliquery.Row
 import no.nav.helse.rapids_rivers.asLocalDate
 import no.nav.helse.rapids_rivers.asLocalDateTime
 import no.nav.helse.rapids_rivers.asOptionalLocalDate
@@ -11,7 +10,7 @@ import no.nav.hjelpemidler.brille.tid.toInstant
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
-import no.nav.hjelpemidler.database.jsonOrNull
+import no.nav.hjelpemidler.database.Row
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate

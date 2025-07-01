@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille.vedtak
 
-import kotliquery.Row
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.alderPåDato
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.pdl.PersonCompat
@@ -8,8 +7,8 @@ import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Row
 import no.nav.hjelpemidler.database.Store
-import no.nav.hjelpemidler.database.json
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime

@@ -84,7 +84,7 @@ import no.nav.hjelpemidler.configuration.LocalEnvironment
 import no.nav.hjelpemidler.database.PostgreSQL
 import no.nav.hjelpemidler.database.createDataSource
 import no.nav.hjelpemidler.database.migrate
-import no.nav.hjelpemidler.http.openid.azureADClient
+import no.nav.hjelpemidler.http.openid.entraIDClient
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
@@ -156,12 +156,12 @@ fun Application.setupRoutes() {
     val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
     val redisClient = RedisClient()
 
-    val azureADClient = azureADClient { cache(leeway = 10.seconds) }
-    val hotsakClient = HotsakClient(azureADClient.withScope(Configuration.HOTSAK_API_SCOPE))
-    val medlemskapClient = MedlemskapClient(azureADClient.withScope(Configuration.MEDLEMSKAP_API_SCOPE))
-    val pdlClient = PdlClient(azureADClient.withScope(Configuration.PDL_API_SCOPE))
+    val entraIDClient = entraIDClient { cache(leeway = 10.seconds) }
+    val hotsakClient = HotsakClient(entraIDClient.withScope(Configuration.HOTSAK_API_SCOPE))
+    val medlemskapClient = MedlemskapClient(entraIDClient.withScope(Configuration.MEDLEMSKAP_API_SCOPE))
+    val pdlClient = PdlClient(entraIDClient.withScope(Configuration.PDL_API_SCOPE))
     val syfohelsenettproxyClient =
-        SyfohelsenettproxyClient(azureADClient.withScope(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
+        SyfohelsenettproxyClient(entraIDClient.withScope(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
