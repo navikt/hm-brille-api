@@ -10,7 +10,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingException
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.configuration.Environment
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.nare.regel.Regelutfall
 import java.time.LocalDateTime
 
@@ -37,7 +37,7 @@ class VedtakService(
         )
 
         if (vilkårsvurdering.utfall != Regelutfall.JA) {
-            log.secureInfo {
+            log.teamInfo {
                 "Vilkårsvurderingen ga uventet resultat:\n${vilkårsvurdering.toJson()}"
             }
             if (Environment.current.isProd) {

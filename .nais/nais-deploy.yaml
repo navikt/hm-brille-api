@@ -74,6 +74,8 @@ spec:
          - application: medlemskap-barn
            namespace: medlemskap
          - application: brille-redis
+         - application: logging
+           namespace: nais-system
       external:
       {{#each external-hosts}}
         - host: {{ this }}
@@ -108,8 +110,6 @@ spec:
             value: "write"
           - name: "pgaudit.log_parameter"
             value: "on"
-  secureLogs:
-    enabled: true
   maskinporten:
     enabled: true
     scopes:

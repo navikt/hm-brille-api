@@ -12,7 +12,7 @@ import no.nav.hjelpemidler.brille.pdl.generated.medlemskaphentbarn.DeltBosted
 import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.tid.mangler
 import no.nav.hjelpemidler.brille.writePrettyString
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.slf4j.MDC
 import java.time.LocalDate
@@ -83,14 +83,14 @@ class MedlemskapBarn(
         val medlemskapBarnCache = redisClient.medlemskapBarn(fnrBarn, bestillingsdato)
         if (medlemskapBarnCache != null) {
             log.info { "Resultat for medlemskapssjekk for barnet funnet i redis-cache" }
-            log.secureInfo { "Funnet $fnrBarn i cache, returner: $medlemskapBarnCache" }
+            log.teamInfo { "Funnet $fnrBarn i cache, returner: $medlemskapBarnCache" }
             return medlemskapBarnCache
         }
 
         // Slå opp pdl informasjon om barnet
         val pdlResponse = pdlClient.medlemskapHentBarn(fnrBarn)
         if (pdlResponse.harAdressebeskyttelse()) {
-            log.secureInfo {
+            log.teamInfo {
                 "Barn har adressebeskyttelse, returnerer positivt medlemskapsresultat"
             }
             val medlemskapResultat = MedlemskapResultat(
@@ -207,7 +207,7 @@ private fun sjekkFolkeregistrertAdresseINorge(
 
     try {
         if (!finnesFolkeregistrertAdresse) {
-            log.secureInfo {
+            log.teamInfo {
                 "Fant ingen folkeregistrert adresse for barn:" +
                     " bostedsadresser=${
                         jsonMapper.writePrettyString(

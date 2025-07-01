@@ -15,7 +15,7 @@ import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.nare.regel.Regelutfall
 
 private val log = KotlinLogging.logger {}
@@ -49,7 +49,7 @@ fun Route.vilkårApi(
             }
 
             if (vilkårsvurdering.utfall != Regelutfall.JA) {
-                log.secureInfo {
+                log.teamInfo {
                     "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                 }
 

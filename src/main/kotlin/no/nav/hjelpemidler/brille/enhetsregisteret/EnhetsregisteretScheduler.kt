@@ -30,7 +30,7 @@ class EnhetsregisteretScheduler(
         }.getOrElse { e ->
             val uid = UUID.randomUUID()
             log.error(e) { "Feil under oppdatering av vår kopi av enhetsregisteret ($uid)" }
-            Slack.post("Feil under oppdatering av vår kopi av enhetsregisteret (søk kibana: $uid)")
+            Slack.post("Feil under oppdatering av vår kopi av enhetsregisteret (søk grafana: $uid)")
         }
     }
 }
