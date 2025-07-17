@@ -15,6 +15,7 @@ import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
+import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.nare.regel.Regelutfall
 
@@ -74,7 +75,7 @@ fun Route.vilkårApi(
                 )
 
                 // Journalfør avvisningsbrev i joark
-                if (haddeAvvisningsbrevFraFør) {
+                if (haddeAvvisningsbrevFraFør && !Environment.current.isDev) {
                     log.info { "Avviser vilkårsvurdering men sender ikke avvisningsbrev pga. tidligere brev sendt de siste 7 dagene" }
                     kafkaService.sendteIkkeAvvisningsbrevPgaTidligereBrev7Dager("krav_app")
                 } else {
