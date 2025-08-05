@@ -73,7 +73,7 @@ object StubEngine {
 
     fun azureAd(): HttpClientEngine = mockEngine {
         post("/default/token") {
-            respond(TokenSet.bearer(1.hours, "token"))
+            respond(TokenSet("token", 1.hours))
         }
     }
 
@@ -126,7 +126,7 @@ object StubEngine {
             )
         }
         post("/default/token") {
-            respond(TokenSet.bearer(1.hours, ""))
+            respond(TokenSet("token", 1.hours))
         }
     }
 
