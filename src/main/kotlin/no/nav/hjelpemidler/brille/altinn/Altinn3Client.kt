@@ -15,18 +15,17 @@ import io.ktor.http.headers
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.cache.createCache
 import no.nav.hjelpemidler.cache.getAsync
-import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
-import no.nav.hjelpemidler.http.openid.maskinporten
+import no.nav.hjelpemidler.http.openid.openID
 import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger {}
 
 class Altinn3Client(tokenSetProvider: TokenSetProvider) {
     private val authedClient: HttpClient = createHttpClient {
-        maskinporten(MaskinportenEnvironmentVariable.MASKINPORTEN_SCOPES)
+        openID(tokenSetProvider)
         defaultRequest {
             headers {
                 accept(ContentType.Application.Json)
