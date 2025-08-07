@@ -52,7 +52,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
     }.buildAsync<String, List<PolicySubjects.Subject>>().coroutines()
 
     private enum class Resource(val resourceKey: String) {
-        Utbertalingsrapport("nav_barnebriller_utbetalingsrapport"),
+        Utbetalingsrapport("nav_barnebriller_utbetalingsrapport"),
         OpprettAvtale("nav_barnebriller_opprette-avtale"),
     }
 
@@ -139,7 +139,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
         // Hent relevante policy subjects for tjenesten sin ressurs
         val resourceKey = when (tjeneste) {
             Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
-            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
+            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbetalingsrapport.resourceKey
         }
         val policySubjects = getPolicySubjectsFor(resourceKey)
         return authorizedParties(fnr)
@@ -201,7 +201,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
                     { tj: Avgiver.Tjeneste ->
                         val resourceKey = when (tj) {
                             Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
-                            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
+                            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbetalingsrapport.resourceKey
                         }
                         if (resourceKey in enhet.authorizedResources) {
                             log.info { "Altinn3 rettighet gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
