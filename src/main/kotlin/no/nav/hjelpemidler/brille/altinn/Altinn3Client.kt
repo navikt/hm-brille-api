@@ -13,8 +13,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.headers
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.cache.coroutines
 import no.nav.hjelpemidler.cache.createCache
-import no.nav.hjelpemidler.cache.getAsync
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.hours
 private val log = KotlinLogging.logger {}
 
 class Altinn3Client(tokenSetProvider: TokenSetProvider) {
-    private val authedClient: HttpClient = createHttpClient {
+    private val client: HttpClient = createHttpClient {
         openID(tokenSetProvider)
         defaultRequest {
             headers {
@@ -49,7 +49,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
 
     private val policySubjectsCache = createCache {
         expireAfterWrite = 1.hours
-    }.buildAsync<String, List<PolicySubjects.Subject>>()
+    }.buildAsync<String, List<PolicySubjects.Subject>>().coroutines()
 
     private enum class Resource(val resourceKey: String) {
         Utbertalingsrapport("nav_barnebriller_utbetalingsrapport"),
@@ -82,7 +82,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
     }
 
     private suspend fun getPolicySubjectsFor(resourceKey: String): List<PolicySubjects.Subject> {
-        return policySubjectsCache.getAsync(resourceKey) {
+        return policySubjectsCache.get(resourceKey) {
             log.info { "Henter policy subjects for resourceKey=$resourceKey og legger de i cache" }
             val response = publicClient.get("/resourceregistry/api/v1/resource/$resourceKey/policy/subjects")
             val body: PolicySubjects.Response = response.body()
@@ -124,7 +124,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
         includeAltinn2: Boolean = true,
     ): List<AuthorizedParties.Response> {
         // Generer maskinporten token og hent data fra altinn3 apiet
-        val response = authedClient.post(
+        val response = client.post(
             "/accessmanagement/api/v1/resourceowner/authorizedparties" + when (includeAltinn2) {
                 true -> "?includeAltinn2=true"
                 false -> ""
@@ -229,7 +229,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
     suspend fun test(fnr: String) {
         log.info { "Requesting resources for $fnr" }
         val response =
-            authedClient.post("/accessmanagement/api/v1/resourceowner/authorizedparties?includeAltinn2=true") {
+            client.post("/accessmanagement/api/v1/resourceowner/authorizedparties?includeAltinn2=true") {
                 setBody(AuthorizedParties.Reqeust(value = fnr))
             }
         log.info { "Result: ${response.status}" }
