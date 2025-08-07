@@ -18,12 +18,13 @@ import no.nav.hjelpemidler.cache.getAsync
 import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
 import no.nav.hjelpemidler.http.openid.maskinporten
 import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger {}
 
-class Altinn3Client {
+class Altinn3Client(tokenSetProvider: TokenSetProvider) {
     private val authedClient: HttpClient = createHttpClient {
         maskinporten(MaskinportenEnvironmentVariable.MASKINPORTEN_SCOPES)
         defaultRequest {

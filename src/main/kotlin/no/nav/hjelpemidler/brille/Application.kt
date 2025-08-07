@@ -81,10 +81,10 @@ import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.KafkaEnvironmentVariable
 import no.nav.hjelpemidler.configuration.LocalEnvironment
+import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.database.PostgreSQL
 import no.nav.hjelpemidler.database.createDataSource
 import no.nav.hjelpemidler.database.migrate
-import no.nav.hjelpemidler.http.openid.IdentityProvider
 import no.nav.hjelpemidler.http.openid.TexasClient
 import org.slf4j.event.Level
 import java.net.InetAddress
@@ -156,13 +156,17 @@ fun Application.setupRoutes() {
     val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
     val redisClient = RedisClient()
 
-    val entraIDClient = TexasClient().asOpenIDClient(IdentityProvider.ENTRA_ID)
-    val altinn3Client = Altinn3Client()
-    val hotsakClient = HotsakClient(entraIDClient.withScope(Configuration.HOTSAK_API_SCOPE))
-    val medlemskapClient = MedlemskapClient(entraIDClient.withScope(Configuration.MEDLEMSKAP_API_SCOPE))
-    val pdlClient = PdlClient(entraIDClient.withScope(Configuration.PDL_API_SCOPE))
+    val texasClient = TexasClient()
+    val altinn3Client =
+        Altinn3Client(texasClient.maskinporten(MaskinportenEnvironmentVariable.MASKINPORTEN_SCOPES))
+    val hotsakClient =
+        HotsakClient(texasClient.entraId(Configuration.HOTSAK_API_SCOPE))
+    val medlemskapClient =
+        MedlemskapClient(texasClient.entraId(Configuration.MEDLEMSKAP_API_SCOPE))
+    val pdlClient =
+        PdlClient(texasClient.entraId(Configuration.PDL_API_SCOPE))
     val syfohelsenettproxyClient =
-        SyfohelsenettproxyClient(entraIDClient.withScope(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
+        SyfohelsenettproxyClient(texasClient.entraId(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
