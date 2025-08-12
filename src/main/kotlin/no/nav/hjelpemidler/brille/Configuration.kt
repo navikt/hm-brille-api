@@ -42,12 +42,20 @@ object Configuration {
     val PDL_API_SCOPE by EnvironmentVariable
     val PDL_API_URL by EnvironmentVariable
 
-    @External(secret = "redis-password")
-    val REDIS_PASSWORD by EnvironmentVariable
-    val REDIS_HOST by EnvironmentVariable
-
     val SYFOHELSENETTPROXY_API_SCOPE by EnvironmentVariable
     val SYFOHELSENETTPROXY_API_URL by EnvironmentVariable
+
+    @External
+    val REDIS_HOST_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_PORT_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_USERNAME_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_PASSWORD_BRILLE by EnvironmentVariable
 
     @External
     val UNLEASH_SERVER_API_URL by EnvironmentVariable
@@ -61,9 +69,10 @@ object Configuration {
     val redisProperties = RedisProperties()
 
     data class RedisProperties(
-        val host: String = REDIS_HOST,
-        val port: Int = 6379,
-        val password: String = REDIS_PASSWORD,
+        val host: String = REDIS_HOST_BRILLE,
+        val port: Int = REDIS_PORT_BRILLE.toInt(),
+        val username: String = REDIS_USERNAME_BRILLE,
+        val password: String = REDIS_PASSWORD_BRILLE,
         val hprExpirySeconds: Long = 1.days.inWholeSeconds,
         val medlemskapBarnExpiryDayOfMonth: Int = 7,
         val orgenhetExpirySeconds: Long = 2.hours.inWholeSeconds,

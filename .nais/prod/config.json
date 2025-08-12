@@ -52,7 +52,6 @@
     "MEDLEMSKAP_API_URL": "http://medlemskap-barn.medlemskap.svc.cluster.local/",
     "PDL_API_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
     "PDL_API_URL": "https://pdl-api.prod-fss-pub.nais.io/graphql",
-    "REDIS_HOST": "brille-redis.teamdigihot.svc.cluster.local",
     "SYFOHELSENETTPROXY_API_SCOPE": "api://prod-gcp.teamsykmelding.syfohelsenettproxy/.default",
     "SYFOHELSENETTPROXY_API_URL": "http://syfohelsenettproxy.teamsykmelding.svc.cluster.local"
   }

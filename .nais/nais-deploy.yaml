@@ -37,7 +37,6 @@ spec:
      - name: GIT_COMMIT
        value: {{commit}}
   envFrom:
-    - secret: redis-password
     - secret: hm-soknad-api-secret
     - secret: hm-slack-hook
     - secret: hm-brille-api-unleash-api-token
@@ -73,7 +72,6 @@ spec:
            namespace: medlemskap
          - application: medlemskap-barn
            namespace: medlemskap
-         - application: brille-redis
          - application: logging
            namespace: nais-system
       external:
@@ -115,3 +113,6 @@ spec:
     scopes:
       consumes:
         - name: "altinn:accessmanagement/authorizedparties.resourceowner"
+  valkey:
+    - instance: brille
+      access: readwrite

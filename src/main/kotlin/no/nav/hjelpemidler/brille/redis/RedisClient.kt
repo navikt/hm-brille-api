@@ -19,6 +19,7 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
             redisProps.host,
             redisProps.port,
             2 * 1000, // 2 seconds
+            redisProps.username,
             redisProps.password,
         )
     }
