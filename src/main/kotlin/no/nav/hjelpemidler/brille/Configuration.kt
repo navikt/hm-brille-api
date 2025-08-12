@@ -1,5 +1,6 @@
 package no.nav.hjelpemidler.brille
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.configuration.EnvironmentVariable
 import no.nav.hjelpemidler.configuration.External
 import no.nav.hjelpemidler.localization.LOCALE_NORWEGIAN_BOKMÅL
@@ -7,6 +8,8 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+
+private val log = KotlinLogging.logger {}
 
 object Configuration {
     val LOCALE = LOCALE_NORWEGIAN_BOKMÅL
@@ -77,6 +80,10 @@ object Configuration {
         val medlemskapBarnExpiryDayOfMonth: Int = 7,
         val orgenhetExpirySeconds: Long = 2.hours.inWholeSeconds,
     ) {
+        init {
+            log.info { "Bruker redis tjener: $host:$port (username: $username)" }
+        }
+
         fun medlemskapBarnExpirySeconds(): Long = LocalDateTime.now().let { now ->
             val dt = if (now.dayOfMonth < medlemskapBarnExpiryDayOfMonth) {
                 LocalDateTime.of(now.year, now.month, medlemskapBarnExpiryDayOfMonth, 0, 0)
