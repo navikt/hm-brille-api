@@ -160,13 +160,13 @@ fun Application.setupRoutes() {
     val altinn3Client =
         Altinn3Client(texasClient.maskinporten(MaskinportenEnvironmentVariable.MASKINPORTEN_SCOPES))
     val hotsakClient =
-        HotsakClient(texasClient.entraId(Configuration.HOTSAK_API_SCOPE))
+        HotsakClient(texasClient.entraIdApplication(Configuration.HOTSAK_API_SCOPE))
     val medlemskapClient =
-        MedlemskapClient(texasClient.entraId(Configuration.MEDLEMSKAP_API_SCOPE))
+        MedlemskapClient(texasClient.entraIdApplication(Configuration.MEDLEMSKAP_API_SCOPE))
     val pdlClient =
-        PdlClient(texasClient.entraId(Configuration.PDL_API_SCOPE))
+        PdlClient(texasClient.entraIdApplication(Configuration.PDL_API_SCOPE))
     val syfohelsenettproxyClient =
-        SyfohelsenettproxyClient(texasClient.entraId(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
+        SyfohelsenettproxyClient(texasClient.entraIdApplication(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
