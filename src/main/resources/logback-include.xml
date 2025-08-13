@@ -19,5 +19,4 @@
     <logger name="no.nav.hjelpemidler.brille.medlemskap" level="DEBUG" />
     <logger name="no.nav.hjelpemidler.brille.syfohelsenettproxy" level="DEBUG" />
     <logger name="no.nav.hjelpemidler.http.openid" level="DEBUG" />
-    <logger name="redis.clients.jedis" level="TRACE" />
 </included>
