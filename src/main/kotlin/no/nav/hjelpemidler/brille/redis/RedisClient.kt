@@ -16,12 +16,20 @@ class RedisClient(private val redisProps: Configuration.RedisProperties = Config
         ValkeyPoolExtension(
             io.valkey.JedisPool(
                 JedisPoolConfig().let {
-                    it.setMaxTotal(32)
-                    it.setMaxIdle(32)
-                    it.setMinIdle(16)
+                    it.maxTotal = 32
+                    it.maxIdle = 32
+                    it.minIdle = 16
+                    it.testOnCreate = true
+                    it.testOnBorrow = true
+                    it.testOnReturn = true
                     it
                 },
-                Configuration.REDIS_URI_BRILLE,
+                Configuration.redisProperties.host,
+                Configuration.redisProperties.port,
+                Configuration.redisProperties.timeout,
+                Configuration.redisProperties.username,
+                Configuration.redisProperties.password,
+                Configuration.redisProperties.ssl,
             ),
         )
     }

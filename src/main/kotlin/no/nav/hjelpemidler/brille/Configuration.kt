@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.valkey.Protocol
 import no.nav.hjelpemidler.configuration.EnvironmentVariable
 import no.nav.hjelpemidler.configuration.External
 import no.nav.hjelpemidler.localization.LOCALE_NORWEGIAN_BOKMÅL
@@ -49,7 +50,16 @@ object Configuration {
     val SYFOHELSENETTPROXY_API_URL by EnvironmentVariable
 
     @External
-    val REDIS_URI_BRILLE by EnvironmentVariable
+    val REDIS_HOST_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_PORT_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_USERNAME_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_PASSWORD_BRILLE by EnvironmentVariable
 
     @External
     val UNLEASH_SERVER_API_URL by EnvironmentVariable
@@ -60,13 +70,18 @@ object Configuration {
     val redisProperties = RedisProperties()
 
     data class RedisProperties(
-        val uri: String = REDIS_URI_BRILLE,
+        val host: String = REDIS_HOST_BRILLE,
+        val port: Int = REDIS_PORT_BRILLE.toInt(),
+        val timeout: Int = Protocol.DEFAULT_TIMEOUT,
+        val username: String = REDIS_USERNAME_BRILLE,
+        val password: String = REDIS_PASSWORD_BRILLE,
+        val ssl: Boolean = true,
         val hprExpirySeconds: Long = 1.days.inWholeSeconds,
         val medlemskapBarnExpiryDayOfMonth: Int = 7,
         val orgenhetExpirySeconds: Long = 2.hours.inWholeSeconds,
     ) {
         init {
-            log.info { "Bruker redis tjener: $uri" }
+            log.info { "Bruker redis tjener: $host:$port (username: $username)" }
         }
 
         fun medlemskapBarnExpirySeconds(): Long = LocalDateTime.now().let { now ->
