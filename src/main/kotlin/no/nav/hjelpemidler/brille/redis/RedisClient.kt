@@ -1,61 +1,62 @@
 package no.nav.hjelpemidler.brille.redis
 
+import io.valkey.JedisPoolConfig
+import io.valkey.commands.StringCommands
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.enhetsregisteret.Organisasjonsenhet
 import no.nav.hjelpemidler.brille.medlemskap.MedlemskapResultat
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig
-import redis.clients.jedis.JedisPooled
-import redis.clients.jedis.commands.StringCommands
 import java.time.LocalDate
 
 class RedisClient(private val redisProps: Configuration.RedisProperties = Configuration.redisProperties) {
-    private val jedis: StringCommands = if (Environment.current.isLocal) {
-        JedisMock()
+    private val valkey: StringCommands = if (Environment.current.isLocal) {
+        ValkeyMock()
     } else {
-        JedisPooled(
-            GenericObjectPoolConfig(),
-            redisProps.host,
-            redisProps.port,
-            2 * 1000, // 2 seconds
-            redisProps.username,
-            redisProps.password,
-            true,
+        ValkeyPoolExtension(
+            io.valkey.JedisPool(
+                JedisPoolConfig().let {
+                    it.setMaxTotal(32)
+                    it.setMaxIdle(32)
+                    it.setMinIdle(16)
+                    it
+                },
+                Configuration.REDIS_URI_BRILLE,
+            ),
         )
     }
 
-    fun erOptiker(fnr: String): Boolean? = jedis.get(erOptikerKey(fnr))?.toBoolean()
+    fun erOptiker(fnr: String): Boolean? = valkey.get(erOptikerKey(fnr))?.toBoolean()
 
     fun setErOptiker(fnr: String, erOptiker: Boolean) {
-        jedis.setex(erOptikerKey(fnr), redisProps.hprExpirySeconds, erOptiker.toString())
+        valkey.setex(erOptikerKey(fnr), redisProps.hprExpirySeconds, erOptiker.toString())
     }
 
-    fun optikerNavn(fnr: String): String? = jedis.get(optikerNavnKey(fnr))
+    fun optikerNavn(fnr: String): String? = valkey.get(optikerNavnKey(fnr))
 
     fun setOptikerNavn(fnr: String, optikerNavn: String) {
-        jedis.setex(optikerNavnKey(fnr), redisProps.hprExpirySeconds, optikerNavn)
+        valkey.setex(optikerNavnKey(fnr), redisProps.hprExpirySeconds, optikerNavn)
     }
 
     fun medlemskapBarn(fnr: String, bestillingsdato: LocalDate): MedlemskapResultat? =
-        jedis.get(medlemskapBarnKey(fnr, bestillingsdato))?.let {
+        valkey.get(medlemskapBarnKey(fnr, bestillingsdato))?.let {
             jsonMapper.readValue(it, MedlemskapResultat::class.java)
         }
 
     fun setMedlemskapBarn(fnr: String, bestillingsdato: LocalDate, medlemskapResultat: MedlemskapResultat) {
-        jedis.setex(
+        valkey.setex(
             medlemskapBarnKey(fnr, bestillingsdato),
             redisProps.medlemskapBarnExpirySeconds(),
             jsonMapper.writeValueAsString(medlemskapResultat),
         )
     }
 
-    fun organisasjonsenhet(orgnr: String): Organisasjonsenhet? = jedis.get(orgenhetKey(orgnr))?.let {
+    fun organisasjonsenhet(orgnr: String): Organisasjonsenhet? = valkey.get(orgenhetKey(orgnr))?.let {
         jsonMapper.readValue(it, Organisasjonsenhet::class.java)
     }
 
     fun setOrganisasjonsenhet(orgnr: String, orgenhet: Organisasjonsenhet) {
-        jedis.setex(
+        valkey.setex(
             orgenhetKey(orgnr),
             redisProps.orgenhetExpirySeconds,
             jsonMapper.writeValueAsString(orgenhet),
