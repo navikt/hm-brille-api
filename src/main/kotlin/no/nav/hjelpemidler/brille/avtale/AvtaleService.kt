@@ -13,8 +13,8 @@ import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.brille.virksomhet.Virksomhet
 import no.nav.hjelpemidler.configuration.ClusterEnvironment
 import no.nav.hjelpemidler.configuration.Environment
-import no.nav.hjelpemidler.logging.secureInfo
-import no.nav.hjelpemidler.logging.secureWarn
+import no.nav.hjelpemidler.logging.teamInfo
+import no.nav.hjelpemidler.logging.teamWarn
 import java.time.LocalDateTime
 import kotlin.system.measureTimeMillis
 
@@ -65,7 +65,7 @@ class AvtaleService(
             }
         }
 
-        log.secureInfo {
+        log.teamInfo {
             "Filtrert avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivereFiltrert"
         }
 
@@ -112,7 +112,7 @@ class AvtaleService(
         }
 
         log.info { "Oppretter avtale for orgnr: $orgnr" }
-        log.secureInfo { "fnrInnsender: $fnrInnsender, opprettAvtale: $opprettAvtale" }
+        log.teamInfo { "fnrInnsender: $fnrInnsender, opprettAvtale: $opprettAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
             val virksomhet = ctx.virksomhetStore.lagreVirksomhet(
@@ -151,7 +151,7 @@ class AvtaleService(
 
         if (Environment.current is ClusterEnvironment) {
             Slack.post(
-                "AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i kibana secureLog (søk: `Kontonr synkronisert til TSS: orgnr=$orgnr`), eller ved å slå opp i database med:" +
+                "AvtaleService: Ny avtale opprettet for orgnr=$orgnr. Husk å be #po-utbetaling-barnebriller om å legge TSS-ident i listen over identer som ikke skal få oppdrag slått sammen av oppdrag. TSS-ident kan finnes i gcp teamLog (søk: `Kontonr synkronisert til TSS: orgnr=$orgnr`), eller ved å slå opp i database med:" +
                     "```" +
                     "-- Hent ut tss-ident for virksomhet med ny avtale for å sende denne over til\n" +
                     "-- po utbetaling/UR\n" +
@@ -175,7 +175,7 @@ class AvtaleService(
         }
 
         log.info { "Registrerer at bruksvilkår for api er godtatt for orgnr: $orgnr" }
-        log.secureInfo { "fnrInnsender: $fnrInnsender, bruksvilkår for api godtatt for orgnr: $orgnr" }
+        log.teamInfo { "fnrInnsender: $fnrInnsender, bruksvilkår for api godtatt for orgnr: $orgnr" }
 
         val bruksvilkårGodtatt = transaction(databaseContext) { ctx ->
             val bruksvilkårGodtatt = ctx.avtaleStore.godtaBruksvilkår(
@@ -212,7 +212,7 @@ class AvtaleService(
         }
 
         log.info { "Oppdaterer avtale for orgnr: $orgnr" }
-        log.secureInfo { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
+        log.teamInfo { "fnrOppdatertAv: $fnrOppdatertAv, orgnr: $orgnr, oppdaterAvtale: $oppdaterAvtale" }
 
         val virksomhet = transaction(databaseContext) { ctx ->
             val opprinneligVirksomhet = requireNotNull(ctx.virksomhetStore.hentVirksomhetForOrganisasjon(orgnr)) {
@@ -234,7 +234,7 @@ class AvtaleService(
         }
 
         if (virksomhet.fnrInnsender != virksomhet.fnrOppdatertAv) {
-            log.secureWarn {
+            log.teamWarn {
                 "Avtalen ble oppdatert av en annen en innsender, fnrInnsender: ${virksomhet.fnrInnsender}, fnrOppdatertAv: ${virksomhet.fnrOppdatertAv}"
             }
         }

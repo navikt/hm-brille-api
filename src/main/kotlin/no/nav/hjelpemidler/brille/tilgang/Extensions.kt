@@ -13,7 +13,7 @@ import no.nav.hjelpemidler.configuration.ClusterEnvironment
 import no.nav.hjelpemidler.configuration.EntraIDEnvironmentVariable
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.TokenXEnvironmentVariable
-import no.nav.hjelpemidler.logging.secureWarn
+import no.nav.hjelpemidler.logging.teamWarn
 import java.net.URI
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -97,7 +97,7 @@ fun AuthenticationConfig.azureAdProvider(
                     )
 
                 else -> {
-                    log.secureWarn {
+                    log.teamWarn {
                         "Validering av Azure AD-bruker feilet, objectId: $objectId, roller: $roller, grupper: $grupper"
                     }
                     null

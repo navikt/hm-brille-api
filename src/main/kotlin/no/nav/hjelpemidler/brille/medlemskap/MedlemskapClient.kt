@@ -7,7 +7,6 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.timeout
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.request
@@ -16,6 +15,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StatusCodeException
+import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
 import no.nav.hjelpemidler.http.openid.openID
@@ -43,8 +43,7 @@ class MedlemskapClient(
             timeout {
                 requestTimeoutMillis = 10_000
             }
-            header("Nav-Call-Id", correlationId)
-            header("X-Correlation-Id", correlationId)
+            correlationId(correlationId)
             contentType(Json)
             setBody(
                 Request(

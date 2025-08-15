@@ -81,16 +81,16 @@ import no.nav.hjelpemidler.brille.virksomhet.virksomhetApi
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.KafkaEnvironmentVariable
 import no.nav.hjelpemidler.configuration.LocalEnvironment
+import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.database.PostgreSQL
 import no.nav.hjelpemidler.database.createDataSource
 import no.nav.hjelpemidler.database.migrate
-import no.nav.hjelpemidler.http.openid.azureADClient
+import no.nav.hjelpemidler.http.openid.TexasClient
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
 import javax.sql.DataSource
 import kotlin.concurrent.thread
-import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
 
@@ -156,16 +156,20 @@ fun Application.setupRoutes() {
     val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
     val redisClient = RedisClient()
 
-    val azureADClient = azureADClient { cache(leeway = 10.seconds) }
-    val hotsakClient = HotsakClient(azureADClient.withScope(Configuration.HOTSAK_API_SCOPE))
-    val medlemskapClient = MedlemskapClient(azureADClient.withScope(Configuration.MEDLEMSKAP_API_SCOPE))
-    val pdlClient = PdlClient(azureADClient.withScope(Configuration.PDL_API_SCOPE))
+    val texasClient = TexasClient()
+    val altinn3Client =
+        Altinn3Client(texasClient.maskinporten(MaskinportenEnvironmentVariable.MASKINPORTEN_SCOPES))
+    val hotsakClient =
+        HotsakClient(texasClient.entraIdApplication(Configuration.HOTSAK_API_SCOPE))
+    val medlemskapClient =
+        MedlemskapClient(texasClient.entraIdApplication(Configuration.MEDLEMSKAP_API_SCOPE))
+    val pdlClient =
+        PdlClient(texasClient.entraIdApplication(Configuration.PDL_API_SCOPE))
     val syfohelsenettproxyClient =
-        SyfohelsenettproxyClient(azureADClient.withScope(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
+        SyfohelsenettproxyClient(texasClient.entraIdApplication(Configuration.SYFOHELSENETTPROXY_API_SCOPE))
 
     // Tjenester
     val medlemskapBarn = MedlemskapBarn(medlemskapClient, pdlClient, redisClient, kafkaService)
-    val altinn3Client = Altinn3Client()
     val featureToggleService = FeatureToggleService()
     val altinnService = AltinnService(altinn3Client)
     val pdlService = PdlService(pdlClient)

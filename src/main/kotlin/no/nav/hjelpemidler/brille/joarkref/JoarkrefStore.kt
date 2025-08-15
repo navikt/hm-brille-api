@@ -2,7 +2,6 @@ package no.nav.hjelpemidler.brille.joarkref
 
 import no.nav.hjelpemidler.database.JdbcOperations
 import no.nav.hjelpemidler.database.Store
-import no.nav.hjelpemidler.database.jsonOrNull
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 

@@ -2,6 +2,7 @@ package no.nav.hjelpemidler.brille.altinn
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.accept
@@ -12,19 +13,19 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.headers
 import no.nav.hjelpemidler.brille.Configuration
+import no.nav.hjelpemidler.cache.coroutines
 import no.nav.hjelpemidler.cache.createCache
-import no.nav.hjelpemidler.cache.getAsync
-import no.nav.hjelpemidler.configuration.MaskinportenEnvironmentVariable
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
-import no.nav.hjelpemidler.http.openid.maskinporten
+import no.nav.hjelpemidler.http.openid.TokenSetProvider
+import no.nav.hjelpemidler.http.openid.openID
 import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger {}
 
-class Altinn3Client {
-    private val authedClient: io.ktor.client.HttpClient = createHttpClient {
-        maskinporten(MaskinportenEnvironmentVariable.MASKINPORTEN_SCOPES)
+class Altinn3Client(tokenSetProvider: TokenSetProvider) {
+    private val client: HttpClient = createHttpClient {
+        openID(tokenSetProvider)
         defaultRequest {
             headers {
                 accept(ContentType.Application.Json)
@@ -35,7 +36,7 @@ class Altinn3Client {
         }
     }
 
-    private val publicClient: io.ktor.client.HttpClient = createHttpClient {
+    private val publicClient: HttpClient = createHttpClient {
         defaultRequest {
             headers {
                 accept(ContentType.Application.Json)
@@ -48,10 +49,10 @@ class Altinn3Client {
 
     private val policySubjectsCache = createCache {
         expireAfterWrite = 1.hours
-    }.buildAsync<String, List<PolicySubjects.Subject>>()
+    }.buildAsync<String, List<PolicySubjects.Subject>>().coroutines()
 
     private enum class Resource(val resourceKey: String) {
-        Utbertalingsrapport("nav_barnebriller_utbetalingsrapport"),
+        Utbetalingsrapport("nav_barnebriller_utbetalingsrapport"),
         OpprettAvtale("nav_barnebriller_opprette-avtale"),
     }
 
@@ -81,7 +82,7 @@ class Altinn3Client {
     }
 
     private suspend fun getPolicySubjectsFor(resourceKey: String): List<PolicySubjects.Subject> {
-        return policySubjectsCache.getAsync(resourceKey) {
+        return policySubjectsCache.get(resourceKey) {
             log.info { "Henter policy subjects for resourceKey=$resourceKey og legger de i cache" }
             val response = publicClient.get("/resourceregistry/api/v1/resource/$resourceKey/policy/subjects")
             val body: PolicySubjects.Response = response.body()
@@ -118,9 +119,12 @@ class Altinn3Client {
         )
     }
 
-    private suspend fun authorizedParties(fnr: String, includeAltinn2: Boolean = true): List<AuthorizedParties.Response> {
+    private suspend fun authorizedParties(
+        fnr: String,
+        includeAltinn2: Boolean = true,
+    ): List<AuthorizedParties.Response> {
         // Generer maskinporten token og hent data fra altinn3 apiet
-        val response = authedClient.post(
+        val response = client.post(
             "/accessmanagement/api/v1/resourceowner/authorizedparties" + when (includeAltinn2) {
                 true -> "?includeAltinn2=true"
                 false -> ""
@@ -135,7 +139,7 @@ class Altinn3Client {
         // Hent relevante policy subjects for tjenesten sin ressurs
         val resourceKey = when (tjeneste) {
             Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
-            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
+            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbetalingsrapport.resourceKey
         }
         val policySubjects = getPolicySubjectsFor(resourceKey)
         return authorizedParties(fnr)
@@ -193,22 +197,23 @@ class Altinn3Client {
             ?.let { enhet ->
                 // TODO: Støtt tilgangspakker / access packages i fremtiden!
                 val enhetRollerPersonHar = enhet.authorizedRoles.map { it.lowercase() }.toSet()
-                val harTjenesteRolleEllerNull: suspend(Avgiver.Tjeneste) -> Avgiver.Tjeneste? = { tj: Avgiver.Tjeneste ->
-                    val resourceKey = when (tj) {
-                        Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
-                        Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbertalingsrapport.resourceKey
+                val harTjenesteRolleEllerNull: suspend (Avgiver.Tjeneste) -> Avgiver.Tjeneste? =
+                    { tj: Avgiver.Tjeneste ->
+                        val resourceKey = when (tj) {
+                            Avgiver.Tjeneste.OPPGJØRSAVTALE -> Resource.OpprettAvtale.resourceKey
+                            Avgiver.Tjeneste.UTBETALINGSRAPPORT -> Resource.Utbetalingsrapport.resourceKey
+                        }
+                        if (resourceKey in enhet.authorizedResources) {
+                            log.info { "Altinn3 rettighet gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
+                            tj
+                        } else {
+                            getPolicySubjectsFor(resourceKey)
+                                .filter { it.type == PolicySubjects.Type.RoleCode }
+                                .map { it.value.lowercase() }
+                                .find { enhetRollerPersonHar.contains(it) }
+                                ?.let { tj }
+                        }
                     }
-                    if (resourceKey in enhet.authorizedResources) {
-                        log.info { "Altinn3 rettighet gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
-                        tj
-                    } else {
-                        getPolicySubjectsFor(resourceKey)
-                            .filter { it.type == PolicySubjects.Type.RoleCode }
-                            .map { it.value.lowercase() }
-                            .find { enhetRollerPersonHar.contains(it) }
-                            ?.let { tj }
-                    }
-                }
                 setOf(
                     // Hent policy subject for tjenesten Oppgjørsavtale, og sjekk om rollene person har gir tilgang
                     // til tjenesten, og da i så fall inkluder denne tjenesten i resultatet
@@ -223,9 +228,10 @@ class Altinn3Client {
 
     suspend fun test(fnr: String) {
         log.info { "Requesting resources for $fnr" }
-        val response = authedClient.post("/accessmanagement/api/v1/resourceowner/authorizedparties?includeAltinn2=true") {
-            setBody(AuthorizedParties.Reqeust(value = fnr))
-        }
+        val response =
+            client.post("/accessmanagement/api/v1/resourceowner/authorizedparties?includeAltinn2=true") {
+                setBody(AuthorizedParties.Reqeust(value = fnr))
+            }
         log.info { "Result: ${response.status}" }
 
         val result = response.body<List<AuthorizedParties.Response>>()

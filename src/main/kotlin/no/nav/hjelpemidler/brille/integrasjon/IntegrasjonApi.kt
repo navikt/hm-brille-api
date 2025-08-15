@@ -43,7 +43,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.brille.virksomhet.OrganisasjonMedBruksvilkår
 import no.nav.hjelpemidler.brille.virksomhet.enhetTilAdresseFor
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.nare.regel.Regelutfall
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -266,7 +266,7 @@ fun Route.integrasjonApi(
                 )
 
                 if (vilkårsvurdering.utfall != Regelutfall.JA) {
-                    log.secureInfo {
+                    log.teamInfo {
                         "Vilkårsvurderingen ga negativt resultat:\n${vilkårsvurdering.toJson()}"
                     }
 

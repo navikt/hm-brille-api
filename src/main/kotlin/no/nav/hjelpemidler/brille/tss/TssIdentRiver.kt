@@ -8,7 +8,7 @@ import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.hjelpemidler.brille.utbetaling.PacketListenerWithOnError
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -48,7 +48,7 @@ class TssIdentRiver(
         runBlocking(Dispatchers.IO) {
             tssIdentService.settTssIdent(packet.orgnr, packet.kontonr, packet.tssIdent)
             log.info { "Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kvittert=${packet.opprettet}" }
-            log.secureInfo { "Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, kvittert=${packet.opprettet}" }
+            log.teamInfo { "Kontonr synkronisert til TSS: orgnr=${packet.orgnr}, kontonr=${packet.kontonr}, tssIdent=${packet.tssIdent}, kvittert=${packet.opprettet}" }
         }
     }
 }

@@ -1,11 +1,10 @@
 package no.nav.hjelpemidler.brille.vedtak
 
-import kotliquery.Row
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Row
 import no.nav.hjelpemidler.database.Store
-import no.nav.hjelpemidler.database.json
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
 import java.time.LocalDate

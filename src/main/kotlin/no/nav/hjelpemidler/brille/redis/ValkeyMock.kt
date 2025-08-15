@@ -1,15 +1,15 @@
 package no.nav.hjelpemidler.brille.redis
 
-import redis.clients.jedis.args.BitCountOption
-import redis.clients.jedis.args.BitOP
-import redis.clients.jedis.commands.StringCommands
-import redis.clients.jedis.params.BitPosParams
-import redis.clients.jedis.params.GetExParams
-import redis.clients.jedis.params.LCSParams
-import redis.clients.jedis.params.SetParams
-import redis.clients.jedis.resps.LCSMatchResult
+import io.valkey.args.BitCountOption
+import io.valkey.args.BitOP
+import io.valkey.commands.StringCommands
+import io.valkey.params.BitPosParams
+import io.valkey.params.GetExParams
+import io.valkey.params.LCSParams
+import io.valkey.params.SetParams
+import io.valkey.resps.LCSMatchResult
 
-class JedisMock : StringCommands {
+class ValkeyMock : StringCommands {
 
     private val store = mutableMapOf<String, String>()
 
@@ -22,6 +22,14 @@ class JedisMock : StringCommands {
     }
 
     override fun setGet(key: String?, value: String?, params: SetParams?): String {
+        TODO("Not yet implemented")
+    }
+
+    override fun setIfeq(key: String?, value: String?, compareValue: String?): String? {
+        TODO("Not yet implemented")
+    }
+
+    override fun delIfeq(key: String?, compareValue: String?): Boolean? {
         TODO("Not yet implemented")
     }
 

@@ -37,7 +37,6 @@ spec:
      - name: GIT_COMMIT
        value: {{commit}}
   envFrom:
-    - secret: redis-password
     - secret: hm-soknad-api-secret
     - secret: hm-slack-hook
     - secret: hm-brille-api-unleash-api-token
@@ -73,7 +72,8 @@ spec:
            namespace: medlemskap
          - application: medlemskap-barn
            namespace: medlemskap
-         - application: brille-redis
+         - application: logging
+           namespace: nais-system
       external:
       {{#each external-hosts}}
         - host: {{ this }}
@@ -87,7 +87,7 @@ spec:
   gcp:
     sqlInstances:
       - name: {{ db_instance_name }}
-        type: POSTGRES_13
+        type: POSTGRES_17
         tier: {{ db_tier }}
         diskType: SSD
         highAvailability: {{ db_high_availability }}
@@ -108,10 +108,11 @@ spec:
             value: "write"
           - name: "pgaudit.log_parameter"
             value: "on"
-  secureLogs:
-    enabled: true
   maskinporten:
     enabled: true
     scopes:
       consumes:
         - name: "altinn:accessmanagement/authorizedparties.resourceowner"
+  valkey:
+    - instance: brille
+      access: readwrite

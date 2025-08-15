@@ -4,7 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.hjelpemidler.configuration.Environment
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 
 private val log = KotlinLogging.logger {}
 
@@ -19,7 +19,7 @@ class AltinnService(
                     "Avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivere"
                 }
             }
-            log.secureInfo {
+            log.teamInfo {
                 "Avgivere for fnr: $fnr, tjeneste: $tjeneste, avgivere: $avgivere"
             }
             avgivere
@@ -34,7 +34,7 @@ class AltinnService(
                 "Rettigheter for fnr: $fnr, orgnr: $orgnr, harTilgangTilOppgjørsavtale: $harTilgangTilOppgjørsavtale"
             }
         }
-        log.secureInfo {
+        log.teamInfo {
             "Rettigheter for fnr: $fnr, orgnr: $orgnr, harTilgangTilOppgjørsavtale: $harTilgangTilOppgjørsavtale"
         }
         harTilgangTilOppgjørsavtale
@@ -49,7 +49,7 @@ class AltinnService(
                 "Rettigheter for fnr: $fnr, orgnr: $orgnr, harTilgangTilUtbetalingsrapport: $harTilgangTilUtbetalingsrapport"
             }
         }
-        log.secureInfo {
+        log.teamInfo {
             "Rettigheter for fnr: $fnr, orgnr: $orgnr, harTilgangTilUtbetalingsrapport: $harTilgangTilUtbetalingsrapport"
         }
         harTilgangTilUtbetalingsrapport

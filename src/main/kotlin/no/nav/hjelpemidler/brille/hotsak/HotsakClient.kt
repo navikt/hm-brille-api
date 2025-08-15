@@ -20,7 +20,7 @@ import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
 import no.nav.hjelpemidler.http.openid.openID
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 import org.slf4j.MDC
 import java.time.Instant
 import java.time.LocalDate
@@ -54,7 +54,7 @@ class HotsakClient(
             when (response.status) {
                 HttpStatusCode.OK -> {
                     val vedtak = response.body<HentEksisterendeVedtakResponse>()
-                    log.secureInfo { "Fikk svar fra hm-saksbehandling: $vedtak" }
+                    log.teamInfo { "Fikk svar fra hm-saksbehandling: $vedtak" }
                     return vedtak.vedtak ?: listOfNotNull(vedtak.vedtaksdato).map {
                         HotsakVedtak(
                             sakId = "",

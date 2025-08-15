@@ -39,7 +39,7 @@ dependencies {
     // other
     implementation(libs.nimbus.jose.jwt)
     implementation(libs.hmRapidsAndRiversV2Core)
-    implementation(libs.jedis)
+    implementation(libs.valkey)
     implementation(libs.micrometer.registry.prometheus)
     implementation(libs.unleash)
     runtimeOnly(libs.logback.syslog4j) // auditlog https://github.com/navikt/naudit

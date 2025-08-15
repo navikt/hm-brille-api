@@ -1,10 +1,8 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
-import kotliquery.Row
 import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Row
 import no.nav.hjelpemidler.database.Store
-import no.nav.hjelpemidler.database.enum
-import no.nav.hjelpemidler.database.json
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate

@@ -1,5 +1,7 @@
 package no.nav.hjelpemidler.brille
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.valkey.Protocol
 import no.nav.hjelpemidler.configuration.EnvironmentVariable
 import no.nav.hjelpemidler.configuration.External
 import no.nav.hjelpemidler.localization.LOCALE_NORWEGIAN_BOKMÅL
@@ -7,6 +9,8 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
+
+private val log = KotlinLogging.logger {}
 
 object Configuration {
     val LOCALE = LOCALE_NORWEGIAN_BOKMÅL
@@ -42,12 +46,20 @@ object Configuration {
     val PDL_API_SCOPE by EnvironmentVariable
     val PDL_API_URL by EnvironmentVariable
 
-    @External(secret = "redis-password")
-    val REDIS_PASSWORD by EnvironmentVariable
-    val REDIS_HOST by EnvironmentVariable
-
     val SYFOHELSENETTPROXY_API_SCOPE by EnvironmentVariable
     val SYFOHELSENETTPROXY_API_URL by EnvironmentVariable
+
+    @External
+    val REDIS_HOST_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_PORT_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_USERNAME_BRILLE by EnvironmentVariable
+
+    @External
+    val REDIS_PASSWORD_BRILLE by EnvironmentVariable
 
     @External
     val UNLEASH_SERVER_API_URL by EnvironmentVariable
@@ -55,19 +67,23 @@ object Configuration {
     @External
     val UNLEASH_SERVER_API_TOKEN by EnvironmentVariable
 
-    // @External
-    // val UNLEASH_SERVER_API_ENV by EnvironmentVariable
-
     val redisProperties = RedisProperties()
 
     data class RedisProperties(
-        val host: String = REDIS_HOST,
-        val port: Int = 6379,
-        val password: String = REDIS_PASSWORD,
+        val host: String = REDIS_HOST_BRILLE,
+        val port: Int = REDIS_PORT_BRILLE.toInt(),
+        val timeout: Int = Protocol.DEFAULT_TIMEOUT,
+        val username: String = REDIS_USERNAME_BRILLE,
+        val password: String = REDIS_PASSWORD_BRILLE,
+        val ssl: Boolean = true,
         val hprExpirySeconds: Long = 1.days.inWholeSeconds,
         val medlemskapBarnExpiryDayOfMonth: Int = 7,
         val orgenhetExpirySeconds: Long = 2.hours.inWholeSeconds,
     ) {
+        init {
+            log.info { "Bruker redis tjener: $host:$port (username: $username)" }
+        }
+
         fun medlemskapBarnExpirySeconds(): Long = LocalDateTime.now().let { now ->
             val dt = if (now.dayOfMonth < medlemskapBarnExpiryDayOfMonth) {
                 LocalDateTime.of(now.year, now.month, medlemskapBarnExpiryDayOfMonth, 0, 0)

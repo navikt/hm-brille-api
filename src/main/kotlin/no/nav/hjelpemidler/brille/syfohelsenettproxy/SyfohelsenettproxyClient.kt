@@ -21,7 +21,7 @@ import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
 import no.nav.hjelpemidler.http.openid.openID
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 import org.slf4j.MDC
 
 private val log = KotlinLogging.logger { }
@@ -65,7 +65,7 @@ class SyfohelsenettproxyClient(
             when (response.status) {
                 HttpStatusCode.OK -> {
                     val behandler = response.body<Behandler>()
-                    log.secureInfo { "Fikk svar fra HPR: $behandler" }
+                    log.teamInfo { "Fikk svar fra HPR: $behandler" }
                     return behandler
                 }
             }

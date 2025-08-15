@@ -5,7 +5,7 @@ import io.ktor.server.application.ApplicationCall
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.uri
 import no.nav.hjelpemidler.configuration.Environment
-import no.nav.hjelpemidler.logging.secureInfo
+import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import java.util.UUID
 
@@ -28,7 +28,7 @@ fun ApplicationCall.adminAuditLogging(tag: String, params: Map<String, String?>,
             jsonMapper.writerWithDefaultPrettyPrinter()
                 .writeValueAsString(allParams)
         }"
-    log.secureInfo { logMessage }
+    log.teamInfo { logMessage }
 
     adminAuditLog(request.httpMethod.value, request.uri, params, extractNavIdent(), fnrDetGjelder)
 }
@@ -70,7 +70,7 @@ private fun adminAuditLog(
     ).joinToString("|")
 
     if (Environment.current.isDev) {
-        log.secureInfo { "adminAuditLog log message: $message" }
+        log.teamInfo { "adminAuditLog log message: $message" }
     }
 
     adminAuditLogger.info { message }
