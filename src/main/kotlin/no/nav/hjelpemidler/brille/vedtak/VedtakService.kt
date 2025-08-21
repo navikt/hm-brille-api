@@ -12,6 +12,7 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.nare.regel.Regelutfall
+import java.math.RoundingMode
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
@@ -46,7 +47,10 @@ class VedtakService(
         }
         val sats = SatsKalkulator(vilkårsgrunnlag.brilleseddel).kalkuler()
         val satsBeløp = sats.beløp(vilkårsgrunnlag.bestillingsdato)
-        val brillepris = vilkårsgrunnlag.brillepris
+
+        // Rund av BigDecimal verdier til nærmeste hele øre
+        val brillepris = vilkårsgrunnlag.brillepris.setScale(2, RoundingMode.HALF_UP)
+        val beløp = minOf(satsBeløp.toBigDecimal().setScale(2, RoundingMode.HALF_UP), brillepris)
 
         val vedtak = transaction(databaseContext) { ctx ->
             val vedtak = ctx.vedtakStore.lagreVedtak(
@@ -64,7 +68,7 @@ class VedtakService(
                     sats = sats,
                     satsBeløp = satsBeløp,
                     satsBeskrivelse = sats.beskrivelse,
-                    beløp = minOf(satsBeløp.toBigDecimal(), brillepris),
+                    beløp = beløp,
                     kilde = kilde,
                     avsendersystemOrgNr = avsendersystemOrgNr,
                 ),
