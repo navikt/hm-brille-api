@@ -23,11 +23,10 @@ spec:
     timeout: 1
   resources:
     limits:
-      cpu: 2000m
-      memory: 3000Mi
+      memory: 768Mi
     requests:
       cpu: 40m
-      memory: 1256Mi
+      memory: 512Mi
   env:
   {{#each env}}
      - name: {{@key }}
