@@ -73,7 +73,7 @@ class AvtaleApiTest {
             navn = avgiver.navn,
             forretningsadresse = null,
             beliggenhetsadresse = null,
-            naeringskode1 = Næringskode("", Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER),
+            naeringskode1 = Næringskode("", Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER.first()),
             naeringskode2 = null,
             naeringskode3 = null,
         )
@@ -86,7 +86,7 @@ class AvtaleApiTest {
                 navn = avgiver.navn,
                 forretningsadresse = null,
                 beliggenhetsadresse = null,
-                naeringskode1 = Næringskode("", Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER),
+                naeringskode1 = Næringskode("", Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER.first()),
                 naeringskode2 = null,
                 naeringskode3 = null,
             ),

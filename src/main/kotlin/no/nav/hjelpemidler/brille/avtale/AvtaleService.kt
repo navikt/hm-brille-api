@@ -52,7 +52,7 @@ class AvtaleService(
                 log.info {
                     "Hentet enhet med orgnr: $orgnr, næringskoder: ${enhet.næringskoder().map { it.kode }}"
                 }
-                setOf(
+                listOf(
                     Næringskode.BUTIKKHANDEL_MED_OPTISKE_ARTIKLER,
                     Næringskode.BUTIKKHANDEL_MED_GULL_OG_SØLVVARER,
                     Næringskode.BUTIKKHANDEL_MED_UR_OG_KLOKKER,
@@ -61,7 +61,7 @@ class AvtaleService(
                     Næringskode.ANDRE_HELSETJENESTER,
                     Næringskode.ENGROSHANDEL_MED_OPTISKE_ARTIKLER,
                     Næringskode.SPESIALISERT_LEGETJENESTE_UNNTATT_PSYKIATRISK_LEGETJENESTE,
-                ).any { enhet.harNæringskode(it) }
+                ).flatten().toSet().any { enhet.harNæringskode(it) }
             }
         }
 
