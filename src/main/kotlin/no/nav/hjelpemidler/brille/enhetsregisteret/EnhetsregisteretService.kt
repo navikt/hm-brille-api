@@ -74,37 +74,19 @@ class EnhetsregisteretService(
     }
 
     suspend fun organisasjonSlettet(orgnr: String): Boolean {
-        kotlin.runCatching {
-            val org =
-                runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
-                    ?: enhetsregisteretClient.hentEnhet(orgnr)
-
-            if (org != null) {
-                return org.slettedato != null
-            }
-
-            throw RuntimeException("orgnr=$orgnr kunne ikke bekreftes å være en enhet eller underenhet")
-        }.getOrElse {
-            log.error(it) { "Kunne ikke sjekke om organisasjonen er slettet" }
-        }
-        return false
+        val org =
+            runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
+                ?: enhetsregisteretClient.hentEnhet(orgnr)
+                ?: throw java.lang.RuntimeException("Kunne ikke sjekke om organisasjonen er slettet: orgnr=$orgnr kunne ikke bekreftes å være en enhet eller underenhet")
+        return org.slettedato != null
     }
 
     suspend fun organisasjonSlettetNår(orgnr: String): LocalDate? {
-        kotlin.runCatching {
-            val org =
-                runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
-                    ?: enhetsregisteretClient.hentEnhet(orgnr)
-
-            if (org != null) {
-                return org.slettedato
-            }
-
-            throw RuntimeException("orgnr=$orgnr kunne ikke bekreftes å være en enhet eller underenhet")
-        }.getOrElse {
-            log.error(it) { "Kunne ikke sjekke om organisasjonen er slettet" }
-        }
-        return null
+        val org =
+            runCatching { transaction(databaseContext) { ctx -> ctx.enhetsregisteretStore.hentEnhet(orgnr) } }.getOrNull()
+                ?: enhetsregisteretClient.hentEnhet(orgnr)
+                ?: throw RuntimeException("Kunne ikke sjekke om organisasjonen er slettet: orgnr=$orgnr kunne ikke bekreftes å være en enhet eller underenhet")
+        return org.slettedato
     }
 
     suspend fun oppdaterMirrorHvisUtdatert(oppdaterUansett: Boolean = false) {
