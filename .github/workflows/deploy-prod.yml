@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Sjekk ut koden
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Deploy Unleash secrets
         uses: nais/deploy/actions/deploy@v2
         env:
