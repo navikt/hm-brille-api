@@ -13,6 +13,8 @@ jobs:
   deploy-to-dev:
     name: Deploy to ${{ matrix.cluster }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     strategy:
       matrix:
         cluster: [ dev-gcp ]
