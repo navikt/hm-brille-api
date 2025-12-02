@@ -14,7 +14,9 @@ jobs:
     name: Deploy to ${{ matrix.cluster }}
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      contents: "write"
+      id-token: "write"
+      packages: "write"
     strategy:
       matrix:
         cluster: [ dev-gcp ]
