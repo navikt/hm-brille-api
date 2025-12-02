@@ -12,12 +12,26 @@ data class Avgiver(
 ) {
     enum class Tjeneste(val kode: String, val versjon: Int) {
         /**
-         * "Avtale om direkte oppgjør av briller for barn"
+         * "Barnebrillestøtte - Inngå avtale om direkteoppgjør for optikerbedrift" (Generisk tilgangsressurs)
+         *
+         * Tjenesten lar optikerbedrifter inngå avtale med Nav for direkteoppgjør av tilskudd ved kjøp av briller til
+         * barn. Når avtale er inngått kan autoriserte optikere som jobber i bedriften sende inn krav om brillestøtte
+         * til barn på barnets vegne.
+         *
+         * Personer som får delegert denne rettigheten kan inngå avtale mellom bedriften som representeres og Nav om
+         * direkteoppgjør av tilskudd ved kjøp av briller til barn.
          */
         OPPGJØRSAVTALE(kode = "5849", versjon = 1),
 
         /**
-         * "Utbetalingsrapport - brillestøtte"
+         * "Barnebrillestøtte - Se utbetalingsrapport" (Generisk tilgangsressurs)
+         *
+         * Tjenesten viser en oversikt over ventende og utførte utbetalinger av barnebrillestøtte gjennom
+         * direkteoppgjørsordningen fra Nav til en bedrift. Rapporten viser informasjon som kan benyttes for å avstemme
+         * mottatte utbetalinger fra Nav mot innsendte krav fra optikerbedrift.
+         *
+         * Personer med denne rettigheten får tilgang til utbetalingsrapporten og kan se alle ventende og utførte
+         * utbetalinger til bedriften som representeres.
          */
         UTBETALINGSRAPPORT(kode = "5850", versjon = 1),
         ;
