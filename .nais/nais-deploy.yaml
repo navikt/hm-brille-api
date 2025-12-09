@@ -96,6 +96,7 @@ spec:
         diskSize: {{ db_size }}
         diskAutoresize: true
         autoBackupHour: 3
+        pointInTimeRecovery: true
         retainedBackups: {{ db_retained_backups }}
         databases:
           - name: {{ db_name }}
