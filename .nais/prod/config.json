@@ -36,6 +36,9 @@
   "kafka-cluster": "nav-prod",
   "min-replicas": 2,
   "max-replicas": 4,
+  "memory-limit": "768Mi",
+  "memory-request": "512Mi",
+  "cpu-request": "40m",
   "env": {
     "ALTINN_URL": "https://platform.altinn.no",
     "CLIENT_ID_AZURE_TOKEN_GENERATOR": "00000000-0000-0000-0000-000000000000",
