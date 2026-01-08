@@ -149,7 +149,7 @@ class VirksomhetStorePostgres(private val tx: JdbcOperations) : VirksomhetStore 
         fnrOppdatertAv = row.stringOrNull("fnr_oppdatert_av"),
         navnInnsender = row.string("navn_innsender"),
         aktiv = row.boolean("hovedavtale_aktiv"),
-        bruksvilkår = row.boolean("utvidet_aktiv"),
+        bruksvilkår = row.booleanOrNull("utvidet_aktiv") == true,
         bruksvilkårGodtattDato = row.localDateTimeOrNull("utvidet_opprettet"),
         avtaleversjon = row.stringOrNull("avtaleversjon"),
         opprettet = row.localDateTime("opprettet"),

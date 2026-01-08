@@ -14,6 +14,7 @@ import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStore
 import no.nav.hjelpemidler.brille.vedtak.SlettVedtakStore
 import no.nav.hjelpemidler.brille.vedtak.VedtakStore
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
+import no.nav.hjelpemidler.database.DatabaseVendor
 import no.nav.hjelpemidler.database.JdbcOperations
 import javax.sql.DataSource
 
@@ -21,8 +22,11 @@ class MockDatabaseContext : DatabaseContext(), DatabaseTransactionContext {
     override val dataSource: DataSource = mockk {
         every { connection } returns mockk {
             every { commit() } returns Unit
-            every { close() } returns Unit
             every { rollback() } returns Unit
+            every { close() } returns Unit
+            every { metaData } returns mockk {
+                every { databaseProductName } returns DatabaseVendor.POSTGRESQL.databaseProductName
+            }
             every { autoCommit = any() } returns Unit
             every { isReadOnly = any() } returns Unit
         }

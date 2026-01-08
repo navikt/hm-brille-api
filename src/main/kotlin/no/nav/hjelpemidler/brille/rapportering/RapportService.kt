@@ -3,7 +3,7 @@ package no.nav.hjelpemidler.brille.rapportering
 import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
-import no.nav.hjelpemidler.database.Page
+import no.nav.hjelpemidler.pagination.Page
 import java.time.LocalDate
 
 class RapportService(
