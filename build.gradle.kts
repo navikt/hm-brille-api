@@ -97,6 +97,7 @@ testing {
 
 tasks.shadowJar {
     mergeServiceFiles()
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 graphql {
