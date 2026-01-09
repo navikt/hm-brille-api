@@ -113,6 +113,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
             val name: String,
             val isDeleted: Boolean,
             val onlyHierarchyElementWithNoAccess: Boolean,
+            val authorizedAccessPackages: List<String>,
             val authorizedResources: List<String>,
             val authorizedRoles: List<String>,
             val subunits: List<Response>,
@@ -156,15 +157,21 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
             }
             // Filtrer ut slettede enheter
             .filter { !it.first.isDeleted }
-            // Bare inkluder resultater hvor vi har en rolle eller (TODO:) tilgangspakke i policy subjects ressursen som matcher
+            // Bare inkluder resultater hvor vi har en rolle eller tilgangspakke i policy subjects ressursen som matcher
             .filter {
                 if (resourceKey in it.first.authorizedResources) {
                     log.info { "Altinn3 tilgang gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
                     true
                 } else {
-                    it.first.authorizedRoles.find { it0 ->
+                    val hasAuthroizedRole = it.first.authorizedRoles.find { it0 ->
                         policySubjects.find { it1 -> it1.type == PolicySubjects.Type.RoleCode && it1.value.lowercase() == it0.lowercase() } != null
                     } != null
+
+                    val hasAuthroizedAccessPackage = it.first.authorizedAccessPackages.find { it0 ->
+                        policySubjects.find { it1 -> it1.type == PolicySubjects.Type.AccessPackage && it1.value.lowercase() == it0.lowercase() } != null
+                    } != null
+
+                    hasAuthroizedRole || hasAuthroizedAccessPackage
                 }
             }
             // Gjenbruk gammel type
@@ -195,8 +202,8 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
             .find { it.organizationNumber == orgnr }
             // Oversett roller og tilgangspakker til et sett av tjeneste-typen som inneholder de som man har tilgang til
             ?.let { enhet ->
-                // TODO: Støtt tilgangspakker / access packages i fremtiden!
                 val enhetRollerPersonHar = enhet.authorizedRoles.map { it.lowercase() }.toSet()
+                val enhetTilgangspakkerPersonHar = enhet.authorizedAccessPackages.map { it.lowercase() }.toSet()
                 val harTjenesteRolleEllerNull: suspend (Avgiver.Tjeneste) -> Avgiver.Tjeneste? =
                     { tj: Avgiver.Tjeneste ->
                         val resourceKey = when (tj) {
@@ -207,11 +214,21 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
                             log.info { "Altinn3 rettighet gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
                             tj
                         } else {
-                            getPolicySubjectsFor(resourceKey)
-                                .filter { it.type == PolicySubjects.Type.RoleCode }
-                                .map { it.value.lowercase() }
-                                .find { enhetRollerPersonHar.contains(it) }
-                                ?.let { tj }
+                            getPolicySubjectsFor(resourceKey).let { subjects ->
+                                val roleCodeOrNull = subjects
+                                    .filter { it.type == PolicySubjects.Type.RoleCode }
+                                    .map { it.value.lowercase() }
+                                    .find { enhetRollerPersonHar.contains(it) }
+                                    ?.let { tj }
+
+                                val accessPackageOrNull = subjects
+                                    .filter { it.type == PolicySubjects.Type.AccessPackage }
+                                    .map { it.value.lowercase() }
+                                    .find { enhetTilgangspakkerPersonHar.contains(it) }
+                                    ?.let { tj }
+
+                                roleCodeOrNull ?: accessPackageOrNull
+                            }
                         }
                     }
                 setOf(
