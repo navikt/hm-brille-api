@@ -1,5 +1,6 @@
 import com.expediagroup.graphql.plugin.gradle.config.GraphQLScalar
 import com.expediagroup.graphql.plugin.gradle.tasks.GraphQLIntrospectSchemaTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 group = "no.nav.hjelpemidler"
 version = "1.0-SNAPSHOT"
@@ -125,4 +126,9 @@ graphql {
 val graphqlIntrospectSchema by tasks.getting(GraphQLIntrospectSchemaTask::class) {
     endpoint.set("https://pdl-api.intern.dev.nav.no/graphql")
     outputFile.set(file("${project.projectDir}/src/main/resources/pdl/schema.graphql"))
+}
+
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
 }
