@@ -163,15 +163,15 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
                     log.info { "Altinn3 tilgang gitt pga. eksplisitt deligert rettighet (authorizedResources): $resourceKey" }
                     true
                 } else {
-                    val hasAuthroizedRole = it.first.authorizedRoles.find { it0 ->
+                    val hasAuthorizedRole = it.first.authorizedRoles.find { it0 ->
                         policySubjects.find { it1 -> it1.type == PolicySubjects.Type.RoleCode && it1.value.lowercase() == it0.lowercase() } != null
                     } != null
 
-                    val hasAuthroizedAccessPackage = it.first.authorizedAccessPackages.find { it0 ->
+                    val hasAuthorizedAccessPackage = it.first.authorizedAccessPackages.find { it0 ->
                         policySubjects.find { it1 -> it1.type == PolicySubjects.Type.AccessPackage && it1.value.lowercase() == it0.lowercase() } != null
                     } != null
 
-                    hasAuthroizedRole || hasAuthroizedAccessPackage
+                    hasAuthorizedRole || hasAuthorizedAccessPackage
                 }
             }
             // Gjenbruk gammel type
