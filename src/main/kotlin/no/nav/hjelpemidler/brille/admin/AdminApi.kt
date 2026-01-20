@@ -124,7 +124,7 @@ fun Route.adminApi(
                 val bestillingsdato: LocalDate,
                 val beløp: BigDecimal,
                 val opprettet: LocalDateTime,
-                val utbetalt: LocalDateTime?,
+                val utbetalt: LocalDate?,
                 val utbetalingsstatus: UtbetalingStatus?,
                 val utbetalingsreferanse: String?,
                 val slettet: LocalDateTime?,

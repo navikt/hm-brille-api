@@ -111,7 +111,7 @@ class AdminStorePostgres(private val tx: JdbcOperations) : AdminStore {
                 bestillingsdato = row.localDate("bestillingsdato"),
                 beløp = row.bigDecimal("belop"),
                 opprettet = row.localDateTime("opprettet"),
-                utbetalingsdato = row.localDateTimeOrNull("utbetalingsdato"),
+                utbetalingsdato = row.localDateOrNull("utbetalingsdato"),
                 utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
                     ?.let { status -> UtbetalingStatus.valueOf(status) },
                 batchId = row.stringOrNull("batch_id"),
@@ -254,7 +254,7 @@ data class Vedtak(
     val bestillingsdato: LocalDate,
     val beløp: BigDecimal,
     val opprettet: LocalDateTime,
-    val utbetalingsdato: LocalDateTime?,
+    val utbetalingsdato: LocalDate?,
     val utbetalingsstatus: UtbetalingStatus?,
     val batchId: String?,
     val slettet: LocalDateTime?,
