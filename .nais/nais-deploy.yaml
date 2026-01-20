@@ -6,10 +6,6 @@ metadata:
   labels:
     team: teamdigihot
 spec:
-  observability:
-    logging:
-      destinations:
-        - id: elastic
   image: {{ image }}
   port: {{ port }}
   replicas:
