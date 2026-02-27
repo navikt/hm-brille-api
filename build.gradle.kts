@@ -79,12 +79,11 @@ testing {
         val test by getting(JvmTestSuite::class) {
             useKotlinTest(libs.versions.kotlin.asProvider())
             dependencies {
-                implementation(libs.handlebars)
                 implementation(libs.hotlibs.test)
-                implementation(libs.jackson.dataformat.yaml)
-                implementation(libs.kotest.assertions.json)
                 implementation(libs.ktor.server.test.host)
                 implementation(libs.nimbus.jose.jwt)
+                implementation(libs.handlebars)
+                implementation(libs.jackson.dataformat.yaml)
 
                 implementation(libs.hotlibs.database) {
                     capabilities {

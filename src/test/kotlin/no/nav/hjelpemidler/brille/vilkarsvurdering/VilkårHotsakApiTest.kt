@@ -28,9 +28,6 @@ import no.nav.hjelpemidler.brille.test.skalVærePositiv
 import no.nav.hjelpemidler.brille.test.verifiser
 import no.nav.hjelpemidler.brille.test.`år på`
 import no.nav.hjelpemidler.brille.tid.MANGLENDE_DATO
-import no.nav.hjelpemidler.brille.tid.minus
-import no.nav.hjelpemidler.brille.tid.toInstant
-import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.brille.vedtak.lagEksisterendeVedtak
@@ -38,6 +35,9 @@ import no.nav.hjelpemidler.brille.vedtak.toList
 import no.nav.hjelpemidler.nare.regel.Regel
 import no.nav.hjelpemidler.nare.regel.Regelevaluering
 import no.nav.hjelpemidler.nare.regel.Regelutfall
+import no.nav.hjelpemidler.time.minus
+import no.nav.hjelpemidler.time.toInstant
+import no.nav.hjelpemidler.time.toLocalDate
 import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.Test

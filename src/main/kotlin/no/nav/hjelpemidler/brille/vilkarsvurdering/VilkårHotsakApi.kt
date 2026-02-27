@@ -12,12 +12,12 @@ import no.nav.hjelpemidler.brille.joarkref.JoarkrefService
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.tid.MANGLENDE_DATO
-import no.nav.hjelpemidler.brille.tid.toInstant
-import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.brille.vedtak.Behandlingsresultat
 import no.nav.hjelpemidler.brille.vedtak.VedtakService
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
+import no.nav.hjelpemidler.time.toInstant
+import no.nav.hjelpemidler.time.toLocalDate
 import java.math.BigDecimal
 import java.time.LocalDateTime
 

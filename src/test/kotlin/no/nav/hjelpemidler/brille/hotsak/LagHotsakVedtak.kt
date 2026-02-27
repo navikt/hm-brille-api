@@ -1,7 +1,7 @@
 package no.nav.hjelpemidler.brille.hotsak
 
 import no.nav.hjelpemidler.brille.test.Builder
-import no.nav.hjelpemidler.brille.tid.toInstant
+import no.nav.hjelpemidler.time.toInstant
 import java.time.Instant
 import java.time.LocalDate
 

@@ -13,10 +13,10 @@ import no.nav.hjelpemidler.brille.kafka.KafkaService
 import no.nav.hjelpemidler.brille.pdl.HentPersonExtensions.navn
 import no.nav.hjelpemidler.brille.sats.SatsKalkulator
 import no.nav.hjelpemidler.brille.sats.SatsType
-import no.nav.hjelpemidler.brille.tid.toLocalDate
 import no.nav.hjelpemidler.brille.vedtak.EksisterendeVedtak
 import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.nare.regel.Regelutfall
+import no.nav.hjelpemidler.time.toLocalDate
 
 private val log = KotlinLogging.logger {}
 

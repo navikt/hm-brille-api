@@ -6,13 +6,13 @@ import no.nav.hjelpemidler.database.Testcontainers
 import no.nav.hjelpemidler.database.createDataSource
 import no.nav.hjelpemidler.database.createRole
 import no.nav.hjelpemidler.database.migrate
-import no.nav.hjelpemidler.database.transactionAsync
+import no.nav.hjelpemidler.database.transaction
 import java.io.Closeable
 
 object TestDatabaseContext : DatabaseContext() {
     override val dataSource by lazy {
         createDataSource(Testcontainers) {
-            tag = "13-alpine"
+            tag = "17-alpine"
         }.also { dataSource ->
             dataSource.migrate {
                 createRole("cloudsqliamuser")
@@ -29,6 +29,6 @@ object TestDatabaseContext : DatabaseContext() {
 suspend inline fun <S : Store, T> testTransaction(
     noinline factory: (JdbcOperations) -> S,
     noinline test: suspend S.() -> T,
-): T = transactionAsync(TestDatabaseContext.dataSource) {
+): T = transaction(TestDatabaseContext.dataSource) {
     factory(it).test()
 }

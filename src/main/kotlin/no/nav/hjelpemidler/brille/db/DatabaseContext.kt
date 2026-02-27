@@ -25,7 +25,7 @@ import no.nav.hjelpemidler.brille.vedtak.VedtakStorePostgres
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStore
 import no.nav.hjelpemidler.brille.virksomhet.VirksomhetStorePostgres
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.transactionAsync
+import no.nav.hjelpemidler.database.transaction
 import java.io.Closeable
 import javax.sql.DataSource
 
@@ -38,7 +38,7 @@ abstract class DatabaseContext : Transaction, Closeable {
         DefaultDatabaseTransactionContext(tx)
 
     override suspend fun <T> invoke(block: suspend DatabaseTransactionContext.() -> T): T =
-        transactionAsync(dataSource) {
+        transaction(dataSource) {
             block(databaseTransactionContext(it))
         }
 }

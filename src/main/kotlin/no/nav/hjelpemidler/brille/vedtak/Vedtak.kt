@@ -6,11 +6,11 @@ import no.nav.helse.rapids_rivers.asLocalDateTime
 import no.nav.helse.rapids_rivers.asOptionalLocalDate
 import no.nav.helse.rapids_rivers.asOptionalLocalDateTime
 import no.nav.hjelpemidler.brille.sats.SatsType
-import no.nav.hjelpemidler.brille.tid.toInstant
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.database.Row
+import no.nav.hjelpemidler.time.toInstant
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
