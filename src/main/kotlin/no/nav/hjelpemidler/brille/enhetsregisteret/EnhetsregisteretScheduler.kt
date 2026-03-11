@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.UUID
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 private val log = KotlinLogging.logger {}
 
@@ -17,13 +17,14 @@ class EnhetsregisteretScheduler(
     private val enhetsregisteretService: EnhetsregisteretService,
     leaderElection: LeaderElection,
     metricsConfig: MetricsConfig,
-    delay: Duration = 1.hours,
+    delay: Duration = 30.minutes,
     onlyWorkHours: Boolean = false,
 ) : SimpleScheduler(leaderElection, delay, metricsConfig, onlyWorkHours) {
     override suspend fun action() {
         // Prøv en til to ganger per natt, merk: Filen produseres hver natt, cirka klokken 05:00.
         val now = LocalDateTime.now(ZoneId.of("Europe/Oslo"))
-        if (now.hour < 6 || now.hour > 8) return
+        val (from, to) = Pair(now.withHour(6).withMinute(30), now.withHour(9).withMinute(0))
+        if (now.isBefore(from) || now.isAfter(to)) return
 
         runCatching {
             enhetsregisteretService.oppdaterMirrorHvisUtdatert()
