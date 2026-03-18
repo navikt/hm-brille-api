@@ -60,7 +60,7 @@ class AdminStorePostgres(private val tx: JdbcOperations) : AdminStore {
                 barnsNavn = person.asPerson().navn(),
                 bestillingsdato = row.localDate("bestillingsdato"),
                 opprettet = row.localDateTime("opprettet"),
-                utbetalt = row.localDateTimeOrNull("utbetalingsdato"),
+                utbetalt = row.localDateOrNull("utbetalingsdato"),
                 utbetalingsstatus = row.stringOrNull("utbetalingsstatus")
                     ?.let { status -> UtbetalingStatus.valueOf(status) },
                 slettet = row.localDateTimeOrNull("slettet"),
@@ -239,7 +239,7 @@ data class VedtakListe(
     val barnsNavn: String,
     val bestillingsdato: LocalDate,
     val opprettet: LocalDateTime,
-    val utbetalt: LocalDateTime?,
+    val utbetalt: LocalDate?,
     val utbetalingsstatus: UtbetalingStatus?,
     val slettet: LocalDateTime?,
 )
