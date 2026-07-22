@@ -11,7 +11,7 @@ object Diopter {
     const val MIN: Double = 0.0
     const val MAX: Double = 99.99
 
-    const val MIN_SFÆRE: Double = -12.0
+    const val MIN_SFÆRE: Double = -16.0
     const val MIN_SYLINDER: Double = -99.0
 
     private val format: NumberFormat = DecimalFormat("#0.00", DecimalFormatSymbols(Configuration.LOCALE))
