@@ -32,7 +32,7 @@ fun kravlinjeQuery(
                 -- COALESCE(v.sats_beskrivelse, vs.sats_beskrivelse) AS sats_beskrivelse,
                 COALESCE(v.belop, vs.belop) AS belop,
                 COALESCE(v.opprettet, vs.opprettet) AS opprettet,
-                -- COALESCE(v.navn_innsender, vs.navn_innsender) AS navn_innsender,
+                COALESCE(v.navn_innsender, vs.navn_innsender) AS navn_innsender,
                 -- COALESCE(v.kilde, vs.kilde) AS kilde,
                 vs.slettet,
                 -- vs.slettet_av_type,

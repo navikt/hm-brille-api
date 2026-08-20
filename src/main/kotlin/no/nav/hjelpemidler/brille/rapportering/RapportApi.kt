@@ -180,6 +180,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
             "Sendt til utbetaling",
             "Dato - sendt til utbetaling",
             "Kommentar",
+            "Optiker",
         )
             .joinToString(";")
             .toByteArray(),
@@ -200,6 +201,7 @@ fun producer(kravlinjer: List<Kravlinje>): suspend OutputStream.() -> Unit = {
                 if (it.utbetalingsdato == null) "Nei" else "Ja",
                 it.utbetalingsdato ?: "",
                 if (it.slettet != null) "Merk: kravet ble slettet av NAV etter utbetaling, etter en henvendelse fra virksomheten." else "",
+                it.optiker ?: "",
             )
                 .joinToString(";")
                 .toByteArray(),

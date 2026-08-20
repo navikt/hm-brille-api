@@ -106,6 +106,7 @@ data class Kravlinje(
     val batchTotalBeløp: BigDecimal?,
     val slettet: LocalDateTime?,
     val potensieltBortfiltrerteKrav: List<Kravlinje>?,
+    val optiker: String?,
 ) {
 
     companion object {
@@ -124,6 +125,7 @@ data class Kravlinje(
                     batchTotalBeløp = node.get("batch_totalbelop").decimalValue(),
                     slettet = node.get("slettet").asOptionalLocalDateTime(),
                     potensieltBortfiltrerteKrav = null,
+                    optiker = node.get("navn_innsender").textValue(),
                 )
             }
 
@@ -139,6 +141,7 @@ data class Kravlinje(
                 batchTotalBeløp = row.bigDecimalOrNull("batch_totalbelop"),
                 slettet = row.localDateTimeOrNull("slettet"),
                 potensieltBortfiltrerteKrav = ekstraKrav,
+                optiker = row.stringOrNull("navn_innsender"),
             )
         }
     }
