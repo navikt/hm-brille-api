@@ -6,6 +6,7 @@ import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
+import no.nav.hjelpemidler.brille.slack.Slack
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
@@ -32,6 +33,21 @@ class RekjørUtbetalingerScheduler(
                 val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
                     ?: error("ingen tss ident tilgjengelig for batch (skal ikke skje)")
                 utbetalingService.rekjorBatchTilUtbetaling(it, tssIdent)
+                // Diverse sjekker
+                val antUtbetalinger = it.utbetalinger.count()
+                if (antUtbetalinger > 100) {
+                    val melding = "En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!"
+                    log.warn { melding }
+                    Slack.post(melding)
+                }
+                val overSats = utbetalinger.count {
+                    it.vedtak.beløp > it.vedtak.sats.beløp(it.vedtak.bestillingsdato).toBigDecimal()
+                }
+                if (overSats > 0) {
+                    val melding = "Batchen ${it.batchId} har $overSats utbetalinger som er større enn satsen var på brillens bestillingsdato!"
+                    log.warn { melding }
+                    Slack.post(melding)
+                }
             }
         }
         metricsConfig.registry

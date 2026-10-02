@@ -7,6 +7,7 @@ import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.brille.internal.MetricsConfig
 import no.nav.hjelpemidler.brille.scheduler.LeaderElection
 import no.nav.hjelpemidler.brille.scheduler.SimpleScheduler
+import no.nav.hjelpemidler.brille.slack.Slack
 import no.nav.hjelpemidler.configuration.Environment
 import java.time.LocalDate
 import kotlin.time.Duration
@@ -51,8 +52,19 @@ class SendTilUtbetalingScheduler(
                 if (maxUtbetalinger < antUtbetalinger) {
                     maxUtbetalinger = antUtbetalinger.toDouble()
                 }
+                // Diverse sjekker
                 if (antUtbetalinger > 100) {
-                    log.warn { "En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!" }
+                    val melding = "En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!"
+                    log.warn { melding }
+                    Slack.post(melding)
+                }
+                val overSats = utbetalinger.count {
+                    it.vedtak.beløp > it.vedtak.sats.beløp(it.vedtak.bestillingsdato).toBigDecimal()
+                }
+                if (overSats > 0) {
+                    val melding = "Batchen ${it.batchId} har $overSats utbetalinger som er større enn satsen var på brillens bestillingsdato!"
+                    log.warn { melding }
+                    Slack.post(melding)
                 }
             }
         }
