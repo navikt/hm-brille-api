@@ -27,16 +27,15 @@ class RekjørUtbetalingerScheduler(
             val batch = utbetalinger.toUtbetalingBatchList()
             log.info { "Fordelt på ${batch.size} batch" }
             batch.forEach {
-                if (it.utbetalinger.size > 100) {
-                    log.warn { "En batch ${it.batchId} har ${it.utbetalinger.size} som er mer enn 100 utbetalinger!" }
-                }
                 val tssIdent = transaction(databaseContext) { ctx -> ctx.tssIdentStore.hentTssIdent(it.orgNr) }
                     ?: error("ingen tss ident tilgjengelig for batch (skal ikke skje)")
+
                 utbetalingService.rekjorBatchTilUtbetaling(it, tssIdent)
+
                 // Diverse sjekker
                 val antUtbetalinger = it.utbetalinger.count()
                 if (antUtbetalinger > 100) {
-                    val melding = "En batch ${it.batchId} har $antUtbetalinger} som er mer enn 100 utbetalinger!"
+                    val melding = "En batch (batchId=${it.batchId}) har $antUtbetalinger utbetalinger, noe som er mer enn 100! Vurder kontroll."
                     log.warn { melding }
                     Slack.post(melding)
                 }
@@ -44,8 +43,8 @@ class RekjørUtbetalingerScheduler(
                     it.vedtak.beløp > it.vedtak.sats.beløp(it.vedtak.bestillingsdato).toBigDecimal()
                 }
                 if (overSats > 0) {
-                    val melding = "Batchen ${it.batchId} har $overSats utbetalinger som er større enn satsen var på brillens bestillingsdato!"
-                    log.warn { melding }
+                    val melding = "Batchen (batchId=${it.batchId}) har $overSats utbetalinger som er større enn satsen var på brillens bestillingsdato!"
+                    log.error { melding }
                     Slack.post(melding)
                 }
             }
