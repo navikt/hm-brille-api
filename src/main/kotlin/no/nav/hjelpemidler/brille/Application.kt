@@ -114,6 +114,7 @@ fun Application.module() {
 
 // Config stuff that we want to reuse in tests
 fun Application.configure() {
+    // Tidssone
     TimeZone.setDefault(TimeZone.getTimeZone("Europe/Oslo"))
 
     setupCallId()
