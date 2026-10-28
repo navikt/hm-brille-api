@@ -21,7 +21,7 @@ jobs:
       matrix:
         cluster: [ dev-gcp ]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: ${{ matrix.cluster }}
