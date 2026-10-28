@@ -28,7 +28,7 @@ jobs:
       - name: Sjekk ut koden
         uses: actions/checkout@v6
       - name: Deploy Unleash secrets
-        uses: nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           RESOURCE: .nais/unleash-apitoken-prod.yaml
