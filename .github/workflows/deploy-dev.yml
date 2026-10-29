@@ -36,9 +36,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Sjekk ut koden
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Deploy Unleash secrets
-        uses: nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           RESOURCE: .nais/unleash-apitoken-dev.yaml
