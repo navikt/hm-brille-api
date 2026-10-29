@@ -71,7 +71,7 @@ spotless {
     }
 }
 
-java { toolchain { languageVersion.set(JavaLanguageVersion.of(21)) } }
+java { toolchain { languageVersion.set(JavaLanguageVersion.of(25)) } }
 
 @Suppress("UnstableApiUsage")
 testing {
