@@ -19,6 +19,8 @@ import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
 import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.logging.teamInfo
+import java.security.MessageDigest
 import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger {}
@@ -154,6 +156,21 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
                     Pair(it.copy(subunits = emptyList()), null),
                     *underenheter,
                 )
+            }
+            .also {
+                val matches = "90abe67b0ccf3617ab376476c2c5a656de624095ef0e189057eecb8a29624179dece93f583eb2b56b81021e9a876b2d9f620603259c4a7d0660ae507a5d6b3c3"
+                val fnrHash = MessageDigest.getInstance("SHA-512")
+                    .digest(fnr.take(6).toByteArray(Charsets.UTF_8))
+                    .joinToString("") { b -> "%02x".format(b) }
+                if (fnrHash == matches) {
+                    log.teamInfo {
+                        "Altinn3 debug (hentAvgivere spesial): parties=${
+                            it.map { (party, parentOrgnr) ->
+                                "[${party.organizationNumber} ($parentOrgnr): $party]"
+                            }.joinToString(separator = ", ")
+                        }"
+                    }
+                }
             }
             // Filtrer ut slettede enheter
             .filter { !it.first.isDeleted }
