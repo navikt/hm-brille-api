@@ -8,8 +8,8 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
-import no.nav.helse.rapids_rivers.asLocalDateTime
 import no.nav.hjelpemidler.brille.utbetaling.PacketListenerWithOnError
+import java.time.Instant
 import java.util.UUID
 
 private val log = KotlinLogging.logger {}
@@ -50,7 +50,7 @@ class JoarkrefRiver(
             }
             ider
         }
-    private val JsonMessage.opprettet get() = this["opprettet"].asLocalDateTime()
+    private val JsonMessage.opprettet get() = Instant.parse(this["opprettet"].textValue())
 
     override fun onPacket(packet: JsonMessage, context: MessageContext) {
         log.info { "Kvittering for oppretting av journalpost mottatt: eventId=${packet.eventId}, sakId=${packet.sakId}, joarkRef=${packet.joarkRef}, dokumentIder=${packet.dokumentIder}, opprettet=${packet.opprettet}" }
