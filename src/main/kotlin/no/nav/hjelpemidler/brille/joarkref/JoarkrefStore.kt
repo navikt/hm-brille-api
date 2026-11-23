@@ -1,11 +1,11 @@
 package no.nav.hjelpemidler.brille.joarkref
 
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 
-interface JoarkrefStore : Store {
+interface JoarkrefStore : Repository {
     fun lagreJoarkRef(vedtakId: Long, joarkRef: Long, dokumentIder: List<String>)
     fun hentJoarkRef(vedtakId: Long): Pair<Long, List<String>>?
 }

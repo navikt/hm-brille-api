@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille.medlemskap
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
@@ -18,7 +17,8 @@ import no.nav.hjelpemidler.brille.StatusCodeException
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
-import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.http.openid.openId
+import tools.jackson.databind.JsonNode
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
@@ -30,7 +30,7 @@ class MedlemskapClient(
     private val baseUrl = Configuration.MEDLEMSKAP_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = false
-        openID(tokenSetProvider)
+        openId(tokenSetProvider)
         install(HttpTimeout)
     }
 

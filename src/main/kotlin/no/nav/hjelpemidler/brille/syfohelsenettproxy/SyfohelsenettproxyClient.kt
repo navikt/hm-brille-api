@@ -20,7 +20,7 @@ import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
-import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.http.openid.openId
 import no.nav.hjelpemidler.logging.teamInfo
 import org.slf4j.MDC
 
@@ -33,7 +33,7 @@ class SyfohelsenettproxyClient(
     private val baseUrl = Configuration.SYFOHELSENETTPROXY_API_URL
     private val client = createHttpClient(engine) {
         expectSuccess = true
-        openID(tokenSetProvider)
+        openId(tokenSetProvider)
     }
 
     suspend fun ping() {

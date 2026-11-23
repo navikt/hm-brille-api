@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
@@ -11,20 +12,21 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.coroutines.CoroutineScope
 import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.cache.coroutines
 import no.nav.hjelpemidler.cache.createCache
 import no.nav.hjelpemidler.http.correlationId
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
-import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.http.openid.openId
 import kotlin.time.Duration.Companion.hours
 
 private val log = KotlinLogging.logger {}
 
-class Altinn3Client(tokenSetProvider: TokenSetProvider) {
-    private val client: HttpClient = createHttpClient {
-        openID(tokenSetProvider)
+class Altinn3Client(tokenSetProvider: TokenSetProvider, scope: CoroutineScope) {
+    private val client: HttpClient = createHttpClient(CIO) {
+        openId(tokenSetProvider)
         defaultRequest {
             headers {
                 accept(ContentType.Application.Json)
@@ -35,7 +37,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
         }
     }
 
-    private val publicClient: HttpClient = createHttpClient {
+    private val publicClient: HttpClient = createHttpClient(CIO) {
         defaultRequest {
             headers {
                 accept(ContentType.Application.Json)
@@ -48,7 +50,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
 
     private val policySubjectsCache = createCache {
         expireAfterWrite = 1.hours
-    }.buildAsync<String, List<PolicySubjects.Subject>>().coroutines()
+    }.buildAsync<String, List<PolicySubjects.Subject>>().coroutines(scope)
 
     private enum class Resource(val resourceKey: String) {
         Utbetalingsrapport("nav_barnebriller_utbetalingsrapport"),
@@ -81,7 +83,7 @@ class Altinn3Client(tokenSetProvider: TokenSetProvider) {
     }
 
     private suspend fun getPolicySubjectsFor(resourceKey: String): List<PolicySubjects.Subject> {
-        return policySubjectsCache.get(resourceKey) {
+        return policySubjectsCache.getOrLoad(resourceKey) {
             log.info { "Henter policy subjects for resourceKey=$resourceKey og legger de i cache" }
             val response = publicClient.get("/resourceregistry/api/v1/resource/$resourceKey/policy/subjects")
             val body: PolicySubjects.Response = response.body()

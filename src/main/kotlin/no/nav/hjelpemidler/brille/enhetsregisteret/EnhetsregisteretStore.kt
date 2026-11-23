@@ -1,13 +1,13 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.sql.Statement
 import java.time.LocalDateTime
 
-interface EnhetsregisteretStore : Store {
+interface EnhetsregisteretStore : Repository {
     fun hentEnhet(orgnr: String): Organisasjonsenhet?
     fun hentEnheter(orgnre: Set<String>): Map<String, Organisasjonsenhet>
     fun oppdaterEnheter(block: (lagre: (type: EnhetType, enhetChunk: List<Organisasjonsenhet>) -> Unit) -> Unit)

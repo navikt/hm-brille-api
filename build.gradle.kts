@@ -8,7 +8,7 @@ version = "1.0-SNAPSHOT"
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
-    alias(libs.plugins.graphql)
+    alias(libs.plugins.graphql).version(libs.versions.graphql)
     alias(libs.plugins.spotless)
 }
 
@@ -42,7 +42,7 @@ dependencies {
     implementation(libs.hmRapidsAndRiversV2Core)
     implementation(libs.valkey)
     implementation(libs.micrometer.registry.prometheus)
-    implementation(libs.unleash)
+    implementation(libs.unleash.client)
     runtimeOnly(libs.logback.syslog4j) // auditlog https://github.com/navikt/naudit
 
     // GraphQL
@@ -76,14 +76,15 @@ java { toolchain { languageVersion.set(JavaLanguageVersion.of(25)) } }
 @Suppress("UnstableApiUsage")
 testing {
     suites {
-        val test by getting(JvmTestSuite::class) {
-            useKotlinTest(libs.versions.kotlin.asProvider())
+        named<JvmTestSuite>("test") {
+            useKotlinTest(libs.versions.kotlin)
             dependencies {
                 implementation(libs.hotlibs.test)
                 implementation(libs.ktor.server.test.host)
                 implementation(libs.nimbus.jose.jwt)
                 implementation(libs.handlebars)
                 implementation(libs.jackson.dataformat.yaml)
+                implementation(libs.junit.jupiter.params)
 
                 implementation(libs.hotlibs.database) {
                     capabilities {
@@ -122,12 +123,13 @@ graphql {
     }
 }
 
-val graphqlIntrospectSchema by tasks.getting(GraphQLIntrospectSchemaTask::class) {
+tasks.named<GraphQLIntrospectSchemaTask>("graphqlIntrospectSchema") {
     endpoint.set("https://pdl-api.intern.dev.nav.no/graphql")
     outputFile.set(file("${project.projectDir}/src/main/resources/pdl/schema.graphql"))
 }
 
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.compilerOptions {
-    freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
+tasks.named<KotlinCompile>("compileKotlin") {
+    compilerOptions {
+        freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
+    }
 }

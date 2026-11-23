@@ -1,8 +1,5 @@
 package no.nav.hjelpemidler.brille
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.github.jknack.handlebars.Handlebars
 import com.github.jknack.handlebars.io.FileTemplateLoader
 import io.kotest.matchers.maps.shouldHaveKeys
@@ -11,6 +8,9 @@ import no.nav.hjelpemidler.configuration.environmentVariablesIn
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import no.nav.hjelpemidler.serialization.jackson.readValue
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
+import tools.jackson.dataformat.yaml.YAMLMapper
+import tools.jackson.module.kotlin.kotlinModule
 import java.nio.file.Path
 
 class ConfigurationTest {
@@ -41,4 +41,4 @@ class ConfigurationTest {
 
 private val JsonNode.miljøvariabler: Map<String, String>
     get() = at("/spec/env")
-        .associate { it["name"].textValue() to it["value"].textValue() }
+        .associate { it["name"].asString() to it["value"].asString() }

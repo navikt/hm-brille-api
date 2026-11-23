@@ -29,7 +29,9 @@ import no.nav.hjelpemidler.database.transaction
 import java.io.Closeable
 import javax.sql.DataSource
 
-typealias Transaction = no.nav.hjelpemidler.database.Transaction<DatabaseTransactionContext>
+interface Transaction {
+    suspend operator fun <T> invoke(block: suspend DatabaseTransactionContext.() -> T): T
+}
 
 abstract class DatabaseContext : Transaction, Closeable {
     abstract val dataSource: DataSource

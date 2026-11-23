@@ -1,14 +1,14 @@
 package no.nav.hjelpemidler.brille.utbetaling
 
 import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.Row
-import no.nav.hjelpemidler.database.Store
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-interface UtbetalingStore : Store {
+interface UtbetalingStore : Repository {
     fun hentUtbetalingForVedtak(vedtakId: Long): Utbetaling?
     fun hentUtbetalingerMedStatusBatchDatoOpprettet(
         status: UtbetalingStatus = UtbetalingStatus.NY,

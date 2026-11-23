@@ -1,6 +1,5 @@
 package no.nav.hjelpemidler.brille.scheduler
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -11,6 +10,7 @@ import no.nav.hjelpemidler.brille.Configuration
 import no.nav.hjelpemidler.brille.StubEngine
 import no.nav.hjelpemidler.brille.engineFactory
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
+import tools.jackson.module.kotlin.readValue
 import java.net.InetAddress
 
 private val log = KotlinLogging.logger {}

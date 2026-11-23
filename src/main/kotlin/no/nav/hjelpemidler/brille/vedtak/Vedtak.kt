@@ -1,16 +1,12 @@
 package no.nav.hjelpemidler.brille.vedtak
 
-import com.fasterxml.jackson.databind.JsonNode
-import no.nav.helse.rapids_rivers.asLocalDate
-import no.nav.helse.rapids_rivers.asLocalDateTime
-import no.nav.helse.rapids_rivers.asOptionalLocalDate
-import no.nav.helse.rapids_rivers.asOptionalLocalDateTime
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsgrunnlag
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.database.Row
 import no.nav.hjelpemidler.time.toInstant
+import tools.jackson.databind.JsonNode
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -115,17 +111,17 @@ data class Kravlinje(
             val ekstraKrav: List<Kravlinje>? = (ekstraKravArray?.toList())?.map { node ->
                 Kravlinje(
                     id = node.get("id").asLong(),
-                    bestillingsdato = node.get("bestillingsdato").asLocalDate(),
-                    behandlingsresultat = node.get("behandlingsresultat").textValue(),
-                    opprettet = node.get("opprettet").asLocalDateTime(),
+                    bestillingsdato = LocalDate.parse(node.get("bestillingsdato").asString()),
+                    behandlingsresultat = node.get("behandlingsresultat").stringValue(),
+                    opprettet = LocalDateTime.parse(node.get("opprettet").asString()),
                     beløp = node.get("belop").decimalValue(),
-                    bestillingsreferanse = node.get("bestillingsreferanse").textValue(),
-                    utbetalingsdato = node.get("utbetalingsdato").asOptionalLocalDate(),
-                    batchId = node.get("batch_id").textValue(),
-                    batchTotalBeløp = node.get("batch_totalbelop").decimalValue(),
-                    slettet = node.get("slettet").asOptionalLocalDateTime(),
+                    bestillingsreferanse = node.get("bestillingsreferanse").stringValue(),
+                    utbetalingsdato = node.get("utbetalingsdato").stringValue(null)?.takeIf(String::isNotEmpty)?.let(LocalDate::parse),
+                    batchId = node.get("batch_id").stringValue(null),
+                    batchTotalBeløp = node.get("batch_totalbelop").decimalValue(BigDecimal.ZERO),
+                    slettet = node.get("slettet").stringValue(null)?.takeIf(String::isNotEmpty)?.let(LocalDateTime::parse),
                     potensieltBortfiltrerteKrav = null,
-                    optiker = node.get("navn_innsender").textValue(),
+                    optiker = node.get("navn_innsender").stringValue(null),
                 )
             }
 

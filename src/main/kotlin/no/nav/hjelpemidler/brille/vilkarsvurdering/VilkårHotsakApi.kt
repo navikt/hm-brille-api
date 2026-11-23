@@ -43,7 +43,7 @@ fun Route.vilkårHotsakApi(
                 HotsakVedtak(
                     sakId = "",
                     vedtakId = "",
-                    vedtaksdato = it.toInstant(),
+                    vedtaksdato = it.atStartOfDay().toInstant(),
                     vedtaksstatus = "",
                     bestillingsdato = it,
                 )

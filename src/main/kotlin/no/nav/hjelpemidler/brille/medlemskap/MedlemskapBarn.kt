@@ -1,7 +1,5 @@
 package no.nav.hjelpemidler.brille.medlemskap
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.treeToValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.brille.MDC_CORRELATION_ID
 import no.nav.hjelpemidler.brille.kafka.KafkaService
@@ -15,6 +13,8 @@ import no.nav.hjelpemidler.brille.writePrettyString
 import no.nav.hjelpemidler.logging.teamInfo
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.slf4j.MDC
+import tools.jackson.databind.JsonNode
+import tools.jackson.module.kotlin.treeToValue
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}

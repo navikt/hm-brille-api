@@ -7,14 +7,14 @@ import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.Row
-import no.nav.hjelpemidler.database.Store
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 import kotlin.math.ceil
 
-interface VedtakStore : Store {
+interface VedtakStore : Repository {
     fun hentTidligereBrukteOrgnrForInnsender(fnrInnsender: String): List<String>
     fun hentVedtakForBarn(fnrBarn: String): List<EksisterendeVedtak>
     fun hentVedtakForOptiker(fnrInnsender: String, vedtakId: Long): OversiktVedtak?

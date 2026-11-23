@@ -4,14 +4,14 @@ import no.nav.hjelpemidler.brille.rapportering.queries.COLUMN_LABEL_TOTAL
 import no.nav.hjelpemidler.brille.rapportering.queries.kravlinjeQuery
 import no.nav.hjelpemidler.brille.vedtak.Kravlinje
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.pagination.Page
 import no.nav.hjelpemidler.pagination.PageRequest
 import no.nav.hjelpemidler.pagination.pageOf
 import org.intellij.lang.annotations.Language
 import java.time.LocalDate
 
-interface RapportStore : Store {
+interface RapportStore : Repository {
     fun hentKravlinjerForOrgNummer(
         orgNr: String,
         kravFilter: KravFilter?,

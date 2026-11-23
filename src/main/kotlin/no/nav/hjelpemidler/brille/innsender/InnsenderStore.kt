@@ -1,10 +1,10 @@
 package no.nav.hjelpemidler.brille.innsender
 
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.Repository
 import org.intellij.lang.annotations.Language
 
-interface InnsenderStore : Store {
+interface InnsenderStore : Repository {
     fun lagreInnsender(innsender: Innsender): Innsender
     fun hentInnsender(fnrInnsender: String): Innsender?
 }

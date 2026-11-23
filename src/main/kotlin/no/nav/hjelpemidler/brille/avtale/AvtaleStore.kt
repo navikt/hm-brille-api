@@ -2,8 +2,8 @@ package no.nav.hjelpemidler.brille.avtale
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.Row
-import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
@@ -27,7 +27,7 @@ enum class BRUKSVILKÅRTYPE(val bruksvilkårId: Int) {
 
 private val log = KotlinLogging.logger {}
 
-interface AvtaleStore : Store {
+interface AvtaleStore : Repository {
     fun lagreAvtale(avtale: Avtale): Avtale
     fun godtaBruksvilkår(bruksvilkårGodtatt: BruksvilkårGodtatt): BruksvilkårGodtatt
     fun henBruksvilkårOrganisasjon(orgnr: String): BruksvilkårGodtatt?

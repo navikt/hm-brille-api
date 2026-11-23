@@ -1,10 +1,9 @@
 package no.nav.hjelpemidler.brille
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.serialization.jackson.jackson
+import io.ktor.client.engine.cio.CIO
+import io.ktor.http.ContentType
+import io.ktor.serialization.jackson3.JacksonConverter
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.install
@@ -86,6 +85,7 @@ import no.nav.hjelpemidler.database.PostgreSQL
 import no.nav.hjelpemidler.database.createDataSource
 import no.nav.hjelpemidler.database.migrate
 import no.nav.hjelpemidler.http.openid.TexasClient
+import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.slf4j.event.Level
 import java.net.InetAddress
 import java.util.TimeZone
@@ -121,11 +121,7 @@ fun Application.configure() {
     configureStatusPages()
 
     install(ContentNegotiation) {
-        jackson {
-            registerModule(JavaTimeModule())
-            disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        }
+        register(ContentType.Application.Json, JacksonConverter(jsonMapper))
     }
     install(CallLogging) {
         level = Level.TRACE
@@ -157,9 +153,9 @@ fun Application.setupRoutes() {
     val enhetsregisteretClient = EnhetsregisteretClient(databaseContext)
     val redisClient = RedisClient()
 
-    val texasClient = TexasClient()
+    val texasClient = TexasClient(CIO.create())
     val altinn3Client =
-        Altinn3Client(texasClient.maskinporten(MaskinportenEnvironmentVariable.MASKINPORTEN_SCOPES))
+        Altinn3Client(texasClient.maskinporten(MaskinportenEnvironmentVariable.MASKINPORTEN_SCOPES), this)
     val hotsakClient =
         HotsakClient(texasClient.entraIdApplication(Configuration.HOTSAK_API_SCOPE))
     val medlemskapClient =
