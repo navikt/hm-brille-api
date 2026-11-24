@@ -281,7 +281,7 @@ class VilkårHotsakApiTest {
         kjørTest(
             vilkårsgrunnlag = lagVilkårsgrunnlagHotsakDto {
                 bestillingsdato = null
-                mottaksdato = dagensDato.minusDays(1).toInstant()
+                mottaksdato = dagensDato.minusDays(1).atStartOfDay().toInstant()
             },
             fødselsdato = 18 `år på` dagensDato,
             dagensDato = dagensDato,

@@ -5,9 +5,11 @@ import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -24,7 +26,9 @@ import no.nav.hjelpemidler.brille.redis.RedisClient
 import no.nav.hjelpemidler.brille.sats.Brilleseddel
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.test.TestRouting
+import no.nav.hjelpemidler.brille.utbetaling.Utbetaling
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingService
+import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vilkarsvurdering.DATO_ORDNINGEN_STARTET
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagExtrasDto
@@ -32,6 +36,8 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsvurderingService
 import no.nav.hjelpemidler.nare.regel.Regelevaluering
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -76,6 +82,80 @@ class KravApiTest {
                     bestillingsreferanse = "",
                 ),
 
+            )
+        }
+    }
+
+    @Test
+    fun `sletting av ukjent krav gir ikke sideeffekter`() {
+        every { databaseContext.vedtakStore.hentVedtak<Any>(42) } returns null
+
+        routing.test {
+            client.delete("/krav/42").status shouldBe HttpStatusCode.NotFound
+        }
+
+        coVerify(exactly = 0) { utbetalingService.hentUtbetalingForVedtak(any()) }
+        coVerify(exactly = 0) { slettVedtakService.slettVedtak(any(), any(), any()) }
+        coVerify(exactly = 0) { auditService.lagreOppslag(any(), any(), any()) }
+    }
+
+    @Test
+    fun `innsender kan ikke slette andres krav`() {
+        every { databaseContext.vedtakStore.hentVedtak<Any>(42) } returns mockedVedtak.copy(
+            id = 42,
+            fnrInnsender = "00000000002",
+        )
+
+        routing.test {
+            client.delete("/krav/42").status shouldBe HttpStatusCode.Unauthorized
+        }
+
+        coVerify(exactly = 0) { utbetalingService.hentUtbetalingForVedtak(any()) }
+        coVerify(exactly = 0) { slettVedtakService.slettVedtak(any(), any(), any()) }
+        coVerify(exactly = 0) { auditService.lagreOppslag(any(), any(), any()) }
+    }
+
+    @ParameterizedTest
+    @EnumSource(UtbetalingStatus::class)
+    fun `krav med registrert utbetaling kan ikke slettes`(status: UtbetalingStatus) {
+        val vedtak = mockedVedtak.copy(id = 42, fnrInnsender = routing.principal.fnr)
+        every { databaseContext.vedtakStore.hentVedtak<Any>(vedtak.id) } returns vedtak
+        coEvery { utbetalingService.hentUtbetalingForVedtak(vedtak.id) } returns Utbetaling(
+            vedtakId = vedtak.id,
+            vedtak = vedtak.toDto(),
+            referanse = vedtak.bestillingsreferanse,
+            utbetalingsdato = null,
+            status = status,
+        )
+
+        routing.test {
+            val response = client.delete("/krav/${vedtak.id}")
+            response.status shouldBe HttpStatusCode.Unauthorized
+            response.bodyAsText() shouldBe """{"error": "Krav kan ikke slettes fordi utbetaling er påstartet"}"""
+        }
+
+        coVerify(exactly = 0) { slettVedtakService.slettVedtak(any(), any(), any()) }
+        coVerify(exactly = 0) { auditService.lagreOppslag(any(), any(), any()) }
+    }
+
+    @Test
+    fun `innsender kan slette eget krav uten registrert utbetaling`() {
+        val vedtak = mockedVedtak.copy(id = 42, fnrInnsender = routing.principal.fnr)
+        every { databaseContext.vedtakStore.hentVedtak<Any>(vedtak.id) } returns vedtak
+        coEvery { utbetalingService.hentUtbetalingForVedtak(vedtak.id) } returns null
+
+        routing.test {
+            client.delete("/krav/${vedtak.id}").status shouldBe HttpStatusCode.OK
+        }
+
+        coVerify(exactly = 1) {
+            slettVedtakService.slettVedtak(vedtak.id, routing.principal.fnr, SlettetAvType.INNSENDER)
+        }
+        coVerify(exactly = 1) {
+            auditService.lagreOppslag(
+                routing.principal.fnr,
+                vedtak.fnrBarn,
+                "[DELETE] /krav - Sletting av krav ${vedtak.id}",
             )
         }
     }

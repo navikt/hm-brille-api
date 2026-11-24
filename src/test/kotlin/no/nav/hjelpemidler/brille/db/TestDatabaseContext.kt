@@ -1,7 +1,7 @@
 package no.nav.hjelpemidler.brille.db
 
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.Testcontainers
 import no.nav.hjelpemidler.database.createDataSource
 import no.nav.hjelpemidler.database.createRole
@@ -26,7 +26,7 @@ object TestDatabaseContext : DatabaseContext() {
     }
 }
 
-suspend inline fun <S : Store, T> testTransaction(
+suspend inline fun <S : Repository, T> testTransaction(
     noinline factory: (JdbcOperations) -> S,
     noinline test: suspend S.() -> T,
 ): T = transaction(TestDatabaseContext.dataSource) {

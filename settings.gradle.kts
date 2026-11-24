@@ -17,7 +17,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("libs") {
-            from("no.nav.hjelpemidler:katalog:26.058.102906")
+            from("no.nav.hjelpemidler:katalog:26.327.105719")
             library("hmRapidsAndRiversV2Core", "com.github.navikt:hm-rapids-and-rivers-v2-core:202602191359")
             version("spotless", "6.25.0")
         }

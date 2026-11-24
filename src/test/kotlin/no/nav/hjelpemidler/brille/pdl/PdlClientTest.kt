@@ -1,7 +1,6 @@
 package no.nav.hjelpemidler.brille.pdl
 
 import com.expediagroup.graphql.client.jackson.types.JacksonGraphQLResponse
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -14,6 +13,7 @@ import no.nav.hjelpemidler.brille.tilgang.withTilgangContext
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import tools.jackson.module.kotlin.readValue
 import java.util.UUID
 import kotlin.test.Test
 

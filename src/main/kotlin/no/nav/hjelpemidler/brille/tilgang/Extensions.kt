@@ -10,7 +10,7 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.auth.principal
 import no.nav.hjelpemidler.configuration.ClusterEnvironment
-import no.nav.hjelpemidler.configuration.EntraIDEnvironmentVariable
+import no.nav.hjelpemidler.configuration.EntraIdEnvironmentVariable
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.configuration.TokenXEnvironmentVariable
 import no.nav.hjelpemidler.logging.teamWarn
@@ -37,7 +37,7 @@ private val jwkProviderTokenX =
         .build()
 
 private val jwkProviderAzureAd =
-    JwkProviderBuilder(URI(EntraIDEnvironmentVariable.AZURE_OPENID_CONFIG_JWKS_URI).toURL())
+    JwkProviderBuilder(URI(EntraIdEnvironmentVariable.AZURE_OPENID_CONFIG_JWKS_URI).toURL())
         // cache up to 1000 JWKs for 24 hours
         .cached(1000, 24, TimeUnit.HOURS)
         // if not cached, only allow max 100 different keys per minute to be fetched from external provider
@@ -68,8 +68,8 @@ fun AuthenticationConfig.azureAdProvider(
     block: Verification.() -> Unit = {},
 ) {
     jwt(name) {
-        verifier(jwkProviderAzureAd, EntraIDEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER) {
-            withAudience(EntraIDEnvironmentVariable.AZURE_APP_CLIENT_ID)
+        verifier(jwkProviderAzureAd, EntraIdEnvironmentVariable.AZURE_OPENID_CONFIG_ISSUER) {
+            withAudience(EntraIdEnvironmentVariable.AZURE_APP_CLIENT_ID)
             block()
         }
         validate { credential ->

@@ -3,14 +3,14 @@ package no.nav.hjelpemidler.brille.vedtak
 import no.nav.hjelpemidler.brille.sats.SatsType
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.Row
-import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-interface SlettVedtakStore : Store {
+interface SlettVedtakStore : Repository {
     fun hentVedtakSlettet(vedtakId: Long): VedtakSlettet?
     fun slettVedtak(vedtakId: Long, slettetAv: String, slettetAvType: SlettetAvType = SlettetAvType.INNSENDER): Int?
 }

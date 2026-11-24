@@ -1,7 +1,5 @@
 package no.nav.hjelpemidler.brille.enhetsregisteret
 
-import com.fasterxml.jackson.core.JsonToken
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
@@ -22,6 +20,8 @@ import no.nav.hjelpemidler.brille.db.DatabaseContext
 import no.nav.hjelpemidler.brille.db.transaction
 import no.nav.hjelpemidler.http.createHttpClient
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
+import tools.jackson.core.JsonToken
+import tools.jackson.module.kotlin.readValue
 import java.util.zip.GZIPInputStream
 import kotlin.system.measureTimeMillis
 
@@ -95,7 +95,7 @@ class EnhetsregisteretClient(
         log.info { "Komprimert filstørrelse: $contentLengthMB MiB ($contentLength bytes)" }
 
         val gunzipStream = GZIPInputStream(httpResponse.bodyAsChannel().toInputStream())
-        jsonMapper.factory.createParser(gunzipStream).use { jsonParser ->
+        jsonMapper.createParser(gunzipStream).use { jsonParser ->
             // Check the first token
             check(jsonParser.nextToken() === JsonToken.START_ARRAY) { "Expected content to be an array" }
 

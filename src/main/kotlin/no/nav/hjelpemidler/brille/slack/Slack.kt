@@ -1,6 +1,7 @@
 package no.nav.hjelpemidler.brille.slack
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.engine.cio.CIO
 import no.nav.hjelpemidler.configuration.Environment
 import no.nav.hjelpemidler.http.slack.slack
 import no.nav.hjelpemidler.http.slack.slackIconEmoji
@@ -14,7 +15,7 @@ object Slack {
 
     private val tier = Environment.current.tier
 
-    private val client = slack()
+    private val client = slack(CIO.create())
 
     suspend fun post(message: String) {
         try {

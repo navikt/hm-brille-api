@@ -1,7 +1,5 @@
 package no.nav.hjelpemidler.brille.kafka
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
-import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.helse.rapids_rivers.KafkaRapid
 import no.nav.hjelpemidler.brille.avtale.BruksvilkårGodtatt
@@ -20,6 +18,8 @@ import no.nav.hjelpemidler.brille.vilkarsvurdering.VilkårsgrunnlagDto
 import no.nav.hjelpemidler.brille.vilkarsvurdering.Vilkårsvurdering
 import no.nav.hjelpemidler.brille.vilkarsvurdering.harResultatJaForVilkår
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
+import tools.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
+import tools.jackson.databind.annotation.JsonNaming
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime

@@ -1,6 +1,6 @@
 package no.nav.hjelpemidler.brille.pdl
 
-import com.fasterxml.jackson.databind.JsonNode
+import tools.jackson.databind.JsonNode
 
 sealed interface PdlOppslag<T> {
     val data: T

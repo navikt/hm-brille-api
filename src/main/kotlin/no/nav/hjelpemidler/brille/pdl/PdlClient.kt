@@ -18,7 +18,7 @@ import no.nav.hjelpemidler.brille.pdl.generated.HentPerson
 import no.nav.hjelpemidler.brille.pdl.generated.MedlemskapHentBarn
 import no.nav.hjelpemidler.brille.tilgang.innloggetBruker
 import no.nav.hjelpemidler.http.openid.TokenSetProvider
-import no.nav.hjelpemidler.http.openid.openID
+import no.nav.hjelpemidler.http.openid.openId
 import no.nav.hjelpemidler.serialization.jackson.jsonMapper
 import org.slf4j.MDC
 import java.net.URI
@@ -34,7 +34,7 @@ class PdlClient(
     private val client = GraphQLKtorClient(
         url = URI(baseUrl).toURL(),
         httpClient = HttpClient(engine) {
-            openID(tokenSetProvider)
+            openId(tokenSetProvider)
             defaultRequest {
                 header("behandlingsnummer", behandlingsnummer)
             }

@@ -1,10 +1,10 @@
 package no.nav.hjelpemidler.brille.tss
 
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.Repository
 import org.intellij.lang.annotations.Language
 
-interface TssIdentStore : Store {
+interface TssIdentStore : Repository {
     fun hentTssIdent(orgnr: String): String?
     fun settTssIdent(orgnr: String, tssIdent: String)
     fun glemEksisterendeTssIdent(orgnr: String)

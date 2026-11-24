@@ -5,14 +5,14 @@ import no.nav.hjelpemidler.brille.pdl.PersonCompat
 import no.nav.hjelpemidler.brille.utbetaling.UtbetalingStatus
 import no.nav.hjelpemidler.brille.vedtak.SlettetAvType
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.pgJsonbOf
 import org.intellij.lang.annotations.Language
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-interface AdminStore : Store {
+interface AdminStore : Repository {
     fun hentVedtakListe(fnr: String): List<VedtakListe>
     fun hentVedtak(vedtakId: Long): Vedtak?
     fun lagreAvvisning(

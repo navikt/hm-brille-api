@@ -1,10 +1,10 @@
 package no.nav.hjelpemidler.brille.audit
 
 import no.nav.hjelpemidler.database.JdbcOperations
-import no.nav.hjelpemidler.database.Store
+import no.nav.hjelpemidler.database.Repository
 import org.intellij.lang.annotations.Language
 
-interface AuditStore : Store {
+interface AuditStore : Repository {
     fun lagreOppslag(fnrInnlogget: String, fnrOppslag: String, oppslagBeskrivelse: String)
 }
 

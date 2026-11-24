@@ -5,7 +5,7 @@ import io.ktor.client.engine.HttpClientEngine
 import io.ktor.http.ContentType
 import io.ktor.http.Url
 import io.ktor.http.protocolWithAuthority
-import io.ktor.serialization.jackson.JacksonConverter
+import io.ktor.serialization.jackson3.JacksonConverter
 import io.ktor.server.application.install
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.plugins.compression.Compression

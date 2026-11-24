@@ -2,14 +2,14 @@ package no.nav.hjelpemidler.brille.virksomhet
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.hjelpemidler.database.JdbcOperations
+import no.nav.hjelpemidler.database.Repository
 import no.nav.hjelpemidler.database.Row
-import no.nav.hjelpemidler.database.Store
 import org.intellij.lang.annotations.Language
 import java.time.LocalDateTime
 
 private val log = KotlinLogging.logger {}
 
-interface VirksomhetStore : Store {
+interface VirksomhetStore : Repository {
     fun hentVirksomhetForOrganisasjon(orgnr: String): Virksomhet?
     fun hentVirksomheterForOrganisasjoner(orgnr: List<String>): List<Virksomhet>
     fun lagreVirksomhet(virksomhet: Virksomhet): Virksomhet
